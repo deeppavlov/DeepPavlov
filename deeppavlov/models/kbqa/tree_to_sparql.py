@@ -189,6 +189,7 @@ class TreeToSparql(Component):
         entities_dict_batch = []
         types_dict_batch = []
         questions_batch = []
+        q_type_flags_batch = []
         count = False
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
             log.debug(f"\n{syntax_tree}")
@@ -196,9 +197,10 @@ class TreeToSparql(Component):
             root = self.find_root(tree)
             tree_desc = tree.descendants
             unknown_node = ""
+            q_type_flag = ""
             if root:
                 log.debug(f"syntax tree info, root: {root.form}")
-                unknown_node, unknown_branch = self.find_branch_with_unknown(root)
+                unknown_node, unknown_branch, q_type_flag = self.find_branch_with_unknown(root)
             positions = [num for position in positions for num in position]
             if unknown_node:
                 log.debug(f"syntax tree info, unknown node: {unknown_node.form}, unknown branch: {unknown_branch.form}")
@@ -275,7 +277,8 @@ class TreeToSparql(Component):
                 entities_dict_batch.append(entities_dict)
                 types_dict_batch.append(types_dict)
                 questions_batch.append(question)
-        return questions_batch, query_nums_batch, entities_dict_batch, types_dict_batch
+            q_type_flags_batch.append(q_type_flag)
+        return questions_batch, query_nums_batch, entities_dict_batch, types_dict_batch, q_type_flags_batch
 
     def find_root(self, tree: Node) -> Node:
         for node in tree.descendants:
@@ -283,6 +286,9 @@ class TreeToSparql(Component):
                 return node
 
     def find_branch_with_unknown(self, root: Node) -> Tuple[str, str]:
+        q_type_flag = ""
+        q_type_pronouns = {"где": "where", "когда": "when", "кто": "who"}
+        
         self.wh_leaf = False
         self.one_chain = False
 
@@ -292,28 +298,33 @@ class TreeToSparql(Component):
             else:
                 for node in root.children:
                     if node.deprel == "nsubj":
-                        return node, node
+                        return node, node, q_type_flag
 
         if not self.one_chain:
             for node in root.children:
-                if node.form.lower() in self.q_pronouns:
+                node_word = node.form.lower()
+                if node_word in self.q_pronouns:
+                    if node_word in q_type_pronouns:
+                        q_type_flag = q_type_pronouns[node_word]
+                    if node_word == "как" and root.form.lower() in ["зовут", "звали"]:
+                        q_type_flag = "who"
                     if node.children:
                         for child in node.children:
                             if child.deprel in ["nmod", "obl"]:
-                                return child, node
+                                return child, node, q_type_flag
                     else:
                         self.wh_leaf = True
                 else:
                     for child in node.descendants:
                         if child.form.lower() in self.q_pronouns:
-                            return child.parent, node
+                            return child.parent, node, q_type_flag
 
         if self.wh_leaf or self.one_chain:
             for node in root.children:
                 if node.deprel in ["nsubj", "obl", "obj", "nmod", "xcomp"] and node.form.lower() not in self.q_pronouns:
-                    return node, node
+                    return node, node, q_type_flag
 
-        return "", ""
+        return "", "", ""
 
     def find_modifiers_of_unknown(self, node: Node) -> Tuple[List[Union[str, Any]], list]:
         modifiers = []
@@ -509,6 +520,7 @@ class TreeToSparql(Component):
         log.debug(f"build_query: root_desc.keys, {root_desc_deprels}, positions {positions}")
         log.debug(f"temporal order {temporal_order}, ranking tokens {ranking_tokens}")
         if root_desc_deprels in [["nsubj", "obl"],
+                                 ["nsubj:pass", "obl"],
                                  ["nsubj", "obj"],
                                  ["nsubj", "xcomp"],
                                  ["obj", "xcomp"],

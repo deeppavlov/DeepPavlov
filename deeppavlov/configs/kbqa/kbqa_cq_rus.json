@@ -27,7 +27,8 @@
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata.hdt",
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "max_comb_num": 1000,
         "lang": "@ru"
       },
       {
@@ -46,7 +47,7 @@
         "adj_to_noun": "#adj2noun",
         "lang": "rus",
         "in": ["syntax_info", "entities_pos"],
-        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
+        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict", "q_type_flag"]
       },
       {
         "class_name": "template_matcher",
@@ -56,7 +57,7 @@
         "templates_filename": "templates_rus.json"
       },
       {
-        "class_name": "rel_ranking_bert_infer",
+        "class_name": "rel_ranking_infer",
         "id": "entity_descr_ranking",
         "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_rus_no_mention.json"},
         "batch_size": 100,
@@ -93,13 +94,13 @@
         "lang": "ru"
       },
       {
-        "class_name": "rel_ranking_bert_infer",
+        "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
         "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert_rus.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
-        "return_all_possible_answers": false,
-        "return_answer_ids": false,
+        "return_all_possible_answers": true,
+        "return_answer_ids": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
       },
@@ -118,9 +119,10 @@
         "entities_to_leave": 9,
         "rels_to_leave": 10,
         "return_answers": true,
-        "return_all_possible_answers": false,
+        "return_all_possible_answers": true,
         "syntax_structure_known": true,
-        "in": ["x", "x_sanitized", "query_nums", "entities_dict", "types_dict"],
+        "max_comb_num": 1000,
+        "in": ["x", "x_sanitized", "query_nums", "entities_dict", "types_dict", "q_type_flag"],
         "out": ["answers"]
       }
     ],
