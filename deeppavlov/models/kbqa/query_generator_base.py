@@ -27,6 +27,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.kbqa.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
+from deeppavlov.models.kbqa.utils import FilterAnswers
 
 log = getLogger(__name__)
 
@@ -49,6 +50,7 @@ class QueryGeneratorBase(Component, Serializable):
                  wiki_file_format: str = "hdt",
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
+                 answer_types_filename: str = None,
                  syntax_structure_known: bool = False,
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
@@ -93,6 +95,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.use_alt_templates = use_alt_templates
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
+        self.filter_answers = FilterAnswers(answer_types_filename)
 
         self.load()
 
@@ -114,7 +117,8 @@ class QueryGeneratorBase(Component, Serializable):
                                question_sanitized: str,
                                template_types: Union[List[str], str],
                                entities_from_ner: List[str],
-                               types_from_ner: List[str]) -> Union[List[Tuple[str, Any]], List[str]]:
+                               types_from_ner: List[str],
+                               q_type_flag: str) -> Union[List[Tuple[str, Any]], List[str]]:
 
         candidate_outputs = []
         self.template_nums = template_types
@@ -127,6 +131,7 @@ class QueryGeneratorBase(Component, Serializable):
         temp_tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
         entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        answer_info = answer_types or q_type_flag
         temp_tm2 = time.time()
         log.debug(f"--------template matching time: {temp_tm2-temp_tm1}")
         self.template_nums = [query_type_template]
@@ -171,7 +176,7 @@ class QueryGeneratorBase(Component, Serializable):
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
-            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, answer_types)
+            candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, answer_info)
         return candidate_outputs, template_answer
 
     def get_entity_ids(self, entities: List[str],

@@ -15,6 +15,8 @@
 import re
 import itertools
 from typing import List, Tuple
+from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.commands.utils import expand_path
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:
@@ -142,21 +144,41 @@ def fill_online_query(query: List[str], entity_comb: List[str], type_comb: List[
 
     return query, new_rels
     
-def filter_answers(question: str, answer_types: List[str] = None):
-    # Q5 - human
-    # Q15773347 - film character
-    # Q95074 - fictional character
-    # Q15632617 - fictional human
-    # Q3658341 - literary character
-    # Q1114461 - comics character
-    # Q15711870 - animated character
-    # Q15773317 - television character
-    if answer_types:
-        if answer_types == ["no_type"]:
-            return []
+class FilterAnswers:
+    def __init__(self, answer_types_filename: str):
+        if answer_types_filename:
+            self.q_answer_types = load_pickle(expand_path(answer_types_filename))
         else:
-            return answer_types
-    elif "who" in question:
-        return ["Q5", "Q15773347", "Q95074", "Q15632617", "Q3658341", "Q1114461", "Q15711870", "Q15773317"]
-    else:
-        return []
+            self.q_answer_types = {}
+
+    def __call__(self, question: str, answer_types: List[str] = None):
+        # Q5 - human
+        # Q15773347 - film character
+        # Q95074 - fictional character
+        # Q15632617 - fictional human
+        # Q3658341 - literary character
+        # Q1114461 - comics character
+        # Q15711870 - animated character
+        # Q15773317 - television character
+        if answer_types:
+            if isinstance(answer_types, list):
+                if answer_types:
+                    if answer_types == ["no_type"]:
+                        return []
+                    else:
+                        return answer_types
+                elif "who" in question:
+                    return self.q_answer_types.get("who", [])
+                else:
+                    return []
+            if isinstance(answer_types, str):
+                if answer_types == "who":
+                    return self.q_answer_types.get("who", [])
+                elif answer_types == "where":
+                    return self.q_answer_types.get("where", [])
+                elif answer_types == "when":
+                    return ["date"]
+                else:
+                    return []
+        else:
+            return []

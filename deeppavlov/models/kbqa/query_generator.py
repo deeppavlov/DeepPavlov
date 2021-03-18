@@ -27,7 +27,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.utils import \
-    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query, filter_answers
+    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 
 log = getLogger(__name__)
@@ -75,7 +75,8 @@ class QueryGenerator(QueryGeneratorBase):
                  question_san_batch: List[str],
                  template_type_batch: Union[List[List[str]], List[str]],
                  entities_from_ner_batch: List[List[str]],
-                 types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
+                 types_from_ner_batch: List[List[str]],
+                 q_type_flags_batch: List[str] = None) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
         candidate_outputs_batch = []
         template_answers_batch = []
@@ -84,14 +85,14 @@ class QueryGenerator(QueryGeneratorBase):
         template_answer = ""
         try:
             log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch}")
-            for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
+            for question, question_sanitized, template_type, entities_from_ner, types_from_ner, q_type_flag in \
                     zip(question_batch, question_san_batch, template_type_batch,
-                        entities_from_ner_batch, types_from_ner_batch):
+                        entities_from_ner_batch, types_from_ner_batch, q_type_flags_batch):
                 if template_type == "-1":
                     template_type = "7"
                 candidate_outputs, template_answer = self.find_candidate_answers(question, question_sanitized,
                                                                                  template_type, entities_from_ner,
-                                                                                 types_from_ner)
+                                                                                 types_from_ner, q_type_flag)
         except Exception as e:
             log.info("query generator is broken")
             log.exception(e)
@@ -198,7 +199,7 @@ class QueryGenerator(QueryGeneratorBase):
                 parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
             except json.decoder.JSONDecodeError:
                 log.info("parse triplets, not received output from wiki parser")
-        answer_types = filter_answers(question.lower(), answer_types)
+        answer_types = self.filter_answers(question.lower(), answer_types)
         query_tm1 = time.time()
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
