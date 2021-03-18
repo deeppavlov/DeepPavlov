@@ -100,7 +100,6 @@ class EntityDetectionParser(Component):
                 tags, tag_probas = self.tags_from_probas(tokens, tokens_info)
                 entities, types, positions = self.entities_from_tags(tokens, tags, tag_probas)
             else:
-                tokens_info = [tag.split("-")[-1] for tag in tokens_info]
                 entities, types, positions = self.entities_from_tags(tokens, tokens_info)
             entities_batch.append(entities)
             types_batch.append(types)
@@ -163,31 +162,34 @@ class EntityDetectionParser(Component):
 
         cnt = 0
         for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
-            if tag in self.entity_tags:
-                if self.ignore_points:
-                    if len(tok) == 1 and n < len(tokens) - 1 and tokens[n + 1] == ".":
-                        entity_dict[tag].append(f"{tok}.")
-                    else:
-                        entity_dict[tag].append(tok)
-                else:
-                    entity_dict[tag].append(tok)
-                entity_positions_dict[tag].append(cnt)
+            print(tok, tag, self.entity_tags)
+            if tag.split('-')[-1] in self.entity_tags:
+                f_tag = tag.split("-")[-1]
+                if tag.startswith("B-") and any(entity_dict.values()):
+                    for c_tag, entity in entity_dict.items():
+                        entity = ' '.join(entity)
+                        for old, new in replace_tokens:
+                            entity = entity.replace(old, new)
+                        if entity:
+                            entities_dict[c_tag].append(entity)
+                            entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
+                        entity_dict[c_tag] = []
+                        entity_positions_dict[c_tag] = []
+                
+                entity_dict[f_tag].append(tok)
+                entity_positions_dict[f_tag].append(cnt)
 
-            elif tag == self.type_tag:
-                entity_type.append(tok)
-                type_proba.append(proba)
-            elif self.ignore_points and tok == "." and n > 0 and len(tokens[n - 1]) == 1:
-                cnt -= 1
             elif any(entity_dict.values()):
                 for tag, entity in entity_dict.items():
+                    c_tag = tag.split("-")[-1]
                     entity = ' '.join(entity)
                     for old, new in replace_tokens:
                         entity = entity.replace(old, new)
                     if entity:
-                        entities_dict[tag].append(entity)
-                        entities_positions_dict[tag].append(entity_positions_dict[tag])
-                    entity_dict[tag] = []
-                    entity_positions_dict[tag] = []
+                        entities_dict[c_tag].append(entity)
+                        entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
+                    entity_dict[c_tag] = []
+                    entity_positions_dict[c_tag] = []
             elif len(entity_type) > 0:
                 entity_type = ' '.join(entity_type)
                 for old, new in replace_tokens:
