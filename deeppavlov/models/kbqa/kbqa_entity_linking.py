@@ -330,11 +330,10 @@ class KBEntityLinker(Component, Serializable):
 
         srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3], x[4]), reverse=True)
         if self.use_descriptions:
-            entity_ids = entity_ids[:self.num_entities_for_bert_ranking]
             log.debug(f"context {context}")
             id_to_score = {entity_id: (tokens_matched, score) for _, entity_id, tokens_matched, score, _ in
-                           srtd_with_ratios[:30]}
-            entity_ids = [entity_id for _, entity_id, _, _, _ in srtd_with_ratios[:30]]
+                           srtd_with_ratios[:self.num_entities_for_bert_ranking]}
+            entity_ids = [entity_id for _, entity_id, _, _, _ in srtd_with_ratios[:self.num_entities_for_bert_ranking]]
             scores = self.entity_ranker.rank_rels(context, entity_ids)
             entities_with_scores = [(entity_id, id_to_score[entity_id][0], id_to_score[entity_id][1], score) for
                                     entity_id, score in scores]
