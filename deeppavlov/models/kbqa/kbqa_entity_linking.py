@@ -54,7 +54,7 @@ class KBEntityLinker(Component, Serializable):
                  who_entities_filename: Optional[str] = None,
                  save_path: str = None,
                  q2descr_filename: str = None,
-                 descr_rank_score_thres: float = 0.01,
+                 descr_rank_score_thres: float = 0.5,
                  freq_dict_filename: Optional[str] = None,
                  entity_ranker: RelRankerInfer = None,
                  build_inverted_index: bool = False,
@@ -69,6 +69,7 @@ class KBEntityLinker(Component, Serializable):
                  use_descriptions: bool = False,
                  include_mention: bool = False,
                  num_entities_to_return: int = 5,
+                 num_entities_for_bert_ranking: int = 100,
                  lemmatize: bool = False,
                  use_prefix_tree: bool = False,
                  **kwargs) -> None:
@@ -138,6 +139,7 @@ class KBEntityLinker(Component, Serializable):
         self.use_descriptions = use_descriptions
         self.include_mention = include_mention
         self.num_entities_to_return = num_entities_to_return
+        self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
         self.black_list_what_is = set(["Q277759", # book series
                                        "Q11424", # film
                                        "Q7889", # video game
@@ -328,6 +330,7 @@ class KBEntityLinker(Component, Serializable):
 
         srtd_with_ratios = sorted(entities_ratios, key=lambda x: (x[2], x[3], x[4]), reverse=True)
         if self.use_descriptions:
+            entity_ids = entity_ids[:self.num_entities_for_bert_ranking]
             log.debug(f"context {context}")
             id_to_score = {entity_id: (tokens_matched, score) for _, entity_id, tokens_matched, score, _ in
                            srtd_with_ratios[:30]}
