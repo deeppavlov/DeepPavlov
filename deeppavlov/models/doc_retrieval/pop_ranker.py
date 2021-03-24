@@ -16,8 +16,8 @@ from logging import getLogger
 from operator import itemgetter
 from typing import List, Any, Tuple
 
-import joblib
 import numpy as np
+from sklearn.externals import joblib
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_json
