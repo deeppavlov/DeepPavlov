@@ -18,7 +18,7 @@ requests==2.25.1
 ruamel.yaml==0.16.13
 rusenttokenize==0.0.5
 sacremoses==0.0.43
-scikit-learn==0.24.1
+scikit-learn==0.21.2
 scipy==1.5.4
 tqdm==4.59.0
 uvicorn==0.13.4
