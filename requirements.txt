@@ -3,9 +3,9 @@ click==7.1.2
 Cython==0.29.22
 fastapi==0.63.0
 filelock==3.0.12
-h5py==3.1.0
+h5py==2.10.0
 nltk==3.5
-numpy==1.19.5
+numpy==1.18.5
 overrides==3.1.0
 pandas==1.1.5
 prometheus-client==0.9.0
