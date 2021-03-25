@@ -72,7 +72,8 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt",
+      "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
     ],
     "download": [
       {
