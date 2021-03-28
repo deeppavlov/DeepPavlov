@@ -15,6 +15,7 @@
 from logging import getLogger
 from typing import List, Dict, Union
 
+import numpy as np
 import tensorflow as tf
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
@@ -55,7 +56,7 @@ class BertClassifierModel(LRScheduledTFModel):
                  one_hot_labels=False, multilabel=False, return_probas=False,
                  attention_probs_keep_prob=None, hidden_keep_prob=None,
                  optimizer=None, num_warmup_steps=None, weight_decay_rate=0.01,
-                 pretrained_bert=None, min_learning_rate=1e-06, **kwargs) -> None:
+                 pretrained_bert=None, min_learning_rate=1e-06, cut_seq=True, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.return_probas = return_probas
@@ -67,6 +68,7 @@ class BertClassifierModel(LRScheduledTFModel):
         self.optimizer = optimizer
         self.num_warmup_steps = num_warmup_steps
         self.weight_decay_rate = weight_decay_rate
+        self.cut_seq = cut_seq
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -232,8 +234,18 @@ class BertClassifierModel(LRScheduledTFModel):
 
         """
         input_ids = [f.input_ids for f in features]
-        input_masks = [f.input_mask for f in features]
-        input_type_ids = [f.input_type_ids for f in features]
+        if self.cut_seq:
+            input_ids_mask = np.array(input_ids, dtype=bool)
+            input_ids_mask.astype(int)
+            input_ids_mask = np.sum(input_ids_mask, axis=1)
+            max_len = input_ids_mask.max()
+            input_ids = [elem[:max_len] for elem in input_ids]
+            input_masks = [f.input_mask[:max_len] for f in features]
+            input_type_ids = [f.input_type_ids[:max_len] for f in features]
+        else:
+            input_masks = [f.input_mask for f in features]
+            input_type_ids = [f.input_type_ids for f in features]
+        
 
         feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
         if not self.return_probas:
