@@ -34,7 +34,7 @@
         "learning_rate": 2e-05,
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
-        "cut_seq": false,
+        "cut_seq": true,
         "in": ["bert_features"],
         "in_y": ["y"],
         "out": ["predictions"]
