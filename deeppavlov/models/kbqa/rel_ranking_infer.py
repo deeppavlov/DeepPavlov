@@ -14,6 +14,10 @@
 
 from logging import getLogger
 from typing import Tuple, List, Any, Optional
+import nltk
+import numpy as np
+import pymorphy2
+from nltk.corpus import stopwords
 from scipy.special import softmax
 
 from deeppavlov.core.common.registry import register
@@ -137,7 +141,12 @@ class RelRankerInfer(Component, Serializable):
                 answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
             else:
                 answers_with_scores = [(answer, rels, conf) for *rels, answer, conf in candidate_answers]
+            candidate_answers_ids = [answer[0] for answer in answers_with_scores]
+            parser_info_list = ["find_type_labels" for _ in candidate_answers_ids]
+            answer_type_labels = self.wiki_parser(parser_info_list, candidate_answers_ids)
+            
 
+            answer_ids = tuple()
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
                 answer_ids = answers_with_scores[0][0]
@@ -183,31 +192,32 @@ class RelRankerInfer(Component, Serializable):
 
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
-        n_batches = len(candidate_rels) // self.batch_size + int(len(candidate_rels) % self.batch_size > 0)
-        for i in range(n_batches):
-            questions_batch = []
-            rels_labels_batch = []
-            rels_batch = []
-            for candidate_rel in candidate_rels[i * self.batch_size: (i + 1) * self.batch_size]:
-                if candidate_rel in self.rel_q2name:
-                    questions_batch.append(question)
-                    rels_batch.append(candidate_rel)
-                    rels_labels_batch.append(self.rel_q2name[candidate_rel])
-            if questions_batch:
-                if self.use_mt_bert:
-                    features = self.bert_preprocessor(questions_batch, rels_labels_batch)
-                    probas = self.ranker(features)
-                else:
-                    probas = self.ranker(questions_batch, rels_labels_batch)
-                probas = [proba[1] for proba in probas]
-                for j, rel in enumerate(rels_batch):
-                    rels_with_scores.append((rel, probas[j]))
-        if self.softmax:
-            scores = [score for rel, score in rels_with_scores]
-            softmax_scores = softmax(scores)
-            rels_with_scores = [(rel, softmax_score) for (rel, score), softmax_score in 
-                                                              zip(rels_with_scores, softmax_scores)]
-        rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
+        if question is not None:
+            n_batches = len(candidate_rels) // self.batch_size + int(len(candidate_rels) % self.batch_size > 0)
+            for i in range(n_batches):
+                questions_batch = []
+                rels_labels_batch = []
+                rels_batch = []
+                for candidate_rel in candidate_rels[i * self.batch_size: (i + 1) * self.batch_size]:
+                    if candidate_rel in self.rel_q2name:
+                        questions_batch.append(question)
+                        rels_batch.append(candidate_rel)
+                        rels_labels_batch.append(self.rel_q2name[candidate_rel])
+                if questions_batch:
+                    if self.use_mt_bert:
+                        features = self.bert_preprocessor(questions_batch, rels_labels_batch)
+                        probas = self.ranker(features)
+                    else:
+                        probas = self.ranker(questions_batch, rels_labels_batch)
+                    probas = [proba[1] for proba in probas]
+                    for j, rel in enumerate(rels_batch):
+                        rels_with_scores.append((rel, probas[j]))
+            if self.softmax:
+                scores = [score for rel, score in rels_with_scores]
+                softmax_scores = softmax(scores)
+                rels_with_scores = [(rel, softmax_score) for (rel, score), softmax_score in 
+                                                                  zip(rels_with_scores, softmax_scores)]
+            rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]
         
@@ -243,3 +253,30 @@ class RelRankerInfer(Component, Serializable):
         paths_with_scores = sorted(paths_with_scores, key=lambda x: x[1], reverse=True)
 
         return paths_with_scores[:self.rels_to_leave]
+   
+'''
+class AnswerRanker:
+    def __init__(self, embeddings_file: str):
+        self.stopwords = set(stopwords.words("russian"))
+        self.morph = pymorphy2.MorphAnalyzer()
+        self.embedder = FasttextEmbedder(load_path = embeddings_file, pad_zero = False)
+        
+    def rank_answers(self, answer_type_str: str, answer_type_labels: List[Tuple[str, str]]):
+        answer_type_str_tokens = [self.morph_parse(tok) for tok in nltk.word_tokenize(answer_type_str) if len(tok) > 1 and tok not in self.stopwords]
+        answer_type_labels = []
+        answer_type_str_emb = self.embedder([answer_type_str_tokens])
+        answer_type_labels = self.embedder([answer_type_label for answer, answer_type_label in answer_type_labels])
+        answer_type_str_emb = np.mean(answer_type_str_emb, axis=1)
+        answer_type_labels = np.mean(answer_type_labels, axis=1)
+        answer_type_str_emb = answer_type_str_emb.T
+        dot_products = np.dot(answer_type_labels, answer_type_str_emb)
+        answers_with_scores = [(answer, score) for (answer, answer_type)]
+        
+    def morph_parse(self, word):
+        morph_parse_tok = self.morph.parse(word)[0]
+        if morph_parse_tok.tag.POS in {"NOUN", "ADJ", "ADJF"}:
+            normal_form = morph_parse_tok.inflect({"nomn"}).word
+        else:
+            normal_form = morph_parse_tok.normal_form
+        return normal_form
+'''
