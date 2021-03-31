@@ -72,9 +72,7 @@
       "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
       "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
     ],
     "download": [
       {

@@ -43,8 +43,7 @@
       "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
       "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
       "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
     ],
     "download": [
       {
