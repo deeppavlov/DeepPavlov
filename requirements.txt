@@ -1,6 +1,8 @@
 aio-pika==6.4.1
 Cython==0.29.14
 fastapi==0.47.1
+filelock==3.0.12
+h5py==2.10.0
 nltk==3.4.5
 numpy==1.18.0
 overrides==2.7.0
