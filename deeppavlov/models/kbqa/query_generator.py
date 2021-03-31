@@ -83,6 +83,8 @@ class QueryGenerator(QueryGeneratorBase):
         qg_tm1 = time.time()
         candidate_outputs = []
         template_answer = ""
+        if q_type_flags_batch is None:
+            q_type_flags_batch = ["" for _ in question_batch]
         try:
             log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch}")
             for question, question_sanitized, template_type, entities_from_ner, types_from_ner, q_type_flag in \
