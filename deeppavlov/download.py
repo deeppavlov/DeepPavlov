@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import secrets
 import shutil
 import sys
 from argparse import ArgumentParser, Namespace
@@ -20,7 +21,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 from urllib.parse import urlparse
-
+from deeppavlov.core.data.utils import get_download_headers
 import requests
 from filelock import FileLock
 
@@ -77,7 +78,7 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]] = None) -> Di
     return all_downloads
 
 
-def check_md5(url: str, dest_paths: List[Path]) -> bool:
+def check_md5(url: str, dest_paths: List[Path], session_id: str, file_id: int) -> bool:
     url_md5 = path_set_md5(url)
 
     try:
@@ -89,7 +90,8 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
             obj = s3.Object(bucket, key)
             data = obj.get()['Body'].read().decode('utf8')
         else:
-            r = requests.get(url_md5)
+            headers = get_download_headers(session_id, file_id)
+            r = requests.get(url_md5, headers=headers)
             if r.status_code != 200:
                 return False
             data = r.text
@@ -126,7 +128,7 @@ def check_md5(url: str, dest_paths: List[Path]) -> bool:
     return True
 
 
-def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) -> None:
+def download_resource(url: str, dest_paths: Iterable[Union[Path, str]], session_id: str, file_id: int) -> None:
     dest_paths = [Path(dest) for dest in dest_paths]
     download_path = dest_paths[0].parent
     download_path.mkdir(parents=True, exist_ok=True)
@@ -134,7 +136,7 @@ def download_resource(url: str, dest_paths: Iterable[Union[Path, str]]) -> None:
     lockfile = download_path / f'.{file_name}.lock'
 
     with FileLock(lockfile).acquire(poll_intervall=10):
-        if check_md5(url, dest_paths):
+        if check_md5(url, dest_paths, session_id, file_id):
             log.info(f'Skipped {url} download because of matching hashes')
         elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
             download_decompress(url, download_path, dest_paths)
@@ -159,11 +161,13 @@ def download_resources(args: Namespace) -> None:
 
 def deep_download(config: Union[str, Path, dict]) -> None:
     downloads = get_configs_downloads(config)
+    last_id = len(downloads) - 1
+    session_id = secrets.token_urlsafe(32)
 
-    for url, dest_paths in downloads.items():
+    for id, (url, dest_paths) in enumerate(downloads.items()):
         if not url.startswith('s3://') and not isinstance(config, dict):
             url = set_query_parameter(url, 'config', Path(config).stem)
-        download_resource(url, dest_paths)
+        download_resource(url, dest_paths, session_id, last_id - id)
 
 
 def main(args: Optional[List[str]] = None) -> None:

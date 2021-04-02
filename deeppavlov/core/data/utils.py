@@ -57,6 +57,14 @@ def _get_download_token() -> str:
     return token_file.read_text(encoding='utf8').strip()
 
 
+def get_download_headers(session_id: str, file_id: int) -> dict:
+    return {
+        'dp-token': _get_download_token(),
+        'dp-session': session_id,
+        'dp-file-id': file_id
+    }
+
+
 def s3_download(url: str, destination: str) -> None:
     """Download a file from an Amazon S3 path `s3://<bucket_name>/<key>`
 
@@ -99,7 +107,7 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
     chunk_size = 32 * 1024
     temporary = destination.with_suffix(destination.suffix + '.part')
 
-    headers = {'dp-token': _get_download_token()}
+    headers = get_download_headers()
     r = requests.get(url, stream=True, headers=headers)
     if r.status_code != 200:
         raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
