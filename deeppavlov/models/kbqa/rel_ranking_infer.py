@@ -142,10 +142,9 @@ class RelRankerInfer(Component, Serializable):
             else:
                 answers_with_scores = [(answer, rels, conf) for *rels, answer, conf in candidate_answers]
             candidate_answers_ids = [answer[0] for answer in answers_with_scores]
-            parser_info_list = ["find_type_labels" for _ in candidate_answers_ids]
-            answer_type_labels = self.wiki_parser(parser_info_list, candidate_answers_ids)
+            #parser_info_list = ["find_type_labels" for _ in candidate_answers_ids]
+            #answer_type_labels = self.wiki_parser(parser_info_list, candidate_answers_ids)
             
-
             answer_ids = tuple()
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
