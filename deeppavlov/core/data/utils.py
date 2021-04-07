@@ -37,7 +37,7 @@ _MARK_DONE = '.done'
 tqdm.monitor_interval = 0
 
 
-def _get_download_token() -> str:
+def get_download_token() -> str:
     """Return a download token from ~/.deeppavlov/token file.
 
     If token file does not exists, creates the file and writes to it a random URL-safe text string
@@ -55,14 +55,6 @@ def _get_download_token() -> str:
         token_file.write_text(secrets.token_urlsafe(32), encoding='utf8')
 
     return token_file.read_text(encoding='utf8').strip()
-
-
-def get_download_headers(session_id: str, file_id: int) -> dict:
-    return {
-        'dp-token': _get_download_token(),
-        'dp-session': session_id,
-        'dp-file-id': file_id
-    }
 
 
 def s3_download(url: str, destination: str) -> None:
@@ -86,7 +78,7 @@ def s3_download(url: str, destination: str) -> None:
         file_object.download_file(destination, Callback=pbar.update)
 
 
-def simple_download(url: str, destination: Union[Path, str]) -> None:
+def simple_download(url: str, destination: Union[Path, str], headers: Optional[dict] = None) -> None:
     """Download a file from URL to target location.
 
     Displays a progress bar to the terminal during the download process.
@@ -94,6 +86,7 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
     Args:
         url: The source URL.
         destination: Path to the file destination (including file name).
+        headers: Headers for file server.
 
     """
     destination = Path(destination)
@@ -107,7 +100,6 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
     chunk_size = 32 * 1024
     temporary = destination.with_suffix(destination.suffix + '.part')
 
-    headers = get_download_headers()
     r = requests.get(url, stream=True, headers=headers)
     if r.status_code != 200:
         raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
@@ -145,13 +137,15 @@ def simple_download(url: str, destination: Union[Path, str]) -> None:
     temporary.rename(destination)
 
 
-def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download: bool = True) -> None:
+def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download: bool = True,
+             headers: Optional[dict] = None) -> None:
     """Download a file from URL to one or several target locations.
 
     Args:
         dest_file_path: Path or list of paths to the file destination (including file name).
         source_url: The source URL.
         force_download: Download file if it already exists, or not.
+        headers: Headers for file server.
 
     """
 
@@ -181,7 +175,7 @@ def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_do
         if not cached_exists:
             first_dest_path.parent.mkdir(parents=True, exist_ok=True)
 
-            simple_download(source_url, first_dest_path)
+            simple_download(source_url, first_dest_path, headers)
         else:
             log.info(f'Found cached {source_url} in {first_dest_path}')
 
@@ -231,7 +225,8 @@ def ungzip(file_path: Union[Path, str], extract_path: Optional[Union[Path, str]]
 
 def download_decompress(url: str,
                         download_path: Union[Path, str],
-                        extract_paths: Optional[Union[List[Union[Path, str]], Path, str]] = None) -> None:
+                        extract_paths: Optional[Union[List[Union[Path, str]], Path, str]] = None,
+                        headers: Optional[dict] = None) -> None:
     """Download and extract .tar.gz or .gz file to one or several target locations.
 
     The archive is deleted if extraction was successful.
@@ -240,6 +235,7 @@ def download_decompress(url: str,
         url: URL for file downloading.
         download_path: Path to the directory where downloaded file will be stored until the end of extraction.
         extract_paths: Path or list of paths where contents of archive will be extracted.
+        headers: Headers for file server.
 
     """
     file_name = Path(urlparse(url).path).name
@@ -261,7 +257,7 @@ def download_decompress(url: str,
         extracted_path = cache_dir / (url_hash + '_extracted')
         extracted = extracted_path.exists()
         if not extracted and not arch_file_path.exists():
-            simple_download(url, arch_file_path)
+            simple_download(url, arch_file_path, headers)
         else:
             if extracted:
                 log.info(f'Found cached and extracted {url} in {extracted_path}')
@@ -269,7 +265,7 @@ def download_decompress(url: str,
                 log.info(f'Found cached {url} in {arch_file_path}')
     else:
         arch_file_path = download_path / file_name
-        simple_download(url, arch_file_path)
+        simple_download(url, arch_file_path, headers)
         extracted_path = extract_paths.pop()
 
     if not extracted:

@@ -21,14 +21,13 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union, Optional, Dict, Iterable, Set, Tuple, List
 from urllib.parse import urlparse
-from deeppavlov.core.data.utils import get_download_headers
 import requests
 from filelock import FileLock
 
 import deeppavlov
 from deeppavlov.core.commands.utils import expand_path, parse_config
 from deeppavlov.core.data.utils import download, download_decompress, get_all_elems_from_json, file_md5, \
-    set_query_parameter, path_set_md5
+    set_query_parameter, path_set_md5, get_download_token
 
 log = getLogger(__name__)
 
@@ -78,7 +77,7 @@ def get_configs_downloads(config: Optional[Union[str, Path, dict]] = None) -> Di
     return all_downloads
 
 
-def check_md5(url: str, dest_paths: List[Path], session_id: str, file_id: int) -> bool:
+def check_md5(url: str, dest_paths: List[Path], headers: Optional[dict] = None) -> bool:
     url_md5 = path_set_md5(url)
 
     try:
@@ -90,7 +89,6 @@ def check_md5(url: str, dest_paths: List[Path], session_id: str, file_id: int) -
             obj = s3.Object(bucket, key)
             data = obj.get()['Body'].read().decode('utf8')
         else:
-            headers = get_download_headers(session_id, file_id)
             r = requests.get(url_md5, headers=headers)
             if r.status_code != 200:
                 return False
@@ -128,7 +126,7 @@ def check_md5(url: str, dest_paths: List[Path], session_id: str, file_id: int) -
     return True
 
 
-def download_resource(url: str, dest_paths: Iterable[Union[Path, str]], session_id: str, file_id: int) -> None:
+def download_resource(url: str, dest_paths: Iterable[Union[Path, str]], headers: Optional[dict] = None) -> None:
     dest_paths = [Path(dest) for dest in dest_paths]
     download_path = dest_paths[0].parent
     download_path.mkdir(parents=True, exist_ok=True)
@@ -136,13 +134,13 @@ def download_resource(url: str, dest_paths: Iterable[Union[Path, str]], session_
     lockfile = download_path / f'.{file_name}.lock'
 
     with FileLock(lockfile).acquire(poll_intervall=10):
-        if check_md5(url, dest_paths, session_id, file_id):
+        if check_md5(url, dest_paths, headers):
             log.info(f'Skipped {url} download because of matching hashes')
         elif any(ext in url for ext in ('.tar.gz', '.gz', '.zip')):
-            download_decompress(url, download_path, dest_paths)
+            download_decompress(url, download_path, dest_paths, headers=headers)
         else:
             dest_files = [dest_path / file_name for dest_path in dest_paths]
-            download(dest_files, url)
+            download(dest_files, url, headers=headers)
 
 
 def download_resources(args: Namespace) -> None:
@@ -164,10 +162,16 @@ def deep_download(config: Union[str, Path, dict]) -> None:
     last_id = len(downloads) - 1
     session_id = secrets.token_urlsafe(32)
 
-    for id, (url, dest_paths) in enumerate(downloads.items()):
+    for file_id, (url, dest_paths) in enumerate(downloads.items()):
+        headers = {
+            'dp-token': get_download_token(),
+            'dp-session': session_id,
+            'dp-file-id': str(last_id - file_id),
+            'dp-version': deeppavlov.__version__
+        }
         if not url.startswith('s3://') and not isinstance(config, dict):
             url = set_query_parameter(url, 'config', Path(config).stem)
-        download_resource(url, dest_paths, session_id, last_id - id)
+        download_resource(url, dest_paths, headers)
 
 
 def main(args: Optional[List[str]] = None) -> None:
