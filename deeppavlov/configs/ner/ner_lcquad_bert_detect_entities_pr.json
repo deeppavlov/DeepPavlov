@@ -18,7 +18,7 @@
         "max_subword_length": 15,
         "token_maksing_prob": 0.0,
         "in": ["x"],
-        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "pred_subword_mask"]
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
       {
         "class_name": "mask",
@@ -57,12 +57,12 @@
         "clip_norm": 1.0,
         "save_path": "{NER_PATH}/model",
         "load_path": "{NER_PATH}/model",
-        "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
         "in_y": ["y_ind"],
         "out": ["y_pred"]
       }
     ],
-    "out": ["x_tokens", "y_pred"]
+    "out": ["x_tokens", "tokens_offsets", "y_pred"]
   },
   "train": {
     "epochs": 30,
