@@ -156,7 +156,7 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad_bilstm.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {
