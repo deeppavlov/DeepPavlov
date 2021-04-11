@@ -59,7 +59,7 @@
         "load_path": "{NER_PATH}/model",
         "in": ["x_subword_tok_ids", "x_subword_mask", "pred_subword_mask"],
         "in_y": ["y_ind"],
-        "out": ["y_pred_ind"]
+        "out": ["y_pred"]
       }
     ],
     "out": ["x_tokens", "y_pred"]
