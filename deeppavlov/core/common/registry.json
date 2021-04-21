@@ -1,7 +1,6 @@
 {
   "UD_pymorphy_lemmatizer": "deeppavlov.models.morpho_tagger.lemmatizer:UDPymorphyLemmatizer",
   "aiml_skill": "deeppavlov.skills.aiml_skill.aiml_skill:AIMLSkill",
-  "amazon_ecommerce_reader": "deeppavlov.dataset_readers.amazon_ecommerce_reader:AmazonEcommerceReader",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "base64_decode_bytesIO": "deeppavlov.models.nemo.common:ascii_to_bytes_io",
@@ -48,9 +47,6 @@
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
-  "ecommerce_preprocess": "deeppavlov.models.preprocessors.ecommerce_preprocess:EcommercePreprocess",
-  "ecommerce_skill_bleu": "deeppavlov.deprecated.skills.ecommerce_skill.bleu_retrieve:EcommerceSkillBleu",
-  "ecommerce_skill_tfidf": "deeppavlov.deprecated.skills.ecommerce_skill.tfidf_retrieve:EcommerceSkillTfidf",
   "elmo_embedder": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
   "elmo_file_paths_iterator": "deeppavlov.dataset_iterators.elmo_file_paths_iterator:ELMoFilePathsIterator",
   "elmo_model": "deeppavlov.models.elmo.elmo:ELMo",
