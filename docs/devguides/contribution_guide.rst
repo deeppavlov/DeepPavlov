@@ -98,4 +98,5 @@ After a code review and a successful completion of all tests, your pull request 
 pushed into the framework.
 
 If you still have any questions, either on the contribution process or about
-the framework itself, please share them with us on our forum `<https://forum.deeppavlov.ai/>`_.
+the framework itself, please share them with us on our `forum <https://forum.deeppavlov.ai>`_.
+Join our official `Telegram channel <https://t.me/deeppavlov>`_ to get notified about our updates & news.
