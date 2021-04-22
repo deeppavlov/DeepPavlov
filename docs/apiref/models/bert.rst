@@ -61,8 +61,3 @@ deeppavlov.models.bert
 .. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor
 
     .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer
-
-    .. automethod:: __call__
-    .. automethod:: _get_nsp_predictions
