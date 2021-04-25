@@ -122,8 +122,8 @@
         "subdir": "{DOWNLOADS_PATH}/bert_models/uncased_L-6_H-512_A-8"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
-        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_ext.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_ontonotes_ext"
       }
     ]
   }
