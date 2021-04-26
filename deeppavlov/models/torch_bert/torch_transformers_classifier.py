@@ -117,6 +117,8 @@ class TorchTransformersClassifierModel(TorchModel):
 
         # Token_type_id is omitted for Text Classification
 
+        del tokenized['token_type_ids']
+
         loss, logits = self.model(**tokenized)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -151,6 +153,7 @@ class TorchTransformersClassifierModel(TorchModel):
         with torch.no_grad():
             tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
 
+            del tokenized['token_type_ids']
             # Forward pass, calculate logit predictions
             logits = self.model(**tokenized)
             logits = logits[0]
