@@ -50,7 +50,7 @@
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-05
+          "lr": 1e-05
         },
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
@@ -73,7 +73,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 64,
+    "batch_size": 4,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_batches": 250,
@@ -87,7 +87,7 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "BASE_MODEL": "roberta-base",
+      "BASE_MODEL": "roberta-large",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mnli_{BASE_MODEL}"
