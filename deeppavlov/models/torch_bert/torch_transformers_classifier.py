@@ -182,7 +182,7 @@ class TorchTransformersClassifierModel(TorchModel):
             config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
                                                 output_attentions=False, output_hidden_states=False)
 
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+            self.model = AutoModelForSequenceClassification.from_config(config=config)
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
