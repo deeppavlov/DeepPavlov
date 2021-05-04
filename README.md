@@ -235,6 +235,9 @@ and others in the Integrations section for more info.
 
 ## Breaking Changes
 
+**Breaking changes in version 0.15.0**
+- [bert_as_summarizer](https://github.com/deepmipt/DeepPavlov/pull/1391) and all deeppavlov.deprecated components have been removed
+
 **Breaking changes in version 0.7.0**
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
   the default value was changed
