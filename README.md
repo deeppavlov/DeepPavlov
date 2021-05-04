@@ -237,7 +237,7 @@ and others in the Integrations section for more info.
 
 **Breaking changes in version 0.15.0**
 - [bert_as_summarizer](https://github.com/deepmipt/DeepPavlov/pull/1391) and all deeppavlov.deprecated components have been removed
-- hyperparameter optimization by neural evolution has [removed](https://github.com/deepmipt/DeepPavlov/pull/1435)
+- hyperparameter optimization by neural evolution has [removed](https://github.com/deepmipt/DeepPavlov/pull/1436)
 
 **Breaking changes in version 0.7.0**
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
