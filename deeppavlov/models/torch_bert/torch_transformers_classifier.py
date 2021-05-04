@@ -18,6 +18,7 @@ from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
+from torch import nn
 from overrides import overrides
 from transformers import AutoModelForSequenceClassification, AutoConfig
 from transformers.data.processors.utils import InputFeatures
@@ -179,10 +180,16 @@ class TorchTransformersClassifierModel(TorchModel):
 
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
+            config = AutoConfig.from_pretrained(self.pretrained_bert,
                                                 output_attentions=False, output_hidden_states=False)
 
-            self.model = AutoModelForSequenceClassification.from_config(config=config)
+            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
+            if self.n_classes != self.model.num_labels:
+                self.model.classifier.out_proj.weight = nn.Parameter(torch.randn(self.n_classes,768))
+                self.model.classifier.out_proj.bias = nn.Parameter(torch.randn(self.n_classes))
+                self.model.classifier.out_proj.out_features = self.n_classes
+                self.model.num_labels = self.n_classes
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
