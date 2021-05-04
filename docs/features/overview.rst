@@ -578,7 +578,7 @@ AutoML
 Hyperparameters optimization :doc:`[docs] </features/hypersearch>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Hyperparameters optimization (either by cross-validation or neural evolution) for DeepPavlov models
+Hyperparameters optimization by cross-validation for DeepPavlov models
 that requires only some small changes in a config file.
 
 

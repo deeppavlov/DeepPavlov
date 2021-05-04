@@ -59,7 +59,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Auto ML**
 
-[Tuning Models with Evolutionary Algorithm](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
+[Tuning Models](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
 
 **Integrations**
 
@@ -237,6 +237,7 @@ and others in the Integrations section for more info.
 
 **Breaking changes in version 0.15.0**
 - [bert_as_summarizer](https://github.com/deepmipt/DeepPavlov/pull/1391) and all deeppavlov.deprecated components have been removed
+- hyperparameter optimization by neural evolution has [removed](https://github.com/deepmipt/DeepPavlov/pull/1435)
 
 **Breaking changes in version 0.7.0**
 - in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
