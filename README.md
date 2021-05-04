@@ -45,9 +45,9 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Skills**
 
-[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/master/features/skills/go_bot.html) | [Seq2seq Goal-Oriented bot](http://docs.deeppavlov.ai/en/master/features/skills/seq2seq_go_bot.html)
+[Goal(Task)-oriented Bot](http://docs.deeppavlov.ai/en/master/features/skills/go_bot.html) | [Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html)
 
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html) | [Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html)
+[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html)
 
 **Embeddings**
 
