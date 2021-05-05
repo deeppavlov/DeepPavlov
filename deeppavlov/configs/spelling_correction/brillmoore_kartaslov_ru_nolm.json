@@ -67,9 +67,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",

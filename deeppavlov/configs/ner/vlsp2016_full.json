@@ -156,10 +156,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/vlsp2016_full"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_vlsp2016_full.tar.gz",

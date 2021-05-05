@@ -103,10 +103,6 @@
       "NUM_CONTEXT_TURNS": 10
 
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_mt_ranking.tar.gz",

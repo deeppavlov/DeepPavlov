@@ -34,11 +34,6 @@
       "NEMO_PATH": "~/.deeppavlov/models/nemo",
       "TTS_PATH": "{NEMO_PATH}/tacotron2_waveglow"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/nemo-pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
-      "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/quartznet15x5.tar.gz",

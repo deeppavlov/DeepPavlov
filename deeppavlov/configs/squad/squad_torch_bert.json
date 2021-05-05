@@ -162,10 +162,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_torch_bert_v0.tar.gz",

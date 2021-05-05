@@ -93,10 +93,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
       "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_bert_v1.tar.gz",

@@ -113,10 +113,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "NUM_CONTEXT_TURNS": 10
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v1_mt_word2vec_dam.tar.gz",

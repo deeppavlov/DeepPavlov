@@ -81,10 +81,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mrpc_torch_cased_bert",
       "BASE_MODEL": "bert-base-cased"
-    },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ]
+    }
   }
 }

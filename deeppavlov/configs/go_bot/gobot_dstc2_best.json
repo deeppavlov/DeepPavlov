@@ -115,12 +115,6 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "DSTC2_DATA_PATH": "{DOWNLOADS_PATH}/dstc2_v3"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_best_v4.tar.gz",
