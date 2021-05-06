@@ -59,10 +59,26 @@ def _get_variables_from_config(config: Union[str, Path, dict]):
     return variables, variables_exact
 
 
+def _update_requirements(config: dict) -> None:
+    components = {component.get('class_name') for component in config['chainer']['pipe']} | \
+        {config.get(item, {}).get('class_name') for item in ['dataset_reader', 'dataset_iterator', 'train']}
+    components -= {None}
+    requirements_registry_path = Path(__file__).parents[1] / 'common' / 'requirements_registry.json'
+    requirements_registry = read_json(requirements_registry_path)
+    requirements = []
+    for component in components:
+        requirements.extend(requirements_registry.get(component, []))
+    requirements.extend(config.get('metadata', {}).get('requirements', []))
+    config['metadata'] = config.get('metadata', {})
+    config['metadata']['requirements'] = list(set(requirements))
+
+
 def parse_config(config: Union[str, Path, dict]) -> dict:
     """Apply variables' values to all its properties"""
     if isinstance(config, (str, Path)):
         config = read_json(find_config(config))
+
+    _update_requirements(config)
 
     variables, variables_exact = _get_variables_from_config(config)
 
