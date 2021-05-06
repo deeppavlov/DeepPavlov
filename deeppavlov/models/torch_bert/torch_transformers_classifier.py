@@ -185,8 +185,10 @@ class TorchTransformersClassifierModel(TorchModel):
 
             self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
+            hidden_size = self.model.classifier.out_proj.in_features
+
             if self.n_classes != self.model.num_labels:
-                self.model.classifier.out_proj.weight = nn.Parameter(torch.randn(self.n_classes,768))
+                self.model.classifier.out_proj.weight = nn.Parameter(torch.randn(self.n_classes,hidden_size))
                 self.model.classifier.out_proj.bias = nn.Parameter(torch.randn(self.n_classes))
                 self.model.classifier.out_proj.out_features = self.n_classes
                 self.model.num_labels = self.n_classes
