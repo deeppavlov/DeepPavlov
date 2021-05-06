@@ -23,11 +23,11 @@
       {
         "in": ["x_tokens"],
         "out": ["tokens_candidates"],
-        "class_name": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
+        "class_name": "spelling_levenshtein",
         "words": "#vocab.keys()"
       },
       {
-        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "class_name": "kenlm_elector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
         "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"

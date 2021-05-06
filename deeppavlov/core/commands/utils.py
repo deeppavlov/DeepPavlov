@@ -16,6 +16,8 @@ from pathlib import Path
 from typing import Union, Dict, TypeVar
 
 from deeppavlov.core.common.file import read_json, find_config
+from deeppavlov.core.common.registry import inverted_registry
+from deeppavlov.core.data.utils import get_all_elems_from_json
 
 # noinspection PyShadowingBuiltins
 _T = TypeVar('_T', str, float, bool, list, dict)
@@ -60,9 +62,8 @@ def _get_variables_from_config(config: Union[str, Path, dict]):
 
 
 def _update_requirements(config: dict) -> None:
-    components = {component.get('class_name') for component in config['chainer']['pipe']} | \
-        {config.get(item, {}).get('class_name') for item in ['dataset_reader', 'dataset_iterator', 'train']}
-    components -= {None}
+    components = get_all_elems_from_json(config, 'class_name')
+    components = {inverted_registry.get(component, component) for component in components}
     requirements_registry_path = Path(__file__).parents[1] / 'common' / 'requirements_registry.json'
     requirements_registry = read_json(requirements_registry_path)
     requirements = []

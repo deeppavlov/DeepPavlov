@@ -12,7 +12,7 @@
     "out": ["y_predicted"],
     "pipe": [
       {
-        "class_name": "deeppavlov.models.go_bot.wrapper:DialogComponentWrapper",
+        "class_name": "dialog_component_wrapper",
         "component": { "class_name": "split_tokenizer" },
         "in": ["x"],
         "out": ["x_tokens"]
