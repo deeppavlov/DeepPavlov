@@ -1,2 +1,0 @@
-python-Levenshtein==0.12.0
-sortedcontainers==2.1.0
