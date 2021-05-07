@@ -9,7 +9,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from json import load
+from deeppavlov.core.common.file import read_json
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -45,10 +45,8 @@ class IntentCatcherReader(DatasetReader):
 
             file = Path(data_path).joinpath(file_name)
             if file.exists():
-                with open(file) as fp:
-                    file = load(fp)
-                for label in file:
-                    data[data_type].extend([(phrase, label) for phrase in file[label]])
+                ic_file_content = read_json(file)
+                data[data_type] = ic_file_content
             else:
                 log.warning("Cannot find {} file".format(file))
 
