@@ -301,23 +301,6 @@ PARAMS = {
         ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
     },
-    "seq2seq_go_bot": {
-        ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
-            [
-                ("will it snow on tuesday?",
-                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-                 "",
-                 "",
-                 "",
-                 None)
-            ],
-        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
-            [
-                ("will it snow on tuesday?",
-                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-                 None)
-            ]
-    },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],

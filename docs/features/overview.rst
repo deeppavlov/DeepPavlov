@@ -525,33 +525,6 @@ Available pre-trained models and their comparison with existing benchmarks:
 +-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
 
 
-Seq2seq goal-oriented bot :doc:`[docs] </features/skills/seq2seq_go_bot>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Dialogue agent predicts responses in a goal-oriented dialog and is able to handle
-multiple domains (pretrained bot allows calendar scheduling, weather information retrieval,
-and point-of-interest navigation). The model is end-to-end differentiable and
-does not need to explicitly model dialogue state or belief trackers.
-
-Comparison of deeppavlov pretrained model with others:
-
-+-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
-| Dataset           | Lang | Model                                              | Valid BLEU       | Test BLEU       | Downloads |
-+===================+======+====================================================+==================+=================+===========+
-| `Stanford Kvret`_ | En   | :config:`KvretNet <seq2seq_go_bot/bot_kvret.json>` | 0.131            | **0.132**       |  10 Gb    |
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | KvretNet, Mihail Eric et al. (2017)                | --               | **0.132**       |    --     +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | CopyNet, Mihail Eric et al. (2017)                 | --               | 0.110           | --        +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | Attn Seq2Seq, Mihail Eric et al. (2017)            | --               | 0.102           | --        +
-+                   +      +----------------------------------------------------+------------------+-----------------+-----------+
-|                   |      | Rule-based, Mihail Eric et al. (2017)              | --               | 0.066           | --        +
-+-------------------+------+----------------------------------------------------+------------------+-----------------+-----------+
-
-.. _`Stanford Kvret`: https://nlp.stanford.edu/blog/a-new-multi-turn-multi-domain-task-oriented-dialogue-dataset/
-
-
 ODQA :doc:`[docs] </features/skills/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
