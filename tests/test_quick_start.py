@@ -705,30 +705,6 @@ def test_param_search():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def test_evolving():
-    model_dir = 'evolution'
-    conf_file = 'evolution/evolve_intents_snips.json'
-    download_config(conf_file)
-
-    c = test_configs_path / conf_file
-    model_path = download_path / model_dir
-
-    install_config(c)
-    deep_download(c)
-
-    shutil.rmtree(str(model_path), ignore_errors=True)
-
-    logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
-                                       timeout=None, logfile=logfile)
-    p.readlines()
-    if p.wait() != 0:
-        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                           .format(model_dir, logfile.getvalue().decode()))
-
-    shutil.rmtree(str(download_path), ignore_errors=True)
-
-
 def test_hashes_existence():
     all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
     url_root = 'http://files.deeppavlov.ai/'
