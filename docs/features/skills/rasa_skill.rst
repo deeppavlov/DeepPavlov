@@ -21,9 +21,8 @@ This project is in essence a working Rasa project created with ``rasa init`` and
 with minimal additions. The Rasa bot can greet, answer about what he can do and detect user's mood sentiment.
 
 The template DeepPavlov config specifies only one component (RASASkill) in :doc:`a pipeline</intro/configuration>`.
-The configuration also specifies: ``metadata.requirements`` which is the file with Rasa dependency and
-``metadata.download`` configuration specifies to download and unpack the gzipped template project into subdir
-``{DOWNLOADS_PATH}``.
+The ``metadata.download`` field in configuration allows to download and unpack the gzipped template project into
+subdir ``{DOWNLOADS_PATH}``.
 
 If you create a configuration for a Rasa project hosted on your machine, you don't need to specify ``metadata.download``
 and just need to correctly set ``path_to_models`` of the ``rasa_skill`` component.

@@ -30,8 +30,7 @@ insults, analyzes sentiment, and recognises named entities. Multi-task BERT conf
 
 We start with the ``metadata`` field of the configuration file. Multi-task BERT model is saved in
 ``{"MT_BERT_PATH": "{MODELS_PATH}/mt_bert"}``. Classes and tag vocabularies are saved in
-``{"INSULTS_PATH": "{MT_BERT_PATH}/insults"}``, ``{"SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment"}``. ``requirements``
-field of Multitask BERT configuration file is identical to ``requirements`` fields of original configs. ``downloads``
+``{"INSULTS_PATH": "{MT_BERT_PATH}/insults"}``, ``{"SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment"}``. ``downloads``
 field of Multitask BERT configuration file is a union of ``downloads`` fields of original configs without pre-trained
 models. The ``metadata`` field of our config is given below.
 
@@ -49,13 +48,6 @@ models. The ``metadata`` field of our config is given below.
         "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",
         "NER_PATH": "{MT_BERT_PATH}/ner"
       },
-      "requirements": [
-        "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-        "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-        "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-        "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-        "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
-      ],
       "download": [
         {
           "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",

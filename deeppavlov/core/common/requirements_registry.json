@@ -154,12 +154,6 @@
   "rel_ranking_infer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "seq2seq_go_bot": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "seq2seq_go_bot_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "siamese_predictor": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
