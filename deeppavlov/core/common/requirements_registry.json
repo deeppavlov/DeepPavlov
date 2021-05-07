@@ -275,12 +275,12 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "nemo_asr": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
   ],
   "nemo_tts": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
