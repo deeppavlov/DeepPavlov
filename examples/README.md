@@ -8,8 +8,6 @@
 
 * Morphotagger model usage example [[notebook]](morphotagger_example.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/morphotagger_example.ipynb)
 
-* Results for neural parameter evolution [[notebook]](evolution_results_analysis.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/evolution_results_analysis.ipynb)
-
 * Pseudo-labeling for classication task [[notebook]](Pseudo-labeling%20for%20classification.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/Pseudo-labeling%20for%20classification.ipynb)
 
 * Optimal learning rate search in DeepPavlov [[notebook]](super_convergence_tutorial.ipynb) [[colab]](https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/super_convergence_tutorial.ipynb)
