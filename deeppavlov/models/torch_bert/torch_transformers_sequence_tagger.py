@@ -21,8 +21,8 @@ import torch
 from overrides import overrides
 from transformers import AutoModelForTokenClassification, AutoConfig
 
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 
@@ -307,7 +307,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        
+
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, attention_mask=b_input_masks)
@@ -331,13 +331,10 @@ class TorchTransformersSequenceTagger(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert:# and not Path(self.pretrained_bert).is_file():
-            config = AutoConfig.from_pretrained(
-                    self.pretrained_bert, num_labels=self.n_classes,
-                    output_attentions=False, output_hidden_states=False)
-            
-            self.model = AutoModelForTokenClassification.from_pretrained(
-                    self.pretrained_bert, config=config)
+        if self.pretrained_bert:
+            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes,
+                                                output_attentions=False, output_hidden_states=False)
+            self.model = AutoModelForTokenClassification.from_pretrained(self.pretrained_bert, config=config)
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
 

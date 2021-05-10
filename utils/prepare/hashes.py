@@ -18,7 +18,7 @@ import sys
 import tarfile
 from hashlib import md5
 from pathlib import Path
-from typing import List, Dict, Union
+from typing import Dict, Optional, Union
 from zipfile import ZipFile
 
 from deeppavlov.core.data.utils import file_md5
@@ -79,11 +79,10 @@ def compute_hashes(fpath: Union[str, Path]) -> Dict[str, str]:
     return hashes
 
 
-def main(fname:str, outfile:str) -> None:
+def main(fname: str, outfile: Optional[str] = None) -> None:
     p = Path(fname).expanduser()
     hashes = compute_hashes(p)
 
-    outfile = outfile
     if outfile is None:
         outfile = p.with_suffix(p.suffix + '.md5').open('w', encoding='utf-8')
     elif outfile == '-':
@@ -103,5 +102,5 @@ if __name__ == '__main__':
     parser.add_argument("fname", help="path to a file to compute hash for", type=str)
     parser.add_argument('-o', '--outfile', help='where to write the hashes', default=None, type=str)
 
-    args = parser.parse_args(args)
+    args = parser.parse_args()
     main(args.fname, args.outfile)

@@ -12,47 +12,40 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import argparse
 import os
-import json
 import shutil
 import tarfile
-import argparse
-from hashes import main
-from logging import getLogger
+from pathlib import Path
 
-logger = getLogger(__name__)
+from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.common.file import find_config
+from hashes import main
+
 
 def upload(config_in_file):
-    
-    with open(config_in_file, 'r') as f:
-        config_in = json.load(f)
-    
-    model_path = config_in['metadata']['variables']['MODEL_PATH']
-    
-    if 'TRANSFORMER' in config_in['metadata']['variables']:
-        transformers = config_in['metadata']['variables']['TRANSFORMER']
-        model_path = model_path.replace('{TRANSFORMER}', transformers)
-        
-    model_path = model_path.replace('{MODELS_PATH}', '~/.deeppavlov/models')
-    model_name = os.path.splitext(os.path.basename(config_in_file))[0]
-    class_name = os.path.basename(os.path.dirname(config_in_file))
+    config_in = parse_config(config_in_file)
+    config_in_file = find_config(config_in_file)
 
-    shutil.rmtree("/tmp/"+class_name, ignore_errors=True)
-    os.mkdir("/tmp/"+class_name)
+    model_path = Path(config_in['metadata']['variables']['MODEL_PATH']).expanduser()
 
-    with tarfile.open("/tmp/"+class_name+"/"+model_name+".tar.gz", "w:gz") as tar:
-        tar.add(os.path.expanduser(model_path), arcname=model_name)
-    
-    files = ["/tmp/"+class_name+"/"+model_name+".tar.gz", "/tmp/"+class_name+"/"+model_name+".md5"]
-    main(files[0], files[1])
-    
-    command="scp -r /tmp/" + class_name + " share.ipavlov.mipt.ru:/home/export/v1/"
-    print(command)
-    
-    donwload_url = "http://files.deeppavlov.ai/v1/"+class_name+"/"+model_name+".tar.gz"
-    print(donwload_url)
-    
-    
+    model_name, class_name = config_in_file.stem, config_in_file.parent.name
+
+    tmp_dir = f'/tmp/{class_name}'
+    tmp_tar = f'/tmp/{class_name}/{model_name}.tar.gz'
+    shutil.rmtree(tmp_dir, ignore_errors=True)
+    os.mkdir(tmp_dir)
+
+    with tarfile.open(tmp_tar, "w:gz") as tar:
+        tar.add(model_path, arcname=model_name)
+
+    main(tmp_tar)
+
+    command = f'scp -r {tmp_dir} share.ipavlov.mipt.ru:/home/export/v1/'
+    donwload_url = f'http://files.deeppavlov.ai/v1/{class_name}/{model_name}.tar.gz'
+    print(command, donwload_url, sep='\n')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("config_in", help="path to a config", type=str)
