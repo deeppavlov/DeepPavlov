@@ -52,7 +52,6 @@ Welcome to DeepPavlov's documentation!
    
    Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
-   Sequence-To-Sequence Dialogue Bot <features/skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <features/skills/faq>
    AIML <features/skills/aiml_skill>
    Rasa <features/skills/rasa_skill>

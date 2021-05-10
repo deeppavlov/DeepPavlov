@@ -41,8 +41,3 @@ deeppavlov.models.torch_bert
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
-
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer
-
-    .. automethod:: __call__
-    .. automethod:: _get_nsp_predictions
