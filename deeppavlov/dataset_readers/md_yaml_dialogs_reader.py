@@ -81,9 +81,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         domain_path = Path(data_path, domain_fname)
         domain_knowledge = DomainKnowledge.from_yaml(domain_path)
         nlu_fpath = Path(data_path, nlu_fname)
-        with open(nlu_fpath) as f:
-            nlu_lines = f.read().splitlines()
-        intents = Intents.from_nlu_md(nlu_lines)
+        intents = Intents.from_file(nlu_fpath)
 
         short2long_subsample_name = {"trn": "train",
                                      "val": "valid",

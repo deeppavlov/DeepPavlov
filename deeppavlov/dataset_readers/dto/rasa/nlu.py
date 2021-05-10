@@ -2,7 +2,9 @@ import re
 from collections import defaultdict
 from typing import List, Tuple, Dict
 
-slots_markup_pattern = r"\[" + \
+from deeppavlov.core.common.file import read_yaml
+
+SLOTS_MARKUP_PATTERN = r"\[" + \
                                r"(?P<slot_value>.*?)" + \
                                r"\]" + \
                                r"\(" + \
@@ -22,8 +24,12 @@ class IntentLine:
 
     @classmethod
     def from_line(cls, line, ignore_slots=False):
-        intent_text_w_markup = line.strip().strip('-').strip()
-        line_slots_found = re.finditer(slots_markup_pattern,
+        line = line.strip()
+        if line.startswith('-'):
+            intent_text_w_markup = line.lstrip('-').strip()
+        else:
+            intent_text_w_markup = line
+        line_slots_found = re.finditer(SLOTS_MARKUP_PATTERN,
                                        intent_text_w_markup)
         if ignore_slots:
             line_slots_found = []
@@ -73,7 +79,7 @@ class IntentLine:
 class IntentDesc:
     def __init__(self, title):
         self.title = title
-        self.lines = list()
+        self.lines: List[IntentLine] = list()
 
     def add_line(self, intent_line:IntentLine):
         self.lines.append(intent_line)
@@ -97,14 +103,14 @@ class Intents:
                     if slot_name not in sn2t2v.keys():
                         sn2t2v[slot_name] = dict()
                     for slot_text, slot_values_li in slot_text2value.items():
-                        if slot_text not in sn2t2v[slot_name].keys()
+                        if slot_text not in sn2t2v[slot_name].keys():
                             sn2t2v[slot_name][slot_text] = list()
                         sn2t2v[slot_name][slot_text].extend(slot_values_li)
         self._slot_name2text2value = sn2t2v
         return sn2t2v
 
     @property
-    def intent2slot2text(self) -> Dict:
+    def intent2slots2text(self) -> Dict:
         if self._intent2slot2text is not None:
             return self._intent2slot2text
 
@@ -136,3 +142,38 @@ class Intents:
                 intent_l = IntentLine.from_line(line, ignore_slots)
                 # noinspection PyUnboundLocalVariable
                 curr_intent.add_line(intent_l)
+        return intents
+
+    @classmethod
+    def from_file(cls, fpath):
+        format = str(fpath).split('.')[-1]
+        if format in ("yml", "yaml"):
+            ic_file_content = read_yaml(fpath)
+            intents = cls()
+            for part in ic_file_content['nlu']:
+                if "intent" in part:
+                    intent_title = part['intent']
+                    curr_intent = IntentDesc(intent_title)
+                    for example in part.get('examples', '').split("\n"):
+                        example = example.strip().lstrip("*-_").strip()
+                        intent_line = IntentLine.from_line(example)
+                        curr_intent.add_line(intent_line)
+                elif 'regex' in part:
+                    intent_title = part['regex']
+                    curr_intent = IntentDesc(intent_title)
+                    for example in part.get('examples', '').split("\n"):
+                        intent_line = IntentLine(example[2:])
+                        curr_intent.add_line(intent_line)
+                else:
+                    continue
+
+                if ic_file_content['version'] == 'dp_2.0':
+                    for example in part.get('regex_examples', '').split("\n"):
+                        intent_line = IntentLine(example[2:])
+                        curr_intent.add_line(intent_line)
+                intents.intents.append(curr_intent)
+        elif format in ("md", "markdown"):
+            with open(fpath, encoding="utf-8") as f:
+                nlu_lines = f.readlines()
+                intents = cls.from_nlu_md(nlu_lines)
+        return intents

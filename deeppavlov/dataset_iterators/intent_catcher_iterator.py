@@ -20,6 +20,7 @@ from xeger import Xeger
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.dataset_readers.dto.rasa.nlu import Intents, IntentDesc
 
 log = getLogger(__name__)
 
@@ -65,12 +66,12 @@ class IntentCatcherIterator(DataLearningIterator):
         if shuffle is None:
             shuffle = self.shuffle
 
-        ic_file_content = self.data[data_type]
+        ic_file_content: Intents = self.data[data_type]["nlu_lines"]
         sentences, labels = [], []
-        for label, samples in ic_file_content:
-            for phrase in samples:
-                sentences.append(phrase)
-                labels.append(label)
+        for intent in ic_file_content.intents:
+            for intent_line in intent.lines:
+                sentences.append(intent_line.text)
+                labels.append(intent.title)
 
         assert len(sentences) == len(labels), \
             "Number of labels is not equal to the number of sentences"
