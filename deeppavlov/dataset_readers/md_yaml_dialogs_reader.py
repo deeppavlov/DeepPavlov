@@ -11,16 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from logging import getLogger
 from overrides import overrides
 from pathlib import Path
-from typing import Dict, Tuple, Any
+from typing import Dict
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
+from deeppavlov.dataset_readers.dto.rasa.nlu import Intents
+from deeppavlov.dataset_readers.dto.rasa.stories import Stories
 
 log = getLogger(__name__)
 
@@ -83,6 +83,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         nlu_fpath = Path(data_path, nlu_fname)
         with open(nlu_fpath) as f:
             nlu_lines = f.read().splitlines()
+        intents = Intents.from_nlu_md(nlu_lines)
 
         short2long_subsample_name = {"trn": "train",
                                      "val": "valid",
@@ -93,11 +94,12 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             story_fpath = Path(data_path, cls._data_fname(subsample_name_short))
             with open(story_fpath) as f:
                 story_lines = f.read().splitlines()
+            stories = Stories.from_stories_lines_md(story_lines)
 
             data[short2long_subsample_name[subsample_name_short]] = {
-                            "story_lines": story_lines,
+                            "story_lines": stories,
                             "domain": domain_knowledge,
-                            "nlu_lines": nlu_lines}
+                            "nlu_lines": intents}
 
 
         return data
