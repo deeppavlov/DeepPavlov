@@ -23,6 +23,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
+from deeppavlov.dataset_readers.dto.rasa.nlu import Intents
+from deeppavlov.dataset_readers.dto.rasa.stories import Stories
 
 log = getLogger(__name__)
 
@@ -53,93 +55,22 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
                     dialogs: bool = False) -> Iterator[Tuple]:
 
         data = self.data[data_type]
-        story_lines = data["story_lines"]
+        stories: Stories = data["story_lines"]
         domain = data["domain"]
-        nlu_lines = data["nlu_lines"]
+        intents: Intents = data["nlu_lines"]
 
-        intent2slots2text, slot_name2text2value = self._read_nlu(
-            domain,
-            ignore_slots,
-            nlu_lines)
-        s = self._read_story(story_lines,
-                            dialogs, domain,
-                            intent2slots2text, slot_name2text2value,
-                            ignore_slots=ignore_slots)
+        s = self._read_story(stories,
+                             dialogs, domain,
+                             intents,
+                             ignore_slots=ignore_slots)
         pass
 
     @classmethod
-    def _read_nlu(cls, domain_knowledge, ignore_slots, nlu_lines):
-        slots_markup_pattern = r"\[" + \
-                               r"(?P<slot_value>.*?)" + \
-                               r"\]" + \
-                               r"\(" + \
-                               r"(?P<slot_name>.*?)" + \
-                               r"\)"
-
-        intent2slots2text = defaultdict(lambda: defaultdict(list))
-        slot_name2text2value = defaultdict(lambda: defaultdict(list))
-        curr_intent_name = None
-        for line in nlu_lines:
-            if line.startswith("##"):
-                # lines starting with ## are starting section describing new intent type
-                curr_intent_name = line.strip("##").strip().split("intent:", 1)[-1]
-            if line.strip().startswith('-'):
-                # lines starting with - are listing the examples of intent texts of the current intent type
-                intent_text_w_markup = line.strip().strip('-').strip()
-                line_slots_found = re.finditer(slots_markup_pattern, intent_text_w_markup)
-                if ignore_slots:
-                    line_slots_found = []
-
-                curr_char_ix = 0
-                intent_text_without_markup = ''
-                cleaned_text_slots = []  # intent text can contain slots highlighted
-                for line_slot in line_slots_found:
-                    line_slot_l_span, line_slot_r_span = line_slot.span()
-                    # intent w.o. markup for "some [entity](entity_example) text" is "some entity text"
-                    # so we should remove brackets and the parentheses content
-                    intent_text_without_markup += intent_text_w_markup[curr_char_ix:line_slot_l_span]
-
-                    slot_value_text = str(line_slot["slot_value"])
-                    slot_name = line_slot["slot_name"]
-                    slot_value = slot_value_text
-                    if ':' in slot_name:
-                        # e.g. [moderately](price:moderate)
-                        slot_name, slot_value = slot_name.split(':', 1)
-
-                    assert slot_name in domain_knowledge.known_slots, f"{slot_name}" + \
-                                                                      " was not listed as slot " + \
-                                                                      "in domain knowledge config"
-
-                    slot_value_new_l_span = len(intent_text_without_markup)  # l span in cleaned text
-                    slot_value_new_r_span = slot_value_new_l_span + len(slot_value_text)  # r span in cleaned text
-                    # intent w.o. markup for "some [entity](entity_example) text" is "some entity text"
-                    # so we should remove brackets and the parentheses content
-                    intent_text_without_markup += slot_value_text
-
-                    cleaned_text_slots.append((slot_name, slot_value))
-
-                    slot_name2text2value[slot_name][slot_value_text].append(slot_value)
-
-                    curr_char_ix = line_slot_r_span
-                intent_text_without_markup += intent_text_w_markup[curr_char_ix: len(intent_text_w_markup)]
-
-                slots_key = tuple(sorted((slot[0], slot[1]) for slot in cleaned_text_slots))
-                intent2slots2text[curr_intent_name][slots_key].append(
-                    {"text": intent_text_without_markup,
-                     "slots_di": cleaned_text_slots,
-                     "slots": slots_key})
-        # defaultdict behavior is no more needed
-        intent2slots2text = {k: dict(v) for k, v in intent2slots2text.items()}
-        slot_name2text2value = dict(slot_name2text2value)
-        return intent2slots2text, slot_name2text2value
-
-    @classmethod
     def _read_story(cls,
-                    story_lines: List,
+                    stories: Stories,
                     dialogs: bool,
                     domain_knowledge: DomainKnowledge,
-                    intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
-                    slot_name2text2value: Dict[str, Dict[str, str]],
+                    intents: Intents,
                     ignore_slots: bool = False) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[
                 Tuple[Dict[str, bool], Dict[str, Any]]]]:
@@ -157,6 +88,21 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
         Returns:
             stories read as if it was done with DSTC2DatasetReader._read_from_file()
         """
+
+        intent2slots2text = intents.intent2slots2text
+        if ignore_slots:
+            intent2slots2text_c = dict()
+            for intent, slots2text in intent2slots2text.items():
+                new_slots2text = {tuple(): list()}
+                for _, texts in slots2text.items():
+                    new_slots2text[tuple()].extend(texts)
+                intent2slots2text_c[intent] = new_slots2text
+            intent2slots2text = intent2slots2text_c
+
+        slot_name2text2value = intents.slot_name2text2value
+        if ignore_slots:
+            slot_name2text2value = dict()
+
         log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
                   f"dialogs={dialogs}, "
                   f"domain_knowledge={domain_knowledge}, "
@@ -280,7 +226,7 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
                 utters_to_extend_with_batch = []
             return utters_to_extend_with_batch
 
-        for line in story_lines:
+        for line in stories.lines:
             line = line.strip()
             if not line:
                 continue
