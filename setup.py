@@ -67,10 +67,10 @@ if __name__ == '__main__':
                 'pexpect'
             ],
             'docs': [
-                'sphinx>=1.7.9',
-                'sphinx_rtd_theme>=0.4.0',
-                'nbsphinx>=0.3.4',
-                'ipykernel>=4.8.0'
+                'sphinx==3.5.4',
+                'sphinx_rtd_theme==0.5.2',
+                'nbsphinx==0.8.4',
+                'ipykernel==5.5.4'
             ],
             's3': [
                 'boto3'
