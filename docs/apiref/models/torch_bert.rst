@@ -21,9 +21,7 @@ deeppavlov.models.torch_bert
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autofunction:: deeppavlov.models.torch_bert.torch_transformers_sequence_tagger.token_from_subtoken
-
-.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_sequence_tagger.TorchTransformersSequenceTagger
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
