@@ -8,7 +8,7 @@ deeppavlov.models.torch_bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertNerPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersNerPreprocessor
 
     .. automethod:: __call__
 
@@ -23,7 +23,7 @@ deeppavlov.models.torch_bert
 
 .. autofunction:: deeppavlov.models.torch_bert.torch_bert_sequence_tagger.token_from_subtoken
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
