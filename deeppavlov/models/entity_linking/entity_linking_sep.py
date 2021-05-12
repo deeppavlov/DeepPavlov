@@ -103,7 +103,6 @@ class NerChunkModel(Component):
             tm_ner_st = time.time()
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)
             entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
-
             tm_ner_end = time.time()
             log.debug(f"ner time {tm_ner_end - tm_ner_st}")
             log.debug(f"entity_substr_batch {entity_substr_batch}")
@@ -128,9 +127,9 @@ class NerChunkModel(Component):
                         entity_offsets_list.append((start_offset, end_offset))
                 else:
                     entity_substr_list, entity_offsets_list, tags_list = [], [], []
-                entity_substr_batch.append(entity_substr_list)
-                entity_offsets_batch.append(entity_offsets_list)
-                tags_batch.append(tags_list)
+                entity_substr_batch.append(list(entity_substr_list))
+                entity_offsets_batch.append(list(entity_offsets_list))
+                tags_batch.append(list(tags_list))
 
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_offsets_batch {entity_offsets_batch}")
@@ -150,7 +149,6 @@ class NerChunkModel(Component):
             sentences_batch, text_len_batch, nums_batch in \
                 zip(entity_substr_batch_list, tags_batch_list, entity_offsets_batch_list,
                     sentences_offsets_batch_list, sentences_batch_list, text_len_batch_list, nums_batch_list):
-
             for entity_substr, tag, entity_offsets, sentences_offsets, sentences, text_len, doc_num in \
                     zip(entity_substr_batch, tags_batch, entity_offsets_batch, sentences_offsets_batch,
                         sentences_batch, text_len_batch, nums_batch):
