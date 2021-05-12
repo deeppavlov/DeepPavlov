@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+from copy import deepcopy
 from pathlib import Path
 from typing import Union, Dict, TypeVar
 
@@ -61,17 +62,19 @@ def _get_variables_from_config(config: Union[str, Path, dict]):
     return variables, variables_exact
 
 
-def _update_requirements(config: dict) -> None:
-    """Generates requirements for DeepPavlov model and adds them as ``metadata.requirements`` field to the passed dict.
+def _update_requirements(config: dict) -> dict:
+    """
+    Generates requirements for DeepPavlov model and adds them as ``metadata.requirements`` field to the returned dict.
 
     Searches for the ``class_name`` keys in the passed config at all nesting levels. For each found component,
-    function looks for dependencies in the requirements registry. Found dependencies are added to the config
-    as ``metadata.requirements``. If the config already has ``metadata.requirements``, the existing one is complemented
-    by the found requirements.
+    function looks for dependencies in the requirements registry. Found dependencies are added to the returned copy of
+    the config as ``metadata.requirements``. If the config already has ``metadata.requirements``, the existing one
+    is complemented by the found requirements.
 
     Args:
         config: DeepPavlov model config
-
+    Returns:
+        config copy with updated ``metadata.requirements`` field according to the config components.
     """
     components = get_all_elems_from_json(config, 'class_name')
     components = {inverted_registry.get(component, component) for component in components}
@@ -81,8 +84,10 @@ def _update_requirements(config: dict) -> None:
     for component in components:
         requirements.extend(requirements_registry.get(component, []))
     requirements.extend(config.get('metadata', {}).get('requirements', []))
-    config['metadata'] = config.get('metadata', {})
-    config['metadata']['requirements'] = list(set(requirements))
+    response = deepcopy(config)
+    response['metadata'] = response.get('metadata', {})
+    response['metadata']['requirements'] = list(set(requirements))
+    return response
 
 
 def parse_config(config: Union[str, Path, dict]) -> dict:
@@ -90,11 +95,11 @@ def parse_config(config: Union[str, Path, dict]) -> dict:
     if isinstance(config, (str, Path)):
         config = read_json(find_config(config))
 
-    _update_requirements(config)
+    updated_config = _update_requirements(config)
 
-    variables, variables_exact = _get_variables_from_config(config)
+    variables, variables_exact = _get_variables_from_config(updated_config)
 
-    return _parse_config_property(config, variables, variables_exact)
+    return _parse_config_property(updated_config, variables, variables_exact)
 
 
 def expand_path(path: Union[str, Path]) -> Path:
