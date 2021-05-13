@@ -14,9 +14,11 @@
 
 from typing import Iterable
 
+from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 
+@register('dialog_component_wrapper')
 class DialogComponentWrapper(Component):
 
     def __init__(self, component: Component, **kwargs):

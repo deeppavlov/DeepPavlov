@@ -33,9 +33,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "DATA_PATH": "{DOWNLOADS_PATH}/rasa_configs_reader"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/dp_minimal_rasa_demo.tar.gz",

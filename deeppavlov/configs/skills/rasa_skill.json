@@ -29,10 +29,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "PROJECT_ROOT": "{DOWNLOADS_PATH}/rasa_tutorial_project"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/rasa_skill/rasa_tutorial_project.tar.gz",

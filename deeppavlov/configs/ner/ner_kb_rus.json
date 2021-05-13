@@ -145,10 +145,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/kbqa_mix_lowercase"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_kb_rus.tar.gz",

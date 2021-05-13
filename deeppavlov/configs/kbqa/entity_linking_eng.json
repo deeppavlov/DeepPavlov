@@ -67,13 +67,6 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_eng.tar.gz",
