@@ -107,8 +107,8 @@ class TorchTransformersPreprocessor(Component):
             return input_features
 
 
-@register('torch_bert_ner_preprocessor')
-class TorchBertNerPreprocessor(Component):
+@register('torch_transformers_ner_preprocessor')
+class TorchTransformersNerPreprocessor(Component):
     """Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
     Creates a mask of subtokens (one for the first subtoken, zero for the others).
 
@@ -186,6 +186,7 @@ class TorchBertNerPreprocessor(Component):
                 f"length of sow_marker({len(sw_marker)}), tokens({len(sw_toks)})," \
                 f" token ids({len(subword_tok_ids[-1])}) and ys({len(ys)})" \
                 f" for tokens = `{toks}` should match"
+
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
         startofword_markers = zero_pad(startofword_markers, dtype=int, padding=0)
         attention_mask = Mask()(subword_tokens)

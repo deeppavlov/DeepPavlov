@@ -117,7 +117,7 @@ BERT for Named Entity Recognition (Sequence Tagging)
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
 can be found :doc:`here </features/models/ner>`. The modules used for tagging
 are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger` on PyTorch.
+:class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
 The tags are obtained by applying a dense layer to the representation of
 the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
 
