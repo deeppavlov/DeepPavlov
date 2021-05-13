@@ -87,11 +87,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/intent_catcher"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/xeger.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/intent_catcher/intent_catcher.tar.gz",

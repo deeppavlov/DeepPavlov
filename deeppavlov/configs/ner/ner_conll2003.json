@@ -163,10 +163,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "NER_PATH": "{MODELS_PATH}/ner_conll2003"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz",

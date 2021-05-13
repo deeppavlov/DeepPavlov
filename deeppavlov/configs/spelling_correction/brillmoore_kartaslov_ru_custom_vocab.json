@@ -45,7 +45,7 @@
         "load_path": "{MODELS_PATH}/error_model/error_model_ru.tsv"
       },
       {
-        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "class_name": "kenlm_electorr",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
         "load_path": "{DOWNLOADS_PATH}/language_models/ru_wiyalen_no_punkt.arpa.binary"
@@ -70,10 +70,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",

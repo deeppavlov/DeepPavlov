@@ -145,10 +145,6 @@
       "TRANSFORMER": "bert-base-uncased",
       "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
 	{
 	"url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert.tar.gz",

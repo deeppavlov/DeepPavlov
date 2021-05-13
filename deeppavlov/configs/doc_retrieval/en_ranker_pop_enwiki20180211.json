@@ -74,10 +74,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",

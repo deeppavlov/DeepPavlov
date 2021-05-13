@@ -159,9 +159,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "RESULTS_PATH": "{ROOT_PATH}/results"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/es_ancora.tar.gz",
