@@ -25,6 +25,10 @@ from deeppavlov.dataset_readers.dto.rasa.stories import Stories
 log = getLogger(__name__)
 
 
+class RASADict(dict):
+    def __add__(self, oth):
+        return RASADict()
+
 @register('md_yaml_dialogs_reader')
 class MD_YAML_DialogsDatasetReader(DatasetReader):
     """
@@ -56,7 +60,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(cls, data_path: str) -> Dict[str, Dict]:
+    def read(cls, data_path: str, fmt = "md") -> Dict[str, Dict]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -69,7 +73,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             Each field is a list of tuples ``(x_i, y_i)``.
         """
         domain_fname = cls.DOMAIN_FNAME
-        nlu_fname = cls.NLU_FNAME
+        nlu_fname = cls.NLU_FNAME if fmt in ("md", "markdown") else cls.NLU_FNAME.replace('.md', f'.{fmt}')
         stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
         for required_fname in required_fnames:
@@ -98,6 +102,5 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                             "story_lines": stories,
                             "domain": domain_knowledge,
                             "nlu_lines": intents}
-
-
+        data = RASADict(data)
         return data

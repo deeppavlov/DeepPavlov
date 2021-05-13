@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import itertools
 import re
 from logging import getLogger
 from typing import Tuple, List, Dict, Any, Iterator
@@ -115,3 +115,10 @@ class IntentCatcherIterator(DataLearningIterator):
 
         log.info(f"Original number of samples: {len(sentences)}"
                  f", generated samples: {generated_cnt}")
+
+    def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
+        res = tuple(map(lambda it: tuple(itertools.chain(*it)),
+                        zip(*self.gen_batches(batch_size=-1,
+                                              data_type=data_type,
+                                              shuffle=False))))
+        return res

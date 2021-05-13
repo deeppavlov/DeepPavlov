@@ -160,7 +160,7 @@ class IntentCatcher(NNModel):
 
         # zip below does [(r1, s1), (r2, s2), ..] -> [r1, r2, ..], [s1, s2, ..]
         passed_regexps, passed_sents = zip(*x)
-        self.regexps = self.regexps.union(set(passed_regexps))
+        self.regexps = self.regexps.union(set(zip(passed_regexps, y)))
 
         # region actual trainig
         embedded_sents = self.session.run(self.embedded,
@@ -172,26 +172,31 @@ class IntentCatcher(NNModel):
     def process_event(self, event_name, data):
         pass
 
-    def __call__(self, x: List[str]) -> List[int]:
+    def __call__(self, x: Union[List[str], List[tuple]]) -> List[int]:
         """
         Predict probabilities.
 
         Args:
-            x: list of input sentences.
+            x: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of probabilities.
         """
+        if x and isinstance(x[0], tuple):
+            x = [sent for _re, sent in x]
         return self._predict_proba(x)
 
-    def _predict_label(self, sentences: List[str]) -> List[int]:
+    def _predict_label(self, sentences: Union[List[str], List[tuple]]) -> List[int]:
         """
         Predict labels.
 
         Args:
-            x: list of input sentences.
+            sentences: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of labels.
         """
+        if sentences and isinstance(x[0], tuple):
+            sentences = [sent for _re, sent in sentences]
+
         labels = [None for i in range(len(sentences))]
         indx = []
         for i, s in enumerate(sentences):
@@ -207,15 +212,17 @@ class IntentCatcher(NNModel):
             labels[indx[i]] = l
         return labels
 
-    def _predict_proba(self, x: List[str]) -> List[float]:
+    def _predict_proba(self, x: Union[List[str], List[tuple]]) -> List[float]:
         """
         Predict probabilities. Used in __call__.
 
         Args:
-            x: list of input sentences.
+            x: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of probabilities
         """
+        if x and isinstance(x[0], tuple):
+            x = [sent for _re, sent in x]
         x_embedded = self.session.run(self.embedded, feed_dict={self.sentences:x})
         probs = self.classifier.predict_proba(x_embedded)
         _, num_labels = probs.shape
