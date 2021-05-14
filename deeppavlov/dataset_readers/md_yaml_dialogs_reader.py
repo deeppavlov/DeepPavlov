@@ -19,6 +19,8 @@ import re
 import tempfile
 from collections import defaultdict
 from logging import getLogger
+import random
+
 from overrides import overrides
 from pathlib import Path
 from typing import Dict, List, Tuple, Union, Any, Optional
@@ -90,7 +92,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
     @classmethod
     @overrides
-    def read(cls, data_path: str, dialogs: bool = False, ignore_slots: bool = False) -> Dict[str, List]:
+    def read(cls, data_path: str, dialogs: bool = False, ignore_slots: bool = False, augment_strategy: str = None) -> Dict[str, List]:
         """
         Parameters:
             data_path: path to read dataset from
@@ -105,6 +107,11 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             ``'test'`` field with dialogs from ``'stories-tst.md'``.
             Each field is a list of tuples ``(x_i, y_i)``.
         """
+        if augment_strategy is None:
+            augment_strategy = "max"
+
+        assert augment_strategy in {"min", "max"}
+
         domain_fname = cls.DOMAIN_FNAME
         nlu_fname = cls.NLU_FNAME
         stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
@@ -127,7 +134,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         data = {short2long_subsample_name[subsample_name_short]:
                     cls._read_story(Path(data_path, cls._data_fname(subsample_name_short)),
                                     dialogs, domain_knowledge, intent2slots2text, slot_name2text2value,
-                                    ignore_slots=ignore_slots)
+                                    ignore_slots=ignore_slots, augment_strategy=augment_strategy)
                 for subsample_name_short in cls.VALID_DATATYPES}
 
         return data
@@ -212,6 +219,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                     domain_knowledge: DomainKnowledge,
                     intent2slots2text: Dict[str, Dict[SLOT2VALUE_PAIRS_TUPLE, List]],
                     slot_name2text2value: Dict[str, Dict[str, str]],
+                    augment_strategy: str,
                     ignore_slots: bool = False) \
             -> Union[List[List[Tuple[Dict[str, bool], Dict[str, Any]]]], List[Tuple[Dict[str, bool], Dict[str, Any]]]]:
         """
@@ -262,6 +270,8 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             nonlocal intent2slots2text, slot_name2text2value, curr_story_utters_batch, nonlocal_curr_story_bad
             try:
                 possible_user_utters = cls.augment_user_turn(intent2slots2text, line, slot_name2text2value)
+                if augment_strategy == "min":
+                    possible_user_utters = random.choices(possible_user_utters)
                 # dialogs MUST start with system replics
                 for curr_story_utters in curr_story_utters_batch:
                     if not curr_story_utters:
@@ -390,7 +400,17 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         # noinspection PyProtectedMember
         gobot_formatted_stories = DSTC2DatasetReader._read_from_file(tmp_f.name, dialogs=dialogs)
         os.remove(tmp_f.name)
-
+        if dialogs:
+            for story in gobot_formatted_stories:
+                for turn_ix, turn in enumerate(story):
+                    if turn[0] == {'text': '', 'intents': [], 'episode_done': True}:
+                        turn = ({'text': 'start', 'intents': [{'act': 'start', 'slots': []}], 'episode_done': True}, turn[1])
+                        story[turn_ix] = turn
+        else:
+            for turn_ix, turn in enumerate(gobot_formatted_stories):
+                if turn[0] == {'text': '', 'intents': [], 'episode_done': True}:
+                    turn = ({'text': 'start', 'intents': [{'act': 'start', 'slots': []}], 'episode_done': True}, turn[1])
+                    gobot_formatted_stories[turn_ix] = turn
         log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
                   f"story_fpath={story_fpath}, "
                   f"dialogs={dialogs}, "
