@@ -57,7 +57,7 @@ class MemClassificationModel(NNModel):
                 or list of classes sentence belongs with
         """
         outputs = np.zeros((len(texts), self.n_classes))
-        for text_ix, text in texts:
+        for text_ix, text in enumerate(texts):
             label = self.text2label.get(text)
             if label is not None:
                 outputs[text_ix][self.label2ix(label)] = 1.
