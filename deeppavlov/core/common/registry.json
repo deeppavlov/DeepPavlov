@@ -208,5 +208,5 @@
   "wikitionary_100K_vocab": "deeppavlov.vocabs.typos:Wiki100KDictionary",
   "intent_catcher_reader": "deeppavlov.dataset_readers.intent_catcher_reader:IntentCatcherReader",
   "intent_catcher": "deeppavlov.models.intent_catcher.intent_catcher:IntentCatcher",
-  "mem_classification_model": "deeppavlov.models.classifiers.memorizing_classifier.MemClassificationModel"
+  "mem_classification_model": "deeppavlov.models.classifiers.memorizing_classifier:MemClassificationModel"
 }
