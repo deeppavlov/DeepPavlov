@@ -179,10 +179,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "RESULTS_PATH": "{ROOT_PATH}/results"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/morpho_tagger/UD2.0/ru_syntagrus.tar.gz",

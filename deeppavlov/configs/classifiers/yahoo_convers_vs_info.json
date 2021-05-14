@@ -153,10 +153,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/yahoo_convers_vs_info_v2"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/embeddings/yahooo-sber-questions_epoches_n_15.tar.gz",

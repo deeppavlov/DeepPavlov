@@ -83,10 +83,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_torch_bert_model"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",

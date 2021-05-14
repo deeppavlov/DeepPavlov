@@ -293,13 +293,6 @@
       "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",
       "NER_PATH": "{MT_BERT_PATH}/ner"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",

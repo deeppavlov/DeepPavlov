@@ -206,9 +206,6 @@ The last part of the config is metadata:
         "MODELS_PATH": "{ROOT_PATH}/models",
         "MODEL_PATH": "{MODELS_PATH}/slotfill_dstc2"
       },
-      "requirements": [
-        "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-      ],
       "download": [
         {
           "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",

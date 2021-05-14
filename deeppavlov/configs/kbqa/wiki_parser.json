@@ -20,7 +20,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": ["{DEEPPAVLOV_PATH}/requirements/hdt.txt"],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_compr.pickle",

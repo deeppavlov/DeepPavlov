@@ -15,7 +15,6 @@
 import re
 from logging import getLogger
 
-import pyinflect
 import spacy
 
 log = getLogger(__name__)

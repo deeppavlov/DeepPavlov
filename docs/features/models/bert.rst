@@ -117,9 +117,11 @@ BERT for Named Entity Recognition (Sequence Tagging)
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
 can be found :doc:`here </features/models/ner>`. The modules used for tagging
 are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger` on PyTorch.
+:class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
 The tags are obtained by applying a dense layer to the representation of
 the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
+In the PyTorch implementation you can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
+The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
@@ -168,20 +170,6 @@ and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` (on Tens
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
-
-BERT for Extractive Summarization
----------------------------------
-The BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
-NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
-This NSP head can be used to stack sentences from a long document, based on a initial sentence. The first sentence in
-a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` on TensorFlow
-and :class:`~deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer` on PyTorch rely on
-pretrained BERT models and does not require training on summarization dataset. 
-We have three configuration files:
-
-- :config:`BertAsSummarizer <summarization/bert_as_summarizer.json>` in Russian takes first sentence in document as initialization.
-- :config:`BertAsSummarizer with init <summarization/bert_as_summarizer_with_init.json>` in Russian uses provided initial sentence.
-- :config:`TorchBertAsSummarizer <summarization/torch_bert_as_en_summarizer.json>` in English takes first sentence in document as initialization.
 
 Using custom BERT in DeepPavlov
 -------------------------------

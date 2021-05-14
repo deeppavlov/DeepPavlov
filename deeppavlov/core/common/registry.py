@@ -28,6 +28,8 @@ if _registry_path.exists():
 else:
     _REGISTRY = {}
 
+inverted_registry = {val: key for key, val in _REGISTRY.items()}
+
 
 def cls_from_str(name: str) -> type:
     """Returns a class object with the name given as a string."""

@@ -112,10 +112,6 @@
       "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_emb",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12_pt"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12_pt.tar.gz",
