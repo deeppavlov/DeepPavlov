@@ -43,6 +43,7 @@ class MemClassificationModel(NNModel):
         self.text2label = dict()
         self.classes = list()
         self.is_trained = False
+        self.load()
 
     def __call__(self: "MemClassificationModel", texts: List[str], *args) -> Union[
         List[List[float]], List[int]]:
@@ -82,20 +83,36 @@ class MemClassificationModel(NNModel):
         Returns:
             metrics values on the given batch
         """
+        if isinstance(labels, np.ndarray):
+            labels = labels.tolist()
+        if labels and isinstance(labels[0], np.ndarray):
+            labels_ = []
+            for lab in labels:
+                label_ixes = np.where(lab)[0].tolist()
+                if len(label_ixes) != 1:
+                    log.warning("smth wrong with ohe")
+                label_ix = label_ixes[0]
+                labels_.append(label_ix)
+            labels = labels_
         self.text2label.update(dict(zip(texts, labels)))
         self.classes = list(sorted(set(self.classes + labels)))
-
+        print(self.text2label)
+        print(self.classes)
         pseudo_loss = 0 if self.is_trained else 1
         self.is_trained = True
+        self.save()
         return pseudo_loss
 
     @overrides
     def save(self, *args, **kwargs):
-        save_json({"classes": self.classes, "text2label": self.text2label},
+        print("saving")
+        save_json({"classes": self.classes,
+                   "text2label": self.text2label},
                   self.save_path)
 
     @overrides
     def load(self, *args, **kwargs):
+        print("loading")
         loaded = read_json(self.save_path)
         self.classes = loaded["classes"]
         self.text2label = loaded["text2label"]
