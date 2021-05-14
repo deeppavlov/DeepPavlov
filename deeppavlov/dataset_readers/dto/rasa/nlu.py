@@ -149,6 +149,7 @@ class Intents:
         format = str(fpath).split('.')[-1]
         if format in ("yml", "yaml"):
             ic_file_content = read_yaml(fpath)
+            dp_version_present = r'# dp_version: "2.0"' in open(fpath).read()
             intents = cls()
             for part in ic_file_content['nlu']:
                 if "intent" in part:
@@ -167,7 +168,7 @@ class Intents:
                 else:
                     continue
 
-                if ic_file_content['version'] == 'dp_2.0':
+                if dp_version_present:
                     for example in part.get('regex_examples', '').split("\n"):
                         intent_line = IntentLine(example[2:])
                         curr_intent.add_line(intent_line)
