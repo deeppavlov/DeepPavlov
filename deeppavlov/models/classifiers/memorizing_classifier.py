@@ -14,19 +14,14 @@
 
 import logging
 from pathlib import Path
-
-from overrides import overrides
 from typing import List, Union, Optional
 
 import numpy as np
-import torch
-import torch.nn as nn
+from overrides import overrides
 
-from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.core.common.file import save_json, read_json
 from deeppavlov.core.common.registry import register
-from .torch_nets import ShallowAndWideCnn
 from ...core.models.nn_model import NNModel
 
 log = logging.getLogger(__name__)
@@ -40,16 +35,17 @@ class MemClassificationModel(NNModel):
         super().__init__(save_path, *args, **kwargs)
         if n_classes == 0:
             raise ConfigError("Please, provide the number of classes setting")
-
+        self.n_classes = n_classes
         self.opt = {
             "return_probas": return_probas,
         }
         self.save_path = save_path
         self.text2label = dict()
         self.classes = list()
+        self.is_trained = False
 
-
-    def __call__(self, texts: List[str], *args) -> Union[List[List[float]], List[int]]:
+    def __call__(self: "MemClassificationModel", texts: List[str], *args) -> Union[
+        List[List[float]], List[int]]:
         """Infer on the given data.
 
         Args:
@@ -60,9 +56,9 @@ class MemClassificationModel(NNModel):
                 vector of probabilities to belong with each class
                 or list of classes sentence belongs with
         """
-        outputs = np.zeros(len(texts), self.n_classes)
+        outputs = np.zeros((len(texts), self.n_classes))
         for text_ix, text in texts:
-            label = self.text2labels.get(text)
+            label = self.text2label.get(text)
             if label is not None:
                 outputs[text_ix][self.label2ix(label)] = 1.
         if self.opt["return_probas"]:
@@ -70,7 +66,7 @@ class MemClassificationModel(NNModel):
         else:
             return np.argmax(outputs, axis=-1).tolist()
 
-    def label2ix(self, label:str):
+    def label2ix(self, label: str):
         if label not in self.classes:
             return -1
         return self.classes.index(label)
@@ -88,7 +84,10 @@ class MemClassificationModel(NNModel):
         """
         self.text2label.update(dict(zip(texts, labels)))
         self.classes = list(sorted(set(self.classes + labels)))
-        return 0
+
+        pseudo_loss = 0 if self.is_trained else 1
+        self.is_trained = True
+        return pseudo_loss
 
     @overrides
     def save(self, *args, **kwargs):
