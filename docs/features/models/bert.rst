@@ -120,6 +120,8 @@ are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on 
 :class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
 The tags are obtained by applying a dense layer to the representation of
 the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
+In the PyTorch implementation you can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
+The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.

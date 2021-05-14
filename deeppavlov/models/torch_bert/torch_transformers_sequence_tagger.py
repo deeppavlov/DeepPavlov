@@ -194,8 +194,8 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
 
 @register('torch_transformers_sequence_tagger')
 class TorchTransformersSequenceTagger(TorchModel):
-    """BERT-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken) in the text.
-    You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    """Transformer-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken)
+    in the text. You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
 
     Args:
         n_tags: number of distinct tags
