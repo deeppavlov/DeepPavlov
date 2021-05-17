@@ -193,6 +193,7 @@ class EntityLinkerSep(Component, Serializable):
                  word_to_idlist_filename: str,
                  entities_ranking_filename: str,
                  entities_types_sets_filename: str,
+                 q_to_label_filename: str,
                  vectorizer_filename: str,
                  faiss_index_filename: str,
                  entity_ranker: RelRankerBertInfer = None,
@@ -222,6 +223,7 @@ class EntityLinkerSep(Component, Serializable):
             entities_ranking_filename: file with dict of entity ids (keys) and number of relations in Wikidata
                 for entities
             entities_types_sets_filename: file with entities split into sets of PER, LOC, ORG entity types
+            q_to_label_filename: file with labels of entities
             vectorizer_filename: filename with TfidfVectorizer data
             faiss_index_filename: file with Faiss index of words
             entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
@@ -248,6 +250,7 @@ class EntityLinkerSep(Component, Serializable):
         self.word_to_idlist_filename = word_to_idlist_filename
         self.entities_ranking_filename = entities_ranking_filename
         self.entities_types_sets_filename = entities_types_sets_filename
+        self.q_to_label_filename = q_to_label_filename
         self.vectorizer_filename = vectorizer_filename
         self.faiss_index_filename = faiss_index_filename
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
@@ -299,6 +302,7 @@ class EntityLinkerSep(Component, Serializable):
         self.word_list = list(self.word_to_idlist.keys())
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
+        self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
         if not self.fit_vectorizer:
             self.vectorizer = load_pickle(expand_path(self.vectorizer_filename))
             self.faiss_index = faiss.read_index(str(expand_path(self.faiss_index_filename)))
@@ -413,11 +417,12 @@ class EntityLinkerSep(Component, Serializable):
             entity_offsets_batch.append(entity_offsets_list)
             entity_ids_batch.append(entity_ids_list)
             conf_batch.append(conf_list)
+        entity_labels_batch = self.find_labels(entity_ids_batch)
 
         if self.return_confidences:
-            return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch
+            return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
         else:
-            return entity_substr_batch, entity_offsets_batch, entity_ids_batch
+            return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
 
     def link_entities(self, entity_substr_batch: List[List[str]], tags_batch: List[List[str]],
                       entity_offsets_batch: List[List[List[int]]],
@@ -747,3 +752,16 @@ class EntityLinkerSep(Component, Serializable):
                 entity_ids_list.append(top_entities[:self.num_entities_to_return])
                 conf_list.append(top_conf[:self.num_entities_to_return])
         return entity_ids_list, conf_list
+        
+    def find_labels(self, entity_ids_batch: List[List[List[str]]]):
+        entity_labels_batch = []
+        for entity_ids_list in entity_ids_batch:
+            entity_labels_list = []
+            for entity_ids in entity_ids_list:
+                if isinstance(entity_ids, list):
+                    entity_labels = [self.q_to_label.get(entity_id, entity_id) for entity_id in entity_ids]
+                else:
+                    entity_labels = self.q_to_label.get(entity_id, entity_id)
+                entity_labels_list.append(entity_labels)
+            entity_labels_batch.append(entity_labels_list)
+        return entity_labels_batch

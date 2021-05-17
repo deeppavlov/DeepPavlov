@@ -14,12 +14,13 @@
       {
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
-        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"],
+        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
         "load_path": "{ENTITIES_PATH}",
         "save_path": "{ENTITIES_PATH}",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
+        "q_to_label_filename": "q_to_label_vx.pickle",
         "vectorizer_filename": "{FAISS_PATH}/vectorizer_vx.pk",
         "faiss_index_filename": "{FAISS_PATH}/faiss_vectors_cpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
@@ -41,7 +42,7 @@
         "lang": "ru"
       }
     ],
-    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"]
+    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"]
   },
   "metadata": {
     "variables": {
@@ -71,6 +72,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_label_vx.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       }
     ]
   }
