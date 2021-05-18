@@ -31,6 +31,82 @@ from deeppavlov.models.preprocessors.mask import Mask
 log = getLogger(__name__)
 
 
+@register('torch_transformers_multiplechoice_preprocessor')
+class TorchTransformersMultiplechoicePreprocessor(Component):
+    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
+
+    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
+
+    Args:
+        vocab_file: path to vocabulary
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
+        tokenizer: instance of Bert FullTokenizer
+
+    """
+
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 512,
+                 return_tokens: bool = False,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+        self.return_tokens = return_tokens
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+
+    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
+            List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+        """Tokenize and create masks.
+
+        texts_a and texts_b are separated by [SEP] token
+
+        Args:
+            texts_a: list of texts,
+            texts_b: list of texts, it could be None, e.g. single sentence classification task
+
+        Returns:
+            batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
+                subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
+        """
+
+        if texts_b is None:
+            texts_b = [None] * len(texts_a)
+
+        input_features = []
+        tokens = []
+        for text_a, text_b in zip(texts_a, texts_b):
+            encoded_dict = self.tokenizer.encode_plus(
+                text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
+                pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+
+            if 'token_type_ids' not in encoded_dict:
+                encoded_dict['token_type_ids'] = torch.tensor([0])
+
+            curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
+                                          attention_mask=encoded_dict['attention_mask'],
+                                          token_type_ids=encoded_dict['token_type_ids'],
+                                          label=None)
+            input_features.append(curr_features)
+            if self.return_tokens:
+                tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
+
+        if self.return_tokens:
+            return input_features, tokens
+        else:
+            return input_features
+
+
 @register('torch_transformers_preprocessor')
 class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
