@@ -75,7 +75,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_label_vx.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "subdir": "{ROOT_PATH}/entities"
       }
     ]
   }
