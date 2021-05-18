@@ -179,6 +179,8 @@
   "tfidf_weighted": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
   "torch_transformers_ner_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersNerPreprocessor",
+  "torch_transformers_multiplechoice_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersMultiplechoicePreprocessor",
+  "torch_transformers_multiplechoice": "deeppavlov.models.torch_bert.torch_transformers_multiplechoice:TorchTransformersMultiplechoiceModel",
   "torch_bert_ranker": "deeppavlov.models.torch_bert.torch_bert_ranker:TorchBertRankerModel",
   "torch_bert_ranker_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchBertRankerPreprocessor",
   "torch_transformers_sequence_tagger": "deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger",
