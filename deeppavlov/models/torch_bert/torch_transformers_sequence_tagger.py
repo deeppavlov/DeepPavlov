@@ -276,8 +276,9 @@ class TorchTransformersSequenceTagger(TorchModel):
         b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
-                                  labels=b_labels)
+        loss = self.model(input_ids=b_input_ids,
+                          attention_mask=b_input_masks,
+                          labels=b_labels).loss
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
