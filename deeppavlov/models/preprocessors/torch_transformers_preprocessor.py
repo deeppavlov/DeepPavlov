@@ -17,7 +17,7 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union
+from typing import Tuple, List, Optional, Union, Dict
 
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -67,14 +67,10 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 
     def tokenize_mc_examples(self,
                              contexts: List[List[str]],
-                             choices: List[List[str]]):
+                             choices: List[List[str]]) -> Dict[str, torch.tensor]:
 
         num_choices = len(contexts[0])
         batch_size = len(contexts)
-
-        # # flatten the lists for tokenization
-        # contexts = sum(contexts, [])
-        # choices = sum(choices, [])
 
         # tokenize examples in groups of `num_choices`
         examples = []
@@ -85,9 +81,6 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
                                                              return_attention_mask=True,
                                                              add_special_tokens=True,
                                                              truncation=True)
-
-                # if 'token_type_ids' not in tokenized_input:
-                #     tokenized_input['token_type_ids'] = None
 
                 examples.append(tokenized_input)
 
@@ -102,8 +95,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 
         return padded_examples
 
-    def __call__(self, texts_a: List[List[str]], texts_b: List[List[str]] = None) -> Union[
-        List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+    def __call__(self, texts_a: List[List[str]], texts_b: List[List[str]] = None) -> Dict[str, torch.tensor]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
@@ -131,11 +123,11 @@ class TorchTransformersPreprocessor(Component):
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
+        return_tokens: whether to return tuple of input features and tokens, or only input features
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of inputfeatures and tokens, or only inputfeatures
+        return_tokens: whether to return tuple of input features and tokens, or only input features
         tokenizer: instance of Bert FullTokenizer
 
     """
@@ -155,8 +147,9 @@ class TorchTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
-        List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
+                                                                                         Tuple[List[InputFeatures],
+                                                                                               List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
