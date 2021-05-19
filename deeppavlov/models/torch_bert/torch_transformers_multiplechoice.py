@@ -20,7 +20,6 @@ import numpy as np
 import torch
 from overrides import overrides
 from transformers import AutoModelForMultipleChoice, AutoConfig
-from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -87,7 +86,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
 
-    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+    def train_on_batch(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
 
@@ -99,34 +98,16 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
             dict with loss and learning_rate values
         """
 
-        # _input = {}
-        # for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-        #     _input[elem] = [getattr(f, elem) for f in features]
-        #
-        # for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-        #     _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-
         _input = {key: value.to(self.device) for key, value in features.items()}
 
         _input["labels"] = torch.tensor(y).long().to(self.device)
-
-
-        # if self.n_classes > 1:
-        #     _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)
-        # else:
-        #     _input['labels'] = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
 
         self.optimizer.zero_grad()
 
         tokenized = {key: value for (key, value) in _input.items() if key in self.model.forward.__code__.co_varnames}
 
-        # Token_type_id is omitted for Text Classification
+        loss = self.model(**tokenized).loss
 
-        output = self.model(**tokenized)
-        loss = output.loss
-        logits = output.logits
-
-        # loss, logits = self.model(**tokenized)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -139,7 +120,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         return {'loss': loss.item()}
 
-    def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
+    def __call__(self, features: Dict[str, torch.tensor]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
 
         Args:
@@ -150,18 +131,11 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         """
 
-
-        # _input = {}
-        # for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-        #     _input[elem] = [getattr(f, elem) for f in features]
-        #
-        # for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-        #     _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-
         _input = {key: value.to(self.device) for key, value in features.items()}
 
         with torch.no_grad():
-            tokenized = {key: value for (key, value) in _input.items() if key in self.model.forward.__code__.co_varnames}
+            tokenized = {key: value for (key, value) in _input.items()
+                         if key in self.model.forward.__code__.co_varnames}
 
             # Forward pass, calculate logit predictions
             logits = self.model(**tokenized)
