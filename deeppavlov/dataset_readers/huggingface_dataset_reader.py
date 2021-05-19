@@ -49,9 +49,10 @@ class HuggingFaceDatasetReader(DatasetReader):
         # filter unused splits
         split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
-        if path == "superglue" and name == "copa":
-            print("*" * 100)
+        if path == "super_glue" and name == "copa":
+            dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
         return dict(zip(split_mapping.keys(), dataset))
+
 
 def preprocess_copa(examples):
     question_dict = {
@@ -69,5 +70,6 @@ def preprocess_copa(examples):
 
     choices = [[choice1, choice2] for choice1, choice2 in zip(examples["choice1"], examples["choice2"])]
 
-    return contexts, choices
+    return {"contexts": contexts,
+            "choices": choices}
 
