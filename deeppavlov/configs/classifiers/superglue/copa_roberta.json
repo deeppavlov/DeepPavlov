@@ -73,7 +73,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 16,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
@@ -89,7 +89,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/copa-roberta",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/copa_roberta",
       "BASE_MODEL": "roberta-large"
     }
   }
