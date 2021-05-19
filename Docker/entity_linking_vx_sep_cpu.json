@@ -72,10 +72,6 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_label_vx.pickle",
-        "subdir": "{ROOT_PATH}/entities"
       }
     ]
   }
