@@ -86,8 +86,8 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
                                                              add_special_tokens=True,
                                                              truncation=True)
 
-                if 'token_type_ids' not in tokenized_input:
-                    tokenized_input['token_type_ids'] = None
+                # if 'token_type_ids' not in tokenized_input:
+                #     tokenized_input['token_type_ids'] = None
 
                 examples.append(tokenized_input)
 

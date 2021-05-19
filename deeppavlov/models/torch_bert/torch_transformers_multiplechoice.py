@@ -110,7 +110,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         _input["labels"] = torch.tensor(y).long().to(self.device)
 
-        print(_input)
 
         # if self.n_classes > 1:
         #     _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)

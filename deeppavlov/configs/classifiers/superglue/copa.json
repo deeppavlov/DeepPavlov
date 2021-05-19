@@ -89,8 +89,8 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_rte_torch_cased_bert",
-      "BASE_MODEL": "bert-base-cased"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/copa-roberta",
+      "BASE_MODEL": "roberta-large"
     }
   }
 }
