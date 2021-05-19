@@ -1,15 +1,15 @@
 {
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
-    "path": "glue",
-    "name": "rte",
+    "path": "super_glue",
+    "name": "copa",
     "train": "train",
     "valid": "validation",
     "test": "test"
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
-    "features": ["sentence1", "sentence2"],
+    "features": ["contexts", "choices"],
     "label": "label",
     "seed": 42
   },
@@ -21,7 +21,7 @@
         "class_name": "torch_transformers_multiplechoice_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 256,
+        "max_seq_length": 64,
         "in": ["sentence1", "sentence2"],
         "out": ["bert_features"]
       },
@@ -73,7 +73,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 16,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
@@ -89,8 +89,8 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_rte_torch_cased_bert",
-      "BASE_MODEL": "bert-base-cased"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/copa_roberta",
+      "BASE_MODEL": "roberta-large"
     }
   }
 }

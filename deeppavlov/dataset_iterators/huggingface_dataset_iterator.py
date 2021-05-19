@@ -41,6 +41,7 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
         Returns:
             List[Tuple[Any, Any]]: list of pairs of extrated features and labels
         """
+
         dataset = []
         for example in data:
             if isinstance(features, str):

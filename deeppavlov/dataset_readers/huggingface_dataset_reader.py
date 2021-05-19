@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from datasets import load_dataset, Dataset
 from overrides import overrides
@@ -49,4 +49,27 @@ class HuggingFaceDatasetReader(DatasetReader):
         # filter unused splits
         split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
+        if path == "super_glue" and name == "copa":
+            dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
         return dict(zip(split_mapping.keys(), dataset))
+
+
+def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
+    question_dict = {
+        "cause": "What was the cause of this?",
+        "effect": "What happened as a result?",
+    }
+
+    num_choices = 2
+
+    questions = [question_dict[question] for question in examples["question"]]
+    premises = examples["premise"]
+
+    contexts = [f"{premise} {question}" for premise, question in zip(premises, questions)]
+    contexts = [[context] * num_choices for context in contexts]
+
+    choices = [[choice1, choice2] for choice1, choice2 in zip(examples["choice1"], examples["choice2"])]
+
+    return {"contexts": contexts,
+            "choices": choices}
+
