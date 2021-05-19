@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from datasets import load_dataset, Dataset
 from overrides import overrides
@@ -54,7 +54,7 @@ class HuggingFaceDatasetReader(DatasetReader):
         return dict(zip(split_mapping.keys(), dataset))
 
 
-def preprocess_copa(examples):
+def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
     question_dict = {
         "cause": "What was the cause of this?",
         "effect": "What happened as a result?",
