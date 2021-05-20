@@ -213,7 +213,12 @@ class TorchTransformersClassifierModel(TorchModel):
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
+                # set strict flag to False if position_ids are missing
+                # this is needed to load models trained on older versions
+                # of transformers library
+                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
+                                         if key.endswith("embeddings.position_ids")])
+                self.model.load_state_dict(checkpoint["model_state_dict"], strict=strict_load_flag)
                 self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
