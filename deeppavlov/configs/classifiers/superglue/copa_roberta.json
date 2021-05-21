@@ -86,11 +86,11 @@
   },
   "metadata": {
     "variables": {
+      "BASE_MODEL": "roberta-large",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/copa_roberta",
-      "BASE_MODEL": "roberta-large"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_copa_{BASE_MODEL}"
     }
   }
 }
