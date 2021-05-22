@@ -266,7 +266,7 @@
   ],
   "torch_squad_bert_infer": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
   ],
   "nemo_asr": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
