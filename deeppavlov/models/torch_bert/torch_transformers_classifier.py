@@ -99,23 +99,14 @@ class TorchTransformersClassifierModel(TorchModel):
             dict with loss and learning_rate values
         """
 
-        _input = {}
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-            _input[elem] = [getattr(f, elem) for f in features]
+        _input = {key: value.to(self.device) for key, value in features.items()}
 
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-
-        if self.n_classes > 1:
-            _input['labels'] = torch.from_numpy(np.array(y)).to(self.device)
-        else:
-            _input['labels'] = torch.from_numpy(np.array(y, dtype=np.float32)).to(self.device)
+        _input["labels"] = torch.tensor(y).long().to(self.device)
 
         self.optimizer.zero_grad()
 
-        tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
-
-        # Token_type_id is omitted for Text Classification
+        tokenized = {key: value for (key, value) in _input.items()
+                     if key in self.model.forward.__code__.co_varnames}
 
         loss = self.model(**tokenized).loss
         loss.backward()
@@ -141,15 +132,11 @@ class TorchTransformersClassifierModel(TorchModel):
 
         """
 
-        _input = {}
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-            _input[elem] = [getattr(f, elem) for f in features]
-
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
-            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+        _input = {key: value.to(self.device) for key, value in features.items()}
 
         with torch.no_grad():
-            tokenized = {key:value for (key,value) in _input.items() if key in self.model.forward.__code__.co_varnames}
+            tokenized = {key: value for (key, value) in _input.items()
+                         if key in self.model.forward.__code__.co_varnames}
 
             # Forward pass, calculate logit predictions
             logits = self.model(**tokenized)
@@ -176,10 +163,31 @@ class TorchTransformersClassifierModel(TorchModel):
 
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
-                                                output_attentions=False, output_hidden_states=False)
+            config = AutoConfig.from_pretrained(self.pretrained_bert,
+                                                # num_labels=self.n_classes,
+                                                output_attentions=False,
+                                                output_hidden_states=False)
 
             self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
+            try:
+                hidden_size = self.model.classifier.out_proj.in_features
+
+                if self.n_classes != self.model.num_labels:
+                    self.model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
+                    self.model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                    self.model.classifier.out_proj.out_features = self.n_classes
+                    self.model.num_labels = self.n_classes
+
+            except torch.nn.modules.module.ModuleAttributeError:
+                hidden_size = self.model.classifier.in_features
+
+                if self.n_classes != self.model.num_labels:
+                    self.model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
+                    self.model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                    self.model.classifier.out_features = self.n_classes
+                    self.model.num_labels = self.n_classes
+
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
