@@ -101,7 +101,11 @@ class TorchTransformersClassifierModel(TorchModel):
 
         _input = {key: value.to(self.device) for key, value in features.items()}
 
-        _input["labels"] = torch.tensor(y).long().to(self.device)
+        if self.n_classes > 1:
+            _input["labels"] = torch.from_numpy(np.array(y)).to(self.device)
+        # regression
+        else:
+            _input["labels"] = torch.from_numpy(np.array(y, dtype=np.float32)).unsqueeze(1).to(self.device)
 
         self.optimizer.zero_grad()
 
@@ -151,7 +155,8 @@ class TorchTransformersClassifierModel(TorchModel):
         elif self.n_classes > 1:
             logits = logits.detach().cpu().numpy()
             pred = np.argmax(logits, axis=1)
-        else:  # regression
+        # regression
+        else:
             pred = logits.squeeze(-1).detach().cpu().numpy()
 
         return pred
