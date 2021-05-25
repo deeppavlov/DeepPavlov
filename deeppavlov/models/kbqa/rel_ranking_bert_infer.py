@@ -182,11 +182,17 @@ class RelRankerBertInfer(Component, Serializable):
             for num, proba, rel in zip(questions_nums_batch, probas, rels_batch):
                 if num != cur_num:
                     rels_with_scores_batch.append(rels_with_scores)
+                    if num - cur_num > 1:
+                        for j in range(num - cur_num - 1):
+                            rels_with_scores_batch.append([])
                     rels_with_scores = []
                 rels_with_scores.append((rel, proba))
                 cur_num = num
-        if rels_with_scores:
-            rels_with_scores_batch.append(rels_with_scores)
+        if len(rels_with_scores_batch) < len(questions_batch):
+            if rels_with_scores:
+                rels_with_scores_batch.append(rels_with_scores)
+            else:
+                rels_with_scores_batch.append([])
         
         for i in range(len(rels_with_scores_batch)):
             rels_with_scores_batch[i] = sorted(rels_with_scores_batch[i], key=lambda x: x[1], reverse=True)
