@@ -163,6 +163,10 @@ class TorchTransformersPreprocessor(Component):
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
 
+        # in case of iterator's strange behaviour
+        if isinstance(texts_a, tuple):
+            texts_a = list(texts_a)
+
         input_features = self.tokenizer(text=texts_a,
                                         text_pair=texts_b,
                                         add_special_tokens=True,
