@@ -75,6 +75,13 @@ async def add_alias(label: str):
     if label not in aliases.aliases:
         raise HTTPException(status_code=404, detail=f'Alias with label "{label}" not found')
     aliases.delete_alias(label)
+    
+    
+@app.get('/aliases/get/{label}')
+async def get_alias(label: str):
+    aliases = Aliases()
+    found_aliases = aliases.get_alias(label)
+    return f"{found_aliases}"
 
 
 @app.get('/worker/{worker_id}')

@@ -12,9 +12,9 @@ class Aliases:
     def __init__(self, aliases_path: Path = ALIASES_PATH) -> None:
         self.aliases_path = aliases_path
         if self.aliases_path.exists():
-            with open(self.aliases_path) as fin:
+            with open(self.aliases_path, 'rb') as fin:
                 self.mtime = datetime.fromtimestamp(self.aliases_path.stat().st_mtime)
-                self.aliases = yaml.safe_load(fin)
+                self.aliases = pickle.load(fl)
                 assert isinstance(self.aliases, dict), f'file {self.aliases_path} contains {type(self.aliases)} ' \
                                                        f'instead of dict'
         else:
@@ -22,12 +22,16 @@ class Aliases:
             self.save()
 
     def add_alias(self, label: str, entity_ids: List[str]) -> None:
-        self.aliases[label] = entity_ids
+        self.aliases[label] += entity_ids
         self.save()
 
     def add_aliases(self, aliases: Dict[str, List[str]]) -> None:
-        self.aliases.update(aliases)
+        for entity_id, entity_aliases in aliases.items():
+            self.aliases[entity_id] += entity_aliases
         self.save()
+        
+    def get_alias(self, label: str) -> List[str]:
+        return self.aliases.get(label, [])
 
     def delete_alias(self, label: str):
         try:
@@ -37,6 +41,6 @@ class Aliases:
         self.save()
 
     def save(self) -> None:
-        with open(self.aliases_path, 'w') as fout:
-            yaml.dump(self.aliases, fout)
+        with open(self.aliases_path, 'wb') as fout:
+            pickle.dump(self.aliases, fout)
         self.mtime = datetime.fromtimestamp(self.aliases_path.stat().st_mtime)
