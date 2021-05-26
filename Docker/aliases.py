@@ -1,3 +1,4 @@
+import pickle
 from datetime import datetime
 from logging import getLogger
 from pathlib import Path
@@ -14,7 +15,7 @@ class Aliases:
         if self.aliases_path.exists():
             with open(self.aliases_path, 'rb') as fin:
                 self.mtime = datetime.fromtimestamp(self.aliases_path.stat().st_mtime)
-                self.aliases = pickle.load(fl)
+                self.aliases = pickle.load(fin)
                 assert isinstance(self.aliases, dict), f'file {self.aliases_path} contains {type(self.aliases)} ' \
                                                        f'instead of dict'
         else:
