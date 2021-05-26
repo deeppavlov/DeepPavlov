@@ -147,7 +147,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1.1/ner/ner_conll2003_torch_bert.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
