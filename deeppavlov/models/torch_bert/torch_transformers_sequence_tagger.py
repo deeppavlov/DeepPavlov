@@ -313,7 +313,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, attention_mask=b_input_masks)
-            logits = logits[0]
 
             # Move logits and labels to CPU and to numpy arrays
             logits = token_from_subtoken(logits[0].detach().cpu(), torch.from_numpy(y_masks))
