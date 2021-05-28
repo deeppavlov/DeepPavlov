@@ -14,20 +14,21 @@
       {
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
-        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"],
+        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
+        "q_to_label_filename": "q_to_label_vx.pickle",
         "vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/vectorizer_vx.pk",
         "faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/faiss_vectors_gpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
         "entity_ranker": "#entity_descr_ranking",
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 20,
-        "num_faiss_cells": 1,
-        "use_gpu": true,
+        "num_faiss_cells": 20,
+        "use_gpu": false,
         "fit_vectorizer": false,
         "max_tfidf_features": 500,
         "include_mention": false,
@@ -41,7 +42,7 @@
         "lang": "ru"
       }
     ],
-    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids"]
+    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"]
   },
   "metadata": {
     "variables": {

@@ -173,11 +173,11 @@ class RelRankerBertInfer(Component, Serializable):
         rels_with_scores = []
         cur_num = 0
         for i in range(n_batches):
-            questions_batch = questions_list[i*self.batch_size:(i+1)*self.batch_size]
+            cur_questions_batch = questions_list[i*self.batch_size:(i+1)*self.batch_size]
             questions_nums_batch = question_nums_list[i*self.batch_size:(i+1)*self.batch_size]
             rels_batch = rels_list[i*self.batch_size:(i+1)*self.batch_size]
             rels_labels_batch = rels_labels_list[i*self.batch_size:(i+1)*self.batch_size]
-            probas = self.ranker(questions_batch, rels_labels_batch)
+            probas = self.ranker(cur_questions_batch, rels_labels_batch)
             probas = [proba[1] for proba in probas]
             for num, proba, rel in zip(questions_nums_batch, probas, rels_batch):
                 if num != cur_num:
