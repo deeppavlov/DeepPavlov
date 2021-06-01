@@ -264,8 +264,6 @@ PARAMS = {
         ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v1_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v1_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_word2vec_dam.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],

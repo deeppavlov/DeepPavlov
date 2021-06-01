@@ -245,14 +245,9 @@ Available pre-trained models for ranking:
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
    | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                                 |   59.2    | 58.7  | --    | --    |  8906 MB  |
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_dam <ranking/ranking_ubuntu_v1_mt_word2vec_dam.json>`                         |   --      | 77.95 | 88.07 | 97.06 |  1645 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V1`_      | :config:`ranking_ubuntu_v1_mt_word2vec_smn <ranking/ranking_ubuntu_v1_mt_word2vec_smn.json>`                         |   --      | 75.90 | 87.16 | 96.80 |  1591 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
-.. _`Ubuntu V1`: https://arxiv.org/abs/1506.08909
 
 Available pre-trained models for paraphrase identification:
 
