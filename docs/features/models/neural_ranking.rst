@@ -76,29 +76,6 @@ Next time you will use the model, built vector representations will be loaded.
 Ranking
 ~~~~~~~
 
-Before using the model make sure that all required packages are installed running the command:
-
-.. code:: bash
-
-    python -m deeppavlov install ranking_insurance
-
-To train the model on the `InsuranceQA V1`_ dataset one can use the following code in python:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    rank_model = train_model(configs.ranking.ranking_insurance, download=True)
-
-To train from command line:
-
-::
-
-    python -m deeppavlov train deeppavlov/configs/ranking/ranking_insurance.json [-d]
-
-As an example of configuration file see
-:config:`ranking_insurance.json <ranking/ranking_insurance.json>`.
-
 To use Sequential Matching Network (SMN) or Deep Attention Matching Network (DAM) or
 Deep Attention Matching Network with Universal Sentence Encoder (DAM-USE-T)
 on the `Ubuntu V2`_ for inference, please run one of the following commands:
@@ -128,53 +105,11 @@ To train the models on the `Ubuntu V2`_ dataset please run one of the following 
 As an example of configuration file see
 :config:`ranking_ubuntu_v2_mt_word2vec_smn.json <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`.
 
-
-To use the model trained on the `InsuranceQA V1`_ dataset for
-inference one can use the following code in python:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    rank_model = build_model(configs.ranking.ranking_insurance_interact, download=True)
-    rank_model(['how much to pay for auto insurance?'])
-
-    >>> ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']
-
-
-By default the model returns the ``interact_pred_num`` most relevant responses from all responses the model saw during training time.
-To get predictions on your own list of responses use the following code:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    rank_model = build_model(configs.ranking.ranking_insurance_interact, download=True)
-    predictor = rank_model.pipe[-1][-1]
-    candidates = ['auto insurance', 'life insurance', 'home insurance']
-    predictor.rebuild_responses(candidates)
-    rank_model(['how much to pay for auto insurance?'])
-
-    >>> [['auto insurance']]
-
 If the model with multi-turn context is used
 (such as :class:`~deeppavlov.models.ranking.bilstm_gru_siamese_network.BiLSTMGRUSiameseNetwork`
 with the parameter ``num_context_turns`` set to the value higher than 1 in the configuration JSON file)
 then the ``context`` to evaluate should consist of ``num_context_turns`` strings connected by the ampersand.
 Some of these strings can be empty, i.e. equal to ``''``.
-
-To run the model for inference from command line:
-
-::
-
-    python -m deeppavlov interact deeppavlov/configs/ranking/ranking_insurance_interact.json [-d]
-
-Then a user can enter a context and get responses:
-
-::
-
-    :: how much to pay for auto insurance?
-    >> ['the cost of auto insurance be based on several factor include your driving record , claim history , type of vehicle , credit score where you live and how far you travel to and from work I will recommend work with an independent agent who can shop several company find the good policy for you', 'there be not any absolute answer to this question rate for auto insurance coverage can vary greatly from carrier to carrier and from area to area contact local agent in your area find out about coverage availablity and pricing within your area look for an agent that you be comfortable working with as they will be the first last point of contact in most instance', 'the cost of auto insurance coverage for any vehicle or driver can vary greatly thing that effect your auto insurance rate be geographical location , vehicle , age (s) of driver (s) , type of coverage desire , motor vehicle record of all driver , credit rating of all driver and more contact a local agent get a quote a quote cost nothing but will let you know where your rate will']
 
 
 Paraphrase identification
@@ -308,6 +243,5 @@ Instead of ``response`` and ``context`` it can be simply two phrases which are p
 Classification metrics on the valid and test dataset parts (the parameter ``metrics`` in the JSON configuration file)
 such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 
-.. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`paraphraser.ru`: https://paraphraser.ru
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator

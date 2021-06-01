@@ -19,8 +19,6 @@ Concrete DatasetReader classes.
 .. autoclass:: deeppavlov.dataset_readers.file_paths_reader.FilePathsReader
    :members:
 
-.. autoclass:: deeppavlov.dataset_readers.insurance_reader.InsuranceReader
-
 .. automodule:: deeppavlov.dataset_readers.kvret_reader
    :members:
 

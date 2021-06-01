@@ -227,8 +227,6 @@ Available pre-trained models for ranking:
    |                   |                                                                                                                      +-----------+-------+-------+-------+-----------+
    |                   |                                                                                                                      |   R10@1   | R10@1 | R10@2 | R10@5 | Downloads |
    +===================+======================================================================================================================+===========+=======+=======+=======+===========+
-   | `InsuranceQA v1`_ | :config:`ranking_insurance_interact <ranking/ranking_insurance_interact.json>`                                       |   72.0    | 72.2  | --    | --    |  8374 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
    | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>` |   74.32   | 74.46 | 86.77 | 97.38 |  2457 MB  |
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
    | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam <ranking/ranking_ubuntu_v2_mt_word2vec_dam.json>`                         |   71.20   | 71.54 | 83.66 | 96.33 |  1645 MB  |
@@ -244,7 +242,6 @@ Available pre-trained models for ranking:
    | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                                 |   59.2    | 58.7  | --    | --    |  8906 MB  |
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
 
-.. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
 
 Available pre-trained models for paraphrase identification:
@@ -263,21 +260,6 @@ Available pre-trained models for paraphrase identification:
    +------------------------+-----------------------------------------------------------------------------------------------+---------------+----------------+---------+----------+---------------+----------------+----------+
 
 .. _`paraphraser.ru`: https://paraphraser.ru/
-
-Comparison with other models on the `InsuranceQA V1 <https://github.com/shuzi/insuranceQA>`__:
-
-+------------------------------------------------------------------------+-------------------------+--------------------+
-| Model                                                                  | Validation (Recall@1)   | Test1 (Recall@1)   |
-+========================================================================+=========================+====================+
-| `Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`_           | 61.8                    | 62.8               |
-+------------------------------------------------------------------------+-------------------------+--------------------+
-| `QA-LSTM basic-model(max pooling)`_                                    | 64.3                    | 63.1               |
-+------------------------------------------------------------------------+-------------------------+--------------------+
-| :config:`ranking_insurance <ranking/ranking_insurance_interact.json>`  | **72.0**                | **72.2**           |
-+------------------------------------------------------------------------+-------------------------+--------------------+
-
-.. _`Architecture II (HLQA(200) CNNQA(4000) 1-MaxPooling Tanh)`: https://arxiv.org/pdf/1508.01585.pdf
-.. _`QA-LSTM basic-model(max pooling)`: https://arxiv.org/pdf/1511.04108.pdf
 
 
 Comparison with other models on the `Ubuntu Dialogue Corpus v2 <http://www.cs.toronto.edu/~lcharlin/papers/ubuntu_dialogue_dd17.pdf>`__ (test):
