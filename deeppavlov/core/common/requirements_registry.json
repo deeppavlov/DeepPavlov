@@ -57,9 +57,6 @@
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
   ],
-  "dam_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "dam_nn_use_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"

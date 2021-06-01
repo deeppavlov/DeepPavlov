@@ -83,7 +83,6 @@ on the `Ubuntu V2`_ for inference, please run one of the following commands:
 ::
 
     python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_smn
-    python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam
     python -m deeppavlov interact -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
 
 Now a user can enter a dialog consists of 10 context sentences and several (>=1) candidate response sentences separated by '&'
@@ -99,7 +98,6 @@ To train the models on the `Ubuntu V2`_ dataset please run one of the following 
 ::
 
     python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_smn
-    python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam
     python -m deeppavlov train -d ranking_ubuntu_v2_mt_word2vec_dam_transformer
 
 As an example of configuration file see

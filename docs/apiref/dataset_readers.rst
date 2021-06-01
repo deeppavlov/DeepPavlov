@@ -30,8 +30,6 @@ Concrete DatasetReader classes.
 
 .. autoclass:: deeppavlov.dataset_readers.paraphraser_reader.ParaphraserReader
 
-.. autoclass:: deeppavlov.dataset_readers.paraphraser_pretrain_reader.ParaphraserPretrainReader
-
 .. autoclass:: deeppavlov.dataset_readers.siamese_reader.SiameseReader
 
 .. autoclass:: deeppavlov.dataset_readers.squad_dataset_reader.SquadDatasetReader
