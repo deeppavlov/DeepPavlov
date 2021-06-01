@@ -124,9 +124,6 @@ Before using the model make sure that all required packages are installed runnin
 
     python -m deeppavlov install paraphrase_ident_paraphraser
     python -m deeppavlov install elmo_paraphraser_fine_tuning
-    python -m deeppavlov install paraphrase_ident_paraphraser_elmo
-    python -m deeppavlov install paraphrase_ident_paraphraser_pretrain
-    python -m deeppavlov install paraphrase_ident_paraphraser_tune
 
 To train the model on the `paraphraser.ru`_ dataset with fasttext embeddings one can use the following code in python:
 
@@ -144,37 +141,6 @@ To train the model on the `paraphraser.ru`_ dataset with fine-tuned ELMO embeddi
     from deeppavlov import configs, train_model
 
     para_model = train_model(configs.elmo.elmo_paraphraser_fine_tuning, download=True)
-
-To train the model itself with fine-tuned embeddings:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_elmo, download=True)
-
-The fine-tuned ELMO embeddings obtained at the previous step can be downloaded directly
-from the :config:`paraphrase_ident_paraphraser_elmo.json <ranking/paraphrase_ident_paraphraser_elmo.json>`.
-
-To train the model on the `paraphraser.ru`_ dataset with pre-training one should first train the model
-on the additionally collected dataset:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_pretrain, download=True)
-
-To fine-tune the model on the target dataset:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    para_model = train_model(configs.elmo.paraphrase_ident_paraphraser_tune , download=True)
-
-The pre-trained model obtained at the previous step can be downloaded directly
-from the :config:`paraphrase_ident_paraphraser_tune.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
 
 Training and inference on your own data
 ---------------------------------------
