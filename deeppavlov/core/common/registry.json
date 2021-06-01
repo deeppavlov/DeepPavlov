@@ -117,7 +117,6 @@
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
   "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
   "pymorphy_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:PymorphyVectorizer",
-  "qqp_reader": "deeppavlov.dataset_readers.quora_question_pairs_reader:QuoraQuestionPairsReader",
   "query_generator": "deeppavlov.models.kbqa.query_generator:QueryGenerator",
   "query_generator_online": "deeppavlov.models.kbqa.query_generator_online:QueryGeneratorOnline",
   "question_sign_checker": "deeppavlov.models.kbqa.entity_detection_parser:QuestionSignChecker",

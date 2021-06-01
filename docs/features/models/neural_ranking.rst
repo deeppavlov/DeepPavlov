@@ -252,59 +252,6 @@ inference, one can use the following code in python:
     para_model(['9 мая метрополитен Петербурга будет работать круглосуточно&Петербургское метро в ночь на 10 мая будет работать круглосуточно'])
     >>> 'This is a paraphrase.'
 
-Quora question pairs dataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Before using the model make sure that all required packages are installed running the command:
-
-.. code:: bash
-
-    python -m deeppavlov install paraphrase_ident_qqp
-
-To train the model on the `Quora Question Pairs`_ dataset one can use the following code in python:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    para_model = train_model(configs.ranking.paraphrase_ident_qqp, download=True)
-
-To train from command line:
-
-::
-
-    python -m deeppavlov train deeppavlov/configs/ranking/paraphrase_ident_qqp.json [-d]
-
-As an example of configuration file see
-:config:`paraphrase_ident_qqp.json <ranking/paraphrase_ident_qqp.json>`.
-
-
-To use the model trained on the `Quora Question Pairs`_ dataset for
-inference, one can use the following code in python:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    para_model = build_model(configs.ranking.paraphrase_ident_qqp_interact, download=True)
-    para_model(['How can I be a good geologist?&What should I do to be a great geologist?'])
-    >>> 'This is a paraphrase.'
-
-Note that two sentences to evaluate are connected by the ampersand.
-
-To use the model for inference from command line:
-
-::
-
-    python -m deeppavlov interact deeppavlov/configs/ranking/paraphrase_ident_qqp_interact.json [-d]
-
-Now a user can enter two sentences and the model will make a prediction whether these sentences are paraphrases or not.
-
-::
-
-    :: How can I be a good geologist?&What should I do to be a great geologist?
-    >> This is a paraphrase.
-
 Training and inference on your own data
 ---------------------------------------
 
@@ -374,5 +321,4 @@ such as ``f1``, ``acc`` and ``log_loss``  can be calculated.
 
 .. _`InsuranceQA V1`: https://github.com/shuzi/insuranceQA
 .. _`paraphraser.ru`: https://paraphraser.ru
-.. _`Quora Question Pairs`: https://www.kaggle.com/c/quora-question-pairs/data
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
