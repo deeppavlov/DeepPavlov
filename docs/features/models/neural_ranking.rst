@@ -241,17 +241,6 @@ To fine-tune the model on the target dataset:
 The pre-trained model obtained at the previous step can be downloaded directly
 from the :config:`paraphrase_ident_paraphraser_tune.json <ranking/paraphrase_ident_paraphraser_tune.json>`.
 
-To use the model trained on the `paraphraser.ru`_ dataset for
-inference, one can use the following code in python:
-
-.. code:: python
-
-    from deeppavlov import build_model, configs
-
-    para_model = build_model(configs.ranking.paraphrase_ident_tune_interact, download=True)
-    para_model(['9 мая метрополитен Петербурга будет работать круглосуточно&Петербургское метро в ночь на 10 мая будет работать круглосуточно'])
-    >>> 'This is a paraphrase.'
-
 Training and inference on your own data
 ---------------------------------------
 
