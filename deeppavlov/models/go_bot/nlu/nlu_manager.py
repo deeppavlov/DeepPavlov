@@ -2,6 +2,8 @@ from logging import getLogger
 from typing import List
 
 from deeppavlov import Chainer
+from deeppavlov.core.data.simple_vocab import SimpleVocabulary
+from deeppavlov.models.bert.bert_classifier import BertClassifierModel
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.nlu.nlu_manager_interface import NLUManagerInterface
 
@@ -31,7 +33,13 @@ class NLUManager(NLUManagerInterface):
         self.intent_classifier = intent_classifier
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
-            self.intents = self.intent_classifier.get_main_component().classes
+            component = self.intent_classifier.get_main_component()
+            if isinstance(component, BertClassifierModel):
+                intent2labeltools = [el[-1] for el in self.intent_classifier.pipe if isinstance(el[-1], SimpleVocabulary)]
+                if intent2labeltools:
+                    self.intents = intent2labeltools[-1]._i2t
+            else:
+                self.intents = component.classes
 
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} init(): "
@@ -57,13 +65,18 @@ class NLUManager(NLUManagerInterface):
 
         intents = []
         if callable(self.intent_classifier):
-            intents = self._extract_intents_from_tokenized_text_entry(tokens)
+            intents = self._extract_intents_from_text_entry(text)
 
         return NLUResponse(slots, intents, tokens)
 
     def _extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated intent classifier
         intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
+        return intent_features
+
+    def _extract_intents_from_text_entry(self, text: str):
+        # todo meaningful type hints, relies on unannotated intent classifier
+        intent_features = self.intent_classifier([text])[1][0]
         return intent_features
 
     def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):

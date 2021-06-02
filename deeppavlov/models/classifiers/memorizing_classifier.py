@@ -113,6 +113,9 @@ class MemClassificationModel(NNModel):
     @overrides
     def load(self, *args, **kwargs):
         print("loading")
-        loaded = read_json(self.save_path)
-        self.classes = loaded["classes"]
-        self.text2label = loaded["text2label"]
+        try:
+            loaded = read_json(self.save_path)
+            self.classes = loaded["classes"]
+            self.text2label = loaded["text2label"]
+        except:
+            log.info("nothing to load")
