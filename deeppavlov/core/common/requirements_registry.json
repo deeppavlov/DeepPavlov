@@ -214,6 +214,9 @@
   "huggingface_dataset_reader": [
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
   ],
+  "tree_to_sparql": [
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+  ],
   "torch_squad_bert_model": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
@@ -233,6 +236,9 @@
   "torch_transformers_sequence_tagger": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "ru_adj_to_noun": [
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
   ],
   "transformers_bert_embedder": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",

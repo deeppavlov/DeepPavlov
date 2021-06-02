@@ -17,7 +17,6 @@ from typing import Any, List, Tuple, Dict, Union
 from logging import getLogger
 from collections import defaultdict
 
-import nltk
 import numpy as np
 import pymorphy2
 import re
