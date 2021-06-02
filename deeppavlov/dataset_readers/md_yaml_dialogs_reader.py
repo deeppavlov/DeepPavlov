@@ -98,9 +98,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
                 story_lines = f.read().splitlines()
             stories = Stories.from_stories_lines_md(story_lines)
 
-            data[short2long_subsample_name[subsample_name_short]] = {
+            data[short2long_subsample_name[subsample_name_short]] = RASADict({
                             "story_lines": stories,
                             "domain": domain_knowledge,
-                            "nlu_lines": intents}
+                            "nlu_lines": intents})
         data = RASADict(data)
         return data
