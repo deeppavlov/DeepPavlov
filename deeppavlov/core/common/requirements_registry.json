@@ -57,9 +57,6 @@
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
   ],
-  "dam_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "dam_nn_use_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
@@ -218,7 +215,7 @@
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
   ],
   "tree_to_sparql": [
-    "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
   ],
   "torch_squad_bert_model": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -241,7 +238,7 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ru_adj_to_noun": [
-    "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
   ],
   "transformers_bert_embedder": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -282,9 +279,6 @@
   ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
-  ],
-  "udpipe_parser": [
-    "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
   ],
   "torchtext_classification_data_reader": [
     "{DEEPPAVLOV_PATH}/requirements/torchtext.txt"

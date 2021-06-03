@@ -339,11 +339,19 @@ If some required packages are missing, install all the requirements by running i
 
 How Do I: Build Go-Bot with DSTC2
 ===================================
-DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking, the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015, and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems, the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have been completed in 2017 and 2018, respectively.
+DSTC is a set of competitions originally known as "Dialog State Tracking Challenges" (DSTC, for short). First challenge
+was organized in 2012-2013. Starting as an initiative to provide a common testbed for the task of Dialog State Tracking,
+the first Dialog State Tracking Challenge (DSTC) was organized in 2013, followed by DSTC2&3 in 2014, DSTC4 in 2015,
+and DSTC5 in 2016. Given the remarkable success of the first five editions, and understanding both, the complexity
+of the dialog phenomenon and the interest of the research community in a wider variety of dialog related problems,
+the DSTC rebranded itself as "Dialog System Technology Challenges" for its sixth edition. Then, DSTC6 and DSTC7 have
+been completed in 2017 and 2018, respectively.
 
-DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain. 
+DSTC-2 released a large number of training dialogs related to restaurant search. Compared to DSTC (which was in the bus
+timetables domain), DSTC 2 introduced changing user goals, tracking 'requested slots' as well as the new Restaurants domain.
 
-Historically, DeepPavlov's Go-Bot used this DSTC-2 approach to defining domain model and behavior of the goal-oriented bots. In this section you will learn how to use this approach to build a DSTC-2-based Go-Bot.
+Historically, DeepPavlov's Go-Bot used this DSTC-2 approach to defining domain model and behavior of the goal-oriented bots.
+In this section you will learn how to use this approach to build a DSTC-2-based Go-Bot.
 
 Requirements
 ^^^^^^^^^^^^
