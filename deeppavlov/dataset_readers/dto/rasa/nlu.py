@@ -116,12 +116,12 @@ class Intents:
 
         intent2slots2text = dict()
         for intent in self.intents:
-            slots2text = dict()
+            slots2text = defaultdict(list)
             intent_title = intent.title
             for intent_l in intent.lines:
-                slots2text[intent_l.slots_key] =  {"text": intent_l.text,
+                slots2text[intent_l.slots_key].append({"text": intent_l.text,
                      "slots_di": intent_l.slots_di,
-                     "slots": intent_l.slots_key}
+                     "slots": intent_l.slots_key})
             intent2slots2text[intent_title] = slots2text
         self._intent2slot2text = intent2slots2text
         return intent2slots2text

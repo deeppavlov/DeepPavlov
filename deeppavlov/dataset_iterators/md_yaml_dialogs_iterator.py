@@ -34,7 +34,7 @@ class RASADict(dict):
         return RASADict()
 
 
-@register('md_yaml_dialogs_reader')
+@register('md_yaml_dialogs_iterator')
 class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
     """
 
@@ -57,8 +57,8 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
         data = self.data[data_type]
         domain_knowledge = self.data[data_type]["domain"]
-        intents = self.data[data_type]["nlu"]
-        stories = self.data[data_type]["stories"]
+        intents = self.data[data_type]["nlu_lines"]
+        stories = self.data[data_type]["story_lines"]
 
         dialogs = False
         ignore_slots = False
@@ -79,11 +79,11 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
             #     print(file=tmp_f)
             # tmp_f.close()
             # noinspection PyProtectedMember
-            gobot_formatted_stories = DSTC2DatasetReader._read_from_batch(batch,
-                                                                         dialogs=dialogs)
+            gobot_formatted_stories = DSTC2DatasetReader._read_from_batch(
+                list(itertools.chain(*[v + [{}] for v in batch.values()])),
+                dialogs=dialogs)
             # os.remove(tmp_f.name)
             yield gobot_formatted_stories
-
 
     # def read_story(self, stories: Stories, dialogs,
     #                domain_knowledge: DomainKnowledge, nlu_knowledge: Intents,
@@ -107,22 +107,19 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
     #
     #     return gobot_formatted_stories
 
-
-
-
     # if len(generated_sentences) == batch_size:
-        #     # tuple(zip) below does [r1, r2, ..], [s1, s2, ..] -> ((r1, s1), (r2, s2), ..)
-        #     yield tuple(zip(regexps, generated_sentences)), generated_labels
-        #     generated_cnt += len(generated_sentences)
-        #     regexps, generated_sentences, generated_labels = [], [], []
-        #
-        # if generated_sentences:
-        #     yield tuple(zip(regexps, generated_sentences)), generated_labels
-        #     generated_cnt += len(generated_sentences)
-        #     regexps, generated_sentences, generated_labels = [], [], []
-        #
-        # log.info(f"Original number of samples: {len(sentences)}"
-        #          f", generated samples: {generated_cnt}")
+    #     # tuple(zip) below does [r1, r2, ..], [s1, s2, ..] -> ((r1, s1), (r2, s2), ..)
+    #     yield tuple(zip(regexps, generated_sentences)), generated_labels
+    #     generated_cnt += len(generated_sentences)
+    #     regexps, generated_sentences, generated_labels = [], [], []
+    #
+    # if generated_sentences:
+    #     yield tuple(zip(regexps, generated_sentences)), generated_labels
+    #     generated_cnt += len(generated_sentences)
+    #     regexps, generated_sentences, generated_labels = [], [], []
+    #
+    # log.info(f"Original number of samples: {len(sentences)}"
+    #          f", generated samples: {generated_cnt}")
 
     def get_instances(self, data_type: str = 'train') -> Tuple[
         tuple, tuple]:
@@ -133,12 +130,12 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
         return res
 
 
-
 class TurnIterator:
     _USER_SPEAKER_ID = 1
     _SYSTEM_SPEAKER_ID = 2
 
-    def __init__(self, turn: Turn, nlu: Intents, domain_knowledge: DomainKnowledge, ignore_slots: bool = False):
+    def __init__(self, turn: Turn, nlu: Intents,
+                 domain_knowledge: DomainKnowledge, ignore_slots: bool = False):
         self.turn = turn
         self.intents: Intents = nlu
         self.domain_knowledge = domain_knowledge
@@ -147,7 +144,8 @@ class TurnIterator:
     def _clarify_slots_values(self, slots_dstc2formatted):
         slots_key = []
         for slot_name, slot_value in slots_dstc2formatted:
-            slot_actual_value = self.intents.slot_name2text2value.get(slot_name, {}).get(
+            slot_actual_value = self.intents.slot_name2text2value.get(slot_name,
+                                                                      {}).get(
                 slot_value, slot_value)
             slots_key.append((slot_name, slot_actual_value))
         slots_key = tuple(sorted(slots_key))
@@ -172,7 +170,8 @@ class TurnIterator:
             slots_dstc2formatted = dict()
         return user_action, slots_dstc2formatted
 
-    def choose_slots_for_whom_exists_text(self, slots_actual_values, user_action):
+    def choose_slots_for_whom_exists_text(self, slots_actual_values,
+                                          user_action):
         """
                 Args:
                     slots_actual_values: the slot values information to look utterance for
@@ -186,7 +185,8 @@ class TurnIterator:
         possible_keys = sorted(possible_keys,
                                key=lambda action_s: action_s.count('+'))
         for possible_action_key in possible_keys:
-            if self.intents.intent2slots2text[possible_action_key].get(slots_actual_values):
+            if self.intents.intent2slots2text[possible_action_key].get(
+                    slots_actual_values):
                 slots_used_values = slots_actual_values
                 slots_to_exclude = []
                 return slots_to_exclude, slots_used_values, possible_action_key
@@ -194,16 +194,17 @@ class TurnIterator:
                 slots_lazy_key = set(e[0] for e in slots_actual_values)
                 slots_lazy_key -= {"intent"}
                 fake_keys = []
-                for known_key in self.intents.intent2slots2text[possible_action_key].keys():
+                for known_key in self.intents.intent2slots2text[
+                    possible_action_key].keys():
                     if slots_lazy_key.issubset(set(e[0] for e in known_key)):
                         fake_keys.append(known_key)
                         break
 
                 if fake_keys:
                     slots_used_values = sorted(fake_keys, key=lambda elem: (
-                    len(set(slots_actual_values) ^ set(elem)),
-                    len([e for e in elem
-                         if e[0] not in slots_lazy_key]))
+                        len(set(slots_actual_values) ^ set(elem)),
+                        len([e for e in elem
+                             if e[0] not in slots_lazy_key]))
                                                )[0]
 
                     slots_to_exclude = [e[0] for e in slots_used_values if
@@ -212,7 +213,7 @@ class TurnIterator:
 
         raise KeyError("no possible NLU candidates found")
 
-    def user_action2text(self, user_action: str, slots_li = None) :
+    def user_action2text(self, user_action: str, slots_li=None):
         """
         given the user intent, return the text representing this intent with passed slots
         Args:
@@ -223,16 +224,19 @@ class TurnIterator:
         """
         if slots_li is None:
             slots_li = tuple()
-        return self.intents.intent2slots2text[user_action][slots_li]
+        res = self.intents.intent2slots2text[user_action][slots_li]
+        return res
 
     def process_user_turn(self):
         user_action, slots_dstc2formatted = self.parse_user_intent()
         slots_actual_values = self._clarify_slots_values(slots_dstc2formatted)
-        slots_to_exclude, slots_used_values, action_for_text = self.choose_slots_for_whom_exists_text(slots_actual_values, user_action)
+        slots_to_exclude, slots_used_values, action_for_text = self.choose_slots_for_whom_exists_text(
+            slots_actual_values, user_action)
         possible_user_response_infos = self.user_action2text(action_for_text,
-                                                              slots_used_values)
+                                                             slots_used_values)
         # possible_user_utters = []
         for user_response_info in possible_user_response_infos:
+            print(user_response_info)
             user_utter = {"speaker": self._USER_SPEAKER_ID,
                           "text": user_response_info["text"],
                           "dialog_acts": [{"act": user_action,
@@ -351,11 +355,13 @@ def iterProduct(ic):
             yield [i] + js
 
 class StoryGenerator:
-    def __init__(self, story: Story, nlu: Intents, domain_knowledge: DomainKnowledge, ignore_slots=False):
+    def __init__(self, story: Story, nlu: Intents,
+                 domain_knowledge: DomainKnowledge, ignore_slots=False):
         self.story: Story = story
         self.turn_iterators = []
-        for turn in story:
-            turn_iterator = TurnIterator(turn, nlu, domain_knowledge, ignore_slots)
+        for turn in story.turns:
+            turn_iterator = TurnIterator(turn, nlu, domain_knowledge,
+                                         ignore_slots)
             self.turn_iterators.append(turn_iterator)
         self.turn_ix = -1
         self.version_ix = -1
@@ -364,19 +370,23 @@ class StoryGenerator:
         for i in iterProduct(self.turn_iterators):
             yield i
 
+
 class StoriesGenerator:
-    def __init__(self, stories: Stories, intents: Intents, domain_knowledge: DomainKnowledge, ignore_slots: False, batch_size = 1):
+    def __init__(self, stories: Stories, intents: Intents,
+                 domain_knowledge: DomainKnowledge, ignore_slots: False,
+                 batch_size=1):
         self.stories = stories
         self.intents = intents
         self.domain_knowledge = domain_knowledge
         self.ignore_slots = ignore_slots
-        self.batch_size =  batch_size
+        self.batch_size = batch_size
 
     def generate(self):
         batch = dict()
         for story in self.stories.stories:
-            story_generator = StoryGenerator(story,self.intents,
-                                             self.domain_knowledge,self.ignore_slots)
+            story_generator = StoryGenerator(story, self.intents,
+                                             self.domain_knowledge,
+                                             self.ignore_slots)
             for story_data in story_generator.gen_story_sample():
                 batch[story.title] = story_data
                 if len(batch) == self.batch_size:

@@ -50,3 +50,4 @@ class Stories:
                 line_content = line.strip('-').strip()
                 # noinspection PyUnboundLocalVariable
                 curr_story.turns.append(Turn(line_content, SYSTEM))
+        return stories
