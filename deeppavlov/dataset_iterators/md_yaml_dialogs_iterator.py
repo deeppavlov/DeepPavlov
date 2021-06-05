@@ -62,6 +62,7 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
         dialogs = False
         ignore_slots = False
+        # print(stories)
         story_iterator = StoriesGenerator(stories,
                                           intents,
                                           domain_knowledge,
@@ -79,11 +80,23 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
             #     print(file=tmp_f)
             # tmp_f.close()
             # noinspection PyProtectedMember
+            # print(batch)
             gobot_formatted_stories = DSTC2DatasetReader._read_from_batch(
                 list(itertools.chain(*[v + [{}] for v in batch.values()])),
                 dialogs=dialogs)
             # os.remove(tmp_f.name)
-            yield gobot_formatted_stories
+            ds = []
+            prev_resp_act = None
+            for x, y in gobot_formatted_stories:
+                if x.get('episode_done'):
+                    del x['episode_done']
+                    prev_resp_act = None
+                    ds.append(([], []))
+                x['prev_resp_act'] = prev_resp_act
+                prev_resp_act = y['act']
+                ds[-1][0].append(x)
+                ds[-1][1].append(y)
+            yield zip(*ds)
 
     # def read_story(self, stories: Stories, dialogs,
     #                domain_knowledge: DomainKnowledge, nlu_knowledge: Intents,
@@ -123,10 +136,19 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
     def get_instances(self, data_type: str = 'train') -> Tuple[
         tuple, tuple]:
-        res = tuple(map(lambda it: tuple(itertools.chain(*it)),
-                        zip(*self.gen_batches(batch_size=-1,
-                                              data_type=data_type,
-                                              shuffle=False))))
+        concat = lambda it: tuple(itertools.chain(*it))
+        tmp = self.gen_batches(batch_size=-1,
+                               data_type=data_type,
+                               shuffle=False)
+        # print("a")
+        res = tuple(e for el in tmp
+                    for e in el)
+        # print("b")
+        # print(a)
+        # print("c")
+        # res = tuple(map(concat,zip(*tmp)))
+
+        # print(res)
         return res
 
 
@@ -225,6 +247,8 @@ class TurnIterator:
         if slots_li is None:
             slots_li = tuple()
         res = self.intents.intent2slots2text[user_action][slots_li]
+        # print(res)
+        # print(self.intents.intent2slots2text)
         return res
 
     def process_user_turn(self):
@@ -334,7 +358,6 @@ class TurnIterator:
 
         yield system_action
 
-
     def __call__(self):
         if self.turn.is_user_turn():
             for possible_turn in self.process_user_turn():
@@ -353,6 +376,7 @@ def iterProduct(ic):
     for i in ic[0]():
         for js in iterProduct(ic[1:]):
             yield [i] + js
+
 
 class StoryGenerator:
     def __init__(self, story: Story, nlu: Intents,
