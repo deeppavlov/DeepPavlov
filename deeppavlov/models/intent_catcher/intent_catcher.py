@@ -23,7 +23,6 @@ import numpy as np
 import tensorflow as tf
 import tensorflow_hub as tfhub
 from overrides import overrides
-from xeger import Xeger
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.nn_model import NNModel
@@ -71,7 +70,7 @@ class IntentCatcher(NNModel):
         }
         if embeddings not in urls:
             raise Exception(f"Provided embeddings type `{embeddings}` is not available. Available embeddings are: use, use_large.")
-        self.limit = limit
+
         embedder = tfhub.Module(urls[embeddings])
         self.sentences = tf.placeholder(dtype=tf.string)
         self.embedded = embedder(self.sentences)
@@ -151,54 +150,53 @@ class IntentCatcher(NNModel):
         Train classifier on batch of data.
 
         Args:
-            x: List of input sentences
+            x: List of tuples: <source_regex, generated sentence>
             y: List of input encoded labels
 
         Returns:
             List[float]: list of losses.
         """
         assert len(x) == len(y), "Number of labels is not equal to the number of sentences"
-        try:
-            regexps = {(re.compile(s), l) for s, l in zip(x, y)}
-        except Exception as e:
-            log.error(f"Some sentences are not a consitent regular expressions")
-            raise e
-        xeger = Xeger(self.limit)
-        self.regexps = self.regexps.union(regexps)
-        generated_x = []
-        generated_y = []
-        for s, l in zip(x, y): # generate samples and add regexp
-            gx = {xeger.xeger(s) for _ in range(self.limit)}
-            generated_x.extend(gx)
-            generated_y.extend([l for i in range(len(gx))])
-        log.info(f"Original number of samples: {len(y)}, generated samples: {len(generated_y)}")
-        embedded_x = self.session.run(self.embedded, feed_dict={self.sentences:generated_x}) # actual trainig
-        loss = self.classifier.train_on_batch(embedded_x, generated_y)
+
+        # zip below does [(r1, s1), (r2, s2), ..] -> [r1, r2, ..], [s1, s2, ..]
+        passed_regexps, passed_sents = zip(*x)
+        self.regexps = self.regexps.union(set(zip(passed_regexps, y)))
+
+        # region actual trainig
+        embedded_sents = self.session.run(self.embedded,
+                                      feed_dict={self.sentences:passed_sents})
+        loss = self.classifier.train_on_batch(embedded_sents, y)
+        # endregion actual trainig
         return loss
 
     def process_event(self, event_name, data):
         pass
 
-    def __call__(self, x: List[str]) -> List[int]:
+    def __call__(self, x: Union[List[str], List[tuple]]) -> List[int]:
         """
         Predict probabilities.
 
         Args:
-            x: list of input sentences.
+            x: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of probabilities.
         """
+        if x and isinstance(x[0], tuple):
+            x = [sent for _re, sent in x]
         return self._predict_proba(x)
 
-    def _predict_label(self, sentences: List[str]) -> List[int]:
+    def _predict_label(self, sentences: Union[List[str], List[tuple]]) -> List[int]:
         """
         Predict labels.
 
         Args:
-            x: list of input sentences.
+            sentences: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of labels.
         """
+        if sentences and isinstance(x[0], tuple):
+            sentences = [sent for _re, sent in sentences]
+
         labels = [None for i in range(len(sentences))]
         indx = []
         for i, s in enumerate(sentences):
@@ -214,15 +212,17 @@ class IntentCatcher(NNModel):
             labels[indx[i]] = l
         return labels
 
-    def _predict_proba(self, x: List[str]) -> List[float]:
+    def _predict_proba(self, x: Union[List[str], List[tuple]]) -> List[float]:
         """
         Predict probabilities. Used in __call__.
 
         Args:
-            x: list of input sentences.
+            x: list of input sentences or List of tuples: <regex, generated sentence>
         Returns:
             list of probabilities
         """
+        if x and isinstance(x[0], tuple):
+            x = [sent for _re, sent in x]
         x_embedded = self.session.run(self.embedded, feed_dict={self.sentences:x})
         probs = self.classifier.predict_proba(x_embedded)
         _, num_labels = probs.shape

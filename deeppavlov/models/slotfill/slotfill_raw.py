@@ -25,7 +25,8 @@ from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.dataset_readers.md_yaml_dialogs_reader import MD_YAML_DialogsDatasetReader, DomainKnowledge
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 
 log = getLogger(__name__)
 
