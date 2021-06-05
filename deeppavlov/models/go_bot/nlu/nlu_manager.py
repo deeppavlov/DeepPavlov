@@ -66,14 +66,18 @@ class NLUManager(NLUManagerInterface):
 
         intents = []
         if callable(self.intent_classifier):
-            intents = self._extract_intents_from_tokenized_text_entry(tokens)
+            intents = self._extract_intents_from_text_entry(text)
 
         return NLUResponse(slots, intents, tokens)
 
     def _extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated intent classifier
-        classifier_output = self.intent_classifier([' '.join(tokens)])
-        intent_features = classifier_output[1][0]
+        intent_features = self.intent_classifier([' '.join(tokens)])[1][0]
+        return intent_features
+
+    def _extract_intents_from_text_entry(self, text: str):
+        # todo meaningful type hints, relies on unannotated intent classifier
+        intent_features = self.intent_classifier([text])[1][0]
         return intent_features
 
     def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):
