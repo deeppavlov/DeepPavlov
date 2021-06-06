@@ -218,7 +218,7 @@ class FeaturizedTracker(TrackerInterface):
                 curr_action = step["action"]
                 if curr_action.startswith("form"):
                     curr_action = json.loads(curr_action[len("form"):])["name"]
-                    print(curr_action)
+                    # print(curr_action)
                 if curr_action in form_names:
                     prev_forms.append(curr_action)
                 if curr_action in potential_api_or_db_actions:
