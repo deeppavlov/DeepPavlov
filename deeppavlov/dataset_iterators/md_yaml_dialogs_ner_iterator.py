@@ -114,3 +114,47 @@ class MD_YAML_DialogsDatasetNERIterator(MD_YAML_DialogsDatasetIterator):
     def _is_equal_sequences(seq1, seq2):
         equality_list = [tok1 == tok2 for tok1, tok2 in zip(seq1, seq2)]
         return all(equality_list)
+
+
+@register("md_yaml_dialogs_intents_iterator")
+class MD_YAML_DialogsDatasetIntentsIterator(MD_YAML_DialogsDatasetIterator):
+
+    def __init__(self,
+                 data: Dict[str, List[Tuple[Any, Any]]],
+                 seed: int = None,
+                 shuffle: bool = True,
+                 limit: int = 10) -> None:
+        super().__init__(data, seed, shuffle, limit)
+
+    def gen_batches(self,
+                    batch_size: int,
+                    data_type: str = 'train',
+                    shuffle: bool = None) -> Iterator[Tuple]:
+
+        for batch in super().gen_batches(batch_size,
+                                         data_type,
+                                         shuffle):
+            processed_data = list()
+            for users, syss in zip(*batch):
+                for user, sys in zip(users, syss):
+                    reply = user
+                    curr_intents = []
+                    # print(turn)
+                    if reply['intents']:
+                        for intent in reply['intents']:
+                            for slot in intent['slots']:
+                                if slot[0] == 'slot':
+                                    curr_intents.append(
+                                        intent['act'] + '_' + slot[1])
+                                else:
+                                    curr_intents.append(
+                                        intent['act'] + '_' + slot[0])
+                            if len(intent['slots']) == 0:
+                                curr_intents.append(intent['act'])
+                    else:
+                        if reply['text']:
+                            curr_intents.append('unknown')
+                        else:
+                            continue
+                    processed_data.append((reply['text'], curr_intents))
+            yield processed_data
