@@ -96,8 +96,8 @@ class MemClassificationModel(NNModel):
             labels = labels_
         self.text2label.update(dict(zip(texts, labels)))
         self.classes = list(sorted(set(self.classes + labels)))
-        print(self.text2label)
-        print(self.classes)
+        # print(self.text2label)
+        # print(self.classes)
         pseudo_loss = 0 if self.is_trained else 1
         self.is_trained = True
         self.save()
@@ -105,14 +105,14 @@ class MemClassificationModel(NNModel):
 
     @overrides
     def save(self, *args, **kwargs):
-        print("saving")
+        # print("saving")
         save_json({"classes": self.classes,
                    "text2label": self.text2label},
                   self.save_path)
 
     @overrides
     def load(self, *args, **kwargs):
-        print("loading")
+        # print("loading")
         try:
             loaded = read_json(self.save_path)
             self.classes = loaded["classes"]
