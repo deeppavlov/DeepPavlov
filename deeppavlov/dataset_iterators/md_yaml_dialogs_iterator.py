@@ -25,6 +25,7 @@ from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 from deeppavlov.dataset_readers.dto.rasa.stories import Story, Turn, Stories
 from deeppavlov.dataset_readers.dto.rasa.nlu import Intents
+import random
 
 log = getLogger(__name__)
 
@@ -258,8 +259,9 @@ class TurnIterator:
             slots_actual_values, user_action)
         possible_user_response_infos = self.user_action2text(action_for_text,
                                                              slots_used_values)
+        random.shuffle(possible_user_response_infos)
         # possible_user_utters = []
-        for user_response_info in possible_user_response_infos:
+        for user_response_info in possible_user_response_infos[:2]:
             # print(user_response_info)
             user_utter = {"speaker": self._USER_SPEAKER_ID,
                           "text": user_response_info["text"],

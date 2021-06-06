@@ -134,7 +134,7 @@ class MD_YAML_DialogsDatasetIntentsIterator(MD_YAML_DialogsDatasetIterator):
         for batch in super().gen_batches(batch_size,
                                          data_type,
                                          shuffle):
-            processed_data = list()
+            texts, intents = list(), list()
             for users, syss in zip(*batch):
                 for user, sys in zip(users, syss):
                     reply = user
@@ -156,5 +156,7 @@ class MD_YAML_DialogsDatasetIntentsIterator(MD_YAML_DialogsDatasetIterator):
                             curr_intents.append('unknown')
                         else:
                             continue
-                    processed_data.append((reply['text'], curr_intents))
-            yield processed_data
+                    texts.append(reply["text"])
+                    intents.append(curr_intents)
+                    # processed_data.append((reply['text'], curr_intents))
+            yield texts, intents
