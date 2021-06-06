@@ -260,7 +260,7 @@ class TurnIterator:
                                                              slots_used_values)
         # possible_user_utters = []
         for user_response_info in possible_user_response_infos:
-            print(user_response_info)
+            # print(user_response_info)
             user_utter = {"speaker": self._USER_SPEAKER_ID,
                           "text": user_response_info["text"],
                           "dialog_acts": [{"act": user_action,
