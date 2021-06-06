@@ -123,7 +123,7 @@ class DSTC2DatasetReader(DatasetReader):
     @classmethod
     def _read_from_batch(cls, batch, dialogs=False):
         """Returns data from single batch"""
-        log.info(f"[loading dialogs from batch of len {len(batch)}]")
+        log.debug(f"[loading dialogs from batch of len {len(batch)}]")
 
         utterances, responses, dialog_indices = \
             cls._get_turns(batch, with_indices=True)

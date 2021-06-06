@@ -81,6 +81,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         actions_combinations = set()
         for dataset_split in dataset.values():
             actions_combinations.update(dataset_split["domain"].known_actions)
+        actions_combinations = {(ac,) for ac in actions_combinations}
         #     for dialogue in dataset_split:
         #         for user_input, system_response in dialogue:
         #             actions_tuple = tuple(system_response["act"].split('+'))
