@@ -35,6 +35,8 @@
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
           "ngram_range": [
             1,
             2
@@ -43,7 +45,7 @@
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 25,
+        "top_n": 12,
         "in": [
           "docs"
         ],
@@ -66,10 +68,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-      "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",

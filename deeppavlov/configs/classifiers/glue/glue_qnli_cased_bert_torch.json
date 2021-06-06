@@ -18,7 +18,7 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "torch_bert_preprocessor",
+        "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 128,
@@ -42,7 +42,7 @@
         "single_vector": true
       },
       {
-        "class_name": "torch_bert_classifier",
+        "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "pretrained_bert": "{BASE_MODEL}",
@@ -91,10 +91,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_qnli_torch_cased_bert",
       "BASE_MODEL": "bert-base-cased"
-    },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ]
+    }
   }
 }

@@ -1,10 +1,10 @@
 {
   "dataset_reader": {
-    "class_name": "deeppavlov.dataset_readers.typos_reader:TyposWikipedia",
+    "class_name": "typos_wikipedia_reader",
     "data_path": "{DOWNLOADS_PATH}"
   },
   "dataset_iterator": {
-    "class_name": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
+    "class_name": "typos_iterator",
     "test_ratio": 0.05
   },
   "chainer":{
@@ -36,13 +36,13 @@
         "window": 1,
         "candidates_count": 4,
         "dictionary": {
-          "class_name": "deeppavlov.vocabs.typos:Wiki100KDictionary",
+          "class_name": "wikitionary_100K_vocab",
           "data_dir": "{DOWNLOADS_PATH}/vocabs"
         },
         "save_path": "{MODELS_PATH}/error_model/error_model.tsv"
       },
       {
-        "class_name": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+        "class_name": "kenlm_elector",
         "in": ["tokens_candidates"],
         "out": ["y_predicted_tokens"],
         "load_path": "{DOWNLOADS_PATH}/language_models/en_wiki_no_punkt.arpa.binary"
@@ -65,10 +65,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/error_model.tar.gz",

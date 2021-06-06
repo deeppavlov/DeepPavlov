@@ -1,0 +1,175 @@
+{
+  "chainer": {
+    "in": ["x_init"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "question_sign_checker",
+        "in": ["x_init"],
+        "out": ["x"]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/ner/ner_lcquad_bert_ent_and_type.json",
+        "in": ["x"],
+        "out": ["x_tokens", "y_pred"]
+      },
+      {
+        "in": ["x_tokens", "y_pred"],
+        "out": ["entities", "types", "entities_pos"],
+        "entity_tags": ["E-TAG"],
+        "type_tag": "T-TAG",
+        "o_tag": "O-TAG",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "class_name": "entity_detection_parser"
+      },
+      {
+        "class_name": "template_matcher",
+        "id": "template_m",
+        "num_processors": 16,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "templates_filename": "templates_eng.json"
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
+        "in": ["x"],
+        "out": ["template_type"]
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "id": "linker_entities",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_eng.pickle",
+        "entities_list_filename": "entities_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "who_entities_filename": "who_entities.pickle",
+        "build_inverted_index": false,
+        "use_descriptions": false,
+        "use_prefix_tree": false
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "id": "linker_types",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_types_eng.pickle",
+        "entities_list_filename": "types_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name_types.pickle",
+        "build_inverted_index": false,
+        "use_descriptions": false,
+        "use_prefix_tree": false
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "rel_r_inf",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking.json"},
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "rels_to_leave": 40
+      },
+      {
+        "class_name": "query_generator",
+        "id": "query_g",
+        "linker_entities": {"config_path": "{CONFIGS_PATH}/kbqa/kbqa_entity_linking.json"},
+        "linker_types": "#linker_types",
+        "template_matcher": "#template_m",
+        "rel_ranker": "#rel_r_inf",
+        "wiki_parser": {"config_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rank_rels_filename_1": "rels_0.txt",
+        "rank_rels_filename_2": "rels_1.txt",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "wiki_file_format": "pickle",
+        "entities_to_leave": 5,
+        "rels_to_leave": 10,
+        "in": ["x", "x", "template_type", "entities", "types"],
+        "out": ["candidate_answers"]
+      },
+      {
+        "class_name": "rel_ranking_bert_infer",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/rel_ranking_bert.json"},
+        "wiki_parser": {"config_path": "{CONFIGS_PATH}/kbqa/wiki_parser.json"},
+        "batch_size": 32,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties.pickle",
+        "in": ["x", "candidate_answers"],
+        "out": ["answers"]
+      }
+    ],
+    "out": ["answers"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 16,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "y_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "y_pred"]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_batches": 400,
+
+    "log_every_n_batches": 400,
+    "tensorboard_log_dir": "{NER_PATH}/logs",
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
+      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "labels": {
+      "telegram_utils": "NERCoNLL2003Model",
+      "server_utils": "NER"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/reddit_fastText/wordpunct_tok_reddit_comments_2017_11_300.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models_kbqa"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/query_prediction.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/query_prediction"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_lcquad.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_lcquad_ent_and_type"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking.tar.gz",
+        "subdir": "{MODELS_PATH}/rel_ranking"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert.tar.gz",
+        "subdir": "{MODELS_PATH}/rel_ranking_bert"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_eng_files.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_compr.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      }
+    ]
+  }
+}

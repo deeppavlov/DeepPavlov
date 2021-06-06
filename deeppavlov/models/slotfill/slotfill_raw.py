@@ -25,7 +25,8 @@ from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.dataset_readers.md_yaml_dialogs_reader import MD_YAML_DialogsDatasetReader, DomainKnowledge
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 
 log = getLogger(__name__)
 
@@ -175,7 +176,30 @@ class RASA_SlotFillingComponent(SlotFillingComponent):
         """reads the slotfilling info from RASA-styled dataset"""
         domain_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
         nlu_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
-        domain_knowledge = DomainKnowledge(read_yaml(domain_path))
+        # domain_knowledge = DomainKnowledge(read_yaml(domain_path))
         # todo: rewrite MD_YAML_DialogsDatasetReader so that public methods are enough
-        _, slot_name2text2value = MD_YAML_DialogsDatasetReader._read_intent2text_mapping(nlu_path, domain_knowledge)
+        data = MD_YAML_DialogsDatasetReader.read(self.load_path)
+        nlu_lines_trn = dict()
+        nlu_lines_tst = dict()
+        nlu_lines_val = dict()
+        if "train" in data:
+            nlu_lines_trn = data["train"]["nlu_lines"].slot_name2text2value
+        if "test" in data:
+            nlu_lines_tst = data["test"]["nlu_lines"].slot_name2text2value
+        if "valid" in data:
+            nlu_lines_val = data["valid"]["nlu_lines"].slot_name2text2value
+        slot_names = list(nlu_lines_trn.keys()) + \
+                     list(nlu_lines_tst.keys()) + \
+                     list(nlu_lines_val.keys())
+        slot_name2text2value = dict()
+        for sname in slot_names:
+            stext2value = dict()
+            for sample in [nlu_lines_trn,
+                           nlu_lines_tst,
+                           nlu_lines_val]:
+                for stext,ssamples in sample.get(sname,{}).items():
+                    if stext not in stext2value:
+                        stext2value[stext] = list()
+                    stext2value[stext].extend(ssamples)
+            slot_name2text2value[sname] = stext2value
         self._slot_vals = slot_name2text2value

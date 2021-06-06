@@ -4,6 +4,7 @@ from typing import List
 from deeppavlov import Chainer
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
 from deeppavlov.models.bert.bert_classifier import BertClassifierModel
+from deeppavlov.models.intent_catcher.intent_catcher import IntentCatcher
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.nlu.nlu_manager_interface import NLUManagerInterface
 
@@ -34,7 +35,7 @@ class NLUManager(NLUManagerInterface):
         self.intents = []
         if isinstance(self.intent_classifier, Chainer):
             component = self.intent_classifier.get_main_component()
-            if isinstance(component, BertClassifierModel):
+            if isinstance(component, BertClassifierModel) or isinstance(component, IntentCatcher):
                 intent2labeltools = [el[-1] for el in self.intent_classifier.pipe if isinstance(el[-1], SimpleVocabulary)]
                 if intent2labeltools:
                     self.intents = intent2labeltools[-1]._i2t
@@ -65,7 +66,7 @@ class NLUManager(NLUManagerInterface):
 
         intents = []
         if callable(self.intent_classifier):
-            intents = self._extract_intents_from_tokenized_text_entry(tokens)
+            intents = self._extract_intents_from_text_entry(text)
 
         return NLUResponse(slots, intents, tokens)
 
@@ -73,6 +74,11 @@ class NLUManager(NLUManagerInterface):
         # todo meaningful type hints, relies on unannotated intent classifier
         classifier_output = self.intent_classifier([' '.join(tokens)])
         intent_features = classifier_output[1][0]
+        return intent_features
+
+    def _extract_intents_from_text_entry(self, text: str):
+        # todo meaningful type hints, relies on unannotated intent classifier
+        intent_features = self.intent_classifier([text])[1][0]
         return intent_features
 
     def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):

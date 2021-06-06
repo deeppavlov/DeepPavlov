@@ -22,6 +22,7 @@ from gensim.models import KeyedVectors
 from gensim.models.wrappers import FastText
 from tensorflow.contrib.layers import xavier_initializer, xavier_initializer_conv2d
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 
@@ -67,7 +68,7 @@ class HybridNerModel(LRScheduledTFModel):
                  chunk_vocab_size: int = None,
                  char_dim: int = None,
                  elmo_dim: int = None,
-                 elmo_hub_path = "https://tfhub.dev/google/elmo/2",
+                 elmo_hub_path: str = "https://tfhub.dev/google/elmo/2",
                  pos_dim: int = None,
                  chunk_dim: int = None,
                  cap_dim: int = None,
@@ -88,6 +89,7 @@ class HybridNerModel(LRScheduledTFModel):
         super().__init__(**kwargs)
 
         word2id = word_vocab.t2i
+        word_emb_path = str(expand_path(word_emb_path))
 
         self._dropout_ph = tf.placeholder_with_default(dropout_keep_prob, shape=[], name='dropout')
         self.training_ph = tf.placeholder_with_default(False, shape=[], name='is_training')

@@ -221,13 +221,6 @@
       "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/datasets/query_prediction.tar.gz",

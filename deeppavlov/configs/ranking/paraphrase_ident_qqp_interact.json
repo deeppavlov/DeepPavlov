@@ -101,13 +101,9 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
-    ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/paraphrase_ident_qqp_27112020.tar.gz",
         "subdir": "{MODELS_PATH}"
       },
       {

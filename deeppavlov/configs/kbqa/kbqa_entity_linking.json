@@ -1,0 +1,55 @@
+{
+  "chainer": {
+    "in": ["entity_substr", "template", "context"],
+    "pipe": [
+      {
+        "class_name": "rel_ranking_bert_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_eng_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "q_to_descr_en.pickle",
+        "rels_to_leave": 20
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "in": ["entity_substr", "template", "context"],
+        "out": ["entity_ids", "confidences"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "inverted_index_filename": "inverted_index_eng.pickle",
+        "entities_list_filename": "entities_list.pickle",
+        "q2name_filename": "wiki_eng_q_to_name.pickle",
+        "q2descr_filename": "q_to_descr_en.pickle",
+        "who_entities_filename": "who_entities.pickle",
+        "entity_ranker": "#entity_descr_ranking",
+        "build_inverted_index": false,
+        "use_descriptions": false,
+        "use_prefix_tree": false,
+        "num_entities_to_return": 2
+      }
+    ],
+    "out": ["entity_ids", "confidences"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_entity_linking_eng.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_eng_no_mention.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_ranking_bert_eng_no_mention"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_en.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
+      }
+    ]
+  }
+}

@@ -18,8 +18,8 @@
     ],
     "pipe": [
       {
-        "class_name": "torch_bert_preprocessor",
-        "vocab_file": "bert-base-uncased",
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
         "do_lower_case": true,
         "max_seq_length": 64,
         "in": [
@@ -56,10 +56,10 @@
         "single_vector": true
       },
       {
-        "class_name": "torch_bert_classifier",
+        "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
-        "pretrained_bert": "bert-base-uncased",
+        "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
@@ -129,15 +129,12 @@
   },
   "metadata": {
     "variables": {
+      "TRANSFORMER": "bert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/insults_kaggle_torch_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",

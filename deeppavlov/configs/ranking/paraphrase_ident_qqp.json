@@ -75,10 +75,10 @@
     "epochs": 200,
     "batch_size": 256,
     "pytest_max_batches": 2,
-    "metric_optimization": "minimize",
-    "train_metrics": ["log_loss", "acc", "f1"],
-    "metrics": ["log_loss", "acc", "f1"],
-    "validation_patience": 10,
+    "metric_optimization": "maximize",
+    "train_metrics": ["acc", "log_loss", "f1"],
+    "metrics": ["acc", "log_loss", "f1"],
+    "validation_patience": 2,
     "val_every_n_epochs": 1,
     "log_every_n_batches": 525,
     "class_name": "nn_trainer",
@@ -93,10 +93,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/quora_question_pairs.zip",

@@ -1,1 +1,0 @@
-from .transparent_filter import TransparentFilter

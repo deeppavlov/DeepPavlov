@@ -328,7 +328,7 @@ class MultipleUserStateTrackersPool(object):
         return tracker
 
     def new_tracker(self):
-        # todo deprecated and never used?  (response: nope, but should be removed in favor of init_new_tracker)
+       # todo deprecated and never used?  (response: nope, but should be removed in favor of init_new_tracker)
         tracker = self.base_tracker.__class__(
             self.base_tracker.slot_names, self.base_tracker.n_actions,
             self.base_tracker.api_call_id, self.base_tracker.hidden_size,
@@ -344,7 +344,7 @@ class MultipleUserStateTrackersPool(object):
     def init_new_tracker(self, user_id: int, tracker_entity: DialogueStateTracker) -> None:
         # TODO: implement a better way to init a tracker
         # todo deprecated. The whole class should follow AbstractFactory or Pool pattern?
-        tracker = tracker_entity.__class__(
+        tracker = DialogueStateTracker(
             tracker_entity.slot_names,
             tracker_entity.n_actions,
             tracker_entity.api_call_id,

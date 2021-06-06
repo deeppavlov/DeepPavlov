@@ -7,7 +7,9 @@ import numpy as np
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
-from deeppavlov.dataset_readers.md_yaml_dialogs_reader import DomainKnowledge, MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import \
+    MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
@@ -219,7 +221,7 @@ class FeaturizedTracker(TrackerInterface):
                 curr_action = step["action"]
                 if curr_action.startswith("form"):
                     curr_action = json.loads(curr_action[len("form"):])["name"]
-                    print(curr_action)
+                    # print(curr_action)
                 if curr_action in form_names:
                     prev_forms.append(curr_action)
                 if curr_action in potential_api_or_db_actions:

@@ -54,10 +54,6 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "ecommerce_skill": {
-        ("ecommerce_skill/bleu_retrieve.json", "ecommerce_skill_bleu", ALL_MODES): [('Dummy text', [], {}, None)],
-        ("ecommerce_skill/tfidf_retrieve.json", "ecommerce_skill_tfidf", ALL_MODES): [('Dummy text', [], {}, None)]
-    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -157,6 +153,12 @@ PARAMS = {
                  (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
                   ['Q19686', 'Q1693', 'Q21'])),
                 ("abc", ([], [], []))
+            ],
+        ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
+            [
+                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
+                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
+                (["  "], "", "", ([[]], [[]]))
             ]
     },
     "ner": {
@@ -186,7 +188,8 @@ PARAMS = {
             ],
         ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
             ("i see 1 cat", ({"number": '1'},))],
-        ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
         ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
@@ -197,14 +200,21 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
@@ -218,7 +228,7 @@ PARAMS = {
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
         ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
@@ -291,23 +301,6 @@ PARAMS = {
         ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    },
-    "seq2seq_go_bot": {
-        ("seq2seq_go_bot/bot_kvret_train.json", "seq2seq_go_bot", ('TI',)):
-            [
-                ("will it snow on tuesday?",
-                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-                 "",
-                 "",
-                 "",
-                 None)
-            ],
-        ("seq2seq_go_bot/bot_kvret.json", "seq2seq_go_bot", ('IP',)):
-            [
-                ("will it snow on tuesday?",
-                 "f78cf0f9-7d1e-47e9-aa45-33f9942c94be",
-                 None)
-            ]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -687,30 +680,6 @@ def test_param_search():
 
     logfile = io.BytesIO(b'')
     p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
-                                       timeout=None, logfile=logfile)
-    p.readlines()
-    if p.wait() != 0:
-        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                           .format(model_dir, logfile.getvalue().decode()))
-
-    shutil.rmtree(str(download_path), ignore_errors=True)
-
-
-def test_evolving():
-    model_dir = 'evolution'
-    conf_file = 'evolution/evolve_intents_snips.json'
-    download_config(conf_file)
-
-    c = test_configs_path / conf_file
-    model_path = download_path / model_dir
-
-    install_config(c)
-    deep_download(c)
-
-    shutil.rmtree(str(model_path), ignore_errors=True)
-
-    logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.evolve {c} --iterations 1 --p_size 1",
                                        timeout=None, logfile=logfile)
     p.readlines()
     if p.wait() != 0:
