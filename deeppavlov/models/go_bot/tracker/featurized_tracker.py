@@ -38,7 +38,7 @@ class FeaturizedTracker(TrackerInterface):
                  # actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
                  domain_yml_path: Optional[Union[str, Path]]=None,
                  stories_yml_path: Optional[Union[str, Path]]=None,
-                 mode: str = "NN",
+                 tracker_mode: str = "NN",
                  **kwargs) -> None:
         self.slot_names = list(slot_names)
         self.domain_yml_path = domain_yml_path
@@ -47,8 +47,8 @@ class FeaturizedTracker(TrackerInterface):
             self._load_actions2slots_formfilling_info_from(domain_yml_path, stories_yml_path)
         self.history = []
         self.current_features = None
-        assert mode in {"NN", "MEM"}
-        self.mode = mode
+        assert tracker_mode in {"NN", "MEM"}
+        self.mode = tracker_mode
 
     @property
     def state_size(self) -> int:

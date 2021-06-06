@@ -140,9 +140,14 @@ class GoalOrientedBot(NNModel):
 
         # todo make mor abstract
         tracker_class: Type = type(tracker)
-        if tracker_class == MemorizingDialogueStateTracker:
+        if tracker.mode == "MEM":
+            tracker_class = MemorizingDialogueStateTracker
             features_params_class: Type = MemorizingGoBotParams
             policy_class: Type = MemorizingPolicy
+        elif tracker.mode == "NN":
+            tracker_class = DialogueStateTracker
+            features_params_class: Type = SharedGoBotParams
+            policy_class: Type = PolicyNetwork
 
         self.dialogue_state_tracker = tracker_class.from_gobot_params(tracker, self.nlg_manager,
                                                                              policy_network_params, database)
