@@ -99,7 +99,7 @@ class Intents:
         sn2t2v = dict()
         for intent in self.intents:
             for intent_l in intent.lines:
-                for slot_name, slot_text2value in intent_l.slot_name2text2value.keys():
+                for slot_name, slot_text2value in intent_l.slot_name2text2value.items():
                     if slot_name not in sn2t2v.keys():
                         sn2t2v[slot_name] = dict()
                     for slot_text, slot_values_li in slot_text2value.items():
