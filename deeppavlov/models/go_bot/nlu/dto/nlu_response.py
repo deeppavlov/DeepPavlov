@@ -10,6 +10,7 @@ class NLUResponse(NLUResponseInterface):
     """
     def __init__(self, slots, intents, tokens):
         self.slots: Union[List[Tuple[str, Any]], Dict[str, Any]] = slots
+        self._intent_names = None
         self.intents = intents
         self.tokens = tokens
         self.tokens_vectorized: Optional[TextVectorizationResponse] = None

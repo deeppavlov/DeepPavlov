@@ -68,7 +68,9 @@ class NLUManager(NLUManagerInterface):
         if callable(self.intent_classifier):
             intents = self._extract_intents_from_text_entry(text)
 
-        return NLUResponse(slots, intents, tokens)
+        resp = NLUResponse(slots, intents, tokens)
+        resp._intents_names = self.intents
+        return resp
 
     def _extract_intents_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated intent classifier
