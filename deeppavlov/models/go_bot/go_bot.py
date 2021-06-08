@@ -37,6 +37,7 @@ from pathlib import Path
 
 log = getLogger(__name__)
 
+UtteranceT = Union[dict, str]
 
 # todo logging
 @register("go_bot")
@@ -273,7 +274,7 @@ class GoalOrientedBot(NNModel):
         utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
         return utterance_data_entry
 
-    def extract_features_from_utterance_text(self, text, tracker, keep_tracker_state=False) -> UtteranceFeatures:
+    def extract_features_from_utterance_text(self, text: UtteranceT, tracker, keep_tracker_state=False) -> UtteranceFeatures:
         """
         Extract ML features for the input text and the respective tracker.
         Features are aggregated from the
@@ -325,7 +326,7 @@ class GoalOrientedBot(NNModel):
 
         return UtteranceFeatures(nlu_response, tracker_knowledge, digitized_policy_features)
 
-    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
+    def _infer(self, user_utterance_text: UtteranceT, user_tracker: DialogueStateTracker,
                keep_tracker_state=False) -> Tuple[BatchDialoguesFeatures, PolicyPrediction]:
         """
         Predict the action to perform in response to given text.
@@ -363,7 +364,7 @@ class GoalOrientedBot(NNModel):
 
         return utterance_batch_features, policy_prediction
 
-    def __call__(self, batch: Union[List[List[dict]], List[str]],
+    def __call__(self, batch: Union[List[List[UtteranceT]], List[UtteranceT]],
                  user_ids: Optional[List] = None) -> Union[List[NLGResponseInterface],
                                                            List[List[NLGResponseInterface]]]:
         if isinstance(batch[0], list):
@@ -372,7 +373,7 @@ class GoalOrientedBot(NNModel):
             # todo unify tracking: no need to distinguish tracking strategies on dialogues and realtime
             res = []
             for dialogue in batch:
-                dialogue: List[dict]
+                dialogue: List[UtteranceT]
                 res.append(self._calc_inferences_for_dialogue(dialogue))
         else:
             # batch is a list of utterances possibly came from different users: real-time inference
@@ -380,7 +381,7 @@ class GoalOrientedBot(NNModel):
             if not user_ids:
                 user_ids = [self.DEFAULT_USER_ID] * len(batch)
             for user_id, user_text in zip(user_ids, batch):
-                user_text: str
+                user_text: UtteranceT
                 res.append(self._realtime_infer(user_id, user_text))
 
         return res

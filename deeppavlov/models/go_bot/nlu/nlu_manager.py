@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import List
+from typing import List, Union
 
 from deeppavlov import Chainer
 from deeppavlov.core.data.simple_vocab import SimpleVocabulary
@@ -51,7 +51,7 @@ class NLUManager(NLUManagerInterface):
                       f"tokenizer={tokenizer}, slot_filler={slot_filler}, "
                       f"intent_classifier={intent_classifier}, debug={debug}")
 
-    def nlu(self, text: str) -> NLUResponse:
+    def nlu(self, text: Union[str, dict]) -> NLUResponse:
         """
         Extracts slot values and intents from text.
 
@@ -62,15 +62,32 @@ class NLUManager(NLUManagerInterface):
             an object storing the extracted slos and intents info
         """
         # todo meaningful type hints
-        tokens = self._tokenize_single_text_entry(text)
+        text_is_dict = isinstance(text, dict)
+        if text_is_dict:
+            _text = text.get("text")
+            _intents = text.get("intents")
+            _slots = text.get("slots")
+        else:
+            _text = text
+
+        tokens = self._tokenize_single_text_entry(_text)
 
         slots = None
         if callable(self.slot_filler):
-            slots = self._extract_slots_from_tokenized_text_entry(tokens)
+            if text_is_dict:
+                slots = _slots
+            else:
+                slots = self._extract_slots_from_tokenized_text_entry(tokens)
 
         intents = []
         if callable(self.intent_classifier):
-            intents = self._extract_intents_from_text_entry(text)
+            if text_is_dict:
+                if isinstance(intents, list):
+                    intents = self._intents_to_ohe(_intents)
+                else:
+                    intents = self._intent_name_to_ohe(_intents)
+            else:
+                intents = self._extract_intents_from_text_entry(text)
 
         resp = NLUResponse(slots, intents, tokens)
         resp._intents_names = self.intents
@@ -86,6 +103,20 @@ class NLUManager(NLUManagerInterface):
         # todo meaningful type hints, relies on unannotated intent classifier
         intent_features = self.intent_classifier([text])[1][0]
         return intent_features
+
+    def _intent_name_to_ohe(self, intent_name):
+        intents_ohe = [0.] * len(self.intents)
+        if intent_name in self.intents:
+            intent_ix = self.intents.index(intent_name)
+            intents_ohe[intent_ix] = 1.
+        return intents_ohe
+
+    def _intents_to_ohe(self, intent_names):
+        ohes = map(self._intent_name_to_ohe, intent_names)
+        intents_ohe = [0.] * len(self.intents)
+        for ohe_ix, ohe_ in ohes:
+            intents_ohe[ohe_ix] = float(any(ohe_))
+        return intents_ohe
 
     def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated slot filler
