@@ -203,3 +203,98 @@ class RASA_SlotFillingComponent(SlotFillingComponent):
                     stext2value[stext].extend(ssamples)
             slot_name2text2value[sname] = stext2value
         self._slot_vals = slot_name2text2value
+
+
+@register('slotfill_raw_memorizing')
+class RASA_MemorizingSlotFillingComponent(SlotFillingComponent):
+    """Slot filling using Fuzzy search"""
+
+    def __init__(self, threshold: float = 0.7, return_all: bool = False,
+                 **kwargs):
+        super().__init__(**kwargs)
+        self.threshold = threshold
+        self.return_all = return_all
+        # self._slot_vals is the dictionary of slot values
+        self._slot_vals = None
+        self.load()
+
+    @overrides
+    def __call__(self, batch, *args, **kwargs):
+        slots = [{}] * len(batch)
+
+        m = [i for i, v in enumerate(batch) if v]
+        if m:
+            batch = [batch[i] for i in m]
+            # tags_batch = self._ner_network.predict_for_token_batch(batch)
+            # batch example: [['is', 'there', 'anything', 'else']]
+            for i, text in zip(m, batch):
+                # tokens are['is', 'there', 'anything', 'else']
+                slots_values_lists = self._predict_slots(text)
+                if self.return_all:
+                    slots[i] = dict(slots_values_lists)
+                else:
+                    slots[i] = {slot: val_list[0] for slot, val_list in
+                                slots_values_lists.items()}
+                # slots[i] example {'food': 'steakhouse'}
+        # slots we want, example : [{'pricerange': 'moderate', 'area': 'south'}]
+        return slots
+
+    def _predict_slots(self, text):
+        # For utterance extract named entities and perform normalization for slot filling
+        entities, slot_values = self._strict_finder(text)
+        # slot_values = defaultdict(list)
+        # for entity, slot in zip(entities, slots):
+        #     slot_values[slot].append(entity)
+        return slot_values
+
+    def load(self, *args, **kwargs):
+        """reads the slotfilling info from RASA-styled dataset"""
+        domain_path = Path(self.load_path,
+                           MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
+        nlu_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
+        # domain_knowledge = DomainKnowledge(read_yaml(domain_path))
+        # todo: rewrite MD_YAML_DialogsDatasetReader so that public methods are enough
+        data = MD_YAML_DialogsDatasetReader.read(self.load_path)
+        nlu_lines_trn = dict()
+        nlu_lines_tst = dict()
+        nlu_lines_val = dict()
+        if "train" in data:
+            nlu_lines_trn = data["train"]["nlu_lines"].slot_name2text2value
+        if "test" in data:
+            nlu_lines_tst = data["test"]["nlu_lines"].slot_name2text2value
+        if "valid" in data:
+            nlu_lines_val = data["valid"]["nlu_lines"].slot_name2text2value
+        slot_names = list(nlu_lines_trn.keys()) + \
+                     list(nlu_lines_tst.keys()) + \
+                     list(nlu_lines_val.keys())
+        slot_name2text2value = dict()
+        for sname in slot_names:
+            stext2value = dict()
+            for sample in [nlu_lines_trn,
+                           nlu_lines_tst,
+                           nlu_lines_val]:
+                for stext, ssamples in sample.get(sname, {}).items():
+                    if stext not in stext2value:
+                        stext2value[stext] = list()
+                    stext2value[stext].extend(ssamples)
+            slot_name2text2value[sname] = stext2value
+        slot_text2name2value = defaultdict(lambda: defaultdict(list))
+        for sname, stext2svalue in slot_name2text2value.items():
+            for stext, svalue in stext2svalue.items():
+                slot_text2name2value[stext][sname].extend(svalue)
+
+        self._slot_vals = slot_name2text2value
+
+    def deserialize(self, data):
+        self._slot_vals = json.loads(data)
+
+    def save(self):
+        with open(self.save_path, 'w', encoding='utf8') as f:
+            json.dump(self._slot_vals, f)
+
+    def _strict_finder(self, text):
+        global input_entity
+        slots = self._slot_vals.get(text, {})
+        entities = list(slots.keys())
+        return entities, slots
+

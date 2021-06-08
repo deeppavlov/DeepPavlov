@@ -212,5 +212,6 @@
   "mem_classification_model": "deeppavlov.models.classifiers.memorizing_classifier:MemClassificationModel",
   "md_yaml_dialogs_iterator": "deeppavlov.dataset_iterators.md_yaml_dialogs_iterator:MD_YAML_DialogsDatasetIterator",
   "md_yaml_dialogs_ner_iterator": "deeppavlov.dataset_iterators.md_yaml_dialogs_ner_iterator:MD_YAML_DialogsDatasetNERIterator",
-  "md_yaml_dialogs_intents_iterator": "deeppavlov.dataset_iterators.md_yaml_dialogs_ner_iterator:MD_YAML_DialogsDatasetIntentsIterator"
+  "md_yaml_dialogs_intents_iterator": "deeppavlov.dataset_iterators.md_yaml_dialogs_ner_iterator:MD_YAML_DialogsDatasetIntentsIterator",
+  "slotfill_raw_memorizing": "deeppavlov.models.slotfill.slotfill_raw:RASA_MemorizingSlotFillingComponent"
 }
