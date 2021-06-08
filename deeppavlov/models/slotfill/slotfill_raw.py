@@ -230,6 +230,7 @@ class RASA_MemorizingSlotFillingComponent(SlotFillingComponent):
             for i, text in zip(m, batch):
                 # tokens are['is', 'there', 'anything', 'else']
                 slots_values_lists = self._predict_slots(text)
+                print(slots_values_lists)
                 if self.return_all:
                     slots[i] = dict(slots_values_lists)
                 else:
@@ -258,32 +259,39 @@ class RASA_MemorizingSlotFillingComponent(SlotFillingComponent):
         nlu_lines_trn = dict()
         nlu_lines_tst = dict()
         nlu_lines_val = dict()
+        text2slots = defaultdict(lambda: defaultdict(list))
         if "train" in data:
-            nlu_lines_trn = data["train"]["nlu_lines"].slot_name2text2value
-        if "test" in data:
-            nlu_lines_tst = data["test"]["nlu_lines"].slot_name2text2value
-        if "valid" in data:
-            nlu_lines_val = data["valid"]["nlu_lines"].slot_name2text2value
-        slot_names = list(nlu_lines_trn.keys()) + \
-                     list(nlu_lines_tst.keys()) + \
-                     list(nlu_lines_val.keys())
-        slot_name2text2value = dict()
-        for sname in slot_names:
-            stext2value = dict()
-            for sample in [nlu_lines_trn,
-                           nlu_lines_tst,
-                           nlu_lines_val]:
-                for stext, ssamples in sample.get(sname, {}).items():
-                    if stext not in stext2value:
-                        stext2value[stext] = list()
-                    stext2value[stext].extend(ssamples)
-            slot_name2text2value[sname] = stext2value
-        slot_text2name2value = defaultdict(lambda: defaultdict(list))
-        for sname, stext2svalue in slot_name2text2value.items():
-            for stext, svalue in stext2svalue.items():
-                slot_text2name2value[stext][sname].extend(svalue)
+            nlu_lines_trn = data["train"]["nlu_lines"].intent2slots2text
+            for intent, slots2text in nlu_lines_trn.items():
+                for slots_is in slots2text.values():
+                    for slots_i in slots_is:
+                        text = slots_i.get("text", '')
+                        slots_di = dict(slots_i.get("slots", []))
+                        for s, sv in slots_di.items():
+                            text2slots[text][s].append(sv)
 
-        self._slot_vals = slot_name2text2value
+        if "test" in data:
+            nlu_lines_tst = data["test"]["nlu_lines"].intent2slots2text
+            for intent, slots2text in nlu_lines_tst.items():
+                for slots_is in slots2text.values():
+                    for slots_i in slots_is:
+                        text = slots_i.get("text", '')
+                        slots_di = dict(slots_i.get("slots", []))
+                        for s, sv in slots_di.items():
+                            text2slots[text][s].append(sv)
+
+        if "valid" in data:
+            nlu_lines_val = data["valid"]["nlu_lines"].intent2slots2text
+            for intent, slots2text in nlu_lines_val.items():
+                for slots_is in slots2text.values():
+                    for slots_i in slots_is:
+                        text = slots_i.get("text", '')
+                        slots_di = dict(slots_i.get("slots", []))
+                        for s, sv in slots_di.items():
+                            text2slots[text][s].append(sv)
+
+
+        self._slot_vals = text2slots
 
     def deserialize(self, data):
         self._slot_vals = json.loads(data)
