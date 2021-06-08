@@ -77,7 +77,7 @@ class NLUManager(NLUManagerInterface):
             if text_is_dict:
                 slots = _slots
             else:
-                slots = self._extract_slots_from_tokenized_text_entry(tokens)
+                slots = self._extract_slots_from_text_entry(tokens)
 
         intents = []
         if callable(self.intent_classifier):
@@ -120,6 +120,10 @@ class NLUManager(NLUManagerInterface):
     def _extract_slots_from_tokenized_text_entry(self, tokens: List[str]):
         # todo meaningful type hints, relies on unannotated slot filler
         return self.slot_filler([tokens])[0]
+
+    def _extract_slots_from_text_entry(self, text: str):
+        # todo meaningful type hints, relies on unannotated slot filler
+        return self.slot_filler([text])[0]
 
     def _tokenize_single_text_entry(self, text: str):
         # todo meaningful type hints, relies on unannotated tokenizer
