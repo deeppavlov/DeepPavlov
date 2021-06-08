@@ -230,7 +230,7 @@ class RASA_MemorizingSlotFillingComponent(SlotFillingComponent):
             for i, text in zip(m, batch):
                 # tokens are['is', 'there', 'anything', 'else']
                 slots_values_lists = self._predict_slots(text)
-                print(slots_values_lists)
+                # print(slots_values_lists)
                 if self.return_all:
                     slots[i] = dict(slots_values_lists)
                 else:
