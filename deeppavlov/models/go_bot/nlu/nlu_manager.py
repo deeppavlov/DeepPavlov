@@ -65,8 +65,8 @@ class NLUManager(NLUManagerInterface):
         text_is_dict = isinstance(text, dict)
         if text_is_dict:
             _text = text.get("text")
-            _intents = text.get("intents")
-            _slots = text.get("slots")
+            _intents = text.get("intents", [])
+            _slots = text.get("slots", {})
         else:
             _text = text
 
@@ -82,13 +82,12 @@ class NLUManager(NLUManagerInterface):
         intents = []
         if callable(self.intent_classifier):
             if text_is_dict:
-                if isinstance(intents, list):
+                if isinstance(_intents, list):
                     intents = self._intents_to_ohe(_intents)
                 else:
                     intents = self._intent_name_to_ohe(_intents)
             else:
                 intents = self._extract_intents_from_text_entry(text)
-
         resp = NLUResponse(slots, intents, tokens)
         resp._intents_names = self.intents
         return resp
@@ -114,7 +113,7 @@ class NLUManager(NLUManagerInterface):
     def _intents_to_ohe(self, intent_names):
         ohes = map(self._intent_name_to_ohe, intent_names)
         intents_ohe = [0.] * len(self.intents)
-        for ohe_ix, ohe_ in ohes:
+        for ohe_ix, ohe_ in enumerate(zip(*ohes)):
             intents_ohe[ohe_ix] = float(any(ohe_))
         return intents_ohe
 
