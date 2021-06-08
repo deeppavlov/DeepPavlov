@@ -1,4 +1,6 @@
 import json
+import re
+from collections import defaultdict
 from itertools import combinations
 from pathlib import Path
 from typing import Union, Dict, List, Tuple
@@ -7,6 +9,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register, get_model
 from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
+from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse, VerboseJSONNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
@@ -36,10 +39,11 @@ class MockJSONNLGManager(NLGManagerInterface):
         self._dataset_reader = get_model(dataset_reader_class)
 
         individual_actions2slots = self._load_actions2slots_mapping(actions2slots_path)
+        split2domain_i = self._get_domain_info(data_path)
         possible_actions_combinations_tuples = sorted(
             set(actions_combination_tuple
                 for actions_combination_tuple
-                in self._extract_actions_combinations(data_path)),
+                in self._extract_actions_combinations(split2domain_i)),
             key=lambda x: '+'.join(x))
 
         self.action_tuples2ids = {action_tuple: action_tuple_idx
@@ -60,6 +64,9 @@ class MockJSONNLGManager(NLGManagerInterface):
             api_call_action_as_tuple = (api_call_action,)
             self._api_call_id = self.action_tuples2ids[api_call_action_as_tuple]
 
+        self.action2slots2text, self.action2slots2values2text =\
+            self._extract_templates(split2domain_i)
+
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} init(): "
                       f"actions2slots_path={actions2slots_path}, "
@@ -72,21 +79,60 @@ class MockJSONNLGManager(NLGManagerInterface):
         """
         return self._api_call_id
 
-    def _extract_actions_combinations(self, dataset_path: Union[str, Path]):
+    def _get_domain_info(self, dataset_path: Union[str, Path]):
         dataset_path = expand_path(dataset_path)
         try:
             dataset = self._dataset_reader.read(data_path=dataset_path)
         except:
-            dataset = self._dataset_reader.read(data_path=dataset_path, fmt="yml")
+            dataset = self._dataset_reader.read(data_path=dataset_path,
+                                                fmt="yml")
+        split2domain = dict()
+        for dataset_split, dataset_split_info in dataset.items():
+            domain_i: DomainKnowledge = dataset_split_info["domain"]
+            split2domain[dataset_split] = domain_i
+        return split2domain
+
+    def _extract_actions_combinations(self, split2domain: Dict[str, DomainKnowledge]):
         actions_combinations = set()
-        for dataset_split in dataset.values():
-            actions_combinations.update(dataset_split["domain"].known_actions)
-        actions_combinations = {(ac,) for ac in actions_combinations}
-        #     for dialogue in dataset_split:
-        #         for user_input, system_response in dialogue:
-        #             actions_tuple = tuple(system_response["act"].split('+'))
-        #             actions_combinations.add(actions_tuple)
+        for dataset_split, domain_i in split2domain.items():
+            actions_combinations.update({(ac,) for ac in domain_i.known_actions})
         return actions_combinations
+
+    def _extract_templates(self, split2domain: Dict[str, DomainKnowledge]):
+        slots_pattern = r'\[(?P<name>\w+)\]\((?P<value>\w+)\)'
+        action2slots2text = defaultdict(lambda: defaultdict(list))
+        action2slots2values2text = defaultdict(lambda: defaultdict(list))
+        for dataset_split, domain_i in split2domain.items():
+            actions2texts = domain_i.response_templates
+            for action, texts in actions2texts.items():
+                action_tuple = (action,)
+                for text in texts:
+                    used_slots, slotvalue_tuples = set(), set()
+                    for found in re.finditer(slots_pattern, text):
+                        used_slots_di = found.groupdict()
+                        used_slots.update(used_slots_di.keys())
+                        slotvalue_tuples.update({(slot_name, slot_value)
+                                                  for slot_name, slot_value
+                                                  in used_slots_di.items()})
+
+                    used_slots = tuple(sorted(used_slots))
+                    slotvalue_tuples = tuple(sorted(slotvalue_tuples))
+                    action2slots2text[action_tuple][used_slots].append(text)
+                    action2slots2values2text[action_tuple][slotvalue_tuples].append(text)
+
+        return action2slots2text, action2slots2values2text
+
+    def generate_template(self, response_info: VerboseJSONNLGResponse, mode="slots"):
+        if mode == "slots":
+            response_text = None
+            action_tuple = response_info.actions_tuple
+            slots = tuple(sorted(response_info.slot_values.keys()))
+            response_text = self.action2slots2text.get(action_tuple, {}).get(slots, None)
+        else:
+            action_tuple = response_info.actions_tuple
+            slotvalue_tuples = tuple(sorted(response_info.slot_values.items()))
+            response_text = self.action2slots2text.get(action_tuple, {}).get(slotvalue_tuples, None)
+        return response_text
 
     @staticmethod
     def _load_actions2slots_mapping(actions2slots_json_path) -> Dict[str, str]:
@@ -140,6 +186,8 @@ class MockJSONNLGManager(NLGManagerInterface):
         verbose_response = VerboseJSONNLGResponse.from_json_nlg_response(response)
         verbose_response.policy_prediction = policy_prediction
         verbose_response._nlu_responses = utterance_batch_features._nlu_responses
+        response_text = self.generate_template(verbose_response)
+        verbose_response.text = response_text
         return verbose_response
 
     def num_of_known_actions(self) -> int:
