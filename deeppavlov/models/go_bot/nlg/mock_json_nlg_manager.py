@@ -108,6 +108,8 @@ class MockJSONNLGManager(NLGManagerInterface):
                 action_tuple = (action,)
                 for text in texts:
                     used_slots, slotvalue_tuples = set(), set()
+                    if isinstance(text, dict):
+                        text = text["text"]
                     for found in re.finditer(slots_pattern, text):
                         used_slots_di = found.groupdict()
                         used_slots.update(used_slots_di.keys())
@@ -132,6 +134,8 @@ class MockJSONNLGManager(NLGManagerInterface):
             action_tuple = response_info.actions_tuple
             slotvalue_tuples = tuple(sorted(response_info.slot_values.items()))
             response_text = self.action2slots2text.get(action_tuple, {}).get(slotvalue_tuples, None)
+        if isinstance(response_text, list):
+            response_text = random.choice(response_text)
         return response_text
 
     @staticmethod
