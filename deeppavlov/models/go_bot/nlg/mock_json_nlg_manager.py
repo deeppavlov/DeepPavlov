@@ -15,7 +15,7 @@ from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse, 
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
 from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
-
+import random
 
 @register("gobot_json_nlg_manager")
 class MockJSONNLGManager(NLGManagerInterface):
@@ -99,7 +99,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         return actions_combinations
 
     def _extract_templates(self, split2domain: Dict[str, DomainKnowledge]):
-        slots_pattern = r'\[(?P<name>\w+)\]\((?P<value>\w+)\)'
+        slots_pattern = r'\[(?P<value>\w+)\]\((?P<name>\w+)\)'
         action2slots2text = defaultdict(lambda: defaultdict(list))
         action2slots2values2text = defaultdict(lambda: defaultdict(list))
         for dataset_split, domain_i in split2domain.items():
@@ -119,8 +119,9 @@ class MockJSONNLGManager(NLGManagerInterface):
 
                     used_slots = tuple(sorted(used_slots))
                     slotvalue_tuples = tuple(sorted(slotvalue_tuples))
-                    action2slots2text[action_tuple][used_slots].append(text)
-                    action2slots2values2text[action_tuple][slotvalue_tuples].append(text)
+                    templated_text = re.sub(slots_pattern, '##\g<name>', text)
+                    action2slots2text[action_tuple][used_slots].append(templated_text)
+                    action2slots2values2text[action_tuple][slotvalue_tuples].append(templated_text)
 
         return action2slots2text, action2slots2values2text
 

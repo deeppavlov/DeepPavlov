@@ -77,7 +77,7 @@ class NLUManager(NLUManagerInterface):
             if text_is_dict:
                 slots = _slots
             else:
-                slots = self._extract_slots_from_text_entry(tokens)
+                slots = self._extract_slots_from_text_entry(text)
 
         intents = []
         if callable(self.intent_classifier):
