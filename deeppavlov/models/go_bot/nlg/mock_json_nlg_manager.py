@@ -106,16 +106,19 @@ class MockJSONNLGManager(NLGManagerInterface):
             actions2texts = domain_i.response_templates
             for action, texts in actions2texts.items():
                 action_tuple = (action,)
+                texts = [text for text in texts if text]
                 for text in texts:
                     used_slots, slotvalue_tuples = set(), set()
                     if isinstance(text, dict):
                         text = text["text"]
+                    used_slots_di = dict()
                     for found in re.finditer(slots_pattern, text):
                         used_slots_di = found.groupdict()
-                        used_slots.update(used_slots_di.keys())
-                        slotvalue_tuples.update({(slot_name, slot_value)
-                                                  for slot_name, slot_value
-                                                  in used_slots_di.items()})
+                        if not ("name" in used_slots_di.keys() and "value" in used_slots_di.keys()):
+                            continue
+                        used_slots.update(used_slots_di["name"])
+                        slotvalue_tuples.update({used_slots_di["name"]:
+                                                 used_slots_di["value"]})
 
                     used_slots = tuple(sorted(used_slots))
                     slotvalue_tuples = tuple(sorted(slotvalue_tuples))
