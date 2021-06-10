@@ -525,6 +525,8 @@ class EntityLinkerSep(Component, Serializable):
                 tm_ind_st = time.time()
                 substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
                 candidate_entities_dict = OrderedDict()
+                for i in range(len(entity_substr_list)):
+                    candidate_entities_dict[i] = []
                 prev_word_count = 0
                 prev_index = 0
                 candidate_entities = {}
