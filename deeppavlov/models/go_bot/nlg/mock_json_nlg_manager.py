@@ -140,6 +140,10 @@ class MockJSONNLGManager(NLGManagerInterface):
             response_text = self.action2slots2text.get(action_tuple, {}).get(slotvalue_tuples, None)
         if isinstance(response_text, list):
             response_text = random.choice(response_text)
+        for slot_name in response_info.slot_values:
+            response_text = response_text.replace(f"##{slot_name}",
+                                                  response_info.slot_values[
+                                                      slot_name])
         return response_text
 
     @staticmethod
