@@ -21,8 +21,11 @@ from collections import defaultdict, OrderedDict
 import numpy as np
 import pymorphy2
 import faiss
+import fasttext
 from nltk.corpus import stopwords
+from rapidfuzz import fuzz
 from sklearn.feature_extraction.text import TfidfVectorizer
+from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -195,15 +198,21 @@ class EntityLinkerSep(Component, Serializable):
                  entities_ranking_filename: str,
                  entities_types_sets_filename: str,
                  q_to_label_filename: str,
-                 vectorizer_filename: str,
-                 faiss_index_filename: str,
+                 tfidf_vectorizer_filename: str,
+                 tfidf_faiss_index_filename: str,
+                 fasttext_vectorizer_filename: str,
+                 fasttext_faiss_index_filename: str,
                  entity_ranker: RelRankerBertInfer = None,
                  num_faiss_candidate_entities: int = 20,
                  num_entities_for_bert_ranking: int = 50,
-                 num_faiss_cells: int = 50,
+                 num_tfidf_faiss_cells: int = 50,
+                 num_ft_faiss_cells: int = 50,
+                 tfidf_index_nprobe: int = 3,
+                 fasttext_index_nprobe: int = 3,
                  use_gpu: bool = True,
                  save_path: str = None,
-                 fit_vectorizer: bool = False,
+                 fit_tfidf_vectorizer: bool = False,
+                 fit_fasttext_vectorizer: bool = False,
                  max_tfidf_features: int = 1000,
                  include_mention: bool = False,
                  ngram_range: List[int] = None,
@@ -225,15 +234,19 @@ class EntityLinkerSep(Component, Serializable):
                 for entities
             entities_types_sets_filename: file with entities split into sets of PER, LOC, ORG entity types
             q_to_label_filename: file with labels of entities
-            vectorizer_filename: filename with TfidfVectorizer data
-            faiss_index_filename: file with Faiss index of words
+            tfidf_vectorizer_filename: filename with TfidfVectorizer data
+            tfidf_faiss_index_filename: file with tfidf Faiss index of words
+            fasttext_vectorizer_filename: filename with fasttext data
+            fasttext_faiss_index_filename: file with fasttext Faiss index of entity titles
             entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert_infer
             num_faiss_candidate_entities: number of nearest neighbors for the entity substring from the text
             num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
-            num_faiss_cells: number of Voronoi cells for Faiss index
+            num_tfidf_faiss_cells: number of Voronoi cells for tfidf Faiss index
+            num_ft_faiss_cells: number of Voronoi cells for fasttext Faiss index
             use_gpu: whether to use GPU for faster search of candidate entities
             save_path: path to folder with inverted index files
-            fit_vectorizer: whether to build index with Faiss library
+            fit_tfidf_vectorizer: whether to build tfidf index with Faiss library
+            fit_fasttext_vectorizer: whether to build fasttext index with Faiss library
             max_tfidf_features: maximal number of features for TfidfVectorizer
             include_mention: whether to leave entity mention in the context (during BERT ranking)
             ngram_range: char ngrams range for TfidfVectorizer
@@ -252,14 +265,20 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_filename = entities_ranking_filename
         self.entities_types_sets_filename = entities_types_sets_filename
         self.q_to_label_filename = q_to_label_filename
-        self.vectorizer_filename = vectorizer_filename
-        self.faiss_index_filename = faiss_index_filename
+        self.tfidf_vectorizer_filename = tfidf_vectorizer_filename
+        self.tfidf_faiss_index_filename = tfidf_faiss_index_filename
+        self.fasttext_vectorizer_filename = fasttext_vectorizer_filename
+        self.fasttext_faiss_index_filename = fasttext_faiss_index_filename
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
         self.num_faiss_candidate_entities = num_faiss_candidate_entities
-        self.num_faiss_cells = num_faiss_cells
+        self.num_tfidf_faiss_cells = num_tfidf_faiss_cells
+        self.num_ft_faiss_cells = num_ft_faiss_cells
+        self.tfidf_index_nprobe = tfidf_index_nprobe
+        self.fasttext_index_nprobe = fasttext_index_nprobe
         self.use_gpu = use_gpu
         self.entity_ranker = entity_ranker
-        self.fit_vectorizer = fit_vectorizer
+        self.fit_tfidf_vectorizer = fit_tfidf_vectorizer
+        self.fit_fasttext_vectorizer = fit_fasttext_vectorizer
         self.max_tfidf_features = max_tfidf_features
         self.include_mention = include_mention
         self.ngram_range = ngram_range
@@ -280,23 +299,39 @@ class EntityLinkerSep(Component, Serializable):
 
         self.load()
 
-        if self.fit_vectorizer:
-            self.vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=tuple(self.ngram_range),
+        if self.fit_tfidf_vectorizer:
+            self.tfidf_vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=tuple(self.ngram_range),
                                               max_features=self.max_tfidf_features, max_df=0.85)
-            self.vectorizer.fit(self.word_list)
-            self.matrix = self.vectorizer.transform(self.word_list)
+            self.tfidf_vectorizer.fit(self.word_list)
+            self.matrix = self.tfidf_vectorizer.transform(self.word_list)
             self.dense_matrix = self.matrix.toarray()
-            if self.num_faiss_cells > 1:
+            if self.num_tfidf_faiss_cells > 1:
                 quantizer = faiss.IndexFlatIP(self.max_tfidf_features)
-                self.faiss_index = faiss.IndexIVFFlat(quantizer, self.max_tfidf_features, self.num_faiss_cells)
-                self.faiss_index.train(self.dense_matrix.astype(np.float32))
+                self.tfidf_faiss_index = faiss.IndexIVFFlat(quantizer, self.max_tfidf_features, self.num_tfidf_faiss_cells)
+                self.tfidf_faiss_index.train(self.dense_matrix.astype(np.float32))
             else:
-                self.faiss_index = faiss.IndexFlatIP(self.max_tfidf_features)
-            self.faiss_index.add(self.dense_matrix.astype(np.float32))
-            self.save_vectorizers_data()
+                self.tfidf_faiss_index = faiss.IndexFlatIP(self.max_tfidf_features)
+            self.tfidf_faiss_index.add(self.dense_matrix.astype(np.float32))
+            self.save_tfidf_vectorizer_data()
             if self.use_gpu:
                 res = faiss.StandardGpuResources()
-                self.faiss_index = faiss.index_cpu_to_gpu(res, 0, self.faiss_index)
+                self.tfidf_faiss_index = faiss.index_cpu_to_gpu(res, 0, self.tfidf_faiss_index)
+                
+        if self.fit_fasttext_vectorizer:
+            labels_fasttext_vectors = []
+            with tqdm(total=len(self.labels_list)) as pbar:
+                for label in self.labels_list:
+                    labels_fasttext_vectors.append(self.alies2ft_vec(label))
+                    pbar.update(1)
+            fasttext_dim = self.fasttext_vectorizer.get_dimension()
+            quantizer = faiss.IndexFlatIP(fasttext_dim)
+            self.fasttext_faiss_index = faiss.IndexIVFFlat(quantizer, fasttext_dim, self.num_ft_faiss_cells)
+            self.fasttext_faiss_index.train(np.array(labels_fasttext_vectors))
+            self.fasttext_faiss_index.add(np.array(labels_fasttext_vectors))
+            faiss.write_index(self.ft_faiss_index, str(expand_path(self.fasttext_faiss_index_filename)))
+            
+        self.tfidf_faiss_index.nprobe = self.tfidf_index_nprobe
+        self.fasttext_faiss_index.nprobe = self.fasttext_index_nprobe
 
     def load(self) -> None:
         self.word_to_idlist = load_pickle(self.load_path / self.word_to_idlist_filename)
@@ -304,19 +339,42 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
         self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
-        if not self.fit_vectorizer:
-            self.vectorizer = load_pickle(expand_path(self.vectorizer_filename))
-            self.faiss_index = faiss.read_index(str(expand_path(self.faiss_index_filename)))
+        self.label_to_q = {}
+        for q_id in self.q_to_label:
+            for label in self.q_to_label[q_id]:
+                if label in self.label_to_q:
+                    self.label_to_q[label].append(q_id)
+                else:
+                    self.label_to_q[label] = [q_id]
+        self.labels_list = list(self.label_to_q.keys())
+        if not self.fit_tfidf_vectorizer:
+            self.tfidf_vectorizer = load_pickle(expand_path(self.tfidf_vectorizer_filename))
+            self.tfidf_faiss_index = faiss.read_index(str(expand_path(self.tfidf_faiss_index_filename)))
             if self.use_gpu:
                 res = faiss.StandardGpuResources()
-                self.faiss_index = faiss.index_cpu_to_gpu(res, 0, self.faiss_index)
+                self.tfidf_faiss_index = faiss.index_cpu_to_gpu(res, 0, self.tfidf_faiss_index)
+       
+        self.fasttext_vectorizer = fasttext.load_model(str(expand_path(self.fasttext_vectorizer_filename)))
+        if not self.fit_fasttext_vectorizer:
+            self.fasttext_faiss_index = faiss.read_index(str(expand_path(self.fasttext_faiss_index_filename)))
 
     def save(self) -> None:
         pass
+        
+    def alies2ft_vec(self, alies):
+        if isinstance(alies, str):
+            alies = '_'.join(alies.split(' ')).lower()
+        elif isinstance(alies, list):
+            if alies:
+                alies = '_'.join(alies).lower()
+            else:
+                alies = "_"
+        vec = self.fasttext_vectorizer.get_word_vector(alies)
+        return vec.astype('float32')
 
-    def save_vectorizers_data(self) -> None:
-        save_pickle(self.vectorizer, expand_path(self.vectorizer_filename))
-        faiss.write_index(self.faiss_index, str(expand_path(self.faiss_index_filename)))
+    def save_tfidf_vectorizer_data(self) -> None:
+        save_pickle(self.tfidf_vectorizer, expand_path(self.tfidf_vectorizer_filename))
+        faiss.write_index(self.tfidf_faiss_index, str(expand_path(self.tfidf_faiss_index_filename)))
 
     def __call__(self, entity_substr_batch: List[List[str]],
                  entity_offsets_batch: List[List[List[int]]],
@@ -421,7 +479,8 @@ class EntityLinkerSep(Component, Serializable):
         entity_labels_batch = self.find_labels(entity_ids_batch)
 
         if self.return_confidences:
-            return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
+            return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, \
+                   entity_labels_batch
         else:
             return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
 
@@ -442,7 +501,12 @@ class EntityLinkerSep(Component, Serializable):
         word_counts_batch = []
         fnd_words_batch = []
         word_tags_batch = []
+        ft_entity_substr_list = []
+        ft_doc_nums = []
         for doc_num, (entity_substr_list, tags_list) in enumerate(zip(entity_substr_batch, tags_batch)):
+            for entity_substr in entity_substr_list:
+                ft_entity_substr_list.append(entity_substr)
+                ft_doc_nums.append(doc_num)
             indices = []
             word_fnd_flags = []
             word_counts = []
@@ -477,6 +541,35 @@ class EntityLinkerSep(Component, Serializable):
             word_counts_batch.append(word_counts)
             word_tags_batch.append(word_tags)
         log.debug(f"words, indices, tags {nf_words_doc_nums}")
+        
+        ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in ft_entity_substr_list]
+        D_ft_all, I_ft_all = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list),
+                                                              self.num_faiss_candidate_entities)
+        D_ft_batch, I_ft_batch = [], []
+        D_ft_list, I_ft_list = [], []
+        prev_doc_num = 0
+        for D, I, doc_num in zip(D_ft_all, I_ft_all, ft_doc_nums):
+            if doc_num != prev_doc_num:
+                D_ft_batch.append(D_ft_list)
+                I_ft_batch.append(I_ft_list)
+                if doc_num - prev_doc_num > 1:
+                    for j in range(doc_num - prev_doc_num - 1):
+                        D_ft_batch.append([])
+                        I_ft_batch.append([])
+                D_ft_list, I_ft_list = [], []
+            D_ft_list.append(D)
+            I_ft_list.append(I)
+            prev_doc_num = doc_num
+        
+        for i in range(len(entity_substr_batch) - len(D_ft_batch)):
+            if D_ft_list:
+                D_ft_batch.append(D_ft_list)
+                I_ft_batch.append(I_ft_list)
+                D_ft_list, I_ft_list = [], []
+            else:
+                D_ft_batch.append([])
+                I_ft_batch.append([])
+        
         nf_words, nf_doc_nums = [], []
         if nf_words_doc_nums:
             nf_words, nf_doc_nums = zip(*nf_words_doc_nums)
@@ -484,12 +577,10 @@ class EntityLinkerSep(Component, Serializable):
             nf_doc_nums = list(nf_doc_nums)
         log.debug(f"nf_words {nf_words} nf_doc_nums {nf_doc_nums}")
         log.debug(f"fnd words {fnd_words_batch} word counts {word_counts_batch} tags {word_tags_batch}")
-        tm_faiss_st = time.time()
         D_all, I_all = [], []
         if nf_words:
-            ent_substr_tfidfs = self.vectorizer.transform(nf_words).toarray().astype(np.float32)
-            D_all, I_all = self.faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
-        tm_faiss_end = time.time()
+            ent_substr_tfidfs = self.tfidf_vectorizer.transform(nf_words).toarray().astype(np.float32)
+            D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
         D_batch, I_batch = [], []
         D_list, I_list = [], []
         prev_doc_num = 0
@@ -516,17 +607,17 @@ class EntityLinkerSep(Component, Serializable):
         entity_ids_batch = []
         conf_batch = []
         for entity_substr_list, entity_offsets_list, sentences_list, sentences_offsets_list, \
-            indices, word_counts, word_tags, tags, fnd_words, word_fnd_flags, D, I in \
+            indices, word_counts, word_tags, tags, fnd_words, word_fnd_flags, D, I, D_ft, I_ft in \
                 zip(entity_substr_batch, entity_offsets_batch, sentences_batch, sentences_offsets_batch,
                     indices_batch, word_counts_batch, word_tags_batch, tags_batch, fnd_words_batch,
-                    word_fnd_flags_batch, D_batch, I_batch):
+                    word_fnd_flags_batch, D_batch, I_batch, D_ft_batch, I_ft_batch):
             entity_ids_list, conf_list = [], []
             if entity_substr_list:
                 tm_ind_st = time.time()
                 substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
                 candidate_entities_dict = OrderedDict()
                 for i in range(len(entity_substr_list)):
-                    candidate_entities_dict[i] = []
+                    candidate_entities_dict[i] = set()
                 prev_word_count = 0
                 prev_index = 0
                 candidate_entities = {}
@@ -541,15 +632,16 @@ class EntityLinkerSep(Component, Serializable):
                     else:
                         scores_list = D[ind_i]
                         ind_list = I[ind_i]
-                        if self.num_faiss_cells > 1:
+                        if self.num_tfidf_faiss_cells > 1:
                             scores_list = [1.0 - score for score in scores_list]
                         ind_i += 1
                     if word_count != prev_word_count:
                         if prev_index not in candidate_entities_dict:
-                            candidate_entities_dict[prev_index] = []
-                        candidate_entities_dict[prev_index] += [(entity, cand_entity_len, score)
-                                                                for (entity, cand_entity_len), score in
-                                                                candidate_entities.items()]
+                            candidate_entities_dict[prev_index] = set()
+                        candidate_entities_dict[prev_index] = \
+                            candidate_entities_dict[prev_index].union({(entity, cand_entity_len, score)
+                                                                       for (entity, cand_entity_len), score in
+                                                                       candidate_entities.items()})
                         candidate_entities = {}
                     
                     for ind, score in zip(ind_list, scores_list):
@@ -569,28 +661,62 @@ class EntityLinkerSep(Component, Serializable):
                     prev_index = index
                     prev_word_count = word_count
                     if not flag:
-                        debug_words = [(self.word_list[ind], score) for ind, score in zip(ind_list[:10], scores_list[:10])]
+                        debug_words = [(self.word_list[ind], score) for ind, score in zip(ind_list[:10],
+                                                                                          scores_list[:10])]
                         log.debug(f"{index} candidate_entities {debug_words}")
                 
                 if index not in candidate_entities_dict:
-                    candidate_entities_dict[index] = []
-                candidate_entities_dict[index] += [(entity, cand_entity_len, score)
+                    candidate_entities_dict[index] = set()
+                candidate_entities_dict[index] = candidate_entities_dict[index].union({(entity, cand_entity_len, score)
                                                    for (entity, cand_entity_len), score in
-                                                   candidate_entities.items()]
+                                                   candidate_entities.items()})
 
                 candidate_entities_total = candidate_entities_dict.values()
                 candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
                                             for candidate_entities, substr_len in
                                             zip(candidate_entities_total, substr_lens)]
+                
+                candidate_entities_ft_dict = OrderedDict()
+                for index, (entity_substr, scores_list, ind_list, tag) \
+                        in enumerate(zip(entity_substr_list, D_ft, I_ft, tags)):
+                    entities_set = set()
+                    for ind, score in zip(ind_list, scores_list):
+                        if score < 400.0:
+                            entity_label = self.labels_list[ind]
+                            fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
+                            for entity_id in self.label_to_q[entity_label]:
+                                entities_set.add((entity_id, fuzz_ratio))
+                    candidate_entities_ft_dict[index] = list(entities_set)
+                candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
+                
+                candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
+                
                 log.debug(f"length candidate entities list {len(candidate_entities_total)}")
                 candidate_entities_list = []
                 entities_scores_list = []
-                for entity_substr, candidate_entities in zip(entity_substr_list, candidate_entities_total):
+                for entity_substr, candidate_entities, candidate_entities_ft \
+                        in zip(entity_substr_list, candidate_entities_total, candidate_entities_ft_total):
                     log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
+                    candidate_entities_dict = {}
+                    for entity, score in candidate_entities:
+                        candidate_entities_dict[entity] = score
+                    for entity, fuzz_score in candidate_entities_ft:
+                        if entity in candidate_entities_dict:
+                            score = candidate_entities_dict[entity]
+                            candidate_entities_dict[entity] = max(score, fuzz_score)
+                        else:
+                            candidate_entities_dict[entity] = fuzz_score
+                    candidate_entities = candidate_entities_dict.items()
+                    
                     candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
                                           for candidate_entity in candidate_entities]
                     candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
+                    
                     log.debug(f"candidate_entities {candidate_entities[:10]}")
+                    out = open("log.txt", 'a')
+                    out.write(str(entity_substr)+'\t'+str(candidate_entities[:10])+'\n')
+                    out.write(str(candidate_entities_ft[:10])+'\n')
+                    out.close()
                     entities_scores = {entity: (substr_score, pop_score)
                                        for entity, substr_score, pop_score in candidate_entities}
                     candidate_entities = [candidate_entity[0] for candidate_entity
@@ -642,7 +768,7 @@ class EntityLinkerSep(Component, Serializable):
                     entities_with_scores[entity] = score
             else:
                 entities_with_scores[entity] = score
-        entities_with_scores = list(entities_with_scores.items())
+        entities_with_scores = set(entities_with_scores.items())
 
         return entities_with_scores
 
@@ -764,9 +890,9 @@ class EntityLinkerSep(Component, Serializable):
             entity_labels_list = []
             for entity_ids in entity_ids_list:
                 if isinstance(entity_ids, list):
-                    entity_labels = [self.q_to_label.get(entity_id, entity_id) for entity_id in entity_ids]
+                    entity_labels = [self.q_to_label.get(entity_id, [entity_id])[0] for entity_id in entity_ids]
                 else:
-                    entity_labels = self.q_to_label.get(entity_id, entity_id)
+                    entity_labels = self.q_to_label.get(entity_id, [entity_id])[0]
                 entity_labels_list.append(entity_labels)
             entity_labels_batch.append(entity_labels_list)
         return entity_labels_batch
