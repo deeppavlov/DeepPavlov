@@ -543,32 +543,37 @@ class EntityLinkerSep(Component, Serializable):
         log.debug(f"words, indices, tags {nf_words_doc_nums}")
         
         ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in ft_entity_substr_list]
-        D_ft_all, I_ft_all = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list),
-                                                              self.num_faiss_candidate_entities)
-        D_ft_batch, I_ft_batch = [], []
-        D_ft_list, I_ft_list = [], []
-        prev_doc_num = 0
-        for D, I, doc_num in zip(D_ft_all, I_ft_all, ft_doc_nums):
-            if doc_num != prev_doc_num:
-                D_ft_batch.append(D_ft_list)
-                I_ft_batch.append(I_ft_list)
-                if doc_num - prev_doc_num > 1:
-                    for j in range(doc_num - prev_doc_num - 1):
-                        D_ft_batch.append([])
-                        I_ft_batch.append([])
-                D_ft_list, I_ft_list = [], []
-            D_ft_list.append(D)
-            I_ft_list.append(I)
-            prev_doc_num = doc_num
+        ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list), self.num_faiss_candidate_entities)
         
-        for i in range(len(entity_substr_batch) - len(D_ft_batch)):
-            if D_ft_list:
-                D_ft_batch.append(D_ft_list)
-                I_ft_batch.append(I_ft_list)
-                D_ft_list, I_ft_list = [], []
-            else:
-                D_ft_batch.append([])
-                I_ft_batch.append([])
+        if len(ft_res) == 2:
+            D_ft_all, I_ft_all = ft_res
+            D_ft_batch, I_ft_batch = [], []
+            D_ft_list, I_ft_list = [], []
+            prev_doc_num = 0
+            for D, I, doc_num in zip(D_ft_all, I_ft_all, ft_doc_nums):
+                if doc_num != prev_doc_num:
+                    D_ft_batch.append(D_ft_list)
+                    I_ft_batch.append(I_ft_list)
+                    if doc_num - prev_doc_num > 1:
+                        for j in range(doc_num - prev_doc_num - 1):
+                            D_ft_batch.append([])
+                            I_ft_batch.append([])
+                    D_ft_list, I_ft_list = [], []
+                D_ft_list.append(D)
+                I_ft_list.append(I)
+                prev_doc_num = doc_num
+            
+            for i in range(len(entity_substr_batch) - len(D_ft_batch)):
+                if D_ft_list:
+                    D_ft_batch.append(D_ft_list)
+                    I_ft_batch.append(I_ft_list)
+                    D_ft_list, I_ft_list = [], []
+                else:
+                    D_ft_batch.append([])
+                    I_ft_batch.append([])
+        else:
+            D_ft_batch = [[] for _ in entity_substr_batch]
+            I_ft_batch = [[] for _ in entity_substr_batch]
         
         nf_words, nf_doc_nums = [], []
         if nf_words_doc_nums:
@@ -676,18 +681,20 @@ class EntityLinkerSep(Component, Serializable):
                                             for candidate_entities, substr_len in
                                             zip(candidate_entities_total, substr_lens)]
                 
-                candidate_entities_ft_dict = OrderedDict()
-                for index, (entity_substr, scores_list, ind_list, tag) \
-                        in enumerate(zip(entity_substr_list, D_ft, I_ft, tags)):
-                    entities_set = set()
-                    for ind, score in zip(ind_list, scores_list):
-                        if score < 400.0:
-                            entity_label = self.labels_list[ind]
-                            fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
-                            for entity_id in self.label_to_q[entity_label]:
-                                entities_set.add((entity_id, fuzz_ratio))
-                    candidate_entities_ft_dict[index] = list(entities_set)
-                candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
+                candidate_entities_ft_total = [[] for _ in entity_substr_list]
+                if D_ft and I_ft:
+                    candidate_entities_ft_dict = OrderedDict()
+                    for index, (entity_substr, scores_list, ind_list, tag) \
+                            in enumerate(zip(entity_substr_list, D_ft, I_ft, tags)):
+                        entities_set = set()
+                        for ind, score in zip(ind_list, scores_list):
+                            if score < 400.0:
+                                entity_label = self.labels_list[ind]
+                                fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
+                                for entity_id in self.label_to_q[entity_label]:
+                                    entities_set.add((entity_id, fuzz_ratio))
+                        candidate_entities_ft_dict[index] = list(entities_set)
+                    candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
                 
                 candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
                 
@@ -713,10 +720,6 @@ class EntityLinkerSep(Component, Serializable):
                     candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
                     
                     log.debug(f"candidate_entities {candidate_entities[:10]}")
-                    out = open("log.txt", 'a')
-                    out.write(str(entity_substr)+'\t'+str(candidate_entities[:10])+'\n')
-                    out.write(str(candidate_entities_ft[:10])+'\n')
-                    out.close()
                     entities_scores = {entity: (substr_score, pop_score)
                                        for entity, substr_score, pop_score in candidate_entities}
                     candidate_entities = [candidate_entity[0] for candidate_entity

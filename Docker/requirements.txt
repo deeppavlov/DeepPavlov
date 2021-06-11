@@ -1,3 +1,5 @@
 pyaml==20.4.0
 docker==4.4.1
 aiohttp==3.7.3
+rapidfuzz==0.7.6
+fasttext==0.9.1
