@@ -12,38 +12,13 @@
     "out": ["y_predicted"],
     "pipe": [
       {
-        "class_name": "dialog_component_wrapper",
-        "component": { "class_name": "split_tokenizer" },
-        "in": ["x"],
-        "out": ["x_tokens"]
-      },
-      {
-        "id": "word_vocab",
-        "class_name": "simple_vocab",
-        "fit_on": ["x_tokens"],
-        "save_path": "{MODEL_PATH}/word.dict",
-        "load_path": "{MODEL_PATH}/word.dict"
-      },
-      {
         "class_name": "trippy",
-        "load_path": "{MODEL_PATH}/model",
-        "save_path": "{MODEL_PATH}/model",
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
-        "main": true,
+        "pretrained_bert": "bert-base-uncased",
+        "save_path": "{MODEL_PATH}/model",
         "debug": false,
-        "learning_rate": 0.003,
-        "learning_rate_drop_patience": 5,
-        "learning_rate_drop_div": 10.0,
-        "momentum": 0.95,
-        "optimizer": "tensorflow.train:AdamOptimizer",
-        "clip_norm": 2.0,
-        "dropout_rate": 0.4,
-        "l2_reg_coef": 3e-4,
-        "hidden_size": 128,
-        "dense_size": 160,
-        "word_vocab": "#word_vocab",
         "database": null,
         "nlg_manager": {
           "class_name": "gobot_nlg_manager",
@@ -54,20 +29,7 @@
         "api_call_action": null,
         "use_action_mask": false,
         "slot_filler": null,
-        "intent_classifier": null,
-        "embedder": {
-          "class_name": "glove",
-          "load_path": "{DOWNLOADS_PATH}/embeddings/glove.6B.100d.txt"
-        },
-        "bow_embedder": null,
-        "tokenizer": {
-          "class_name": "stream_spacy_tokenizer",
-          "lowercase": false
-        },
-        "tracker": {
-          "class_name": "featurized_tracker",
-          "slot_names": ["pricerange", "this", "area", "food", "name"]
-        }
+        "slot_names": ["pricerange", "this", "area", "food", "name"]
       }
     ]
   },
@@ -85,8 +47,7 @@
     "evaluation_targets": [
       "valid",
       "test"
-    ],
-    "class_name": "nn_trainer"
+    ]
   },
   "metadata": {
     "variables": {
@@ -101,10 +62,6 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/gobot_dstc2_v9.tar.gz",
         "subdir": "{MODELS_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/glove.6B.100d.txt",
-        "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
         "url": "http://files.deeppavlov.ai/datasets/dstc2_v3.tar.gz",
