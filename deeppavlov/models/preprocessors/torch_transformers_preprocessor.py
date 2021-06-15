@@ -19,7 +19,7 @@ from pathlib import Path
 import torch
 from typing import Tuple, List, Optional, Union
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
@@ -66,7 +66,7 @@ class TorchTransformersPreprocessor(Component):
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
-            List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+        List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
@@ -194,7 +194,7 @@ class TorchTransformersNerPreprocessor(Component):
         if tags is not None:
             if self.provide_subword_tags:
                 return tokens, subword_tokens, subword_tok_ids, \
-                    attention_mask, startofword_markers, subword_tags
+                       attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -208,7 +208,7 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
                 return tokens, subword_tokens, subword_tok_ids, \
-                    attention_mask, startofword_markers, nonmasked_tags
+                       attention_mask, startofword_markers, nonmasked_tags
         return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
     @staticmethod
@@ -259,7 +259,7 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
         """Tokenize and create masks.
 
         Args:
-            batch: list of elemenents where the first element represents the batch with contexts
+            batch: list of elements where the first element represents the batch with contexts
                 and the rest of elements represent response candidates batches
 
         Returns:
@@ -297,5 +297,50 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
                                               label=None)
                 sub_list_features.append(curr_features)
             input_features.append(sub_list_features)
+
+        return input_features
+
+
+@register('torch_transformers_re_preprocessor')
+class TorchTransformersREPreprocessor(Component):
+    def __init__(
+            self,
+            vocab_file: str,
+            special_token: str = '<ENT>'
+    ):
+        self.special_token = special_token
+        self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
+
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file)
+
+    def __call__(self, input_data: List[Tuple[List, List, str]], **kwargs) -> List[InputFeatures]:
+        _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
+        count = 0
+        wordpiece_tokens, input_features = [], []
+        for doc in input_data:
+            doc_wordpiece_tokens = []
+            entity_positions_start = list(sum(doc[1][0], ()))
+            entity_positions_end = list(sum(doc[1][1], ()))
+            for n, token in enumerate(doc[0]):
+                if n in entity_positions_start or n-1 in entity_positions_end:
+                    doc_wordpiece_tokens.append(self.special_token)
+                    count += 1
+                word_tokens = self.tokenizer.wordpiece_tokenizer.tokenize(token)
+                doc_wordpiece_tokens += word_tokens
+                count += len(word_tokens)
+
+            encoding = self.tokenizer.encode_plus(
+                doc_wordpiece_tokens, add_special_tokens=True, truncation=True, padding="max_length",
+                return_attention_mask=True, return_tensors="pt"
+            )
+
+            input_features.append(InputFeatures(
+                input_ids=encoding['input_ids'], attention_mask=encoding['attention_mask'],
+                token_type_ids=encoding['token_type_ids'], label=None
+            ))
 
         return input_features

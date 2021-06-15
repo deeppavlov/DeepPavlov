@@ -69,8 +69,6 @@ class DocREDDatasetReader(DatasetReader):
                     ]
         """
 
-        # todo: add downloading from url
-
         self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         self.if_add_neg_samples = generate_additional_neg_samples
         self.num_neg_samples = num_neg_samples
