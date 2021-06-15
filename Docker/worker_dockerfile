@@ -13,4 +13,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD python -m deeppavlov riseapi $([ -z $CUDA_VISIBLE_DEVICES ] && echo entity_linking_vx_sep_cpu.json || echo entity_linking_vx_sep_gpu.json) -p 8000 2>&1 | tee /data/logs/$CONTAINER_NAME_$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')
+CMD python -m deeppavlov riseapi $(echo entity_linking_vx_sep_cpu.json) -p 8000 2>&1 | tee /data/logs/$CONTAINER_NAME_$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')

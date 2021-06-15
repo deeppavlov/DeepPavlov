@@ -23,7 +23,10 @@ class Aliases:
             self.save()
 
     def add_alias(self, label: str, entity_ids: List[str]) -> None:
-        self.aliases[label] += entity_ids
+        if label in self.aliases:
+            self.aliases[label] += entity_ids
+        else:
+            self.aliases[label] = entity_ids
         self.save()
 
     def add_aliases(self, aliases: Dict[str, List[str]]) -> None:
