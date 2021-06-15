@@ -880,6 +880,20 @@ class EntityLinkerSep(Component, Serializable):
             else:
                 top_entities = [score[0] for score in entities_with_scores]
                 top_conf = [score[1:] for score in entities_with_scores]
+                
+            high_conf_entities = []
+            high_conf_nums = []
+            for elem_num, (entity, conf) in enumerate(zip(top_entities, top_conf)):
+                if conf[0] == 1.0 and conf[1] > 55 and conf[2] > 0.8:
+                    high_conf_entities.append((entity,)+conf)
+                    high_conf_nums.append(elem_num)
+            
+            high_conf_entities = sorted(high_conf_entities, key=lambda x: (x[1], x[3], x[2]), reverse=True)
+            for n, elem_num in enumerate(high_conf_nums):
+                del top_entities[elem_num - n]
+                
+            top_entities = [elem[0] for elem in high_conf_entities] + top_entities
+            top_conf = [elem[1:] for elem in high_conf_entities] + top_conf
 
             if self.num_entities_to_return == 1 and top_entities:
                 entity_ids_list.append(top_entities[0])

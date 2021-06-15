@@ -43,6 +43,7 @@
         "build_inverted_index": false,
         "lemmatize": true,
         "use_descriptions": true,
+        "full_paragraph": true,
         "return_confidences": true,
         "use_prefix_tree": false,
         "lang": "ru"
