@@ -543,7 +543,9 @@ class EntityLinkerSep(Component, Serializable):
         log.debug(f"words, indices, tags {nf_words_doc_nums}")
         
         ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in ft_entity_substr_list]
-        ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list), self.num_faiss_candidate_entities)
+        ft_res = []
+        if ft_entity_emb_list:
+            ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list), self.num_faiss_candidate_entities)
         
         if len(ft_res) == 2:
             D_ft_all, I_ft_all = ft_res
