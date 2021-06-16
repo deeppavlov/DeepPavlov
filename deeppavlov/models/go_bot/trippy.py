@@ -17,6 +17,8 @@ from logging import getLogger
 from typing import Dict, Any, List, Optional, Union, Tuple
 from pathlib import Path
 
+from numpy.lib.twodim_base import diag
+
 import torch
 from overrides import overrides
 from transformers.modeling_bert import BertConfig
@@ -27,8 +29,9 @@ from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
-from deeppavlov.models.go_bot.trippy_preprocssing import prepare_trippy_data, get_turn
+from deeppavlov.models.go_bot.trippy_preprocssing import prepare_trippy_data, get_turn, batch_to_device
 
 logger = getLogger(__name__)
 
@@ -39,7 +42,6 @@ class TripPy(TorchModel):
     Go-bot architecture based on https://arxiv.org/abs/2005.02877.
 
     Parameters:
-
         save_path
             Where to save the model
         class_types
@@ -49,7 +51,7 @@ class TripPy(TorchModel):
         bert_config
             Can be path to a file in case different from bert-base-uncased config
         max_seq_length
-            Max sequence length of an entire dialog. Defaults to TripPy 180 default.
+            Max sequence length of an entire dialog. Defaults to TripPy 180 default. Too long examples will be logged.
         class_loss_ratio
             The ratio applied on class loss in total loss calculation.
             Should be a value in [0.0, 1.0].
@@ -115,7 +117,7 @@ class TripPy(TorchModel):
         self.ds_logits = None
 
         # Init NLG & Co
-        super().__init__(**kwargs)
+        super().__init__(save_path=save_path, **kwargs)
 
     @overrides
     def load(self, fname=None):
@@ -141,7 +143,7 @@ class TripPy(TorchModel):
                  batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> List:
         """
-        Model invocation
+        Model invocation.
 
         Args:
             batch: batch of dialogue data or list of strings
@@ -153,21 +155,18 @@ class TripPy(TorchModel):
         if not(isinstance(batch[0], list)):
             # User inference - Just one dialogue
             batch = [[{"text": text, "intents": [{"act": None, "slots": None}]} for text in batch]]
+        else:
+            self.reset()
 
         dialogue_results = []
         for diag_id, dialogue in enumerate(batch):
 
-            # Increment context / response info holders if out of bounds
-            if diag_id >= len(self.batch_dialogues_utterances_contexts_info):
-                self.batch_dialogues_utterances_contexts_info.append([])
-                self.batch_dialogues_utterances_responses_info.append([None])
-
             turn_results = []
             for turn_id, turn in enumerate(dialogue):
-
                 # Reset dialogue state if no dialogue state yet or the dialogue is empty (i.e. its a new dialogue)
-                if (self.ds_logits is None) or (len(self.batch_dialogues_utterances_contexts_info[diag_id]) == 0):
+                if (self.ds_logits is None) or (diag_id >= len(self.batch_dialogues_utterances_contexts_info)):
                     self.reset()
+                    diag_id = 0
 
                 # Append context to the dialogue
                 self.batch_dialogues_utterances_contexts_info[diag_id].append(turn)
@@ -179,8 +178,9 @@ class TripPy(TorchModel):
                                                     self.slot_names, 
                                                     self.class_types, 
                                                     self.nlg_manager,
-                                                    max_seq_length=self.max_seq_length)
-                
+                                                    max_seq_length=self.max_seq_length,
+                                                    debug=self.debug)
+
                 # Take only the last turn - as we already know the previous ones; We need to feed them one by one to update the ds
                 last_turn = get_turn(batch, index=-1)
 
@@ -191,8 +191,12 @@ class TripPy(TorchModel):
                 # Update data-held dialogue state based on new logits
                 last_turn["diag_state"] = self.ds_logits
 
+                # Move to correct device
+                last_turn = batch_to_device(last_turn, self.device)
+
                 # Run the turn through the model
-                outputs = self.model(**last_turn)
+                with torch.no_grad():
+                    outputs = self.model(**last_turn)
 
                 # Update dialogue state logits
                 for slot in self.model.slot_list:
@@ -209,11 +213,13 @@ class TripPy(TorchModel):
                               input_ids_unmasked, 
                               inform)
                 
-                # Get predicted action
-                predicted_action = outputs[6]
+                # Wrap predicted action (outputs[6]) into a PolicyPrediction
+                policy_prediction = PolicyPrediction(outputs[6].cpu(), None, None, None)
 
-                # ... NLG based on self.ds & pred action
-                response = "Hello World"
+                # NLG based on predicted action & dialogue state
+                response = self.nlg_manager.decode_response(None,
+                                                            policy_prediction,
+                                                            self.ds)
         
                 # Add system response to responses for possible next round
                 self.batch_dialogues_utterances_responses_info[diag_id].insert(-1, {"text": response, "act": None})
@@ -304,25 +310,36 @@ class TripPy(TorchModel):
         Returns:
             dict with loss value
         """
-        inputs = prepare_trippy_data(batch_dialogues_utterances_features,
+        batch, features = prepare_trippy_data(batch_dialogues_utterances_features,
                                      batch_dialogues_utterances_targets,
                                      self.tokenizer,
                                      self.slot_names,
                                      self.class_types,
                                      self.nlg_manager,
-                                     self.max_seq_length)
+                                     self.max_seq_length,
+                                     debug=self.debug)
+        # Move to correct device
+        batch = batch_to_device(batch, self.device)
         # Feed through model
-        outputs = self.model(**inputs)
-        # Return loss
-        return {"loss": outputs[0]}
+        outputs = self.model(**batch)
+        # Backpropagation
+        loss = outputs[0]
+        loss.backward()
+        self.optimizer.step()
+        return {"loss": loss.item()}
     
     def reset(self, user_id: Union[None, str, int] = None) -> None:
         """
         Reset dialogue state trackers.
         """
-        # TODO: might have to move to self.device
         self.ds_logits = {slot: torch.tensor([0]) for slot in self.slot_names}
         self.ds = None
+
+        self.batch_dialogues_utterances_contexts_info = [[]]
+        self.batch_dialogues_utterances_responses_info = [[None]]
     
     def save(self, *args, **kwargs) -> None:
+        """
+        Save the model.
+        """
         self.model.save_pretrained(self.save_path)

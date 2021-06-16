@@ -17,7 +17,8 @@
         "in_y": ["y"],
         "out": ["y_predicted"],
         "pretrained_bert": "bert-base-uncased",
-        "save_path": "{MODEL_PATH}/model",
+        "save_path": "./",
+        "max_seq_length": 180,
         "debug": false,
         "database": null,
         "nlg_manager": {

@@ -28,6 +28,8 @@ import torch
 logger = getLogger(__name__)
 
 
+## EXP ##
+from deeppavlov.models.spelling_correction.levenshtein.searcher_component import LevenshteinSearcherComponent
 
 class DSTExample(object):
     """
@@ -116,9 +118,17 @@ def normalize_text(text):
     text = re.sub("(^| )b ?& ?b([.,? ]|$)", r"\1bed and breakfast\2", text) # Normalization
     text = re.sub("bed & breakfast", "bed and breakfast", text) # Normalization
 
+    # Add inconsistent slot values here - Incorrect one first, then correct
     text = re.sub("price range", "pricerange", text) # These are very necessary, because there are discrepencies btw the TripPy slot values & the actual text
     text = re.sub("center", "centre", text)
     text = re.sub("moderately", "moderate", text)
+    text = re.sub("medium", "moderate", text)
+    text = re.sub("central", "centre", text)
+    text = re.sub("portugese", "portuguese", text)
+    text = re.sub("steak house", "steakhouse", text)
+    text = re.sub("turkiesh", " turkish", text)
+    text = re.sub("asian ori$", "asian oriental ", text) # Cannot remove the space cuz else it will mess with normal asian ori; probably need some more regex
+
     return text
 
 
@@ -153,13 +163,15 @@ def get_dialogue_state_sv_dict(context):
     In order to get an overall diag state we then merge the diag states with more recent ones taking preference
     """
     sv_dict = {}
-    for intent in context["intents"]:
-        if (intent["slots"] is not None) and (len(intent["slots"]) > 0):
-          # Only inform since we only want slots where we have the value (in request we dont)
-          if intent["act"] == "inform":
-            slot = intent["slots"][0][0]
-            value = intent["slots"][0][1]
-            sv_dict[slot] = value
+    # There may be no slots & slot values, though it doesnt really make sense to use TripPy then
+    if "intent" in context:
+        for intent in context["intents"]:
+            if (intent["slots"] is not None) and (len(intent["slots"]) > 0):
+                # Only inform since we only want slots where we have the value (in request we dont)
+                if intent["act"] == "inform":
+                    slot = intent["slots"][0][0]
+                    value = intent["slots"][0][1]
+                    sv_dict[slot] = value
     return sv_dict
 
 
@@ -211,10 +223,12 @@ def get_tok_label(prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok,
                 assert sum(usr_utt_tok_label + sys_utt_tok_label) == 0
                 if (slot_type not in prev_ds_dict or value != prev_ds_dict[slot_type]):
                     # Added clarifications
-                    print("INFO:", slot_type, value, prev_ds_dict, usr_slot_label)
+                    print("Value: {} for slot type {} does not exist in utterance: {}".format(value, slot_type, usr_utt_tok))
+                    print("Other Information: ", prev_ds_dict, usr_slot_label, sys_utt_tok)
+                    print("Most likely have to add the incorrect utterance token to be replaced with the value see normalizations in the code.")
                     print("This error is likely because of a mismatch in the slot value & the actual text!\n \
                           E.g. the slot value is pricerange: moderate but the text contains only moderately\n \
-                          Possibly add a replacement to the normalization")
+                          Possibly add a replacement to the normalization.")
                     raise ValueError('Copy value cannot found in Dial %s Turn %s' % (str(dial_id), str(turn_id)))
                 else:
                     class_type = 'none'
@@ -255,37 +269,41 @@ def get_token_and_slot_label(context, response=None):
 
     # Possibly simplify
     usr_slot_label = []
-    for intent in context['intents']:
-        if (intent["slots"] is not None) and (len(intent["slots"]) > 0):
-            if intent["act"] == "request":
-              
-                slot = intent["slots"][0][1]
-                value = None # request slots have no value yet
+    if 'intents' in context:
+        for intent in context['intents']:
+            if (intent["slots"] is not None) and (len(intent["slots"]) > 0):
+                if intent["act"] == "request":
+                
+                    slot = intent["slots"][0][1]
+                    value = None # request slots have no value yet
 
-                # End & start queried lateron, so set to -1
-                slot_dict = {
-                  "exclusive_end": -1,
-                  "slot": slot,
-                  "start": -1
-                }
-                usr_slot_label.append(slot_dict)
-
-            elif intent["act"] == "inform":
-
-                slot = intent["slots"][0][0]
-                value = intent["slots"][0][1]
-
-                # if e.g. "dontcare" skip it; It will be in the diag_state (like in TripPy)
-                # This unfortunately is not robust to slot values that are different from the text
-                # TODO: Use Levenshtein component!
-                if value in usr_utt_tok:
-                    # Will have to be adpated for slot values of len > 1
+                    # End & start queried lateron, so set to -1
                     slot_dict = {
-                      "exclusive_end": usr_utt_tok.index(value) + 1,
-                      "slot": slot,
-                      "start": usr_utt_tok.index(value)
+                    "exclusive_end": -1,
+                    "slot": slot,
+                    "start": -1
                     }
                     usr_slot_label.append(slot_dict)
+
+                elif intent["act"] == "inform":
+
+                    slot = intent["slots"][0][0]
+                    value = intent["slots"][0][1]
+
+                    value_tok = tokenize(value)
+
+                    # if e.g. "dontcare" skip it; It will be in the diag_state (like in TripPy)
+                    # This unfortunately is not robust to slot values that are different from the text & they have to be manually added to replace
+                    # Generally TripPy's text index predicting is brittle and we should move to generating slot values not copying them in the future
+                    if set(value_tok) <= set(usr_utt_tok):
+                        # Will have to be adpated for slot values of len > 1
+                        slot_dict = {
+                        "exclusive_end": usr_utt_tok.index(value_tok[-1]) + 1,
+                        "slot": slot,
+                        "start": usr_utt_tok.index(value_tok[0])
+                        }
+                        usr_slot_label.append(slot_dict)
+
 
     return sys_utt_tok, sys_slot_label, usr_utt_tok, usr_slot_label
 
@@ -493,7 +511,7 @@ class InputFeatures(object):
         self.class_label_id = class_label_id
 
 
-def convert_examples_to_features(examples, slot_list, class_types, tokenizer, max_seq_length, slot_value_dropout=0.0):
+def convert_examples_to_features(examples, slot_list, class_types, tokenizer, max_seq_length, slot_value_dropout=0.0, debug=False):
     """Loads a data file into a list of `InputBatch`s."""
 
     # BERT Model Specs
@@ -557,7 +575,9 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
         # Account for [CLS], [SEP], [SEP], [SEP] with "- 4" (BERT)
         # Account for <s>, </s></s>, </s></s>, </s> with "- 6" (RoBERTa)
         if len(tokens_a) + len(tokens_b) + len(history) > max_seq_length - model_specs['TOKEN_CORRECTION']:
-            logger.info("Truncate Example %s. Total len=%d." % (guid, len(tokens_a) + len(tokens_b) + len(history)))
+            if debug:
+                logger.info("Truncate Example %s. Total len=%d." % (guid, len(tokens_a) + len(tokens_b) + len(history)))
+                logger.info("Truncated Example History: %s" % history)
             input_text_too_long = True
         else:
             input_text_too_long = False
@@ -659,11 +679,11 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
     features = []
     # Convert single example
     for (example_index, example) in enumerate(examples):
-        if example_index % 1000 == 0:
+        if (example_index % 10 == 0) and (debug == True):
             logger.info("Writing example %d of %d" % (example_index, len(examples)))
 
         total_cnt += 1
-
+        
         value_dict = {}
         inform_dict = {}
         inform_slot_dict = {}
@@ -684,7 +704,7 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
                 tokens_a, tokens_b, tokens_history, max_seq_length, model_specs, example.guid)
 
             if input_text_too_long:
-                if example_index < 10:
+                if debug == True:
                     if len(token_labels_a) > len(tokens_a):
                         logger.info('    tokens_a truncated labels: %s' % str(token_labels_a[len(tokens_a):]))
                     if len(token_labels_b) > len(tokens_b):
@@ -740,7 +760,7 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
 
         assert(len(input_ids) == len(input_ids_unmasked))
 
-        if example_index < 10: # Possibly if debug=True
+        if debug == True:
             logger.info("*** TripPy Example ***")
             logger.info("guid: %s" % (example.guid))
             logger.info("tokens: %s" % " ".join(tokens))
@@ -772,7 +792,8 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
                 diag_state=diag_state_dict,
                 class_label_id=class_label_id_dict))
 
-    logger.info("========== %d out of %d examples have text too long" % (too_long_cnt, total_cnt))
+    if debug == True:
+        logger.info("========== %d out of %d examples have text too long" % (too_long_cnt, total_cnt))
 
     return features
 
@@ -793,6 +814,20 @@ def get_turn(batch, index=-1):
             result[key] = value[None, index]
     return result
 
+def batch_to_device(batch, device):
+    """
+    Moves items in batch to correct device
+    """
+    result = {}
+    for key, value in batch.items():
+        if isinstance(value, dict):
+            result[key] = {k: v.to(device) for k, v in value.items()}
+        elif isinstance(value, list):
+            result[key] = [v.to(device) for v in value]
+        else:
+            result[key] = value.to(device)
+    return result
+
 
 def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict]],
                         batch_dialogues_utterances_responses_info: List[List[dict]],
@@ -800,7 +835,8 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
                         slot_list,
                         class_types,
                         nlg_manager=None,
-                        max_seq_length=180) -> dict:
+                        max_seq_length=180,
+                        debug=False) -> dict:
     """
     Parse the passed DSTC2 dialogue information to BertForDST input. 
 
@@ -830,7 +866,8 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
                                             slot_list, 
                                             class_types=class_types, 
                                             tokenizer=tokenizer,
-                                            max_seq_length=max_seq_length)
+                                            max_seq_length=max_seq_length,
+                                            debug=debug)
 
     # Convert to Tensors and return data
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
