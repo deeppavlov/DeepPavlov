@@ -19,7 +19,7 @@
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{TRANSFORMER}",
-        "do_lower_case": false,
+        "do_lower_case": true,
         "max_seq_length": 512,
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
