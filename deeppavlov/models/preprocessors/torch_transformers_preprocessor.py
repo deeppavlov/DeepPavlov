@@ -230,16 +230,45 @@ class TorchSquadTransformersPreprocessor(Component):
 
         if texts_b is None:
             texts_b = [None] * len(texts_a)
-
+            
         input_features = []
         tokens = []
+            
+        input_features = self.tokenizer(text=texts_a,
+                                        text_pair=texts_b,
+                                        add_special_tokens=True,
+                                        max_length=self.max_seq_length,
+                                        pad_to_max_length=True,
+                                        return_attention_mask=True,
+                                        truncation=True,
+                                        return_tensors='pt')
+        
+        if self.return_tokens:        
+            for input_feature in input_features:
+                tokens.append(self.tokenizer.convert_ids_to_tokens(input_feature['input_ids'][0]))
+            return input_features, tokens
+        else:
+            return input_features
+                
+        
+            
+
+        
         for text_a, text_b in zip(texts_a, texts_b):
             encoded_dict = self.tokenizer.encode_plus(
-                text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
-                pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+                text=text_a, 
+                text_pair=text_b, 
+                add_special_tokens=True, 
+#                 max_length=self.max_seq_length,
+#                 pad_to_max_length=True, 
+                padding='max_length',
+                max_length = self.max_seq_length,
+                return_attention_mask=True, 
+                truncation=True,
+                return_tensors='pt')
 
-            if 'token_type_ids' not in encoded_dict:
-                encoded_dict['token_type_ids'] = torch.tensor([0])
+#             if 'token_type_ids' not in encoded_dict:
+#                 encoded_dict['token_type_ids'] = torch.tensor([0])
 
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                           attention_mask=encoded_dict['attention_mask'],
