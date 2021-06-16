@@ -20,9 +20,9 @@
     "pipe": [
       {
         "class_name": "torch_squad_transformers_preprocessor",
-        "vocab_file": "bert-base-cased",
-        "do_lower_case": false,
-        "max_seq_length": 384,
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": true,
+        "max_seq_length": 512,
         "return_tokens": true,
         "in": [
           "question_raw",
@@ -35,7 +35,7 @@
       },
       {
         "class_name": "squad_bert_mapping",
-        "do_lower_case": false,
+        "do_lower_case": true,
         "in": [
           "context_raw",
           "bert_features",
@@ -48,7 +48,7 @@
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
-        "do_lower_case": false,
+        "do_lower_case": true,
         "in": [
           "ans_raw",
           "ans_raw_start",
@@ -61,10 +61,10 @@
         ]
       },
       {
-        "class_name": "torch_squad_bert_model",
-        "pretrained_bert": "bert-base-cased",
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "class_name": "torch_transformers_squad",
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}",
+        "load_path": "{MODEL_PATH}",
         "optimizer": "AdamW",
         "optimizer_parameters": {
           "lr": 2e-5,
@@ -121,8 +121,6 @@
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 5,
     "validation_patience": 10,
     "metrics": [
       {
@@ -158,14 +156,14 @@
   },
   "metadata": {
     "variables": {
+      "TRANSFORMER": "bert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_torch_bert_v0.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
       }
     ]
   }
