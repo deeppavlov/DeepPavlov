@@ -299,7 +299,7 @@ class TorchTransformersNerPreprocessor(Component):
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=True)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
 
     def __call__(self,
