@@ -19,7 +19,7 @@
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{TRANSFORMER}",
-        "do_lower_case": true,
+        "do_lower_case": false,
         "max_seq_length": 512,
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
@@ -108,7 +108,7 @@
   },
   "train": {
     "epochs": 30,
-    "batch_size": 16,
+    "batch_size": 8,
     "metrics": [
       {
         "name": "ner_f1",
@@ -142,14 +142,8 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "bert-base-uncased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert"
-    },
-    "download": [
-      {
-        "url": "http://files.deeppavlov.ai/v1.1/ner/ner_conll2003_torch_bert.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      }
-    ]
+      "TRANSFORMER": "roberta-large",
+      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_roberta"
+    }
   }
 }
