@@ -48,7 +48,7 @@ BERT outputs for each subtoken. First/second linear transformation is used for p
 subtoken is start/end position of an answer.
 
 BERT for SQuAD model documentation on TensorFlow :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel`
-and on PyTorch :class:`~deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel`.
+and on PyTorch :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
 
 R-Net
 ~~~~~

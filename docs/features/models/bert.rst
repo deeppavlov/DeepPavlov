@@ -148,7 +148,7 @@ BERT for Context Question Answering (SQuAD)
 Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel` on PyTorch use two linear
+:class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad` on PyTorch use two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </features/models/squad>`.
 
