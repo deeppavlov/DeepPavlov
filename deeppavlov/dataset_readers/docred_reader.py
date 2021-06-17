@@ -14,13 +14,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
 # ATTENTION! To make it work, please run the following command: python3 -m deeppavlov install ner_ontonotes_bert
-# from deeppavlov import configs, build_model
-# ner = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
-
-# ATTENTION! To make it work, please run the following command: python3 -m spacy download en_core_web_sm
-import spacy
-
-ner = spacy.load("en_core_web_sm")
+from deeppavlov import configs, build_model
+ner = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
 
 logger = getLogger(__name__)
 
@@ -113,7 +108,7 @@ class DocREDDatasetReader(DatasetReader):
         with open(file_path) as file:
             data = json.load(file)
             for data_unit in data:
-                ent_ids2ent, ent_ids2ent_tag = {}, {}
+                ent_ids2ent_pos, ent_ids2ent_text, ent_ids2ent_tag = {}, {}, {}
 
                 # get list of all tokens from the document
                 doc = [token for sent in data_unit["sents"] for token in sent]
@@ -122,27 +117,32 @@ class DocREDDatasetReader(DatasetReader):
                 sents_begins = list(np.cumsum([0] + [len(sent) + 1 for sent in data_unit["sents"]]))
 
                 for ent_set_id, ent_set in enumerate(data_unit["vertexSet"]):
-                    # get the list of tuples with each entity's new indices (recalculated regarding to the whole doc)
-                    ent_ids2ent[ent_set_id] = [
-                        ((ent["pos"][0] + sents_begins[ent["sent_id"]]), (ent["pos"][1] + sents_begins[ent["sent_id"]]))
-                        for ent in ent_set
-                    ]
-                    # get the sample NER tag (logically, the same for all entity mentions)
-                    ent_ids2ent_tag[ent_set_id] = list(set([ent["type"] for ent in ent_set]))[0]
+                    ent_ids2ent_pos[ent_set_id], ent_ids2ent_text[ent_set_id], ent_ids2ent_tag[ent_set_id] = [], [], []
+                    for ent in ent_set:
+                        # the list of tuples with each entity's new indices (recalculated regarding to the whole doc)
+                        ent_ids2ent_pos[ent_set_id].append(
+                            ((ent["pos"][0] + sents_begins[ent["sent_id"]]),
+                             (ent["pos"][1] + sents_begins[ent["sent_id"]]))
+                        )
+                        # also save entity id to entity as exact text mentions correspondence
+                        ent_ids2ent_text[ent_set_id].append(ent["name"])
+                        # get the sample NER tag (logically, the same for all entity mentions)
+                        ent_ids2ent_tag[ent_set_id].append(list({ent["type"]})[0])
+                    ent_ids2ent_text[ent_set_id] = list(set(ent_ids2ent_text[ent_set_id]))
 
                 # if no labels are provided for the sample, handle is as a negative one
                 if len(data_unit["labels"]) == 0:
-                    processed_data_samples += self.construct_neg_samples(ent_ids2ent, ent_ids2ent_tag, doc)
+                    processed_data_samples += self.construct_neg_samples(ent_ids2ent_pos, ent_ids2ent_tag, doc)
                 else:
                     for label_info in data_unit["labels"]:
                         processed_data_samples.append(
-                            self.construct_pos_samples(ent_ids2ent, ent_ids2ent_tag, label_info, doc)
+                            self.construct_pos_samples(ent_ids2ent_pos, ent_ids2ent_tag, label_info, doc)
                         )
 
                 # additionally generate negative samples for already included samples
                 if self.if_add_neg_samples:
                     processed_data_samples += self.generate_additional_neg_samples(
-                        doc, sum(ent_ids2ent.values(), []), self.num_neg_samples
+                        doc, sum(ent_ids2ent_text.values(), []), self.num_neg_samples
                     )
 
         logger.info(f"Data: {os.path.split(file_path)[1]}. Positive samples: {self.stat['POS_REL']}. "
@@ -195,7 +195,7 @@ class DocREDDatasetReader(DatasetReader):
         return neg_data_samples
 
     def generate_additional_neg_samples(
-            self, doc: List, pos_entities, num_neg_samples: int, neg_label: str = NEG_LABEL
+            self, doc: List, vorbidden_entities: List, num_neg_samples: int, neg_label: str = NEG_LABEL
     ):
         """
         Generated negative samples, i.e. the same document that is used for positive samples, but labeled with
@@ -203,33 +203,31 @@ class DocREDDatasetReader(DatasetReader):
 
         Args:
              doc: list of positive sentences
-             pos_entities: list of entities that participate in any of the relations
+             vorbidden_entities: list of entities that participate in any of the relations (and, therefore, cannot be
+                chosen for negative sample)
              num_neg_samples: number of negative samples that are to be generated out of this document
              neg_label: a label for negative samples
         Returns:
              a tuple with list of all doc tokens, entity information (positions & NER tags) and relation (=neg_label).
         """
         neg_data_samples = []
-        pos_ents_start, pos_ents_end = list(zip(*pos_entities))[0], list(zip(*pos_entities))[1]
-        analysed_sentences = ner(" ".join(doc)).to_json()
+        analysed_sentences = ner([" ".join(doc)])       # returns [[[tokens]], [[ner tags]]]
 
-        # select such pairs of tokens that were not part of any relation so far
-        neg_spacy_entities = random.sample(
-            [
-                ent for ent in analysed_sentences["tokens"] if
-                ent["start"] not in pos_ents_start or ent["end"] not in pos_ents_end
-            ],
-            num_neg_samples
+        # select ids of tokens that were not part of any relation so far
+        neg_spacy_entities_idx = random.sample(
+            [ent_idx for ent_idx in range(len(analysed_sentences[0][0]))
+             if analysed_sentences[0][0][ent_idx] not in vorbidden_entities],
+            num_neg_samples * 2
         )
 
-        for n_ent_1, n_ent_2 in itertools.permutations(neg_spacy_entities, 2):
+        for n_ent_1_idx, n_ent_2_idx in itertools.permutations(neg_spacy_entities_idx, 2):
             # if already sufficient number of negative samples have been generated
             if len(neg_data_samples) == num_neg_samples:
                 break
-            neg_entity_1 = (n_ent_1["start"], n_ent_1["end"])
-            neg_entity_2 = (n_ent_2["start"], n_ent_2["end"])
-            neg_entity_1_tag = n_ent_1["tag"]
-            neg_entity_2_tag = n_ent_2["tag"]
+            neg_entity_1 = analysed_sentences[0][0][n_ent_1_idx]
+            neg_entity_2 = analysed_sentences[0][0][n_ent_2_idx]
+            neg_entity_1_tag = analysed_sentences[0][1][n_ent_1_idx]
+            neg_entity_2_tag = analysed_sentences[0][1][n_ent_1_idx]
             neg_data_samples.append(
                 (doc, [[neg_entity_1], [neg_entity_2], neg_entity_1_tag, neg_entity_2_tag], neg_label)
             )
@@ -242,8 +240,3 @@ if __name__ == "__main__":
     DocREDDatasetReader().read(
         "/Users/asedova/PycharmProjects/deeppavlov_fork/DocRED", generate_additional_neg_samples=True, num_neg_samples=5
     )
-
-"""
-ToDo: 
-- NER with DP
-"""
