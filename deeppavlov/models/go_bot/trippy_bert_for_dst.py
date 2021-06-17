@@ -63,9 +63,9 @@ class BertForDST(BertPreTrainedModel):
             self.add_module("aux_out_projection", nn.Linear(config.hidden_size, int(config.aux_task_def['n_class'])))
 
         # Not in original TripPy model; Add action prediction CLF Head
-        #self.add_module("action_prediction", 
-        self.action_prediction = nn.Sequential([nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
-                                                nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions),])
+        #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
+        self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
+                                                nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
                                                 
 
         self.add_module("action_softmax", nn.Softmax(dim=1))
