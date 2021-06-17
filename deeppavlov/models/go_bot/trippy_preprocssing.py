@@ -127,7 +127,14 @@ def normalize_text(text):
     text = re.sub("portugese", "portuguese", text)
     text = re.sub("steak house", "steakhouse", text)
     text = re.sub("turkiesh", " turkish", text)
-    text = re.sub("asian ori$", "asian oriental ", text) # Cannot remove the space cuz else it will mess with normal asian ori; probably need some more regex
+    text = re.sub("asian ori$", "asian oriental", text) # Cannot remove the space cuz else it will mess with normal asian ori; probably need some more regex
+    text = re.sub("bristish", " british", text)
+    text = re.sub("asian$", "asian oriental", text)
+    text = re.sub("portugeuse", "portuguese", text)
+    text = re.sub("sea food", "seafood", text)
+    text = re.sub("australian asian", "australasian", text)
+    text = re.sub("^derately", "moderately", text)
+
 
     return text
 
@@ -164,7 +171,7 @@ def get_dialogue_state_sv_dict(context):
     """
     sv_dict = {}
     # There may be no slots & slot values, though it doesnt really make sense to use TripPy then
-    if "intent" in context:
+    if "intents" in context:
         for intent in context["intents"]:
             if (intent["slots"] is not None) and (len(intent["slots"]) > 0):
                 # Only inform since we only want slots where we have the value (in request we dont)
@@ -179,7 +186,7 @@ def get_tok_label(prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok,
                   sys_slot_label, usr_utt_tok, usr_slot_label, dial_id,
                   turn_id, slot_last_occurrence=True):
     """
-    Created labels of 11111111 for where an slot value is uttered by user/system
+    Creates labels of 11111111 for where an slot value is uttered by user/system
 
     Adapted from TripPy get_tok_label.
     The position of the last occurrence of the slot value will be used.
@@ -198,8 +205,10 @@ def get_tok_label(prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok,
             in_usr = False
             in_sys = False
             for label_d in usr_slot_label:
-                if label_d['slot'] == slot_type and value == ' '.join(
-                        usr_utt_tok[label_d['start']:label_d['exclusive_end']]):
+                if (label_d['slot'] == slot_type) and (label_d['start'] >= 0):
+                    # Allow start & end logits referring to utterances that do not exactly match the slot value; Not in original TripPy
+                    # Start should still be >0 not to allow ones with -1, i.e. there is not value
+                    #value == ' '.join(usr_utt_tok[label_d['start']:label_d['exclusive_end']]):
                     for idx in range(label_d['start'], label_d['exclusive_end']):
                         usr_utt_tok_label[idx] = 1
                     in_usr = True
@@ -304,6 +313,26 @@ def get_token_and_slot_label(context, response=None):
                         }
                         usr_slot_label.append(slot_dict)
 
+                    elif value not in ["dontcare", "itdoesntmatter"]:
+                        # Not in original TripPy - Search for most similar values with Levenshtein in case
+                        # Slot value label is not in the user tokens
+                        searcher = LevenshteinSearcherComponent(usr_utt_tok, max_distance=10)
+                        candidates = searcher([[value]])
+                        top_candidate = candidates[0][0][0][1]
+
+                        # The LevenshteinSearcher seems not to work for removal edits
+                        if top_candidate not in usr_utt_tok:
+                            top_candidate = usr_utt_tok[0] # Just randomly take the first token
+
+                        slot_dict = {
+                        "exclusive_end": usr_utt_tok.index(top_candidate) + 1,
+                        "slot": slot,
+                        "start": usr_utt_tok.index(top_candidate),
+                        "candidate": top_candidate
+                        }
+                        usr_slot_label.append(slot_dict)
+
+    
 
     return sys_utt_tok, sys_slot_label, usr_utt_tok, usr_slot_label
 
@@ -335,7 +364,7 @@ def get_turn_label(context, response, cur_ds_dict, prev_ds_dict, slot_list, dial
             prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok, sys_slot_label,
             usr_utt_tok, usr_slot_label, dial_id, turn_id,
             slot_last_occurrence=slot_last_occurrence)
-        
+
         if sum(sys_utt_tok_label) > 0:
             inform_label_dict[slot_type] = cur_ds_dict[slot_type]
 
@@ -470,6 +499,8 @@ def create_examples(batch_dialogues_utterances_contexts_info,
             if append_history:
                 hst = txt_a + txt_b + hst
 
+            #print("DS DICT:", cur_ds)
+
     return examples
 
 ### Transform into final model input ###
@@ -516,10 +547,10 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
 
     # BERT Model Specs
     model_specs = {'MODEL_TYPE': 'bert',
-                    'CLS_TOKEN': '[CLS]',
-                    'UNK_TOKEN': '[UNK]',
-                    'SEP_TOKEN': '[SEP]',
-                    'TOKEN_CORRECTION': 4}
+                'CLS_TOKEN': '[CLS]',
+                'UNK_TOKEN': '[UNK]',
+                'SEP_TOKEN': '[SEP]',
+                'TOKEN_CORRECTION': 4}
 
     def _tokenize_text_and_label(text, text_label_dict, slot, tokenizer, model_specs, slot_value_dropout):
         joint_text_label = [0 for _ in text_label_dict[slot]] # joint all slots' label

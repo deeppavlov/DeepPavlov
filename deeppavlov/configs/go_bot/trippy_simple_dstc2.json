@@ -40,10 +40,14 @@
 
     "metrics": ["per_item_dialog_accuracy"],
     "validation_patience": 10,
-    "val_every_n_batches": 15,
+    "val_every_n_batches": -1,
+    "val_every_n_epochs": -1,
 
     "log_every_n_batches": 15,
     "log_on_k_batches": -1,
+
+    "validate_first": false,
+
     "show_examples": false,
     "evaluation_targets": [
       "valid",

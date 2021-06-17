@@ -101,6 +101,9 @@ class BertForDST(BertPreTrainedModel):
         pooled_output = self.dropout(pooled_output)
 
 
+        #print("CLASS LABEL:", class_label_id)
+
+
         if aux_task_def is not None:
             if aux_task_def['task_type'] == "classification":
                 aux_logits = getattr(self, 'aux_out_projection')(pooled_output)
@@ -168,7 +171,7 @@ class BertForDST(BertPreTrainedModel):
             per_slot_start_logits[slot] = start_logits
             per_slot_end_logits[slot] = end_logits
             per_slot_refer_logits[slot] = refer_logits
-            
+
             # If there are no labels, don't compute loss
             if class_label_id is not None and start_pos is not None and end_pos is not None and refer_id is not None:
                 # If we are on multi-GPU, split add a dimension
@@ -185,6 +188,7 @@ class BertForDST(BertPreTrainedModel):
                 token_loss_fct = CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
                 refer_loss_fct = CrossEntropyLoss(reduction='none')
 
+
                 start_loss = token_loss_fct(start_logits, start_pos[slot])
                 end_loss = token_loss_fct(end_logits, end_pos[slot])
                 token_loss = (start_loss + end_loss) / 2.0
@@ -200,6 +204,9 @@ class BertForDST(BertPreTrainedModel):
 
                 class_loss = class_loss_fct(class_logits, class_label_id[slot])
 
+                #print("token_loss", token_loss)
+                #print("class_loss", class_loss)
+
                 if self.refer_index > -1:
                     per_example_loss = (self.class_loss_ratio) * class_loss + ((1 - self.class_loss_ratio) / 2) * token_loss + ((1 - self.class_loss_ratio) / 2) * refer_loss
                 else:
@@ -209,16 +216,24 @@ class BertForDST(BertPreTrainedModel):
                 per_slot_per_example_loss[slot] = per_example_loss
 
 
-        # Not in original TripPy; Predict action & add loss if training
+        # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
         action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
+
         if action_label is not None:
-            action_loss = CrossEntropyLoss()(action_logits, action_label)
-            total_loss += action_loss
+            action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
+            total_loss += action_loss * len(self.slot_list) * 100
+
         action_logits = getattr(self, 'action_softmax')(action_logits)
 
-
+        # TMP
+        #if action_label.shape[0] > 1:
+        #    print("LOGITS:", action_logits)
+        #    print("LOSS:", action_loss)
+        #print("total_loss", total_loss)
+        #action_logits = None
+        #action_loss = None
 
         # add hidden states and attention if they are here
-        outputs = (total_loss,) + (per_slot_per_example_loss, per_slot_class_logits, per_slot_start_logits, per_slot_end_logits, per_slot_refer_logits, action_logits,) + outputs[2:]
+        outputs = (total_loss,) + (per_slot_per_example_loss, per_slot_class_logits, per_slot_start_logits, per_slot_end_logits, per_slot_refer_logits, action_logits, action_loss,) + outputs[2:]
 
         return outputs
