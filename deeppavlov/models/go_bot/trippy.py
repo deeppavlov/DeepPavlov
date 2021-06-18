@@ -143,7 +143,7 @@ class TripPy(TorchModel):
         #self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
         #t_total: batches / batch_size  *  epochs
         #t_total = 900 // 4 * 2 # Rough estimate
-        num_warmup_steps = int(t_total * 0.1)
+        #num_warmup_steps = int(t_total * 0.1)
         #self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
         #                                                num_warmup_steps=num_warmup_steps, 
         #                                                num_training_steps=t_total)
