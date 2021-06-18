@@ -34,6 +34,10 @@ from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPredicti
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
 from deeppavlov.models.go_bot.trippy_preprocssing import prepare_trippy_data, get_turn, batch_to_device
 
+
+# EXP
+from transformers import (AdamW, get_linear_schedule_with_warmup)
+
 logger = getLogger(__name__)
 
 
@@ -134,7 +138,15 @@ class TripPy(TorchModel):
 
         self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
+               self.model.parameters(), **self.optimizer_parameters)
+
+        #self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
+        #t_total: batches / batch_size  *  epochs
+        #t_total = 900 // 4 * 2 # Rough estimate
+        num_warmup_steps = int(t_total * 0.1)
+        #self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
+        #                                                num_warmup_steps=num_warmup_steps, 
+        #                                                num_training_steps=t_total)
 
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
@@ -381,6 +393,7 @@ class TripPy(TorchModel):
         Returns:
             dict with loss value
         """
+        self.model.zero_grad()
         batch, features = prepare_trippy_data(batch_dialogues_utterances_features,
                                               batch_dialogues_utterances_targets,
                                               self.tokenizer,
@@ -401,6 +414,7 @@ class TripPy(TorchModel):
         # Clip gradients
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
         self.optimizer.step()
+        #self.scheduler.step()
         return {"loss": loss.cpu().item()}
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
