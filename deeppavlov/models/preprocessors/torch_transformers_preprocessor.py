@@ -243,15 +243,17 @@ class TorchSquadTransformersPreprocessor(Component):
                                         truncation=True,
                                         return_tensors='pt')
         
-        if self.return_tokens:        
-            for input_feature in input_features:
-                tokens.append(self.tokenizer.convert_ids_to_tokens(input_feature['input_ids'][0]))
+        if self.return_tokens:
+            for sequence in input_features['input_ids']:
+                tokens.append(self.tokenizer.convert_ids_to_tokens(sequence))
+            # for input_feature in input_features:
+            #     tokens.append(self.tokenizer.convert_ids_to_tokens(input_feature['input_ids'][0]))
             return input_features, tokens
         else:
             return input_features
-                
-        
-            
+
+
+
 
         
         for text_a, text_b in zip(texts_a, texts_b):
