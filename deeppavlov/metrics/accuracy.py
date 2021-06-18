@@ -155,6 +155,7 @@ def per_item_dialog_accuracy(y_true, y_predicted: List[List[str]]):
     examples_len = len(y_true)
     print([(y1.strip().lower(), y2.strip().lower()) for y1, y2 in zip(y_true, y_predicted)])
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
+    print("ACCURACY:", correct / examples_len)
     return correct / examples_len if examples_len else 0
 
 
