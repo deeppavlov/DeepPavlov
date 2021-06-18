@@ -395,6 +395,9 @@ class SquadBertMappingPreprocessor(Component):
     def __call__(self, contexts, bert_features, *args, **kwargs):
         subtok2chars: List[Dict[int, int]] = []
         char2subtoks: List[Dict[int, int]] = []
+
+        bert_features = bert_features['input_ids']
+
         for batch_counter, (context, features) in enumerate(zip(contexts, bert_features)):
             subtokens: List[str]
             if self.do_lower_case:
