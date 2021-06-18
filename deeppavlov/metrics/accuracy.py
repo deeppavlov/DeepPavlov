@@ -161,11 +161,7 @@ def per_item_dialog_accuracy(y_true, y_predicted: List[List[str]]):
 
     print([(y1.strip().lower(), y2.strip().lower()) for y1, y2 in zip(y_true, y_predicted)])
 
-    print("CORR:", correct)
-    print("LEN", examples_len)
-    print("ACCURACY:", correct / examples_len)
     return correct / examples_len if examples_len else 0
-
 
 @register_metric("per_item_action_accuracy")
 def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted: List[List[JSONNLGResponse]]):
