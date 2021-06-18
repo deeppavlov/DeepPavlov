@@ -223,7 +223,7 @@ class BertForDST(BertPreTrainedModel):
 
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
         #action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
-        action_logits = getattr(self, 'action_prediction')(sequence_output)
+        action_logits = getattr(self, 'action_prediction')(pooled_output)
 
         if action_label is not None:
             action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
