@@ -73,7 +73,7 @@ class TripPy(TorchModel):
                  max_seq_length: int = 180,
                  dropout_rate: float = 0.3,
                  heads_dropout: float = 0.0,
-                 class_loss_ratio: float = 0.8,
+                 class_loss_ratio: float = 0.6,
                  token_loss_for_nonpointable: bool = False,
                  refer_loss_for_nonpointable: bool = False,
                  class_aux_feats_inform: bool = True,
