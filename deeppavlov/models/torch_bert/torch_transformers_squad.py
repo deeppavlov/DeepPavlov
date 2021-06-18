@@ -35,8 +35,8 @@ logger = getLogger(__name__)
 
 
 def softmax_mask(val, mask):
-    INF = 1e30
-    return -INF * (1 - mask.to(torch.float32)) + val
+    inf = 1e30
+    return -inf * (1 - mask.to(torch.float32)) + val
 
 
 @register('torch_transformers_squad')
@@ -71,8 +71,7 @@ class TorchTransformersSquad(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 0.01, "weight_decay": 0.01,
-                                               "betas": (0.9, 0.999), "eps": 1e-6},
+                 optimizer_parameters: Optional[dict] = None,
                  bert_config_file: Optional[str] = None,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
@@ -80,6 +79,12 @@ class TorchTransformersSquad(TorchModel):
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
+
+        if not optimizer_parameters:
+            optimizer_parameters = {"lr": 0.01,
+                                    "weight_decay": 0.01,
+                                    "betas": (0.9, 0.999),
+                                    "eps": 1e-6}
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
@@ -124,10 +129,12 @@ class TorchTransformersSquad(TorchModel):
 
         self.optimizer.zero_grad()
 
-        loss = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
-                             token_type_ids=b_input_type_ids,
-                             start_positions=b_y_st, end_positions=b_y_end,
-                             return_dict=True).loss
+        loss = self.model(input_ids=b_input_ids,
+                          attention_mask=b_input_masks,
+                          token_type_ids=b_input_type_ids,
+                          start_positions=b_y_st,
+                          end_positions=b_y_end,
+                          return_dict=True).loss
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -160,8 +167,11 @@ class TorchTransformersSquad(TorchModel):
 
         with torch.no_grad():
             # Forward pass, calculate logit predictions
-            outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids, return_dict=True)
-            
+            outputs = self.model(input_ids=b_input_ids,
+                                 attention_mask=b_input_masks,
+                                 token_type_ids=b_input_type_ids,
+                                 return_dict=True)
+
             logits_st = outputs.start_logits
             logits_end = outputs.end_logits
 
@@ -214,7 +224,7 @@ class TorchTransformersSquad(TorchModel):
                                                 output_hidden_states=False)
 
             self.model = AutoModelForQuestionAnswering.from_pretrained(self.pretrained_bert, config=config)
-            
+
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
