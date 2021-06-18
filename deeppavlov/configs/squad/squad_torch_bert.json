@@ -63,8 +63,8 @@
       {
         "class_name": "torch_transformers_squad",
         "pretrained_bert": "{TRANSFORMER}",
-        "save_path": "{MODEL_PATH}",
-        "load_path": "{MODEL_PATH}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
           "lr": 2e-5,
@@ -161,11 +161,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
-    },
-    "download": [
-      {
-      }
-    ]
+    }
   }
 }
 
