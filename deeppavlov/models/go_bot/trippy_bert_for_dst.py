@@ -63,7 +63,8 @@ class BertForDST(BertPreTrainedModel):
             self.add_module("aux_out_projection", nn.Linear(config.hidden_size, int(config.aux_task_def['n_class'])))
 
         # Not in original TripPy model; Add action prediction CLF Head
-        self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
+        #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
+        self.add_module("action_prediction", nn.Linear(config.hidden_size, self.num_actions))
         #self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
         #                                        nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
                                                 
@@ -221,7 +222,8 @@ class BertForDST(BertPreTrainedModel):
 
 
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
-        action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
+        #action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
+        action_logits = getattr(self, 'action_prediction')(sequence_output)
 
         if action_label is not None:
             action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
