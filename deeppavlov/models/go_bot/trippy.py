@@ -64,7 +64,6 @@ class TripPy(TorchModel):
         class_aux_feats_ds: Whether or not to use the identity of slots in the current dialog state as auxiliary featurs for class prediction.
         debug: Turn on debug mode to get logging information on input examples & co
     """
-
     def __init__(self,
                  nlg_manager: NLGManagerInterface,
                  save_path: str,
@@ -165,6 +164,9 @@ class TripPy(TorchModel):
         Returns:
             results: list of model answers
         """
+        # Turns off dropout
+        self.model.eval()
+
         if not(isinstance(batch[0], list)):
             # User inference - Just one dialogue
             batch = [
@@ -393,6 +395,9 @@ class TripPy(TorchModel):
         Returns:
             dict with loss value
         """
+        # Turns on dropout
+        self.model.train()
+        # Zeroes grads
         self.model.zero_grad()
         batch, features = prepare_trippy_data(batch_dialogues_utterances_features,
                                               batch_dialogues_utterances_targets,
