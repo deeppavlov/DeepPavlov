@@ -419,7 +419,7 @@ class TripPy(TorchModel):
         # Clip gradients
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
         self.optimizer.step()
-        #self.scheduler.step()
+        self.scheduler.step()
         return {"loss": loss.cpu().item()}
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
