@@ -71,7 +71,7 @@ class TripPy(TorchModel):
                  class_types: List = ["none", "dontcare", "copy_value", "inform"],
                  pretrained_bert: str = "bert-base-uncased",
                  bert_config: str = "bert-base-uncased",
-                 optimizer_parameters: dict = {"lr": 1e-5, "eps": 1e-6},
+                 optimizer_parameters: dict = {"lr": 1e-4, "eps": 1e-6},
                  clip_norm: float = 1.0,
                  max_seq_length: int = 180,
                  dropout_rate: float = 0.3,
@@ -141,7 +141,7 @@ class TripPy(TorchModel):
 
         self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
         #t_total: batches / batch_size  *  epochs
-        t_total = 900 // 4 * 2 # Rough estimate
+        t_total = 550#900 // 4 * 2 # Rough estimate
         num_warmup_steps = int(t_total * 0.1)
         self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
                                                         num_warmup_steps=num_warmup_steps, 
