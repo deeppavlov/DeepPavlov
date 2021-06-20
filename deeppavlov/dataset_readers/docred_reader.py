@@ -13,9 +13,6 @@ from sklearn.model_selection import train_test_split
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
-# ATTENTION! To make it work, please run the following command: python3 -m deeppavlov install ner_ontonotes_bert
-from deeppavlov import configs, build_model
-ner = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
 
 logger = getLogger(__name__)
 
@@ -195,7 +192,7 @@ class DocREDDatasetReader(DatasetReader):
         return neg_data_samples
 
     def generate_additional_neg_samples(
-            self, doc: List, vorbidden_entities: List, num_neg_samples: int, neg_label: str = NEG_LABEL
+            self, doc: List, forbidden_entities: List, num_neg_samples: int, neg_label: str = NEG_LABEL
     ):
         """
         Generated negative samples, i.e. the same document that is used for positive samples, but labeled with
@@ -203,31 +200,36 @@ class DocREDDatasetReader(DatasetReader):
 
         Args:
              doc: list of positive sentences
-             vorbidden_entities: list of entities that participate in any of the relations (and, therefore, cannot be
+             forbidden_entities: list of entities that participate in any of the relations (and, therefore, cannot be
                 chosen for negative sample)
              num_neg_samples: number of negative samples that are to be generated out of this document
              neg_label: a label for negative samples
         Returns:
              a tuple with list of all doc tokens, entity information (positions & NER tags) and relation (=neg_label).
         """
+
+        # ATTENTION! To make it work, please run the following command: python3 -m deeppavlov install ner_ontonotes_bert
+        from deeppavlov import configs, build_model
+        ner = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
+
         neg_data_samples = []
         analysed_sentences = ner([" ".join(doc)])       # returns [[[tokens]], [[ner tags]]]
 
         # select ids of tokens that were not part of any relation so far
-        neg_spacy_entities_idx = random.sample(
+        neg_entities_idx = random.sample(
             [ent_idx for ent_idx in range(len(analysed_sentences[0][0]))
-             if analysed_sentences[0][0][ent_idx] not in vorbidden_entities],
+             if analysed_sentences[0][0][ent_idx] not in forbidden_entities],
             num_neg_samples * 2
         )
 
-        for n_ent_1_idx, n_ent_2_idx in itertools.permutations(neg_spacy_entities_idx, 2):
+        for n_ent_1_idx, n_ent_2_idx in itertools.permutations(neg_entities_idx, 2):
             # if already sufficient number of negative samples have been generated
             if len(neg_data_samples) == num_neg_samples:
                 break
             neg_entity_1 = analysed_sentences[0][0][n_ent_1_idx]
             neg_entity_2 = analysed_sentences[0][0][n_ent_2_idx]
-            neg_entity_1_tag = analysed_sentences[0][1][n_ent_1_idx]
-            neg_entity_2_tag = analysed_sentences[0][1][n_ent_1_idx]
+            neg_entity_1_tag = analysed_sentences[1][0][n_ent_1_idx]
+            neg_entity_2_tag = analysed_sentences[1][0][n_ent_2_idx]
             neg_data_samples.append(
                 (doc, [[neg_entity_1], [neg_entity_2], neg_entity_1_tag, neg_entity_2_tag], neg_label)
             )
@@ -237,6 +239,10 @@ class DocREDDatasetReader(DatasetReader):
 
 
 if __name__ == "__main__":
+    import tensorflow as tf
+    print(tf.__version__)
     DocREDDatasetReader().read(
-        "/Users/asedova/PycharmProjects/deeppavlov_fork/DocRED", generate_additional_neg_samples=True, num_neg_samples=5
+        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED",
+        generate_additional_neg_samples=False,
+        # num_neg_samples=5
     )
