@@ -71,7 +71,7 @@ class BertForDST(BertPreTrainedModel):
 
         self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
                                                nn.ReLU(),
-                                               self.dropout,
+                                               #self.dropout,
                                                nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
 
         self.add_module("action_softmax", nn.Softmax(dim=1))
