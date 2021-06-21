@@ -240,6 +240,9 @@ class BertForDST(BertPreTrainedModel):
 
             total_loss += action_loss * multiplier
 
+        else:
+            action_loss = None
+
         action_logits = getattr(self, 'action_softmax')(action_logits)
 
         #print("ACT LOGITS:", action_logits)
