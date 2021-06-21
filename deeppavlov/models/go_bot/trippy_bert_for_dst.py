@@ -112,12 +112,6 @@ class BertForDST(BertPreTrainedModel):
         sequence_output = self.dropout(sequence_output)
         pooled_output = self.dropout(pooled_output)
 
-
-        #print("CLASS LABEL:", class_label_id)
-
-        print("SLOTS:", self.slot_list)
-
-
         if aux_task_def is not None:
             if aux_task_def['task_type'] == "classification":
                 aux_logits = getattr(self, 'aux_out_projection')(pooled_output)
@@ -164,7 +158,6 @@ class BertForDST(BertPreTrainedModel):
         per_slot_end_logits = {}
         per_slot_refer_logits = {}
         for slot in self.slot_list:
-            print(slot)
             if self.class_aux_feats_inform and self.class_aux_feats_ds:
                 pooled_output_aux = torch.cat((pooled_output, self.inform_projection(inform_labels), self.ds_projection(diag_state_labels)), 1)
             elif self.class_aux_feats_inform:
@@ -235,7 +228,9 @@ class BertForDST(BertPreTrainedModel):
                 print("per_slot_per_example_loss", per_slot_per_example_loss)
 
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
-
+        
+        if not self.slot_list:
+            pooled_output_aux = pooled_output
         #action_logits = getattr(self, 'action_prediction')(torch.cat((pooled_output_aux, self.prev_action_projection(prev_action_label.float())), 1))
         action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
         #action_logits = getattr(self, 'action_prediction')(pooled_output)

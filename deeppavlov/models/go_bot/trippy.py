@@ -88,7 +88,7 @@ class TripPy(TorchModel):
         self.nlg_manager = nlg_manager
         self.save_path = save_path
         self.max_seq_length = max_seq_length
-        if len(slot_names) == 0:
+        if slot_names:
             self.slot_names = ["dummy"]
             self.has_slots = False
         else:
@@ -107,7 +107,7 @@ class TripPy(TorchModel):
         self.config.dst_refer_loss_for_nonpointable = refer_loss_for_nonpointable
         self.config.dst_class_aux_feats_inform = class_aux_feats_inform
         self.config.dst_class_aux_feats_ds = class_aux_feats_ds
-        self.config.dst_slot_list = slot_names
+        self.config.dst_slot_list = slot_names # This will be empty if there are no slots
         self.config.dst_class_types = class_types
         self.config.dst_class_labels = len(class_types)
 
