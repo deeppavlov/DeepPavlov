@@ -228,6 +228,9 @@ class BertForDST(BertPreTrainedModel):
                 per_slot_per_example_loss[slot] = per_example_loss
 
 
+                print("class_loss", class_loss)
+                print("per_slot_per_example_loss", per_slot_per_example_loss)
+
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
 
         #action_logits = getattr(self, 'action_prediction')(torch.cat((pooled_output_aux, self.prev_action_projection(prev_action_label.float())), 1))
