@@ -88,7 +88,7 @@ class TripPy(TorchModel):
         self.nlg_manager = nlg_manager
         self.save_path = save_path
         self.max_seq_length = max_seq_length
-        if slot_names:
+        if not slot_names:
             self.slot_names = ["dummy"]
             self.has_slots = False
         else:
