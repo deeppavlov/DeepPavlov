@@ -6,7 +6,6 @@ from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 from overrides import overrides
-from json import load
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -17,7 +16,7 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 
 logger = getLogger(__name__)
 
-NEG_LABEL = "NO_REL"
+NEG_LABEL = "Na"
 
 
 @register('docred_reader')
@@ -189,7 +188,7 @@ class DocREDDatasetReader(DatasetReader):
         for ent1, ent2 in itertools.permutations(ent_ids2ent.keys(), 2):
             neg_data_samples.append(
                 (doc, [ent_ids2ent[ent1], ent_ids2ent[ent2], ent_ids2ent_tag[ent1][0], ent_ids2ent_tag[ent2][0]],
-                 neg_label)
+                 self.rel2id[neg_label])
             )
             self.stat["NEG_REL"] += 1
         return neg_data_samples
@@ -234,7 +233,7 @@ class DocREDDatasetReader(DatasetReader):
             neg_entity_1_tag = analysed_sentences[1][0][n_ent_1_idx]
             neg_entity_2_tag = analysed_sentences[1][0][n_ent_2_idx]
             neg_data_samples.append(
-                (doc, [[neg_entity_1], [neg_entity_2], neg_entity_1_tag, neg_entity_2_tag], neg_label)
+                (doc, [[neg_entity_1], [neg_entity_2], neg_entity_1_tag, neg_entity_2_tag], self.rel2id[neg_label])
             )
             self.stat["NEG_REL"] += 1
 
