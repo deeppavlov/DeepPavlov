@@ -21,8 +21,8 @@
       {
         "class_name": "torch_squad_transformers_preprocessor",
         "vocab_file": "{TRANSFORMER}",
-        "do_lower_case": true,
-        "max_seq_length": 512,
+        "do_lower_case": "{LOWERCASE}",
+        "max_seq_length": 384,
         "return_tokens": true,
         "in": [
           "question_raw",
@@ -35,7 +35,7 @@
       },
       {
         "class_name": "squad_bert_mapping",
-        "do_lower_case": true,
+        "do_lower_case": "{LOWERCASE}",
         "in": [
           "context_raw",
           "bert_features",
@@ -48,7 +48,7 @@
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
-        "do_lower_case": true,
+        "do_lower_case": "{LOWERCASE}",
         "in": [
           "ans_raw",
           "ans_raw_start",
@@ -156,7 +156,8 @@
   },
   "metadata": {
     "variables": {
-      "TRANSFORMER": "bert-base-uncased",
+      "LOWERCASE": false,
+      "TRANSFORMER": "bert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
