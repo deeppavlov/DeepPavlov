@@ -396,7 +396,7 @@ class SquadBertMappingPreprocessor(Component):
         subtok2chars: List[Dict[int, int]] = []
         char2subtoks: List[Dict[int, int]] = []
 
-        if 'input_ids' in bert_features in bert_features:
+        if 'input_ids' in bert_features:
             bert_features = bert_features['input_ids']
 
         for batch_counter, (context, features) in enumerate(zip(contexts, bert_features)):
