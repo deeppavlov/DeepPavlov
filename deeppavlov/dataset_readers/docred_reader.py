@@ -6,6 +6,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Tuple, Union
 from overrides import overrides
+from json import load
 
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -29,7 +30,7 @@ class DocREDDatasetReader(DatasetReader):
             data_path: str,
             generate_additional_neg_samples: bool = False,
             num_neg_samples: int = None
-    ) -> Dict[str, List[Tuple]]:
+    ) -> Tuple[Dict[str, List[Tuple]], Dict[str, int]]:
         """
         This class processes the DocRED relation extraction dataset (https://arxiv.org/abs/1906.06127v3).
         Args:
@@ -61,6 +62,8 @@ class DocREDDatasetReader(DatasetReader):
                     ]
         """
 
+        with open(os.path.join(data_path, "meta", "rel2id.json")) as file:
+            self.rel2id = json.load(file)
         self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         self.if_add_neg_samples = generate_additional_neg_samples
         self.num_neg_samples = num_neg_samples
@@ -85,7 +88,7 @@ class DocREDDatasetReader(DatasetReader):
             out = os.path.join(out, data_type)
             dump(data_units, out)
 
-        return data
+        return data, self.rel2id
 
     def process_docred_file(self, file_path: str, split: float = None) -> Tuple[List, Union[List, None]]:
         """
@@ -166,7 +169,7 @@ class DocREDDatasetReader(DatasetReader):
         entity1, entity2 = ent_ids2ent[label_info["h"]], ent_ids2ent[label_info["t"]]
         entity1_tag, entity2_tag = ent_ids2ent_tag[label_info["h"]], ent_ids2ent_tag[label_info["t"]]
         self.stat["POS_REL"] += 1
-        return tuple((doc, [entity1, entity2, entity1_tag[0], entity2_tag[0]], label_info['r']))
+        return tuple((doc, [entity1, entity2, entity1_tag[0], entity2_tag[0]], self.rel2id[label_info['r']]))
 
     def construct_neg_samples(
             self, ent_ids2ent: Dict, ent_ids2ent_tag: Dict, doc: List, neg_label: str = NEG_LABEL,
@@ -239,8 +242,6 @@ class DocREDDatasetReader(DatasetReader):
 
 
 if __name__ == "__main__":
-    import tensorflow as tf
-    print(tf.__version__)
     DocREDDatasetReader().read(
         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED",
         generate_additional_neg_samples=False,
