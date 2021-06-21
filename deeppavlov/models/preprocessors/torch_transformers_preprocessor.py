@@ -17,7 +17,7 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union
+from typing import Tuple, List, Optional, Union, Dict
 
 from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -306,8 +306,27 @@ class TorchTransformersREPreprocessor(Component):
     def __init__(
             self,
             vocab_file: str,
-            special_token: str = '<ENT>'
+            special_token: str = '<ENT>',
+            do_lower_case: bool = False
     ):
+        """
+
+        Return:
+            batch of InputFeatures
+            entity_pos: List[
+                            List[
+                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id),
+                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id),
+                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id)
+                                ]
+                            ]
+            ner_tags: List[ner_tag_mention1, ner_tag_mention2, ..., ner_tag_mention_n]
+            true relations found in the document
+            length of tokenizer
+            cls_token_id
+            sep_token_id
+
+        """
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
 
@@ -317,19 +336,37 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file)
 
-    def __call__(self, input_data: List[Tuple[List, List, str]], **kwargs) -> List[InputFeatures]:
+    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict], int, int, int]:
+
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        count = 0
-        wordpiece_tokens, input_features = [], []
+        wordpiece_tokens, input_features, entity_pos, ner_tags, labels = [], [], [], [], []
         for doc in input_data:
+            count = 0
+            labels.append(doc[2])
             doc_wordpiece_tokens = []
-            entity_positions_start = list(sum(doc[1][0], ()))
-            entity_positions_end = list(sum(doc[1][1], ()))
+            entity1_pos_start = list(zip(*doc[1][0]))[0]  # first entity mentions' start positions
+            entity1_pos_end = list(zip(*doc[1][0]))[1]  # first entity mentions' end positions
+            entity2_pos_start = list(zip(*doc[1][1]))[0]  # second entity mentions' start positions
+            entity2_pos_end = list(zip(*doc[1][1]))[1]  # second entity mentions' end positions
+            upd_entity1_pos_start, upd_entity2_pos_start, upd_entity1_pos_end, upd_entity2_pos_end = [], [], [], []
             for n, token in enumerate(doc[0]):
-                if n in entity_positions_start or n-1 in entity_positions_end:
+                if n in entity1_pos_start:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
-                word_tokens = self.tokenizer.wordpiece_tokenizer.tokenize(token)
+                    upd_entity1_pos_start.append(count)
+                elif n in entity2_pos_start:
+                    doc_wordpiece_tokens.append(self.special_token)
+                    count += 1
+                    upd_entity2_pos_start.append(count)
+                elif n in entity1_pos_end:
+                    doc_wordpiece_tokens.append(self.special_token)
+                    upd_entity1_pos_end.append(count - 1)
+                    count += 1
+                elif n in entity2_pos_end:
+                    doc_wordpiece_tokens.append(self.special_token)
+                    upd_entity2_pos_end.append(count - 1)
+                    count += 1
+                word_tokens = self.tokenizer.tokenize(token)
                 doc_wordpiece_tokens += word_tokens
                 count += len(word_tokens)
 
@@ -338,9 +375,48 @@ class TorchTransformersREPreprocessor(Component):
                 return_attention_mask=True, return_tensors="pt"
             )
 
-            input_features.append(InputFeatures(
-                input_ids=encoding['input_ids'], attention_mask=encoding['attention_mask'],
-                token_type_ids=encoding['token_type_ids'], label=None
-            ))
+            upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
+            upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
-        return input_features
+            input_features.append(
+                {
+                    "input_ids": encoding['input_ids'],
+                    "attention_mask": encoding['attention_mask'],
+                    "token_type_ids": encoding['token_type_ids'],
+                    "labels": labels,
+                    "entity_pos": upd_entity1 + upd_entity2,
+                    "ner_tags": [doc[1][2]] * len(upd_entity1) + [doc[1][3]] * len(upd_entity2)
+                }
+            )
+
+        # todo: to delete!
+        from joblib import dump
+        dump(
+            input_features[:50],
+            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small"
+        )
+        dump(
+            entity_pos[:50],
+            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_entity_pos"
+        )
+        dump(
+            ner_tags[:50],
+            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_ner_tags"
+        )
+        dump(
+            labels[:50],
+            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_labels"
+        )
+        print(len(self.tokenizer))  # 28997
+        print(self.tokenizer.cls_token_id)  # 101
+        print(self.tokenizer.sep_token_id)  # 102
+        return input_features, len(self.tokenizer), self.tokenizer.cls_token_id, self.tokenizer.sep_token_id
+
+
+# todo: to delete!
+if __name__ == "__main__":
+    from joblib import load
+
+    data = load(
+        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader_without_negatives/dev")
+    TorchTransformersREPreprocessor("bert-base-cased").__call__(data)
