@@ -127,30 +127,73 @@ class TripPy(TorchModel):
         """
         Loads BERTForDST. Note that it only supports bert-X huggingface weights. (RoBERTa & co are not supported.)
         """
-        # Load model from huggingface // from path
-        self.model = BertForDST.from_pretrained(
-            self.pretrained_bert, config=self.config)
-        print("LOADED FROM:", self.pretrained_bert)
-        # Tokenizer is always the same for bert-base / bert-large
-        # We also always use uncased, as TripPy always lowercases all data in its input
-        # If you think cases are super important for your data, feel free to change the below & remove the .lower() ops in preprocessing
-        self.tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+
+
+        if fname is not None:
+            self.load_path = fname
+
+        if self.pretrained_bert:
+            self.model = BertForDST.from_pretrained(
+                self.pretrained_bert, config=self.config)
+            self.tokenizer = BertTokenizerFast.from_pretrained(self.pretrained_bert)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
+
 
         self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
-               self.model.parameters(), **self.optimizer_parameters)
-
-        self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
-        #t_total: batches / batch_size  *  epochs
-        t_total = 550#900 // 4 * 2 # Rough estimate
-        num_warmup_steps = int(t_total * 0.1)
-        self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
-                                                        num_warmup_steps=num_warmup_steps, 
-                                                        num_training_steps=t_total)
-
+            self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
+
+        if self.load_path:
+            logger.info(f"Load path {self.load_path} is given.")
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided load path is incorrect!")
+
+            weights_path = Path(self.load_path.resolve())
+            weights_path = weights_path.with_suffix(f".pth.tar")
+            if weights_path.exists():
+                logger.info(f"Load path {weights_path} exists.")
+                logger.info(f"Initializing `{self.__class__.__name__}` from saved.")
+
+                # now load the weights, optimizer from saved
+                logger.info(f"Loading weights from {weights_path}.")
+                checkpoint = torch.load(weights_path, map_location=self.device)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                self.epochs_done = checkpoint.get("epochs_done", 0)
+            else:
+                logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
+
+
+
+
+        # Load model from huggingface // from path
+        #self.model = BertForDST.from_pretrained(
+        #    self.pretrained_bert, config=self.config)
+        #print("LOADED FROM:", self.pretrained_bert)
+        # Tokenizer is always the same for bert-base / bert-large
+        # We also always use uncased, as TripPy always lowercases all data in its input
+        # If you think cases are super important for your data, feel free to change the below & remove the .lower() ops in preprocessing
+        #self.tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+
+        #self.model.to(self.device)
+        #self.optimizer = getattr(torch.optim, self.optimizer_name)(
+        #       self.model.parameters(), **self.optimizer_parameters)
+
+        #self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
+        #t_total: batches / batch_size  *  epochs
+        #t_total = 550#900 // 4 * 2 # Rough estimate
+        #num_warmup_steps = int(t_total * 0.1)
+        #self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
+        #                                                num_warmup_steps=num_warmup_steps, 
+        #                                                num_training_steps=t_total)
+
+        #if self.lr_scheduler_name is not None:
+        #    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+        #        self.optimizer, **self.lr_scheduler_parameters)
 
     def __call__(self,
                  batch: Union[List[List[dict]], List[str]],
@@ -420,7 +463,7 @@ class TripPy(TorchModel):
         # Clip gradients
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
         self.optimizer.step()
-        self.scheduler.step()
+        #self.scheduler.step()
         return {"loss": loss.cpu().item()}
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
@@ -436,9 +479,9 @@ class TripPy(TorchModel):
         self.db_result = None
         self.current_db_result = None
 
-    def save(self, *args, **kwargs) -> None:
-        """
-        Save the model.
-        """
-        self.model.save_pretrained(self.save_path)
-        print("SAVED")
+    #def save(self, *args, **kwargs) -> None:
+    #    """
+    #    Save the model.
+    #    """
+    #    self.model.save_pretrained(self.save_path)
+    #    print("SAVED")

@@ -16,6 +16,7 @@
         "in": ["x"],
         "in_y": ["y"],
         "out": ["y_predicted"],
+        "load_path": "{MODEL_PATH}/model",
         "pretrained_bert": "bert-base-uncased",
         "save_path": "./",
         "max_seq_length": 180,
