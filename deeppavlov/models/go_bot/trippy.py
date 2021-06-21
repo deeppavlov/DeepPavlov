@@ -67,7 +67,7 @@ class TripPy(TorchModel):
     def __init__(self,
                  nlg_manager: NLGManagerInterface,
                  save_path: str,
-                 slot_names: List,
+                 slot_names: List = [],
                  class_types: List = ["none", "dontcare", "copy_value", "inform"],
                  pretrained_bert: str = "bert-base-uncased",
                  bert_config: str = "bert-base-uncased",
@@ -88,7 +88,12 @@ class TripPy(TorchModel):
         self.nlg_manager = nlg_manager
         self.save_path = save_path
         self.max_seq_length = max_seq_length
-        self.slot_names = slot_names
+        if len(slot_names) == 0:
+            self.slot_names = ["dummy"]
+            self.has_slots = False
+        else:
+            self.slot_names = slot_names
+            self.has_slots = True
         self.class_types = class_types
         self.debug = debug
 
@@ -258,6 +263,14 @@ class TripPy(TorchModel):
                 last_turn = batch_to_device(last_turn, self.device)
 
                 # Run the turn through the model
+                if self.has_slots is False:
+                    batch["start_pos"] = None
+                    batch["end_pos"] = None
+                    batch["inform_slot_id"] = None
+                    batch["refer_id"] = None
+                    batch["class_label_id"] = None
+                    batch["diag_state"] = None
+
                 with torch.no_grad():
                     outputs = self.model(**last_turn)
 
@@ -453,6 +466,15 @@ class TripPy(TorchModel):
                                               debug=self.debug)
         # Move to correct device
         batch = batch_to_device(batch, self.device)
+
+        if self.has_slots is False:
+            batch["start_pos"] = None
+            batch["end_pos"] = None
+            batch["inform_slot_id"] = None
+            batch["refer_id"] = None
+            batch["class_label_id"] = None
+            batch["diag_state"] = None
+
 
         # Feed through model
         outputs = self.model(**batch)
