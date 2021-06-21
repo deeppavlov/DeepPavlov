@@ -70,7 +70,7 @@ class BertForDST(BertPreTrainedModel):
         #self.add_module("action_prediction", nn.Linear(config.hidden_size, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
 
-        self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims + self.num_actions, (config.hidden_size + aux_dims)//2),
+        self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
                                                nn.ReLU(),
                                                self.dropout,
                                                nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
