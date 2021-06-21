@@ -233,6 +233,8 @@ class BertForDST(BertPreTrainedModel):
 
         action_logits = getattr(self, 'action_softmax')(action_logits)
 
+        print("ACT LOGITS:", action_logits)
+
         # TMP
         #if action_label.shape[0] > 1:
         #    print("LOGITS:", action_logits)
