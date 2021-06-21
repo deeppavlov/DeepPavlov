@@ -21,7 +21,7 @@ from typing import List, Tuple, Optional, Dict
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import BertForQuestionAnswering, BertTokenizer, AutoModelForQuestionAnswering, AutoConfig
+from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov import build_model
@@ -312,10 +312,10 @@ class TorchTransformersSquadInfer(Component):
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
         self.batch_size = batch_size
 
