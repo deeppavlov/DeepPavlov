@@ -130,6 +130,7 @@ class TripPy(TorchModel):
         # Load model from huggingface // from path
         self.model = BertForDST.from_pretrained(
             self.pretrained_bert, config=self.config)
+        print("LOADED FROM:", self.pretrained_bert)
         # Tokenizer is always the same for bert-base / bert-large
         # We also always use uncased, as TripPy always lowercases all data in its input
         # If you think cases are super important for your data, feel free to change the below & remove the .lower() ops in preprocessing
@@ -440,3 +441,4 @@ class TripPy(TorchModel):
         Save the model.
         """
         self.model.save_pretrained(self.save_path)
+        print("SAVED")
