@@ -115,6 +115,8 @@ class BertForDST(BertPreTrainedModel):
 
         #print("CLASS LABEL:", class_label_id)
 
+        print("SLOTS:", self.slot_list)
+
 
         if aux_task_def is not None:
             if aux_task_def['task_type'] == "classification":
@@ -162,6 +164,7 @@ class BertForDST(BertPreTrainedModel):
         per_slot_end_logits = {}
         per_slot_refer_logits = {}
         for slot in self.slot_list:
+            print(slot)
             if self.class_aux_feats_inform and self.class_aux_feats_ds:
                 pooled_output_aux = torch.cat((pooled_output, self.inform_projection(inform_labels), self.ds_projection(diag_state_labels)), 1)
             elif self.class_aux_feats_inform:
