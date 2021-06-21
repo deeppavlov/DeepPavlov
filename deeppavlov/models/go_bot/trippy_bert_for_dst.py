@@ -65,7 +65,7 @@ class BertForDST(BertPreTrainedModel):
             self.add_module("aux_out_projection", nn.Linear(config.hidden_size, int(config.aux_task_def['n_class'])))
 
         # Not in original TripPy model; Add action prediction CLF Head
-        #self.add_module("prev_action_projection", nn.Linear(self.num_actions, self.num_actions))
+        self.add_module("prev_action_projection", nn.Linear(self.num_actions, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims + self.num_actions, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
@@ -224,8 +224,8 @@ class BertForDST(BertPreTrainedModel):
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
         if not self.slot_list:
             pooled_output_aux = pooled_output
-        #action_logits = getattr(self, 'action_prediction')(torch.cat((pooled_output_aux, self.prev_action_projection(prev_action_label.float())), 1))
-        action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
+        action_logits = getattr(self, 'action_prediction')(torch.cat((pooled_output_aux, self.prev_action_projection(prev_action_label.float())), 1))
+        #action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
         #action_logits = getattr(self, 'action_prediction')(pooled_output)
 
         if action_label is not None:
