@@ -237,7 +237,13 @@ class BertForDST(BertPreTrainedModel):
 
         if action_label is not None:
             action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
-            total_loss += action_loss * len(self.slot_list)
+
+            if self.slot_list:
+                multiplier = self.slot_list
+            else:
+                multiplier = 1
+
+            total_loss += action_loss * multiplier
 
         action_logits = getattr(self, 'action_softmax')(action_logits)
 
