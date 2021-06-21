@@ -1,9 +1,10 @@
 from logging import getLogger
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 import torch
 import torch.nn as nn
 import numpy as np
+from torch.utils.data import DataLoader
 from transformers import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
@@ -62,30 +63,40 @@ class REBertModel(TorchModel):
         # self.optimizer = getattr(torch.optim, self.optimizer_name)(
         #     self.model.parameters(), **self.optimizer_parameters)
 
-    def train_on_batch(self, features: List[InputFeatures], y: List[int]):
+    def train_on_batch(self, features: List[Dict], train_batch_size: int, num_epochs: int, device: str = "cpu"):
         """
         Trains the relation extraction BERT model on the given batch.
-
-        Args:
-            features: batch of InputFeatures.
-            y: batch of class labels.
 
         Returns:
             dict with loss and learning rate values.
         """
 
-        _input = {'labels': torch.from_numpy(np.array(y)).to(self.device)}
-        for elem in ['input_ids', 'attention_mask', 'entity_pos', 'token_type_ids']:
-            _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
+        self.model.train()
 
-        self.optimizer.zero_grad()
+        train_dataloader = DataLoader(features, batch_size=train_batch_size, shuffle=True, drop_last=True)
 
-        hidden_states = self.model(**_input)
+        # _input = {'labels': torch.from_numpy(np.array(y)).to(self.device)}
+        # for elem in ['input_ids', 'attention_mask', 'entity_pos', 'token_type_ids']:
+        #     _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
 
-        # Clip the norm of the gradients to prevent the "exploding gradients" problem
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
-        return
+        for epoch in range(num_epochs):
+            self.optimizer.zero_grad()
+            self.model.zero_grad()
+            for _, batch in enumerate(train_dataloader):
+                inputs = {
+                    'input_ids': batch[0].to(device),
+                    'attention_mask': batch[1].to(device),
+                    'labels': batch[2],
+                    'entity_pos': batch[3],
+                    'hts': batch[4],
+                }
+                hidden_states = self.model(**inputs)
+                loss = hidden_states[0]
+                loss.backward()
+
+                # Clip the norm of the gradients to prevent the "exploding gradients" problem
+                if self.clip_norm:
+                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
     def __call__(self, features: List[InputFeatures]):
 
@@ -117,21 +128,21 @@ class REBertModel(TorchModel):
 if __name__ == "__main__":
     from joblib import load
     data = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-    entity_pos = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-                      "dev_small_entity_pos")
-    ner_tags = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-                    "dev_small_ner_tags")
-    labels = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-                  "dev_small_labels")
-    n_classes = len(set(labels))
+    # entity_pos = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
+    #                   "dev_small_entity_pos")
+    # ner_tags = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
+    #                 "dev_small_ner_tags")
+    # labels = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
+    #               "dev_small_labels")
+    n_classes = 97
 
-    from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
-    smplvoc = SimpleVocabulary(
-        save_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-                  "dev_small_labels_enc",
-    )
-    smplvoc.fit(labels)
-    labels_enc = smplvoc.__call__(labels)
+    # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
+    # smplvoc = SimpleVocabulary(
+    #     save_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
+    #               "dev_small_labels_enc",
+    # )
+    # smplvoc.fit(data["labels"])
+    # labels_enc = smplvoc.__call__(data["labels"])
 
     REBertModel(
         n_classes=n_classes,
@@ -142,7 +153,7 @@ if __name__ == "__main__":
         model_name="re_model",
         cls_token_id=101,
         sep_token_id=201,
-    ).train_on_batch(data, labels_enc)
+    ).train_on_batch(data, train_batch_size=32, num_epochs=2)
 
 
 
