@@ -1,18 +1,15 @@
 from logging import getLogger
-from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Optional
 
 import torch
 import torch.nn as nn
 import numpy as np
-from overrides import overrides
-from transformers import BertTokenizer, BertModel, AutoConfig, InputFeatures
+from transformers import InputFeatures
 
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.models.classifiers.torch_re_bert import REBertWith
+from deeppavlov.models.classifiers.torch_re_bert import BertWithAdaThresholdLocContextPooling
 
 log = getLogger(__name__)
 
@@ -107,7 +104,7 @@ class REBertModel(TorchModel):
         BERT tokenizer -> Input features -> BERT (self.model) -> hidden states -> taking the mean of entities; bilinear formula -> return the whole model.
         model <= BERT + additional processing
         """
-        return REBertWith(
+        return BertWithAdaThresholdLocContextPooling(
             n_classes=self.n_classes,
             cls_token_id=self.cls_token_id,
             sep_token_id=self.sep_token_id,
