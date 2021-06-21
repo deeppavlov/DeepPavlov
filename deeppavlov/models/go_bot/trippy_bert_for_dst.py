@@ -228,7 +228,7 @@ class BertForDST(BertPreTrainedModel):
         action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
         #action_logits = getattr(self, 'action_prediction')(pooled_output)
 
-        print("total_loss_pev", total_loss)
+        #print("total_loss_pev", total_loss)
         if action_label is not None:
             action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
 
@@ -248,7 +248,7 @@ class BertForDST(BertPreTrainedModel):
         #if action_label.shape[0] > 1:
         #    print("LOGITS:", action_logits)
         #    print("LOSS:", action_loss)
-        print("total_loss", total_loss)
+        #print("total_loss", total_loss)
         #action_logits = None
         #action_loss = None
 
