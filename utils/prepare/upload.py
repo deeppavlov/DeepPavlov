@@ -24,25 +24,39 @@ from hashes import main
 
 
 def upload(config_in_file):
+
+    print(config_in_file)
     config_in = parse_config(config_in_file)
     config_in_file = find_config(config_in_file)
 
     model_path = Path(config_in['metadata']['variables']['MODEL_PATH']).expanduser()
-
+    models_path = Path(config_in['metadata']['variables']['MODELS_PATH']).expanduser()
     model_name, class_name = config_in_file.stem, config_in_file.parent.name
+    
+    if str(model_name) not in str(model_path):
+        raise(f'{model_name} is not the path of the {model_path}')
+    
+    arcname = str(model_path).split("models/")[1]
+    tar_path = models_path/model_name
+    tmp_folder = f'/tmp/'
+    tmp_tar = tmp_folder + f'{model_name}.tar.gz'
 
-    tmp_dir = f'/tmp/{class_name}'
-    tmp_tar = f'/tmp/{class_name}/{model_name}.tar.gz'
-    shutil.rmtree(tmp_dir, ignore_errors=True)
-    os.mkdir(tmp_dir)
+    print("model_path", model_path)
+    print("class_name", class_name)
+    print("model_name", model_name)
+    
+    print("Start tarring")
+    archive = tarfile.open(tmp_tar, "w|gz")
+    archive.add(model_path, arcname=arcname)
+    archive.close()
+    print("Stop tarring")
 
-    with tarfile.open(tmp_tar, "w:gz") as tar:
-        tar.add(model_path, arcname=model_name)
-
+    print("Calculating hash")
     main(tmp_tar)
 
-    command = f'scp -r {tmp_dir} share.ipavlov.mipt.ru:/home/export/v1/'
-    donwload_url = f'http://files.deeppavlov.ai/v1/{class_name}/{model_name}.tar.gz'
+    print("tmp_tar", tmp_tar)
+    command = f'scp -r {tmp_folder}{model_name}* share.ipavlov.mipt.ru:/home/export/v1/{class_name}'
+    donwload_url = f'https://files.deeppavlov.ai/v1/{class_name}/{model_name}.tar.gz'
     print(command, donwload_url, sep='\n')
 
 
