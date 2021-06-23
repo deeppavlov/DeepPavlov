@@ -144,12 +144,12 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-cased",
       "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch/{TRANSFORMER}"
-    },
-    "download": [
-      {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
-      }
-    ]
-  }
+    }
+  },
+  "download": [
+    {
+      "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert.tar.gz",
+      "subdir": "{ROOT_PATH}/models"
+    }
+  ]
 }
