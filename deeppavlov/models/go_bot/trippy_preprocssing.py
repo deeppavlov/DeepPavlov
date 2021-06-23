@@ -505,6 +505,9 @@ def create_examples(batch_dialogues_utterances_contexts_info,
                 hst = txt_a + txt_b + hst
 
             #print("DS DICT:", cur_ds)
+            print("text_a", txt_a)
+            print("text_b", txt_b)
+            print("action_label", action_label)
 
     return examples
 
