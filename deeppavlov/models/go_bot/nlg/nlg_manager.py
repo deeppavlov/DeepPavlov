@@ -54,6 +54,9 @@ class NLGManager(NLGManagerInterface):
                       f"template_path={template_path}, template_type={template_type}, "
                       f"api_call_action={api_call_action}, debug={debug}")
 
+
+        print("ACTS: ", self.templates.actions)
+
     def get_action_id(self, action_text: str) -> int:
         """
         Looks up for an ID relevant to the passed action text in the list of known actions and their ids.
