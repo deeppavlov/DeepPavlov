@@ -1,4 +1,5 @@
 from typing import List
+from deeppavlov.core.common.file import read_yaml
 
 USER = "usr"
 SYSTEM = "sys"
@@ -51,3 +52,39 @@ class Stories:
                 # noinspection PyUnboundLocalVariable
                 curr_story.turns.append(Turn(line_content, SYSTEM))
         return stories
+
+    @classmethod
+    def from_stories_lines_yml(cls, lines: List[str], fmt="yml"):
+        lines_text = '\n'.join(lines)
+        stories_yml = read_yaml(lines_text)
+        stories_lines = []
+        for story in stories_yml.get("stories", []):
+            story_title = story.get("story", 'todo')
+            stories_lines.append(f"# {story_title}")
+            for step in story.get("steps", []):
+                is_usr_step = "intent" in step.keys()
+                is_sys_step = "action" in step.keys()
+                if is_usr_step:
+                    curr_story_line = step["intent"]
+                    stories_lines.append(f"* {curr_story_line}")
+                if is_sys_step:
+                    curr_story_line = step["action"]
+                    stories_lines.append(f"- {curr_story_line}")
+
+        return cls.from_stories_lines_md(stories_lines)
+
+    @classmethod
+    def from_stories_lines(cls, lines: List[str]):
+        try:
+            lines_text = '\n'.join(lines)
+            read_yaml(lines_text)
+            is_yaml = True
+            is_md = False
+        except:
+            is_yaml = False
+            is_md = True
+
+        if is_yaml:
+            return cls.from_stories_lines_yml(lines)
+        if is_md:
+            return cls.from_stories_lines_md(lines)

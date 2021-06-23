@@ -96,7 +96,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
             story_fpath = Path(data_path, cls._data_fname(subsample_name_short))
             with open(story_fpath) as f:
                 story_lines = f.read().splitlines()
-            stories = Stories.from_stories_lines_md(story_lines)
+            stories = Stories.from_stories_lines(story_lines)
 
             data[short2long_subsample_name[subsample_name_short]] = RASADict({
                             "story_lines": stories,
