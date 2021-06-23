@@ -144,10 +144,12 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "MODEL_PATH": "{MODELS_PATH}/ner_rus_bert_torch"
-    },
-    "download": [
-    	"url": "http://files.deeppavlov.ai/v1/ner/ner_rus_bert_torch.tar.gz",
-	"subdir": "{ROOT_PATH}/models"
-    ]
-  }
+    }
+  },
+  "download": [
+    {
+      "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_bert_torch.tar.gz",
+      "subdir": "{ROOT_PATH}/models"
+    }
+  ]
 }
