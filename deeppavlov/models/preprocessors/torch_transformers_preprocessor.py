@@ -228,23 +228,28 @@ class TorchSquadTransformersPreprocessor(Component):
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
 
-        # if texts_b is None:
-        #     texts_b = [None] * len(texts_a)
+        if texts_b is None:
+            texts_b = [None] * len(texts_a)
 
-        tokens: List[List[str]] = []
-            
-        input_features = self.tokenizer(text=texts_a,
-                                        text_pair=texts_b,
-                                        add_special_tokens=True,
-                                        max_length=self.max_seq_length,
-                                        pad_to_max_length=True,
-                                        return_attention_mask=True,
-                                        truncation=True,
-                                        return_tensors='pt')
-        
+        input_features = []
+        tokens = []
+        for text_a, text_b in zip(texts_a, texts_b):
+            encoded_dict = self.tokenizer.encode_plus(
+                text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
+                pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+
+            if 'token_type_ids' not in encoded_dict:
+                encoded_dict['token_type_ids'] = torch.tensor([0])
+
+            curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
+                                          attention_mask=encoded_dict['attention_mask'],
+                                          token_type_ids=encoded_dict['token_type_ids'],
+                                          label=None)
+            input_features.append(curr_features)
+            if self.return_tokens:
+                tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
+
         if self.return_tokens:
-            for sequence in input_features['input_ids']:
-                tokens.append(self.tokenizer.convert_ids_to_tokens(sequence))
             return input_features, tokens
         else:
             return input_features
