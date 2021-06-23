@@ -229,7 +229,7 @@ class BertForDST(BertPreTrainedModel):
 
         #print("total_loss_pev", total_loss)
         if action_label is not None:
-            action_loss = CrossEntropyLoss(reduction='sum')(action_logits, action_label)
+            action_loss = CrossEntropyLoss()(action_logits, action_label)
 
             # Increase the loss proportional to the amount of slots if present
             if self.slot_list:
