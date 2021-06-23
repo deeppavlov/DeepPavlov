@@ -64,16 +64,16 @@
         ],
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-5,
-          "weight_decay": 1e-6,
+          "lr": 2e-05,
+          "weight_decay": 1e-06,
           "betas": [
             0.9,
             0.999
           ],
-          "eps": 1e-6
+          "eps": 1e-06
         },
         "clip_norm": 1.0,
-        "min_learning_rate": 1e-7,
+        "min_learning_rate": 1e-07,
         "learning_rate_drop_patience": 30,
         "learning_rate_drop_div": 1.5,
         "load_before_drop": true,
@@ -143,11 +143,13 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-multilingual-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_torch/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_mult_torch/{TRANSFORMER}"
     },
     "download": [
-	"url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_mult_torch.tar.gz",
-	"subdir": "{ROOT_PATH}/models"
+      {
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_mult_torch.tar.gz",
+        "subdir": "{ROOT_PATH}/models"
+      }
     ]
   }
 }
