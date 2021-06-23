@@ -196,7 +196,6 @@ class BertForDST(BertPreTrainedModel):
                 token_loss_fct = CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
                 refer_loss_fct = CrossEntropyLoss(reduction='none')
 
-
                 start_loss = token_loss_fct(start_logits, start_pos[slot])
                 end_loss = token_loss_fct(end_logits, end_pos[slot])
                 token_loss = (start_loss + end_loss) / 2.0
@@ -243,7 +242,7 @@ class BertForDST(BertPreTrainedModel):
         else:
             action_loss = None
 
-        action_logits = getattr(self, 'action_softmax')(action_logits)
+        #action_logits = getattr(self, 'action_softmax')(action_logits)
 
         #print("ACT LOGITS:", action_logits)
 
