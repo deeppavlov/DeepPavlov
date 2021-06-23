@@ -121,6 +121,8 @@
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 5,
     "validation_patience": 10,
     "metrics": [
       {
@@ -156,13 +158,15 @@
   },
   "metadata": {
     "variables": {
-      "LOWERCASE": false,
-      "TRANSFORMER": "bert-base-cased",
+      "LOWERCASE": true,
+      "TRANSFORMER": "bert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
     }
-  }
-}
-
+  },
+  "download": [{
+	"url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
+	"subdir": "{ROOT_PATH}/models"
+	}]}
