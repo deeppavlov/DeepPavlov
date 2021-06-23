@@ -17,7 +17,7 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union, Dict
+from typing import Tuple, List, Optional, Union, Dict, Any
 
 from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -109,7 +109,8 @@ class TorchTransformersPreprocessor(Component):
 
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):
-    """Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
+    """
+    Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
     Creates a mask of subtokens (one for the first subtoken, zero for the others).
 
     If tags are provided, calculates tags for subtokens.
@@ -306,29 +307,33 @@ class TorchTransformersREPreprocessor(Component):
     def __init__(
             self,
             vocab_file: str,
+            rel2id: Dict,
             special_token: str = '<ENT>',
             do_lower_case: bool = False
     ):
         """
 
         Return:
-            batch of InputFeatures
-            entity_pos: List[
-                            List[
-                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id),
-                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id),
-                                    tuple(entity1_mention1_start_id, entity1_mention1_end_id)
+            input_features: List[
+                input_ids: List[int],
+                attention_mask: List[int],
+                entity_pos: List[
+                                List[
+                                        tuple(entity1_mention1_start_id, entity1_mention1_end_id),
+                                        tuple(entity1_mention2_start_id, entity1_mention2_end_id)
+                                    ],
+                                List[
+                                        tuple(entity2_mention1_start_id, entity2_mention1_end_id)
+                                    ]
                                 ]
-                            ]
-            ner_tags: List[ner_tag_mention1, ner_tag_mention2, ..., ner_tag_mention_n]
-            true relations found in the document
-            length of tokenizer
-            cls_token_id
-            sep_token_id
-
+                ner_tags: List[ner_tag_entity1, ner_tag_entity2]
+                label: int
+                ]
         """
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
+        self.rel2id = rel2id
+        self.ner_tags = {}      # {str(ner tag): ner tag id}
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
@@ -336,13 +341,13 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file)
 
-    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict], int, int, int]:
+    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict]]:
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        wordpiece_tokens, input_features, entity_pos, ner_tags, labels = [], [], [], [], []
+        input_features = []
         for doc in input_data:
             count = 0
-            labels.append(doc[2])
+            label = doc[2]
             doc_wordpiece_tokens = []
             entity1_pos_start = list(zip(*doc[1][0]))[0]  # first entity mentions' start positions
             entity1_pos_end = list(zip(*doc[1][0]))[1]  # first entity mentions' end positions
@@ -372,51 +377,60 @@ class TorchTransformersREPreprocessor(Component):
 
             encoding = self.tokenizer.encode_plus(
                 doc_wordpiece_tokens, add_special_tokens=True, truncation=True, padding="max_length",
-                return_attention_mask=True, return_tensors="pt"
+                return_attention_mask=True,     # return_tensors="pt"
             )
 
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
             upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
+            enc_label = self.label_to_one_hot(label)
+            enc_ner_tag = self.encode_ner_tag(doc[1][2], doc[1][3])
+
             input_features.append(
                 {
                     "input_ids": encoding['input_ids'],
                     "attention_mask": encoding['attention_mask'],
-                    "token_type_ids": encoding['token_type_ids'],
-                    "labels": labels,
-                    "entity_pos": upd_entity1 + upd_entity2,
-                    "ner_tags": [doc[1][2]] * len(upd_entity1) + [doc[1][3]] * len(upd_entity2)
+                    "entity_pos": [upd_entity1, upd_entity2],
+                    "ner_tags": enc_ner_tag,
+                    "label": enc_label
                 }
             )
 
         # todo: to delete!
         from joblib import dump
-        dump(
-            input_features[:50],
-            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small"
-        )
-        dump(
-            entity_pos[:50],
-            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_entity_pos"
-        )
-        dump(
-            ner_tags[:50],
-            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_ner_tags"
-        )
-        dump(
-            labels[:50],
-            "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_labels"
-        )
+        dump(input_features[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
         print(len(self.tokenizer))  # 28997
         print(self.tokenizer.cls_token_id)  # 101
-        print(self.tokenizer.sep_token_id)  # 102
-        return input_features, len(self.tokenizer), self.tokenizer.cls_token_id, self.tokenizer.sep_token_id
+        return input_features
+
+    def label_to_one_hot(self, label: int) -> List:
+        """ Turn labels to one hot encodings """
+        relation = [0] * len(self.rel2id)
+        relation[label] = 1
+        return [relation]
+
+    def encode_ner_tag(self, *ner_tags) -> List:
+        """ Encode NER tags with indices """
+        enc_ner_tags = []
+        for ner_tag in ner_tags:
+            if ner_tag in self.ner_tags:
+                enc_ner_tags.append(self.ner_tags[ner_tag])
+            else:
+                self.ner_tags[ner_tag] = len(self.ner_tags)
+                enc_ner_tags.append(self.ner_tags[ner_tag])
+        return enc_ner_tags
 
 
 # todo: to delete!
 if __name__ == "__main__":
-    from joblib import load
+    # output of docred_reader: data, rel2id
 
+    import json
+    from joblib import load
+    with open("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/meta/rel2id.json") as file:
+        rel2id = json.load(file)
     data = load(
         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader_without_negatives/dev")
-    TorchTransformersREPreprocessor("bert-base-cased").__call__(data)
+
+    TorchTransformersREPreprocessor("bert-base-cased", rel2id).__call__(data)

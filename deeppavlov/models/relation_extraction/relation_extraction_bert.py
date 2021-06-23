@@ -1,9 +1,9 @@
 from logging import getLogger
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 
 import torch
 import torch.nn as nn
-import numpy as np
+from torch import Tensor
 from torch.utils.data import DataLoader
 from transformers import InputFeatures
 
@@ -22,9 +22,7 @@ class REBertModel(TorchModel):
             self,
             n_classes: int,
             model_name: str,
-            len_tokenizer: int = None,
-            cls_token_id: int = 101,
-            sep_token_id: int = 201,
+            tokenizer_vocab_file: str = "bert-base-cased",
             pretrained_bert: str = None,
             bert_config_file: Optional[str] = None,
             criterion: str = "CrossEntropyLoss",
@@ -37,9 +35,7 @@ class REBertModel(TorchModel):
             **kwargs
     ):
         self.n_classes = n_classes
-        self.len_tokenizer = len_tokenizer
-        self.cls_token_id = cls_token_id
-        self.sep_token_id = sep_token_id
+        self.tokenizer_vocab_file = tokenizer_vocab_file
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.return_probas = return_probas
@@ -59,10 +55,6 @@ class REBertModel(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
-        # mb needed?
-        # self.optimizer = getattr(torch.optim, self.optimizer_name)(
-        #     self.model.parameters(), **self.optimizer_parameters)
-
     def train_on_batch(self, features: List[Dict], train_batch_size: int, num_epochs: int, device: str = "cpu"):
         """
         Trains the relation extraction BERT model on the given batch.
@@ -73,7 +65,9 @@ class REBertModel(TorchModel):
 
         self.model.train()
 
-        train_dataloader = DataLoader(features, batch_size=train_batch_size, shuffle=True, drop_last=True)
+        train_dataloader = DataLoader(
+            features, batch_size=train_batch_size, shuffle=False, collate_fn=self.collate_fn, drop_last=True
+        )
 
         # _input = {'labels': torch.from_numpy(np.array(y)).to(self.device)}
         # for elem in ['input_ids', 'attention_mask', 'entity_pos', 'token_type_ids']:
@@ -86,13 +80,14 @@ class REBertModel(TorchModel):
                 inputs = {
                     'input_ids': batch[0].to(device),
                     'attention_mask': batch[1].to(device),
-                    'labels': batch[2],
-                    'entity_pos': batch[3],
-                    'hts': batch[4],
+                    'entity_pos': batch[2],
+                    'ner_tags': batch[3],
+                    'label': batch[4]
                 }
                 hidden_states = self.model(**inputs)
                 loss = hidden_states[0]
                 loss.backward()
+                self.optimizer.step()
 
                 # Clip the norm of the gradients to prevent the "exploding gradients" problem
                 if self.clip_norm:
@@ -101,7 +96,7 @@ class REBertModel(TorchModel):
     def __call__(self, features: List[InputFeatures]):
 
         _input = {}
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+        for elem in ['input_ids', 'attention_mask']:
             _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
 
         if not self.return_probas:
@@ -117,23 +112,25 @@ class REBertModel(TorchModel):
         """
         return BertWithAdaThresholdLocContextPooling(
             n_classes=self.n_classes,
-            cls_token_id=self.cls_token_id,
-            sep_token_id=self.sep_token_id,
-            len_tokenizer=self.len_tokenizer,
+            tokenizer_vocab_file=self.tokenizer_vocab_file,
             pretrained_bert=self.pretrained_bert,
             device=self.device
         )
+
+    def collate_fn(self, batch: List[Dict]) -> Tuple[Tensor, Tensor, List, List, List]:
+        input_ids = torch.tensor([f["input_ids"] for f in batch], dtype=torch.long)
+        label = [f["label"] for f in batch]
+        entity_pos = [f["entity_pos"] for f in batch]
+        ner_tags = [f["ner_tags"] for f in batch]
+        attention_mask = torch.tensor([f["attention_mask"] for f in batch], dtype=torch.float)
+        out = (input_ids, attention_mask, entity_pos, ner_tags, label)
+        return out
 
 
 if __name__ == "__main__":
     from joblib import load
     data = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-    # entity_pos = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-    #                   "dev_small_entity_pos")
-    # ner_tags = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-    #                 "dev_small_ner_tags")
-    # labels = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/"
-    #               "dev_small_labels")
+
     n_classes = 97
 
     # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
@@ -149,11 +146,9 @@ if __name__ == "__main__":
         save_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         load_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         pretrained_bert="bert-base-uncased",
-        len_tokenizer=30523,
         model_name="re_model",
-        cls_token_id=101,
-        sep_token_id=201,
-    ).train_on_batch(data, train_batch_size=32, num_epochs=2)
+        tokenizer_vocab_file="bert-base-cased"
+    ).train_on_batch(data, train_batch_size=4, num_epochs=2)
 
 
 

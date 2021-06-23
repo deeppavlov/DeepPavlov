@@ -5,13 +5,14 @@ This code is copied from ATLOP algorithm (https://github.com/wzhouad/ATLOP/blob/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 
 
 class ATLoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, logits, labels):
+    def forward(self, logits: Tensor, labels: Tensor) -> float:
         # TH label
         th_label = torch.zeros_like(labels, dtype=torch.float).to(labels)
         th_label[:, 0] = 1.0
@@ -33,7 +34,7 @@ class ATLoss(nn.Module):
         loss = loss.mean()
         return loss
 
-    def get_label(self, logits, num_labels=-1) -> torch.Tensor:
+    def get_label(self, logits: Tensor, num_labels: int = -1) -> Tensor:
         th_logit = logits[:, 0].unsqueeze(1)
         output = torch.zeros_like(logits).to(logits)
         mask = (logits > th_logit)
