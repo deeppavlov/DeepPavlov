@@ -1,5 +1,5 @@
 from typing import List
-from deeppavlov.core.common.file import read_yaml
+from ruamel.yaml import YAML
 
 USER = "usr"
 SYSTEM = "sys"
@@ -56,7 +56,7 @@ class Stories:
     @classmethod
     def from_stories_lines_yml(cls, lines: List[str], fmt="yml"):
         lines_text = '\n'.join(lines)
-        stories_yml = read_yaml(lines_text)
+        stories_yml = YAML().load(lines_text)
         stories_lines = []
         for story in stories_yml.get("stories", []):
             story_title = story.get("story", 'todo')
@@ -70,14 +70,13 @@ class Stories:
                 if is_sys_step:
                     curr_story_line = step["action"]
                     stories_lines.append(f"- {curr_story_line}")
-
         return cls.from_stories_lines_md(stories_lines)
 
     @classmethod
     def from_stories_lines(cls, lines: List[str]):
         try:
             lines_text = '\n'.join(lines)
-            read_yaml(lines_text)
+            YAML().load(lines_text)
             is_yaml = True
             is_md = False
         except:
