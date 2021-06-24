@@ -13,7 +13,6 @@ from sklearn.model_selection import train_test_split
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
-
 logger = getLogger(__name__)
 
 NEG_LABEL = "Na"
@@ -56,7 +55,7 @@ class DocREDDatasetReader(DatasetReader):
                             str(NER tag of entity 1),
                             str(NER tag of entity 2)
                             ],
-                        str(relation label)
+                        List(int(relation label))
                         )
                     ]
         """
@@ -81,11 +80,10 @@ class DocREDDatasetReader(DatasetReader):
 
         # todo: delete!
         from joblib import dump
-        for data_type, data_units in data.items():
-            out = f"/Users/asedova/Downloads/DocRED/"
-            Path(out).mkdir(parents=True, exist_ok=True)
-            out = os.path.join(out, data_type)
-            dump(data_units, out)
+        out = f"/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader/"
+        Path(out).mkdir(parents=True, exist_ok=True)
+        out = os.path.join(out, "all_data")
+        dump(data, out)
 
         return data, self.rel2id
 
@@ -133,10 +131,8 @@ class DocREDDatasetReader(DatasetReader):
                 if len(data_unit["labels"]) == 0:
                     processed_data_samples += self.construct_neg_samples(ent_ids2ent_pos, ent_ids2ent_tag, doc)
                 else:
-                    for label_info in data_unit["labels"]:
-                        processed_data_samples.append(
-                            self.construct_pos_samples(ent_ids2ent_pos, ent_ids2ent_tag, label_info, doc)
-                        )
+                    labels = data_unit["labels"]
+                    processed_data_samples += self.construct_pos_samples(labels, ent_ids2ent_pos, ent_ids2ent_tag, doc)
 
                 # additionally generate negative samples for already included samples
                 if self.if_add_neg_samples:
@@ -153,22 +149,38 @@ class DocREDDatasetReader(DatasetReader):
             return processed_data_samples, None
 
     def construct_pos_samples(
-            self, ent_ids2ent: Dict, ent_ids2ent_tag: Dict, label_info: Dict, doc: List
+            self, labels: List, ent_id2ent: Dict, ent_ids2ent_tag: Dict, doc: List
     ) -> Tuple[List, List, str]:
         """
         Transforms the relevant information into an entry of the DocRED reader output.
         Args:
-            ent_ids2ent: a dictionary {entity id: [entity mentions' positions]}
+            labels: information about relation found in a document (whole labels list of the original DocRED)
+            ent_id2ent: a dictionary {entity id: [entity mentions' positions]}
             ent_ids2ent_tag: a dictionary {entity id: entity NER tag}
-            label_info: information about relation found in a document (item of the original DocRED)
             doc: list of all tokens of the document
         Returns:
             a tuple with list of all doc tokens, entity information (positions & NER tags) and relation.
         """
-        entity1, entity2 = ent_ids2ent[label_info["h"]], ent_ids2ent[label_info["t"]]
-        entity1_tag, entity2_tag = ent_ids2ent_tag[label_info["h"]], ent_ids2ent_tag[label_info["t"]]
-        self.stat["POS_REL"] += 1
-        return tuple((doc, [entity1, entity2, entity1_tag[0], entity2_tag[0]], self.rel2id[label_info['r']]))
+        ent2ent_id = {str(ent): ent_id for ent_id, ent in ent_id2ent.items()}
+
+        data_samples = []
+        rel_triples = {}
+        for label_info in labels:
+            entity1, entity2 = ent_id2ent[label_info["h"]], ent_id2ent[label_info["t"]]
+            entity1_id = ent2ent_id[str(entity1)]
+            entity2_id = ent2ent_id[str(entity2)]
+            entity1_tag, entity2_tag = ent_ids2ent_tag[label_info["h"]], ent_ids2ent_tag[label_info["t"]]
+            if (entity1_id, entity2_id) in rel_triples:
+                rel_triples[(entity1_id, entity2_id)].append(self.rel2id[label_info['r']])
+            else:
+                rel_triples[(entity1_id, entity2_id)] = [self.rel2id[label_info['r']]]
+
+        for (entity1_id, entity2_id), label in rel_triples.items():
+            data_samples.append(
+                (doc, [ent_id2ent[entity1_id], ent_id2ent[entity2_id], entity1_tag[0], entity2_tag[0]], label)
+            )
+            self.stat["POS_REL"] += 1
+        return data_samples
 
     def construct_neg_samples(
             self, ent_ids2ent: Dict, ent_ids2ent_tag: Dict, doc: List, neg_label: str = NEG_LABEL,
@@ -215,7 +227,7 @@ class DocREDDatasetReader(DatasetReader):
         ner = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
 
         neg_data_samples = []
-        analysed_sentences = ner([" ".join(doc)])       # returns [[[tokens]], [[ner tags]]]
+        analysed_sentences = ner([" ".join(doc)])  # returns [[[tokens]], [[ner tags]]]
 
         # select ids of tokens that were not part of any relation so far
         neg_entities_idx = random.sample(
