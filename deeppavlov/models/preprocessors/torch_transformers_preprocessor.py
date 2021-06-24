@@ -341,10 +341,10 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file)
 
-    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict]]:
+    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict], List[List]]:
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        input_features = []
+        input_features, labels = [], []
         for doc in input_data:
             count = 0
             label = doc[2]
@@ -391,10 +391,10 @@ class TorchTransformersREPreprocessor(Component):
                     "input_ids": encoding['input_ids'],
                     "attention_mask": encoding['attention_mask'],
                     "entity_pos": [upd_entity1, upd_entity2],
-                    "ner_tags": enc_ner_tag,
-                    "label": enc_label
+                    "ner_tags": enc_ner_tag
                 }
             )
+            labels.append(enc_label)
 
         # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
         input_features = self.ner_tags_to_one_hot(input_features)
@@ -403,14 +403,17 @@ class TorchTransformersREPreprocessor(Component):
         from joblib import dump
         dump(input_features[:50],
              "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+        dump(labels[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
         print(len(self.tokenizer))  # 28997
         print(self.tokenizer.cls_token_id)  # 101
         return input_features
 
-    def label_to_one_hot(self, label: int) -> List:
+    def label_to_one_hot(self, labels: int) -> List:
         """ Turn labels to one hot encodings """
         relation = [0] * len(self.rel2id)
-        relation[label] = 1
+        for label in labels:
+            relation[label] = 1
         return [relation]
 
     def encode_ner_tag(self, *ner_tags) -> List:
@@ -442,9 +445,12 @@ if __name__ == "__main__":
 
     import json
     from joblib import load
+    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
+
     with open("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/meta/rel2id.json") as file:
         rel2id = json.load(file)
     data = load(
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader_without_negatives/dev")
+        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader/all_data")
+    data_iter_out = BasicClassificationDatasetIterator(data)
 
-    TorchTransformersREPreprocessor("bert-base-cased", rel2id).__call__(data)
+    TorchTransformersREPreprocessor("bert-base-cased", rel2id).__call__(data["valid"])

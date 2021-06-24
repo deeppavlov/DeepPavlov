@@ -70,13 +70,13 @@ class DocREDDatasetReader(DatasetReader):
             raise ValueError("Please provide a number of negative samples to be generated!")
 
         data_path = Path(data_path)
-        data = {"train": [], "dev": [], "test": []}
+        data = {"train": [], "valid": [], "test": []}
 
         # since in the original DocRED test data is given without labels, we will use a subset of train data instead
         data["train"], data["test"] = self.process_docred_file(
             os.path.join(data_path, "train_annotated.json"), split=0.1
         )
-        data["dev"], _ = self.process_docred_file(os.path.join(data_path, "dev.json"))
+        data["valid"], _ = self.process_docred_file(os.path.join(data_path, "dev.json"))
 
         # todo: delete!
         from joblib import dump
