@@ -333,7 +333,7 @@ class TorchTransformersREPreprocessor(Component):
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
         self.rel2id = rel2id
-        self.ner_tags = {}      # {str(ner tag): ner tag id}
+        self.ner2id = {}      # {str(ner tag): ner tag id}
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
@@ -396,6 +396,9 @@ class TorchTransformersREPreprocessor(Component):
                 }
             )
 
+        # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
+        input_features = self.ner_tags_to_one_hot(input_features)
+
         # todo: to delete!
         from joblib import dump
         dump(input_features[:50],
@@ -414,12 +417,23 @@ class TorchTransformersREPreprocessor(Component):
         """ Encode NER tags with indices """
         enc_ner_tags = []
         for ner_tag in ner_tags:
-            if ner_tag in self.ner_tags:
-                enc_ner_tags.append(self.ner_tags[ner_tag])
+            if ner_tag in self.ner2id:
+                enc_ner_tags.append(self.ner2id[ner_tag])
             else:
-                self.ner_tags[ner_tag] = len(self.ner_tags)
-                enc_ner_tags.append(self.ner_tags[ner_tag])
+                self.ner2id[ner_tag] = len(self.ner2id)
+                enc_ner_tags.append(self.ner2id[ner_tag])
         return enc_ner_tags
+
+    def ner_tags_to_one_hot(self, input_features: List) -> List:
+        """ Iterated over input features and turn NER tags of each of them to one hot encodings """
+        for inp_f in input_features:
+            tags = []
+            for ner_tag in inp_f["ner_tags"]:
+                ner_tag_one_hot = [0] * len(self.ner2id)
+                ner_tag_one_hot[ner_tag] = 1
+                tags.append(ner_tag_one_hot)
+            inp_f["ner_tags"] = tags
+        return input_features
 
 
 # todo: to delete!

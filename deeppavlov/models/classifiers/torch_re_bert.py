@@ -26,6 +26,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             device: str = "gpu",
+            ner_tags_length: int = 6        # number of ner tags
     ):
         super().__init__()
         self.n_classes = n_classes
@@ -53,8 +54,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
-        self.head_extractor = nn.Linear(2 * self.hidden_size + 1, self.emb_size)        # added 1 for NER tags
-        self.tail_extractor = nn.Linear(2 * self.hidden_size + 1, self.emb_size)        # added 1 for NER tags
+        self.head_extractor = nn.Linear(2 * self.hidden_size + ner_tags_length, self.emb_size)
+        self.tail_extractor = nn.Linear(2 * self.hidden_size + ner_tags_length, self.emb_size)
         self.bilinear = nn.Linear(self.emb_size * self.block_size, self.n_classes)
 
     def forward(
@@ -73,7 +74,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
 
         # get ner tags of entities
         hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))])
-        hs_ner_tags, ts_ner_tags = torch.unsqueeze(hs_ner_tags, 1), torch.unsqueeze(ts_ner_tags, 1)
         hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)            # todo! ner as one-hot-encoding
         ts_inp = torch.cat([hs, rs, ts_ner_tags], dim=1)
 
@@ -111,7 +111,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
-                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 else:
                     start, end = e[0]
@@ -120,7 +120,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]
                     else:
-                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 entity_embs.append(e_emb)           # get an embedding of an entity
                 entity_atts.append(e_att)       # get attention of an entity
