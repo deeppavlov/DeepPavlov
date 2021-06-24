@@ -39,7 +39,7 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
             use_label_name: Use actual label name instead of its index (0, 1, ...). Defaults to True.
 
         Returns:
-            List[Tuple[Any, Any]]: list of pairs of extrated features and labels
+            List[Tuple[Any, Any]]: list of pairs of extracted features and labels
         """
 
         dataset = []
