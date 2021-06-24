@@ -500,10 +500,3 @@ class TripPy(TorchModel):
 
         self.db_result = None
         self.current_db_result = None
-
-    #def save(self, *args, **kwargs) -> None:
-    #    """
-    #    Save the model.
-    #    """
-    #    self.model.save_pretrained(self.save_path)
-    #    print("SAVED")
