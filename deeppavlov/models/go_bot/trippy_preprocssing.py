@@ -419,6 +419,7 @@ def create_examples(batch_dialogues_utterances_contexts_info,
         hst = []
         prev_hst_lbl_dict = {slot: [] for slot in slot_list}
         prev_ds_lbl_dict = {slot: 'none' for slot in slot_list}
+        response_saved = None
 
         for turn_id, (context, response) in enumerate(zip(contexts, responses)):
             guid = '%s-%s' % (dial_id, str(turn_id))
@@ -427,6 +428,9 @@ def create_examples(batch_dialogues_utterances_contexts_info,
             action_label = nlg_manager.get_action_id(response["act"]) if (response is not None) and (response["act"] is not None) else 0
             prev_action_label = nlg_manager.get_action_id(context["prev_resp_act"]) if ("prev_resp_act" in context) and (context["prev_resp_act"] is not None) else 0
 
+            # Move the responses one backwards, because the first input should be user only with the response being None
+            # The final utterance by the system is not needed in the text, except for the action label (action labels are not moved back)
+            response_saved, response = response, response_saved
 
 
             ds_lbl_dict = prev_ds_lbl_dict.copy()
