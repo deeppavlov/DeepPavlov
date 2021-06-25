@@ -1,0 +1,56 @@
+{
+  "dataset_reader": {
+    "class_name": "docred_reader",
+    "data_path": "{DOWNLOADS_PATH}/docred",
+    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
+    "generate_additional_neg_samples": true,
+    "num_neg_samples": 10
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator"
+  },
+  "chainer": {
+    "in": ["input_x", "entity_pos_ner"],
+    "in_y": ["y_ids"],
+    "pipe": [
+      {
+        "in": ["input_x", "entity_pos_ner"],
+        "out": ["input_x_bert"],
+        "class_name": "torch_transformers_re_preprocessor",
+        "vocab_file": "bert-base-cased"
+      },
+      {
+        "class_name": "re_torch_transformers_classifier",
+        "in": ["input_x_bert"],
+        "in_y": ["y_ids"],
+        "out": ["predictions"],
+        "n_classes": 97,
+        "save_path": "{MODELS_PATH}/model",
+        "load_path": "{MODELS_PATH}/model",
+        "model_name": "re_model",
+        "pretrained_bert": "bert-base-uncased"
+
+      }
+    ],
+    "out": ["predictions"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 32,
+    "train_metrics": ["f1", "acc"],
+    "metrics": ["f1", "acc"],
+    "validation_patience": 5,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "evaluation_targets": ["valid", "train"],
+    "show_examples": false,
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models"
+      }
+  }
+}
