@@ -307,14 +307,12 @@ class TorchTransformersREPreprocessor(Component):
     def __init__(
             self,
             vocab_file: str,
-            rel2id: Dict,
             special_token: str = '<ENT>',
             do_lower_case: bool = False
     ):
         """
         Args:
             vocab_file: path to vocabulary / name of vocabulary for tokenizer initialization
-            rel2id: dictionary with relation to relation id correspondings
             special_token: an additional token that will be used for marking the entities in the document
             do_lower_case: set True if lowercasing is needed
         Return:
@@ -336,7 +334,6 @@ class TorchTransformersREPreprocessor(Component):
         """
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
-        self.rel2id = rel2id        # {str(relation): relation id}
         self.ner2id = {}      # {str(ner tag): ner tag id}
 
         if Path(vocab_file).is_file():
@@ -345,13 +342,12 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict], List[List]]:
+    def __call__(self, input_data_batch: List[Tuple[List, List]]) -> Tuple[List[Dict]]:
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
         input_features, labels = [], []
-        for doc in input_data:
+        for doc in input_data_batch:
             count = 0
-            label = doc[2]
             doc_wordpiece_tokens = []
             entity1_pos_start = list(zip(*doc[1][0]))[0]  # first entity mentions' start positions
             entity1_pos_end = list(zip(*doc[1][0]))[1]  # first entity mentions' end positions
@@ -387,7 +383,6 @@ class TorchTransformersREPreprocessor(Component):
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
             upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
-            enc_label = self.label_to_one_hot(label)
             enc_ner_tag = self.encode_ner_tag(doc[1][2], doc[1][3])
 
             input_features.append(
@@ -398,7 +393,6 @@ class TorchTransformersREPreprocessor(Component):
                     "ner_tags": enc_ner_tag
                 }
             )
-            labels.append(enc_label)
 
         # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
         input_features = self.ner_tags_to_one_hot(input_features)
@@ -410,14 +404,7 @@ class TorchTransformersREPreprocessor(Component):
         dump(labels[:50],
              "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
 
-        return input_features, labels
-
-    def label_to_one_hot(self, labels: int) -> List:
-        """ Turn labels to one hot encodings """
-        relation = [0] * len(self.rel2id)
-        for label in labels:
-            relation[label] = 1
-        return [relation]
+        return input_features
 
     def encode_ner_tag(self, *ner_tags) -> List:
         """ Encode NER tags with indices """
@@ -444,16 +431,13 @@ class TorchTransformersREPreprocessor(Component):
 
 # todo: wil be deleted
 if __name__ == "__main__":
-    # output of docred_reader: data, rel2id
-
     import json
     from joblib import load
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
 
-    with open("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/meta/rel2id.json") as file:
-        rel2id = json.load(file)
     data = load(
         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader/all_data")
     data_iter_out = BasicClassificationDatasetIterator(data)
+    test_data = [[data[0], data[1]] for data in data_iter_out.test]
 
-    TorchTransformersREPreprocessor("bert-base-cased", rel2id).__call__(data["valid"])
+    TorchTransformersREPreprocessor("bert-base-cased").__call__(test_data)

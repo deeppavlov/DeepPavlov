@@ -23,7 +23,6 @@ class REBertModel(TorchModel):
             self,
             n_classes: int,
             model_name: str,
-            tokenizer_vocab_file: str = "bert-base-cased",
             pretrained_bert: str = None,
             bert_config_file: Optional[str] = None,
             criterion: str = "CrossEntropyLoss",
@@ -36,7 +35,6 @@ class REBertModel(TorchModel):
             **kwargs
     ):
         self.n_classes = n_classes
-        self.tokenizer_vocab_file = tokenizer_vocab_file
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.return_probas = return_probas
@@ -122,7 +120,6 @@ class REBertModel(TorchModel):
         """
         return BertWithAdaThresholdLocContextPooling(
             n_classes=self.n_classes,
-            tokenizer_vocab_file=self.tokenizer_vocab_file,
             pretrained_bert=self.pretrained_bert,
             device=self.device
         )
@@ -157,53 +154,4 @@ if __name__ == "__main__":
         load_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         pretrained_bert="bert-base-uncased",
         model_name="re_model",
-        tokenizer_vocab_file="bert-base-cased"
     ).train_on_batch(features, labels)
-
-
-
-
-
-'''
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
-special_tokens_dict = {'additional_special_tokens': ['<ENT>']}
-num_added_toks = tokenizer.add_special_tokens(special_tokens_dict)
-model.resize_token_embeddings(len(tokenizer))
-
-positions = [1, 3]
-text = ["what", "is", "the", "capital", "of", "russia", "?"]
-
-wordpiece_tokens = []
-
-special_tokens_pos = []
-
-count = 0
-for n, token in enumerate(text):
-    if n in positions:
-        wordpiece_tokens.append("<ENT>")
-        special_tokens_pos.append(count)
-        count += 1
-
-    word_tokens = tokenizer.wordpiece_tokenizer.tokenize(token)
-    wordpiece_tokens += word_tokens
-    count += len(word_tokens)
-
-print(wordpiece_tokens)
-print(special_tokens_pos)
-
-encoding = tokenizer.encode_plus(wordpiece_tokens, add_special_tokens=True, truncation=True, padding="max_length",
-                                 return_attention_mask=True, return_tensors="pt")
-input_ids = encoding["input_ids"]
-token_type_ids = encoding["token_type_ids"]
-attention_mask = encoding["attention_mask"]
-
-model_input = {"input_ids": [input_ids], "token_type_ids": [token_type_ids], "attention_mask": [attention_mask]}
-
-print(encoding)
-
-hidden_states = model(**encoding)
-
-last_hidden_states = hidden_states.last_hidden_state
-print(len(last_hidden_states), len(last_hidden_states[0]), len(last_hidden_states[0][0]))  # 1x512x768
-'''

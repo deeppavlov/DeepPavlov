@@ -26,6 +26,7 @@ class DocREDDatasetReader(DatasetReader):
     def read(
             self,
             data_path: str,
+            rel2id_path: str,
             generate_additional_neg_samples: bool = False,
             num_neg_samples: int = None
     ) -> Tuple[Dict[str, List[Tuple]], Dict[str, int]]:
@@ -60,7 +61,7 @@ class DocREDDatasetReader(DatasetReader):
                     ]
         """
 
-        with open(os.path.join(data_path, "meta", "rel2id.json")) as file:
+        with open(rel2id_path) as file:
             self.rel2id = json.load(file)
         self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         self.if_add_neg_samples = generate_additional_neg_samples
@@ -176,8 +177,9 @@ class DocREDDatasetReader(DatasetReader):
                 rel_triples[(entity1_id, entity2_id)] = [self.rel2id[label_info['r']]]
 
         for (entity1_id, entity2_id), label in rel_triples.items():
+            label_one_hot = self.label_to_one_hot(label)
             data_samples.append(
-                (doc, [ent_id2ent[entity1_id], ent_id2ent[entity2_id], entity1_tag[0], entity2_tag[0]], label)
+                (doc, [ent_id2ent[entity1_id], ent_id2ent[entity2_id], entity1_tag[0], entity2_tag[0]], label_one_hot)
             )
             self.stat["POS_REL"] += 1
         return data_samples
@@ -250,6 +252,13 @@ class DocREDDatasetReader(DatasetReader):
             self.stat["NEG_REL"] += 1
 
         return neg_data_samples
+
+    def label_to_one_hot(self, labels: int) -> List:
+        """ Turn labels to one hot encodings """
+        relation = [0] * len(self.rel2id)
+        for label in labels:
+            relation[label] = 1
+        return [relation]
 
 
 # todo: wil be deleted

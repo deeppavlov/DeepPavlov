@@ -20,8 +20,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
     def __init__(
             self,
             n_classes: int = 97,
-            tokenizer_vocab_file: str = None,
             pretrained_bert: str = None,
+            bert_tokenizer_config_file: str = None,
             bert_config_file: str = None,
             emb_size: int = 768,
             block_size: int = 8,       # 64
@@ -41,17 +41,16 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.model, self.config, self.bert_config = None, None, None
         self.load()
 
-        if tokenizer_vocab_file:
-            # initialize tokenizer to call resize_token_embeddings function for model with increased tokenizer size (due to
-            # the additional <ENT> token) and get CLS and SEP token ids
-            if Path(tokenizer_vocab_file).is_file():
-                vocab_file = str(expand_path(tokenizer_vocab_file))
-                self.tokenizer = BertTokenizer(vocab_file=vocab_file)
-            else:
-                tokenizer = BertTokenizer.from_pretrained(tokenizer_vocab_file)
-            self.model.resize_token_embeddings(len(tokenizer) + 1)
-            self.cls_token_id = tokenizer.cls_token_id
-            self.sep_token_id = tokenizer.sep_token_id
+        # initialize tokenizer to call resize_token_embeddings function for model with increased tokenizer size (due to
+        # the additional <ENT> token) and get CLS and SEP token ids
+        if Path(bert_tokenizer_config_file).is_file():
+            vocab_file = str(expand_path(bert_tokenizer_config_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file)
+        else:
+            tokenizer = BertTokenizer.from_pretrained(pretrained_bert)
+        self.model.resize_token_embeddings(len(tokenizer) + 1)
+        self.cls_token_id = tokenizer.cls_token_id
+        self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
         self.head_extractor = nn.Linear(2 * self.hidden_size + ner_tags_length, self.emb_size)
@@ -160,10 +159,3 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
-
-"""
-Todo: 
-
-1) config 
-
-"""
