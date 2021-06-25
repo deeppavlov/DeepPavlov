@@ -312,7 +312,11 @@ class TorchTransformersREPreprocessor(Component):
             do_lower_case: bool = False
     ):
         """
-
+        Args:
+            vocab_file: path to vocabulary / name of vocabulary for tokenizer initialization
+            rel2id: dictionary with relation to relation id correspondings
+            special_token: an additional token that will be used for marking the entities in the document
+            do_lower_case: set True if lowercasing is needed
         Return:
             input_features: List[
                 input_ids: List[int],
@@ -332,14 +336,14 @@ class TorchTransformersREPreprocessor(Component):
         """
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
-        self.rel2id = rel2id
+        self.rel2id = rel2id        # {str(relation): relation id}
         self.ner2id = {}      # {str(ner tag): ner tag id}
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file)
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, input_data: List[Tuple[List, List, str]]) -> Tuple[List[Dict], List[List]]:
 
@@ -399,15 +403,14 @@ class TorchTransformersREPreprocessor(Component):
         # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
         input_features = self.ner_tags_to_one_hot(input_features)
 
-        # todo: to delete!
+        # todo: wil be deleted
         from joblib import dump
         dump(input_features[:50],
              "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
         dump(labels[:50],
              "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
-        print(len(self.tokenizer))  # 28997
-        print(self.tokenizer.cls_token_id)  # 101
-        return input_features
+
+        return input_features, labels
 
     def label_to_one_hot(self, labels: int) -> List:
         """ Turn labels to one hot encodings """
@@ -427,7 +430,7 @@ class TorchTransformersREPreprocessor(Component):
                 enc_ner_tags.append(self.ner2id[ner_tag])
         return enc_ner_tags
 
-    def ner_tags_to_one_hot(self, input_features: List) -> List:
+    def ner_tags_to_one_hot(self, input_features: List) -> List[Dict]:
         """ Iterated over input features and turn NER tags of each of them to one hot encodings """
         for inp_f in input_features:
             tags = []
@@ -439,7 +442,7 @@ class TorchTransformersREPreprocessor(Component):
         return input_features
 
 
-# todo: to delete!
+# todo: wil be deleted
 if __name__ == "__main__":
     # output of docred_reader: data, rel2id
 

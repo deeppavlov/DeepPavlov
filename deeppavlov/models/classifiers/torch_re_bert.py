@@ -62,9 +62,9 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             self,
             input_ids: Tensor,
             attention_mask: Tensor,
-            label: List,
             entity_pos: List,
-            ner_tags: List
+            ner_tags: List,
+            label: List
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
@@ -74,7 +74,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
 
         # get ner tags of entities
         hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))])
-        hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)            # todo! ner as one-hot-encoding
+        hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)
         ts_inp = torch.cat([hs, rs, ts_ner_tags], dim=1)
 
         hs = torch.tanh(self.head_extractor(hs_inp))

@@ -252,6 +252,7 @@ class DocREDDatasetReader(DatasetReader):
         return neg_data_samples
 
 
+# todo: wil be deleted
 if __name__ == "__main__":
     DocREDDatasetReader().read(
         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED",

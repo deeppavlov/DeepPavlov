@@ -3,9 +3,10 @@ from typing import List, Optional, Dict, Tuple
 
 import torch
 import torch.nn as nn
+import numpy as np
 from torch import Tensor
-from torch.utils.data import DataLoader
 from transformers import InputFeatures
+from apex import amp
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -27,7 +28,7 @@ class REBertModel(TorchModel):
             bert_config_file: Optional[str] = None,
             criterion: str = "CrossEntropyLoss",
             optimizer: str = "AdamW",
-            optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+            optimizer_parameters: Dict = {"lr": 5e-5, "weight_decay": 0.01, "eps": 1e-6},
             return_probas: bool = False,
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
@@ -55,7 +56,7 @@ class REBertModel(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
-    def train_on_batch(self, features: List[Dict], train_batch_size: int, num_epochs: int, device: str = "cpu"):
+    def train_on_batch(self, features: List[Dict], labels: List) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
 
@@ -63,35 +64,44 @@ class REBertModel(TorchModel):
             dict with loss and learning rate values.
         """
 
-        self.model.train()
-
-        train_dataloader = DataLoader(
-            features, batch_size=train_batch_size, shuffle=False, collate_fn=self.collate_fn, drop_last=True
-        )
+        # train_dataloader = DataLoader(features, shuffle=False, collate_fn=self.collate_fn, drop_last=True)
 
         # _input = {'labels': torch.from_numpy(np.array(y)).to(self.device)}
         # for elem in ['input_ids', 'attention_mask', 'entity_pos', 'token_type_ids']:
         #     _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
 
-        for epoch in range(num_epochs):
-            self.optimizer.zero_grad()
-            self.model.zero_grad()
-            for _, batch in enumerate(train_dataloader):
-                inputs = {
-                    'input_ids': batch[0].to(device),
-                    'attention_mask': batch[1].to(device),
-                    'entity_pos': batch[2],
-                    'ner_tags': batch[3],
-                    'label': batch[4]
-                }
-                hidden_states = self.model(**inputs)
-                loss = hidden_states[0]
-                loss.backward()
-                self.optimizer.step()
+        '''
+        features, labels = np.array(texts), np.array(labels)
+        inputs, labels = torch.from_numpy(features), torch.from_numpy(labels)
+        inputs, labels = inputs.to(self.device), labels.to(self.device)
+        '''
+        print(self.epochs_done)
+        labels = torch.from_numpy(np.array(labels))
+        self.model.train()
+        self.optimizer.zero_grad()      # zero the parameter gradients
 
-                # Clip the norm of the gradients to prevent the "exploding gradients" problem
-                if self.clip_norm:
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
+        inputs = {
+            'input_ids': features[0].to(self.device),
+            'attention_mask': features[1].to(self.device),
+            'entity_pos': features[2].to(self.device),
+            'ner_tags': features[3].to(self.device),
+            'label': labels.to(self.device)
+        }
+        hidden_states = self.model(**inputs)
+        loss = hidden_states[0]
+        loss.backward()
+        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+            scaled_loss.backward()
+        self.optimizer.step()
+
+        # Clip the norm of the gradients to prevent the "exploding gradients" problem
+        if self.clip_norm:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
+
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step()
+
+        return loss.item()
 
     def __call__(self, features: List[InputFeatures]):
 
@@ -129,8 +139,8 @@ class REBertModel(TorchModel):
 
 if __name__ == "__main__":
     from joblib import load
-    data = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-
+    features = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+    labels = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
     n_classes = 97
 
     # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
@@ -148,7 +158,7 @@ if __name__ == "__main__":
         pretrained_bert="bert-base-uncased",
         model_name="re_model",
         tokenizer_vocab_file="bert-base-cased"
-    ).train_on_batch(data, train_batch_size=4, num_epochs=2)
+    ).train_on_batch(features, labels)
 
 
 
