@@ -14,6 +14,7 @@
 
 
 from typing import Dict, Optional, List
+import re
 
 from datasets import load_dataset, Dataset
 from overrides import overrides
@@ -28,8 +29,14 @@ class HuggingFaceDatasetReader(DatasetReader):
     """
 
     @overrides
-    def read(self, data_path: str, path: str, name: Optional[str] = None, train: str = 'train',
-             valid: Optional[str] = None, test: Optional[str] = None, **kwargs) -> Dict[str, Dataset]:
+    def read(self,
+             data_path: str,
+             path: str,
+             name: Optional[str] = None,
+             train: str = 'train',
+             valid: Optional[str] = None,
+             test: Optional[str] = None,
+             **kwargs) -> Dict[str, Dataset]:
         """Wraps datasets.load_dataset method
 
         Args:
@@ -51,6 +58,8 @@ class HuggingFaceDatasetReader(DatasetReader):
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
+        elif path == "super_glue" and name == "boolq":
+            dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         return dict(zip(split_mapping.keys(), dataset))
 
 
@@ -73,3 +82,12 @@ def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
     return {"contexts": contexts,
             "choices": choices}
 
+
+def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
+
+    def remove_passage_title(passage: str) -> str:
+        return re.sub(r"^.+-- ", "", passage)
+
+    passages = [remove_passage_title(passage) for passage in examples["passage"]]
+
+    return {"passage": passages}
