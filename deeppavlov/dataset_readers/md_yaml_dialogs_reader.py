@@ -54,9 +54,9 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
     DOMAIN_FNAME = "domain.yml"
 
     @classmethod
-    def _data_fname(cls, datatype: str) -> str:
+    def _data_fname(cls, datatype: str, fmt: str="md") -> str:
         assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
-        return f"stories-{datatype}.md"
+        return f"stories-{datatype}.{fmt}"
 
     @classmethod
     @overrides
@@ -74,7 +74,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
         """
         domain_fname = cls.DOMAIN_FNAME
         nlu_fname = cls.NLU_FNAME if fmt in ("md", "markdown") else cls.NLU_FNAME.replace('.md', f'.{fmt}')
-        stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
+        stories_fnames = tuple(cls._data_fname(dt, fmt) for dt in cls.VALID_DATATYPES)
         required_fnames = stories_fnames + (nlu_fname, domain_fname)
         for required_fname in required_fnames:
             required_path = Path(data_path, required_fname)
@@ -93,7 +93,7 @@ class MD_YAML_DialogsDatasetReader(DatasetReader):
 
         data = dict()
         for subsample_name_short in cls.VALID_DATATYPES:
-            story_fpath = Path(data_path, cls._data_fname(subsample_name_short))
+            story_fpath = Path(data_path, cls._data_fname(subsample_name_short, fmt))
             with open(story_fpath) as f:
                 story_lines = f.read().splitlines()
             stories = Stories.from_stories_lines(story_lines)
