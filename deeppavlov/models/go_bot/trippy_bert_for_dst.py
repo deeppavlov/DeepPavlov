@@ -232,15 +232,13 @@ class BertForDST(BertPreTrainedModel):
 
             #print("LOGITS: ", action_logits)
             #print("LABEL: ", action_label)
-            action_loss = CrossEntropyLoss()(action_logits, action_label)
+            action_loss = CrossEntropyLoss(reduction="sum")(action_logits, action_label)
 
             # Increase the loss proportional to the amount of slots if present
             if self.slot_list:
                 multiplier = len(self.slot_list)
             else:
                 multiplier = 1
-
-            print("MULTIPLIER:", multiplier)
 
             total_loss += action_loss * multiplier
 
