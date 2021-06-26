@@ -240,6 +240,8 @@ class BertForDST(BertPreTrainedModel):
             else:
                 multiplier = 1
 
+            print("MULTIPLIER:", multiplier)
+
             total_loss += action_loss * multiplier
 
         else:
