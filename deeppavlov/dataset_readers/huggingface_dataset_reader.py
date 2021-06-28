@@ -59,8 +59,13 @@ class HuggingFaceDatasetReader(DatasetReader):
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "boolq":
+            dataset = load_dataset(path=path, name=name, split=interleave_splits(list(split_mapping.values())), **kwargs)
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         return dict(zip(split_mapping.keys(), dataset))
+
+
+def interleave_splits(splits: List[str]) -> List[str]:
+    return [f"{splits[0]}[:90%]+{splits[1]}", f"{splits[1]}[-10%:]", splits[2]]
 
 
 def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:

@@ -21,7 +21,7 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 256,
+        "max_seq_length": 128,
         "in": ["question", "passage"],
         "out": ["bert_features"]
       },
@@ -73,7 +73,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 4,
+    "batch_size": 16,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,

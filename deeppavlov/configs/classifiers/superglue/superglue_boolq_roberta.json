@@ -9,20 +9,20 @@
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
-    "features": ["question", "passage"],
+    "features": ["passage", "question"],
     "label": "label",
     "seed": 42
   },
   "chainer": {
-    "in": ["question", "passage"],
+    "in": ["passage", "question"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 512,
-        "in": ["question", "passage"],
+        "max_seq_length": 192,
+        "in": ["passage", "question"],
         "out": ["bert_features"]
       },
       {
@@ -50,7 +50,7 @@
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 1e-05,
+          "lr": 2e-05,
           "weight_decay": 0.1
         },
         "learning_rate_drop_patience": 3,
@@ -74,7 +74,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 2,
+    "batch_size": 14,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
