@@ -393,7 +393,7 @@ def create_examples(batch_dialogues_utterances_contexts_info,
                     nlg_manager=None,
                     append_history=True,
                     use_history_labels=True,
-                    swap_utterances=False,
+                    swap_utterances=True,
                     debug=False):
     """
     Create TripPy input examples.
