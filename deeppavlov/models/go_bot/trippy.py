@@ -231,7 +231,7 @@ class TripPy(TorchModel):
             turn_results = []
             for turn_id, turn in enumerate(dialogue):
                 # Reset dialogue state if no dialogue state yet or the dialogue is empty (i.e. its a new dialogue)
-                if diag_id >= len(self.batch_dialogues_utterances_contexts_info):
+                if (self.ds_logits is None) or (diag_id >= len(self.batch_dialogues_utterances_contexts_info)):
                     self.reset()
                     diag_id = 0
 
@@ -328,7 +328,6 @@ class TripPy(TorchModel):
 
             dialogue_results.append(turn_results)
         
-        #print("LAST DS", self.ds)
 
         # Return NLG generated responses
         return dialogue_results
