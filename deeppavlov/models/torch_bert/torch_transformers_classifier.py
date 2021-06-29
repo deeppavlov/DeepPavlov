@@ -14,13 +14,13 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Dict, Union, Optional
+from typing import List, Dict, Union, Optional, Tuple
 
 import numpy as np
 import torch
 from overrides import overrides
 from transformers import AutoModelForSequenceClassification, AutoConfig
-from transformers.data.processors.utils import InputFeatures
+from transformers.tokenization_utils_base import BatchEncoding
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -59,10 +59,16 @@ class TorchTransformersClassifierModel(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+                 optimizer_parameters: Optional[dict] = None,
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
+
+        if not optimizer_parameters:
+            optimizer_parameters = {"lr": 1e-3,
+                                    "weight_decay": 0.01,
+                                    "betas": (0.9, 0.999),
+                                    "eps": 1e-6},
 
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
@@ -87,7 +93,7 @@ class TorchTransformersClassifierModel(TorchModel):
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
 
-    def train_on_batch(self, features: List[InputFeatures], y: Union[List[int], List[List[int]]]) -> Dict:
+    def train_on_batch(self, features: BatchEncoding, y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
 
@@ -101,6 +107,8 @@ class TorchTransformersClassifierModel(TorchModel):
 
         _input = {key: value.to(self.device) for key, value in features.items()}
 
+        accepted_keys = self.get_accepted_keys()
+
         if self.n_classes > 1:
             _input["labels"] = torch.from_numpy(np.array(y)).to(self.device)
         # regression
@@ -110,9 +118,11 @@ class TorchTransformersClassifierModel(TorchModel):
         self.optimizer.zero_grad()
 
         tokenized = {key: value for (key, value) in _input.items()
-                     if key in self.model.forward.__code__.co_varnames}
+                     if key in accepted_keys}
 
         loss = self.model(**tokenized).loss
+        if self.is_data_parallel():
+            loss = loss.mean()
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -125,7 +135,7 @@ class TorchTransformersClassifierModel(TorchModel):
 
         return {'loss': loss.item()}
 
-    def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
+    def __call__(self, features: BatchEncoding) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
 
         Args:
@@ -138,9 +148,11 @@ class TorchTransformersClassifierModel(TorchModel):
 
         _input = {key: value.to(self.device) for key, value in features.items()}
 
+        accepted_keys = self.get_accepted_keys()
+
         with torch.no_grad():
             tokenized = {key: value for (key, value) in _input.items()
-                         if key in self.model.forward.__code__.co_varnames}
+                         if key in accepted_keys}
 
             # Forward pass, calculate logit predictions
             logits = self.model(**tokenized)
@@ -160,6 +172,18 @@ class TorchTransformersClassifierModel(TorchModel):
             pred = logits.squeeze(-1).detach().cpu().numpy()
 
         return pred
+
+    # TODO move to the super class
+    def get_accepted_keys(self) -> Tuple[str]:
+        if self.is_data_parallel():
+            accepted_keys = self.model.module.forward.__code__.co_varnames
+        else:
+            accepted_keys = self.model.forward.__code__.co_varnames
+        return accepted_keys
+
+    # TODO move to the super class
+    def is_data_parallel(self) -> bool:
+        return isinstance(self.model, torch.nn.DataParallel)
 
     @overrides
     def load(self, fname=None):
@@ -193,7 +217,6 @@ class TorchTransformersClassifierModel(TorchModel):
                     self.model.classifier.out_features = self.n_classes
                     self.model.num_labels = self.n_classes
 
-
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
             if self.attention_probs_keep_prob is not None:
@@ -203,6 +226,10 @@ class TorchTransformersClassifierModel(TorchModel):
             self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
+
+        # TODO that should probably be parametrized in config
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
 
         self.model.to(self.device)
 
