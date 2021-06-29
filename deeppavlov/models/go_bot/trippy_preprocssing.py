@@ -510,10 +510,10 @@ def create_examples(batch_dialogues_utterances_contexts_info,
                 hst = txt_a + txt_b + hst
 
             if (debug) and (dial_id == 0) and (turn_id < 2):
-                log.debug(f"Example - Turn: {turn_id}:")
-                log.debug(f"Text A: {txt_a}")
-                log.debug(f"Text B: {txt_b}")
-                log.debug(f"Action Label: {action_label}")
+                logger.info(f"Example - Turn: {turn_id}:")
+                logger.info(f"Text A: {txt_a}")
+                logger.info(f"Text B: {txt_b}")
+                logger.info(f"Action Label: {action_label}")
 
     return examples
 
