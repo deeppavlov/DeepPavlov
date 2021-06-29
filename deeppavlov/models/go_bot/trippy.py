@@ -496,7 +496,7 @@ class TripPy(TorchModel):
         self.ds = None
 
         self.batch_dialogues_utterances_contexts_info = [[]]
-        self.batch_dialogues_utterances_responses_info = [[None]]
+        self.batch_dialogues_utterances_responses_info = [[]]
 
         self.db_result = None
         self.current_db_result = None
