@@ -239,6 +239,9 @@ class TripPy(TorchModel):
                 # Update Database
                 self.update_ground_truth_db_result_from_context(turn)
 
+                print(self.batch_dialogues_utterances_contexts_info,
+                                                      self.batch_dialogues_utterances_responses_info)
+
                 # Preprocess inputs
                 batch, features = prepare_trippy_data(self.batch_dialogues_utterances_contexts_info,
                                                       self.batch_dialogues_utterances_responses_info,
@@ -249,6 +252,7 @@ class TripPy(TorchModel):
                                                       max_seq_length=self.max_seq_length,
                                                       debug=self.debug)
 
+                print("BATCH", batch)
                 # Take only the last turn - as we already know the previous ones; We need to feed them one by one to update the ds
                 last_turn = get_turn(batch, index=-1)
 
