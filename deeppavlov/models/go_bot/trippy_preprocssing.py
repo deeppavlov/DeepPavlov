@@ -851,6 +851,7 @@ def get_turn(batch, index=-1):
     """
     result = {}
     for key, value in batch.items():
+        print("KEYVAL", key, value)
         if isinstance(value, dict):
             result[key] = {k: v[None, index] for k, v in value.items()}
         elif isinstance(value, list):
