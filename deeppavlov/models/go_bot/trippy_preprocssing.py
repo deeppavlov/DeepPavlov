@@ -907,7 +907,8 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
     examples = create_examples(batch_dialogues_utterances_contexts_info,
                                batch_dialogues_utterances_responses_info,
                                slot_list=slot_list,
-                               nlg_manager=nlg_manager)
+                               nlg_manager=nlg_manager,
+                               debug=debug)
 
 
     

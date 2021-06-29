@@ -96,6 +96,7 @@ class TripPy(TorchModel):
             self.has_slots = True
         self.class_types = class_types
         self.debug = debug
+        print("DEBUGGING: ", self.debug)
 
         # BertForDST Configuration
         self.pretrained_bert = pretrained_bert
