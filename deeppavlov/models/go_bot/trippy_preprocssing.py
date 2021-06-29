@@ -509,14 +509,11 @@ def create_examples(batch_dialogues_utterances_contexts_info,
             if append_history:
                 hst = txt_a + txt_b + hst
 
-            print("SOMETING WORNG?")
-            print(debug, dial_id, turn_id)
             if (debug) and (dial_id == 0) and (turn_id < 2):
                 logger.info(f"Example - Turn: {turn_id}:")
                 logger.info(f"Text A: {txt_a}")
                 logger.info(f"Text B: {txt_b}")
                 logger.info(f"Action Label: {action_label}")
-                logger.info("HIHIOEGBIEWLGW: %s" % (action_label))
 
     return examples
 
