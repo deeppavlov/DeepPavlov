@@ -219,8 +219,10 @@ class TripPy(TorchModel):
         if not(isinstance(batch[0], list)):
             # User inference - Just one dialogue
             batch = [
-                [{"text": text, "intents": [{"act": None, "slots": None}]} for text in batch]]
+                [{"text": text, "intents": [{"act": None, "slots": None}]} for text in batch]
+                ]
         else:
+            # At validation reset for every call
             self.reset()
 
         dialogue_results = []
@@ -229,7 +231,7 @@ class TripPy(TorchModel):
             turn_results = []
             for turn_id, turn in enumerate(dialogue):
                 # Reset dialogue state if no dialogue state yet or the dialogue is empty (i.e. its a new dialogue)
-                if (self.ds_logits is None) or (diag_id >= len(self.batch_dialogues_utterances_contexts_info)):
+                if diag_id >= len(self.batch_dialogues_utterances_contexts_info):
                     self.reset()
                     diag_id = 0
 
