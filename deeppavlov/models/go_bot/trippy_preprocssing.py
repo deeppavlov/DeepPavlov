@@ -393,7 +393,8 @@ def create_examples(batch_dialogues_utterances_contexts_info,
                     nlg_manager=None,
                     append_history=True,
                     use_history_labels=True,
-                    swap_utterances=False):
+                    swap_utterances=False,
+                    debug=False):
     """
     Create TripPy input examples.
 
@@ -508,10 +509,11 @@ def create_examples(batch_dialogues_utterances_contexts_info,
             if append_history:
                 hst = txt_a + txt_b + hst
 
-            #print("DS DICT:", cur_ds)
-            #print("text_a", txt_a)
-            #print("text_b", txt_b)
-            #print("action_label", action_label)
+            if (debug) and (dial_id == 0) and (turn_id < 2):
+                log.debug(f"Example - Turn: {turn_id}:")
+                log.debug(f"Text A: {txt_a}")
+                log.debug(f"Text B: {txt_b}")
+                log.debug(f"Action Label: {action_label}")
 
     return examples
 
@@ -903,6 +905,8 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
                                batch_dialogues_utterances_responses_info,
                                slot_list=slot_list,
                                nlg_manager=nlg_manager)
+
+
     
 
     features = convert_examples_to_features(examples, 
