@@ -369,7 +369,7 @@ class TripPy(TorchModel):
             end_prediction = int(end_logits.argmax())
             refer_prediction = int(refer_logits.argmax())
 
-            if class_prediction == self.model.class_types.index('dontcare'):
+            if (class_prediction == self.model.class_types.index('dontcare')) or (class_prediction == self.model.class_types.index('none')):
                 self.ds[slot] = 'dontcare'
             elif class_prediction == self.model.class_types.index('copy_value'):
                 input_tokens = self.tokenizer.convert_ids_to_tokens(
