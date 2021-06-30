@@ -298,7 +298,7 @@ class TripPy(TorchModel):
                 #print(torch.nn.functional.one_hot(last_turn["action_label"], num_classes=46))
 
                 policy_prediction = PolicyPrediction(
-                    outputs[6].cpu(), None, None, None)
+                    outputs[6].cpu().numpy(), None, None, None)
 
                 # Ground truth Policy for testing
                 #policy_prediction = PolicyPrediction(
