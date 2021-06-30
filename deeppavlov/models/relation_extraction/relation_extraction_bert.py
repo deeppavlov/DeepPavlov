@@ -57,35 +57,25 @@ class REBertModel(TorchModel):
     def train_on_batch(self, features: List[Dict], labels: List) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
+        Args:
 
         Returns:
             dict with loss and learning rate values.
         """
 
-        # train_dataloader = DataLoader(features, shuffle=False, collate_fn=self.collate_fn, drop_last=True)
+        _input = {'label': torch.from_numpy(np.array(labels)).to(self.device)}
+        for elem in ['input_ids', 'attention_mask']:
+            inp_elem = [f[elem] for f in features]
+            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
+        for elem in ['entity_pos', 'ner_tags']:
+            inp_elem = [f[elem] for f in features]
+            _input[elem] = inp_elem
 
-        # _input = {'labels': torch.from_numpy(np.array(y)).to(self.device)}
-        # for elem in ['input_ids', 'attention_mask', 'entity_pos', 'token_type_ids']:
-        #     _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
-
-        '''
-        features, labels = np.array(texts), np.array(labels)
-        inputs, labels = torch.from_numpy(features), torch.from_numpy(labels)
-        inputs, labels = inputs.to(self.device), labels.to(self.device)
-        '''
         print(self.epochs_done)
-        labels = torch.from_numpy(np.array(labels))
         self.model.train()
         self.optimizer.zero_grad()      # zero the parameter gradients
 
-        inputs = {
-            'input_ids': features[0].to(self.device),
-            'attention_mask': features[1].to(self.device),
-            'entity_pos': features[2].to(self.device),
-            'ner_tags': features[3].to(self.device),
-            'label': labels.to(self.device)
-        }
-        hidden_states = self.model(**inputs)
+        hidden_states = self.model(**_input)
         loss = hidden_states[0]
         loss.backward()
         with amp.scale_loss(loss, self.optimizer) as scaled_loss:
@@ -108,19 +98,25 @@ class REBertModel(TorchModel):
             _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
 
         if not self.return_probas:
+            # todo: class id -> Batch[int]
             pred = self.sess.run(self.y_predictions, feed_dict=_input)
         else:
+            # todo: softmax over classes -> Batch[np.ndarray]
             pred = self.sess.run(self.y_probas, feed_dict=_input)
+
+
         return pred
 
     def re_model(self, **kwargs) -> nn.Module:
         """
-        BERT tokenizer -> Input features -> BERT (self.model) -> hidden states -> taking the mean of entities; bilinear formula -> return the whole model.
+        BERT tokenizer -> Input features -> BERT (self.model) -> hidden states -> taking the mean of entities; bilinear
+        formula -> return the whole model.
         model <= BERT + additional processing
         """
         return BertWithAdaThresholdLocContextPooling(
             n_classes=self.n_classes,
             pretrained_bert=self.pretrained_bert,
+            bert_tokenizer_config_file=self.pretrained_bert,
             device=self.device
         )
 
