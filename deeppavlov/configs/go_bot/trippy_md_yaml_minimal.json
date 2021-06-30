@@ -30,9 +30,6 @@
                 "api_call_action": null
             },
             "api_call_action": null,
-            "use_action_mask": false,
-            "slot_filler": null,
-            "slot_names": ["pricerange", "this", "area", "food", "name"]
         }
       ]
     },

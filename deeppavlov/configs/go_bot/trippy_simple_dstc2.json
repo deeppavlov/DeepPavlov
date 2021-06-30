@@ -29,8 +29,6 @@
           "api_call_action": "api_call"
         },
         "api_call_action": null,
-        "use_action_mask": false,
-        "slot_filler": null,
         "slot_names": ["pricerange", "this", "area", "food", "name"]
       }
     ]
