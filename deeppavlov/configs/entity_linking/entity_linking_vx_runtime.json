@@ -3,6 +3,15 @@
     "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
     "pipe": [
       {
+        "class_name": "rel_ranking_bert_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "{CONFIGS_PATH}/classifiers/entity_ranking_bert_rus_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "rel_q2name_filename": "q_to_descr_vx.pickle",
+        "rels_to_leave": 200
+      },
+      {
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
@@ -17,8 +26,7 @@
         "fasttext_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasttext_dim100_ws10",
         "fasttext_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasstext_faiss_vectors_cpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
-        "descr_to_emb_filename": "descr_to_emb_vx.pickle",
-        "bert_embedder": {"config_path": "{CONFIGS_PATH}/entity_linking/bert_cls_emb.json"},
+        "entity_ranker": "#entity_descr_ranking",
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 20,
         "num_tfidf_faiss_cells": 1000,
@@ -38,7 +46,8 @@
         "full_paragraph": true,
         "return_confidences": true,
         "use_prefix_tree": false,
-        "lang": "ru"
+        "lang": "ru",
+        "rank_in_runtime": true
       }
     ],
     "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"]

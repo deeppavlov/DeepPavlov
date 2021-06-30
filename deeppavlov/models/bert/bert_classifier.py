@@ -15,7 +15,9 @@
 from logging import getLogger
 from typing import List, Dict, Union
 
+import numpy as np
 import tensorflow as tf
+from tensorflow.python.ops import variables
 from bert_dp.modeling import BertConfig, BertModel
 from bert_dp.optimization import AdamWeightDecayOptimizer
 from bert_dp.preprocessing import InputFeatures
@@ -23,6 +25,7 @@ from bert_dp.preprocessing import InputFeatures
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
+from deeppavlov.core.models.component import Component
 
 logger = getLogger(__name__)
 
@@ -241,3 +244,111 @@ class BertClassifierModel(LRScheduledTFModel):
         else:
             pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
         return pred
+        
+        
+@register('bert_cls_embedder')
+class BertCLSEmbedder(Component):
+    def __init__(self, bert_config_file, keep_prob, load_path,
+                 optimizer=None, num_warmup_steps=None, cut_seq = True,
+                 pretrained_bert=None, **kwargs) -> None:
+
+        self.keep_prob = keep_prob
+        self.load_path = load_path
+        self.cut_seq = cut_seq
+
+        self.bert_config = BertConfig.from_json_file(str(expand_path(bert_config_file)))
+
+        self.sess_config = tf.ConfigProto(allow_soft_placement=True)
+        self.sess_config.gpu_options.allow_growth = True
+        self.sess = tf.Session(config=self.sess_config)
+
+        self._init_graph()
+
+        self.sess.run(tf.global_variables_initializer())
+
+        if pretrained_bert is not None:
+            pretrained_bert = str(expand_path(pretrained_bert))
+
+            if tf.train.checkpoint_exists(pretrained_bert) \
+                    and not (self.load_path and tf.train.checkpoint_exists(str(expand_path(self.load_path)))):
+                logger.info('[initializing model with Bert from {}]'.format(pretrained_bert))
+                # Exclude optimizer and classification variables from saved variables
+                var_list = self._get_saveable_variables(
+                    exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, pretrained_bert)
+
+        if self.load_path is not None:
+            path = str(expand_path(self.load_path))
+            # Check presence of the model files
+            if tf.train.checkpoint_exists(path):
+                logger.info('[loading model from {}]'.format(path))
+                # Exclude optimizer variables from saved variables
+                var_list = self._get_saveable_variables(exclude_scopes=('Optimizer', 'learning_rate', 'momentum', 'output_weights', 'output_bias'))
+                saver = tf.train.Saver(var_list)
+                saver.restore(self.sess, path)
+                
+    def _get_saveable_variables(self, exclude_scopes=tuple()):
+        # noinspection PyProtectedMember
+        all_vars = variables._all_saveable_objects()
+        vars_to_train = [var for var in all_vars if all(sc not in var.name for sc in exclude_scopes)]
+        return vars_to_train
+
+    def _init_graph(self):
+        self._init_placeholders()
+
+        self.bert = BertModel(config=self.bert_config,
+                              is_training=self.is_train_ph,
+                              input_ids=self.input_ids_ph,
+                              input_mask=self.input_masks_ph,
+                              token_type_ids=self.token_types_ph,
+                              use_one_hot_embeddings=False,
+                              )
+
+        self.init_output_layer = self.bert.get_pooled_output()
+        hidden_size = self.init_output_layer.shape[-1].value
+
+    def _init_placeholders(self):
+        self.input_ids_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='ids_ph')
+        self.input_masks_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='masks_ph')
+        self.token_types_ph = tf.placeholder(shape=(None, None), dtype=tf.int32, name='token_types_ph')
+
+        self.learning_rate_ph = tf.placeholder_with_default(0.0, shape=[], name='learning_rate_ph')
+        self.keep_prob_ph = tf.placeholder_with_default(1.0, shape=[], name='keep_prob_ph')
+        self.is_train_ph = tf.placeholder_with_default(False, shape=[], name='is_train_ph')
+
+    def _build_feed_dict(self, input_ids, input_masks, token_types, y=None):
+        feed_dict = {
+            self.input_ids_ph: input_ids,
+            self.input_masks_ph: input_masks,
+            self.token_types_ph: token_types,
+        }
+        if y is not None:
+            feed_dict.update({
+                self.y_ph: y,
+                self.learning_rate_ph: max(self.get_learning_rate(), self.min_learning_rate),
+                self.keep_prob_ph: self.keep_prob,
+                self.is_train_ph: True,
+            })
+
+        return feed_dict
+
+    def __call__(self, features: List[InputFeatures]) -> Union[List[int], List[List[float]]]:
+        input_ids = [f.input_ids for f in features]
+        if self.cut_seq:
+            input_ids_mask = np.array(input_ids, dtype=bool)
+            input_ids_mask.astype(int)
+            input_ids_mask = np.sum(input_ids_mask, axis=1)
+            max_len = input_ids_mask.max()
+            input_ids = [elem[:max_len] for elem in input_ids]
+            input_masks = [f.input_mask[:max_len] for f in features]
+            input_type_ids = [f.input_type_ids[:max_len] for f in features]
+        else:
+            input_masks = [f.input_mask for f in features]
+            input_type_ids = [f.input_type_ids for f in features]
+        
+
+        feed_dict = self._build_feed_dict(input_ids, input_masks, input_type_ids)
+        embeddings = self.sess.run(self.init_output_layer, feed_dict=feed_dict)
+        
+        return embeddings

@@ -3,22 +3,30 @@
     "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
     "pipe": [
       {
+        "class_name": "rel_ranking_bert_infer",
+        "id": "entity_descr_ranking",
+        "ranker": {"config_path": "entity_ranking_bert_rus_no_mention.json"},
+        "batch_size": 100,
+        "load_path": "{ENTITIES_PATH}",
+        "rel_q2name_filename": "q_to_descr_vx.pickle",
+        "rels_to_leave": 200
+      },
+      {
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
-        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "load_path": "{ENTITIES_PATH}",
+        "save_path": "{ENTITIES_PATH}",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
         "q_to_label_filename": "q_to_label_vx.pickle",
-        "tfidf_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_vectorizer_vx.pk",
-        "tfidf_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_faiss_vectors_cpu.index",
-        "fasttext_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasttext_dim100_ws10",
-        "fasttext_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasstext_faiss_vectors_cpu.index",
+        "tfidf_vectorizer_filename": "{FAISS_PATH}/tfidf_vectorizer_vx.pk",
+        "tfidf_faiss_index_filename": "{FAISS_PATH}/tfidf_faiss_vectors_cpu.index",
+        "fasttext_vectorizer_filename": "{FAISS_PATH}/fasttext_dim100_ws10",
+        "fasttext_faiss_index_filename": "{FAISS_PATH}/fasstext_faiss_vectors_cpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
-        "descr_to_emb_filename": "descr_to_emb_vx.pickle",
-        "bert_embedder": {"config_path": "{CONFIGS_PATH}/entity_linking/bert_cls_emb.json"},
+        "entity_ranker": "#entity_descr_ranking",
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 20,
         "num_tfidf_faiss_cells": 1000,
@@ -45,7 +53,9 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "/data",
+      "ENTITIES_PATH": "{ROOT_PATH}/entities",
+      "FAISS_PATH": "{ROOT_PATH}/faiss",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
@@ -59,16 +69,16 @@
     ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus_vx.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/parsed_wikidata.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
-        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/faiss.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_vx.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
       }
     ]
   }

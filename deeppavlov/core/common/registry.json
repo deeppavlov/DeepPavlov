@@ -9,6 +9,7 @@
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "bert_as_summarizer": "deeppavlov.models.bert.bert_as_summarizer:BertAsSummarizer",
   "bert_classifier": "deeppavlov.models.bert.bert_classifier:BertClassifierModel",
+  "bert_cls_embedder": "deeppavlov.models.bert.bert_classifier:BertCLSEmbedder",
   "bert_ner_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertNerPreprocessor",
   "bert_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertPreprocessor",
   "bert_ranker": "deeppavlov.models.bert.bert_ranker:BertRankerModel",
