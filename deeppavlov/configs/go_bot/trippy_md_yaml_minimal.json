@@ -29,7 +29,7 @@
                 "actions2slots_path": "{DATA_PATH}/dstc2-actions2slots.json",
                 "api_call_action": null
             },
-            "api_call_action": null,
+            "api_call_action": null
         }
       ]
     },
