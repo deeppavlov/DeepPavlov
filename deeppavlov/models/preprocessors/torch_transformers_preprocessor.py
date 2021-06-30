@@ -329,7 +329,6 @@ class TorchTransformersREPreprocessor(Component):
                                     ]
                                 ]
                 ner_tags: List[ner_tag_entity1, ner_tag_entity2]
-                label: int
                 ]
         """
         self.special_token = special_token
@@ -342,10 +341,10 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, input_data_batch: List[Tuple[List, List]]) -> Tuple[List[Dict]]:
+    def __call__(self, input_data_batch: List[Tuple[List, List]]) -> List[Dict]:
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        input_features, labels = [], []
+        input_features = []
         for doc in input_data_batch:
             count = 0
             doc_wordpiece_tokens = []
@@ -357,20 +356,35 @@ class TorchTransformersREPreprocessor(Component):
             for n, token in enumerate(doc[0]):
                 if n in entity1_pos_start:
                     doc_wordpiece_tokens.append(self.special_token)
-                    count += 1
                     upd_entity1_pos_start.append(count)
-                elif n in entity2_pos_start:
+                    count += 1
+                if n in entity1_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
+                    upd_entity1_pos_end.append(count)
+
+                if n in entity2_pos_start:
+                    doc_wordpiece_tokens.append(self.special_token)
                     upd_entity2_pos_start.append(count)
-                elif n in entity1_pos_end:
-                    doc_wordpiece_tokens.append(self.special_token)
-                    upd_entity1_pos_end.append(count - 1)
                     count += 1
-                elif n in entity2_pos_end:
+                if n in entity2_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
-                    upd_entity2_pos_end.append(count - 1)
                     count += 1
+                    upd_entity2_pos_end.append(count)
+
+                word_tokens = self.tokenizer.tokenize(token)
+                doc_wordpiece_tokens += word_tokens
+                count += len(word_tokens)
+
+            # special case when the entity is the last in the doc
+            if len(doc[0]) in entity1_pos_end:
+                doc_wordpiece_tokens.append(self.special_token)
+                count += 1
+                upd_entity1_pos_end.append(count)
+            if len(doc[0]) in entity2_pos_end:
+                doc_wordpiece_tokens.append(self.special_token)
+                count += 1
+                upd_entity2_pos_end.append(count)
                 word_tokens = self.tokenizer.tokenize(token)
                 doc_wordpiece_tokens += word_tokens
                 count += len(word_tokens)
@@ -382,6 +396,10 @@ class TorchTransformersREPreprocessor(Component):
 
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
             upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
+
+            # build text entities for self check
+            upd_entity1_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity1]
+            upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity2]
 
             enc_ner_tag = self.encode_ner_tag(doc[1][2], doc[1][3])
 
@@ -401,8 +419,6 @@ class TorchTransformersREPreprocessor(Component):
         from joblib import dump
         dump(input_features[:50],
              "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-        dump(labels[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
 
         return input_features
 
@@ -431,7 +447,6 @@ class TorchTransformersREPreprocessor(Component):
 
 # todo: wil be deleted
 if __name__ == "__main__":
-    import json
     from joblib import load
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
 
