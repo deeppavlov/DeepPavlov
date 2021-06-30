@@ -1,5 +1,5 @@
 from logging import getLogger
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Union
 
 import torch
 import torch.nn as nn
@@ -58,7 +58,8 @@ class REBertModel(TorchModel):
         """
         Trains the relation extraction BERT model on the given batch.
         Args:
-
+            features: batch of dictionaries containing information about input_ids, attention_mask, entity pos & ner tag
+            labels: gold labels
         Returns:
             dict with loss and learning rate values.
         """
@@ -71,7 +72,6 @@ class REBertModel(TorchModel):
             inp_elem = [f[elem] for f in features]
             _input[elem] = inp_elem
 
-        print(self.epochs_done)
         self.model.train()
         self.optimizer.zero_grad()      # zero the parameter gradients
 
@@ -91,19 +91,36 @@ class REBertModel(TorchModel):
 
         return loss.item()
 
-    def __call__(self, features: List[InputFeatures]):
+    def __call__(self, features: List[Dict]) -> Union[List[int], List[np.ndarray]]:
+        """
+        Get model predictions using features as input.
+        Args:
+            features: batch of dictionaries containing information about input_ids, attention_mask, entity pos & ner tag
+        Returns:
+            predictions:
+        """
+        self.model.eval()
 
         _input = {}
         for elem in ['input_ids', 'attention_mask']:
-            _input[elem] = torch.cat([getattr(f, elem) for f in features], dim=0).to(self.device)
+            inp_elem = [f[elem] for f in features]
+            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
+        for elem in ['entity_pos', 'ner_tags']:
+            inp_elem = [f[elem] for f in features]
+            _input[elem] = inp_elem
 
-        if not self.return_probas:
-            # todo: class id -> Batch[int]
-            pred = self.sess.run(self.y_predictions, feed_dict=_input)
+        with torch.no_grad():
+            pred, *_ = self.model(**_input)
+            # pred = pred[0]
+
+        if self.return_probas:
+            pred = torch.nn.functional.sigmoid(pred)
+            pred = pred.cpu().numpy()
+            pred[np.isnan(pred)] = 0
         else:
-            # todo: softmax over classes -> Batch[np.ndarray]
-            pred = self.sess.run(self.y_probas, feed_dict=_input)
-
+            pred = pred.cpu().numpy()
+            pred[np.isnan(pred)] = 0
+            pred = np.argmax(pred, axis=1)
 
         return pred
 
