@@ -47,11 +47,21 @@ class TorchBertRankerModel(TorchTransformersClassifierModel):
                  n_classes: int = 2,
                  return_probas: bool = True,
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 2e-5, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+                 optimizer_parameters: Optional[dict] = None,
                  **kwargs) -> None:
-        super().__init__(pretrained_bert=pretrained_bert, bert_config_file=bert_config_file,
-                         n_classes=n_classes, return_probas=return_probas,
-                         optimizer=optimizer, optimizer_parameters=optimizer_parameters,
+
+        if not optimizer_parameters:
+            optimizer_parameters = {"lr": 2e-5,
+                                    "weight_decay": 0.01,
+                                    "betas": (0.9, 0.999),
+                                    "eps": 1e-6}
+
+        super().__init__(pretrained_bert=pretrained_bert,
+                         bert_config_file=bert_config_file,
+                         n_classes=n_classes,
+                         return_probas=return_probas,
+                         optimizer=optimizer,
+                         optimizer_parameters=optimizer_parameters,
                          **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:

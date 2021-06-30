@@ -20,7 +20,6 @@ import numpy as np
 import torch
 from overrides import overrides
 from transformers import AutoModelForSequenceClassification, AutoConfig
-from transformers.tokenization_utils_base import BatchEncoding
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -93,7 +92,7 @@ class TorchTransformersClassifierModel(TorchModel):
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
 
-    def train_on_batch(self, features: BatchEncoding, y: Union[List[int], List[List[int]]]) -> Dict:
+    def train_on_batch(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and y (labels).
 
@@ -111,6 +110,7 @@ class TorchTransformersClassifierModel(TorchModel):
 
         if self.n_classes > 1:
             _input["labels"] = torch.from_numpy(np.array(y)).to(self.device)
+
         # regression
         else:
             _input["labels"] = torch.from_numpy(np.array(y, dtype=np.float32)).unsqueeze(1).to(self.device)
@@ -135,7 +135,7 @@ class TorchTransformersClassifierModel(TorchModel):
 
         return {'loss': loss.item()}
 
-    def __call__(self, features: BatchEncoding) -> Union[List[int], List[List[float]]]:
+    def __call__(self, features: Dict[str, torch.tensor]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
 
         Args:
