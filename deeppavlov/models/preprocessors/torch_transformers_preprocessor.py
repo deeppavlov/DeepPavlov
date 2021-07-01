@@ -308,8 +308,9 @@ class TorchTransformersREPreprocessor(Component):
             self,
             vocab_file: str,
             special_token: str = '<ENT>',
-            do_lower_case: bool = False
-    ):
+            do_lower_case: bool = False,
+            **kwargs
+    ) -> None:
         """
         Args:
             vocab_file: path to vocabulary / name of vocabulary for tokenizer initialization

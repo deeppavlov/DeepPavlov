@@ -5,8 +5,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch import Tensor
-from transformers import InputFeatures
-from apex import amp
+# from apex import amp
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -54,6 +53,9 @@ class REBertModel(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
+        # if self.device == "cuda":
+        #     self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", verbosity=0)
+
     def train_on_batch(self, features: List[Dict], labels: List) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
@@ -64,7 +66,7 @@ class REBertModel(TorchModel):
             dict with loss and learning rate values.
         """
 
-        _input = {'label': torch.from_numpy(np.array(labels)).to(self.device)}
+        _input = {'labels': labels}
         for elem in ['input_ids', 'attention_mask']:
             inp_elem = [f[elem] for f in features]
             _input[elem] = torch.LongTensor(inp_elem).to(self.device)
@@ -73,13 +75,17 @@ class REBertModel(TorchModel):
             _input[elem] = inp_elem
 
         self.model.train()
+        self.model.zero_grad()
         self.optimizer.zero_grad()      # zero the parameter gradients
 
         hidden_states = self.model(**_input)
         loss = hidden_states[0]
+
+        # if self.device == torch.device("cuda"):
+        #     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+        #         scaled_loss.backward()
+        # else:
         loss.backward()
-        with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-            scaled_loss.backward()
         self.optimizer.step()
 
         # Clip the norm of the gradients to prevent the "exploding gradients" problem
@@ -149,9 +155,13 @@ class REBertModel(TorchModel):
 
 if __name__ == "__main__":
     from joblib import load
+    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
     features = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-    labels = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_labels_small")
     n_classes = 97
+
+    data_iter_out = BasicClassificationDatasetIterator(load(
+        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"))
+    labels = [data[2] for data in data_iter_out.test][:50]
 
     # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
     # smplvoc = SimpleVocabulary(
