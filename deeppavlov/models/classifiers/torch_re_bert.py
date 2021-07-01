@@ -53,8 +53,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
-        self.head_extractor = nn.Linear(2 * self.hidden_size + ner_tags_length, self.emb_size)
-        self.tail_extractor = nn.Linear(2 * self.hidden_size + ner_tags_length, self.emb_size)
+        self.head_extractor = nn.Linear(2 * self.hidden_size + 2 * ner_tags_length, self.emb_size)
+        self.tail_extractor = nn.Linear(2 * self.hidden_size + 2 * ner_tags_length, self.emb_size)
         self.bilinear = nn.Linear(self.emb_size * self.block_size, self.n_classes)
 
     def forward(
@@ -63,7 +63,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             attention_mask: Tensor,
             entity_pos: List,
             ner_tags: List,
-            label: List
+            labels: List
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
@@ -84,10 +84,10 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         logits = self.bilinear(bl)
 
         output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes),)
-        if label is not None:
-            labels = [torch.tensor(label) for label in label]
-            labels = torch.cat(labels, dim=0).to(logits)
-            loss = self.loss_fnt(logits.float(), labels.float())
+        if labels is not None:
+            labels_tensors = [torch.tensor(label) for label in labels]
+            labels_tensors = torch.stack(labels_tensors).to(logits)
+            loss = self.loss_fnt(logits.float(), labels_tensors.float())
             output = (loss.to(sequence_output),) + output
         return output
 
@@ -103,9 +103,11 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                     for start, end in e:            # for start and end position of each mention
                         if start + offset < c:
                             # In case the entity mention is truncated due to limited max seq length.
-                            print("wow")        # todo: figure it out
                             e_emb.append(sequence_output[i, start + offset])
                             e_att.append(attention[i, :, start + offset])
+                        else:
+                            e_emb = torch.zeros(self.hidden_size).to(sequence_output)
+                            e_att = torch.zeros(h, c).to(attention)
                     if len(e_emb) > 0:
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
@@ -115,7 +117,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                 else:
                     start, end = e[0]
                     if start + offset < c:
-                        print("wow")        # todo: figure it out
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]
                     else:
