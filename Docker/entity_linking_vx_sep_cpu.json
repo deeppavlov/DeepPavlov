@@ -18,7 +18,7 @@
         "fasttext_faiss_index_filename": "{FAISS_PATH}/fasstext_faiss_vectors_cpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
         "descr_to_emb_filename": "descr_to_emb_vx.pickle",
-        "bert_embedder": {"config_path": "{CONFIGS_PATH}/entity_linking/bert_cls_emb.json"},
+        "bert_embedder": {"config_path": "bert_cls_emb.json"},
         "num_faiss_candidate_entities": 10,
         "num_entities_for_bert_ranking": 20,
         "num_tfidf_faiss_cells": 1000,
