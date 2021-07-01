@@ -56,7 +56,7 @@ class REBertModel(TorchModel):
         # if self.device == "cuda":
         #     self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", verbosity=0)
 
-    def train_on_batch(self, features: List[Dict], labels: List) -> float:
+    def train_on_batch(self, input_ids, attention_mask, entity_pos, ner_tags, labels) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
         Args:
@@ -65,14 +65,13 @@ class REBertModel(TorchModel):
         Returns:
             dict with loss and learning rate values.
         """
-
-        _input = {'labels': labels}
-        for elem in ['input_ids', 'attention_mask']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        for elem in ['entity_pos', 'ner_tags']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = inp_elem
+        _input = {
+            "input_ids": torch.LongTensor(input_ids).to(self.device),
+            "attention_mask": torch.LongTensor(attention_mask).to(self.device),
+            "entity_pos": entity_pos,
+            "ner_tags": ner_tags,
+            'labels': labels
+        }
 
         self.model.train()
         self.model.zero_grad()
@@ -97,7 +96,7 @@ class REBertModel(TorchModel):
 
         return loss.item()
 
-    def __call__(self, features: List[Dict]) -> Union[List[int], List[np.ndarray]]:
+    def __call__(self, input_ids, attention_mask, entity_pos, ner_tags) -> Union[List[int], List[np.ndarray]]:
         """
         Get model predictions using features as input.
         Args:
@@ -107,13 +106,12 @@ class REBertModel(TorchModel):
         """
         self.model.eval()
 
-        _input = {}
-        for elem in ['input_ids', 'attention_mask']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        for elem in ['entity_pos', 'ner_tags']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = inp_elem
+        _input = {
+            "input_ids": torch.LongTensor(input_ids).to(self.device),
+            "attention_mask": torch.LongTensor(attention_mask).to(self.device),
+            "entity_pos": entity_pos,
+            "ner_tags": ner_tags
+        }
 
         with torch.no_grad():
             pred, *_ = self.model(**_input)
@@ -156,7 +154,10 @@ class REBertModel(TorchModel):
 if __name__ == "__main__":
     from joblib import load
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-    features = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+    input_ids = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_input_ids")
+    attention_mask = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_attention_mask")
+    entity_pos = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_entity_pos")
+    ner_tags = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_ner_tags")
     n_classes = 97
 
     data_iter_out = BasicClassificationDatasetIterator(load(
@@ -177,4 +178,4 @@ if __name__ == "__main__":
         load_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         pretrained_bert="bert-base-uncased",
         model_name="re_model",
-    ).train_on_batch(features, labels)
+    ).train_on_batch(input_ids, attention_mask, entity_pos, ner_tags, labels)

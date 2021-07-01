@@ -364,7 +364,7 @@ class TorchTransformersREPreprocessor(Component):
         """
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        input_features = []
+        input_ids, attention_mask, entity_pos, ner_tags = [], [], [], []
         for doc, entities in zip(features, entity_info):
             count = 0
             doc_wordpiece_tokens = []
@@ -423,24 +423,26 @@ class TorchTransformersREPreprocessor(Component):
 
             enc_ner_tag = self.encode_ner_tag(entities[2], entities[3])
 
-            input_features.append(
-                {
-                    "input_ids": encoding['input_ids'],
-                    "attention_mask": encoding['attention_mask'],
-                    "entity_pos": [upd_entity1, upd_entity2],
-                    "ner_tags": enc_ner_tag
-                }
-            )
+            input_ids.append(encoding['input_ids'])
+            attention_mask.append(encoding['attention_mask'])
+            entity_pos.append([upd_entity1, upd_entity2])
+            ner_tags.append(enc_ner_tag)
 
         # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
-        input_features = self.ner_tags_to_one_hot(input_features)
+        ner_tags = self.ner_tags_to_one_hot(ner_tags)
 
         # todo: wil be deleted
-        # from joblib import dump
-        # dump(input_features[:50],
-        #      "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+        from joblib import dump
+        dump(input_ids[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_input_ids")
+        dump(attention_mask[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_attention_mask")
+        dump(entity_pos[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_entity_pos")
+        dump(ner_tags[:50],
+             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_ner_tags")
 
-        return input_features
+        return input_ids, attention_mask, entity_pos, ner_tags          # List[List[int]], List[List[int]], List[List[List[Tuple]]], List[List[List[int]]]
 
     def encode_ner_tag(self, *ner_tags) -> List:
         """ Encode NER tags with indices """
@@ -453,17 +455,17 @@ class TorchTransformersREPreprocessor(Component):
                 enc_ner_tags.append(self.ner2id[ner_tag])
         return enc_ner_tags
 
-    def ner_tags_to_one_hot(self, input_features: List) -> List[Dict]:
+    def ner_tags_to_one_hot(self, ner_tags: List) -> List:
         """ Iterated over input features and turn NER tags of each of them to one hot encodings """
-        for inp_f in input_features:
-            tags = []
-            for ner_tag in inp_f["ner_tags"]:
-                ner_tag_one_hot = [0] * len(self.ner2id)
-                ner_tag_one_hot[ner_tag] = 1
-                tags.append(ner_tag_one_hot)
-            inp_f["ner_tags"] = tags
-        return input_features
-
+        ner_tags_one_hot = []
+        for ner_tag_set in ner_tags:
+            ner_tag_set_one_hot = []
+            for ner_tag in ner_tag_set:
+                tag_one_hot = [0] * len(self.ner2id)
+                tag_one_hot[ner_tag] = 1
+                ner_tag_set_one_hot.append(tag_one_hot)
+            ner_tags_one_hot.append(ner_tag_set_one_hot)
+        return ner_tags_one_hot
 
 # todo: wil be deleted
 if __name__ == "__main__":
