@@ -316,6 +316,36 @@ class TorchTransformersREPreprocessor(Component):
             special_token: an additional token that will be used for marking the entities in the document
             do_lower_case: set True if lowercasing is needed
         Return:
+            list of feature batches with input_ids, attention_mask, entity_pos, ner_tags
+        """
+        self.special_token = special_token
+        self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
+        self.ner2id = {}      # {str(ner tag): ner tag id}
+
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+
+    def __call__(self, features: List[List], entity_info: List[List]) -> List[Dict]:
+        """
+        Tokenize and create masks; recalculate the entity positions reagrding the document boarders.
+        Args:
+            features: List of tokens of each document: List[List[tokens in doc]]
+            entity_info: List of information about entities containing in the document:
+                List[
+                    List[
+                        (entity1_mention1_start_id, entity1_mention1_end_id),
+                        (entity1_mention2_start_id, entity1_mention2_end_id),
+                        ],
+                    List[
+                        (entity2_mention1_start_id, entity2_mention1_end_id),
+                        ],
+                    NER tag of entity1,
+                    NER tag of entity2
+                    ]
+        Return:
             input_features: List[
                 input_ids: List[int],
                 attention_mask: List[int],
@@ -331,29 +361,18 @@ class TorchTransformersREPreprocessor(Component):
                 ner_tags: List[ner_tag_entity1, ner_tag_entity2]
                 ]
         """
-        self.special_token = special_token
-        self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
-        self.ner2id = {}      # {str(ner tag): ner tag id}
-
-        if Path(vocab_file).is_file():
-            vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
-        else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
-
-    def __call__(self, input_data_batch: List[Tuple[List, List]]) -> List[Dict]:
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
         input_features = []
-        for doc in input_data_batch:
+        for doc, entities in zip(features, entity_info):
             count = 0
             doc_wordpiece_tokens = []
-            entity1_pos_start = list(zip(*doc[1][0]))[0]  # first entity mentions' start positions
-            entity1_pos_end = list(zip(*doc[1][0]))[1]  # first entity mentions' end positions
-            entity2_pos_start = list(zip(*doc[1][1]))[0]  # second entity mentions' start positions
-            entity2_pos_end = list(zip(*doc[1][1]))[1]  # second entity mentions' end positions
+            entity1_pos_start = list(zip(*entities[0]))[0]  # first entity mentions' start positions
+            entity1_pos_end = list(zip(*entities[0]))[1]  # first entity mentions' end positions
+            entity2_pos_start = list(zip(*entities[1]))[0]  # second entity mentions' start positions
+            entity2_pos_end = list(zip(*entities[1]))[1]  # second entity mentions' end positions
             upd_entity1_pos_start, upd_entity2_pos_start, upd_entity1_pos_end, upd_entity2_pos_end = [], [], [], []
-            for n, token in enumerate(doc[0]):
+            for n, token in enumerate(doc):
                 if n in entity1_pos_start:
                     doc_wordpiece_tokens.append(self.special_token)
                     upd_entity1_pos_start.append(count)
@@ -377,11 +396,11 @@ class TorchTransformersREPreprocessor(Component):
                 count += len(word_tokens)
 
             # special case when the entity is the last in the doc
-            if len(doc[0]) in entity1_pos_end:
+            if len(doc) in entity1_pos_end:
                 doc_wordpiece_tokens.append(self.special_token)
                 count += 1
                 upd_entity1_pos_end.append(count)
-            if len(doc[0]) in entity2_pos_end:
+            if len(doc) in entity2_pos_end:
                 doc_wordpiece_tokens.append(self.special_token)
                 count += 1
                 upd_entity2_pos_end.append(count)
@@ -401,7 +420,7 @@ class TorchTransformersREPreprocessor(Component):
             upd_entity1_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity1]
             upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity2]
 
-            enc_ner_tag = self.encode_ner_tag(doc[1][2], doc[1][3])
+            enc_ner_tag = self.encode_ner_tag(entities[2], entities[3])
 
             input_features.append(
                 {
@@ -416,9 +435,9 @@ class TorchTransformersREPreprocessor(Component):
         input_features = self.ner_tags_to_one_hot(input_features)
 
         # todo: wil be deleted
-        from joblib import dump
-        dump(input_features[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+        # from joblib import dump
+        # dump(input_features[:50],
+        #      "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
 
         return input_features
 
@@ -451,8 +470,10 @@ if __name__ == "__main__":
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
 
     data = load(
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader/all_data")
+        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data")
     data_iter_out = BasicClassificationDatasetIterator(data)
-    test_data = [[data[0], data[1]] for data in data_iter_out.test]
+    tokens = [data[0] for data in data_iter_out.test]
+    entity_info = [data[1] for data in data_iter_out.test]
+    labels = [data[2] for data in data_iter_out.test]
 
-    TorchTransformersREPreprocessor("bert-base-cased").__call__(test_data)
+    TorchTransformersREPreprocessor("bert-base-cased").__call__(tokens, entity_info)
