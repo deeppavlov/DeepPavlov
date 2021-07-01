@@ -25,6 +25,7 @@ import fasttext
 from nltk.corpus import stopwords
 from rapidfuzz import fuzz
 from sklearn.feature_extraction.text import TfidfVectorizer
+from scipy.special import softmax
 from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
@@ -34,7 +35,6 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.models.kbqa.entity_detection_parser import EntityDetectionParser
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 
 log = getLogger(__name__)
 
@@ -202,7 +202,9 @@ class EntityLinkerSep(Component, Serializable):
                  tfidf_faiss_index_filename: str,
                  fasttext_vectorizer_filename: str,
                  fasttext_faiss_index_filename: str,
-                 entity_ranker: RelRankerBertInfer = None,
+                 entity_ranker = None,
+                 bert_embedder = None,
+                 descr_to_emb_filename: str = None,
                  num_faiss_candidate_entities: int = 20,
                  num_entities_for_bert_ranking: int = 50,
                  num_tfidf_faiss_cells: int = 50,
@@ -224,6 +226,7 @@ class EntityLinkerSep(Component, Serializable):
                  lemmatize: bool = False,
                  full_paragraph: bool = False,
                  max_paragraph_len: int = 280,
+                 rank_in_runtime: bool = False,
                  **kwargs) -> None:
         """
 
@@ -265,6 +268,7 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_filename = entities_ranking_filename
         self.entities_types_sets_filename = entities_types_sets_filename
         self.q_to_label_filename = q_to_label_filename
+        self.descr_to_emb_filename = descr_to_emb_filename
         self.tfidf_vectorizer_filename = tfidf_vectorizer_filename
         self.tfidf_faiss_index_filename = tfidf_faiss_index_filename
         self.fasttext_vectorizer_filename = fasttext_vectorizer_filename
@@ -277,6 +281,7 @@ class EntityLinkerSep(Component, Serializable):
         self.fasttext_index_nprobe = fasttext_index_nprobe
         self.use_gpu = use_gpu
         self.entity_ranker = entity_ranker
+        self.bert_embedder = bert_embedder
         self.fit_tfidf_vectorizer = fit_tfidf_vectorizer
         self.fit_fasttext_vectorizer = fit_fasttext_vectorizer
         self.max_tfidf_features = max_tfidf_features
@@ -296,6 +301,7 @@ class EntityLinkerSep(Component, Serializable):
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.full_paragraph = full_paragraph
         self.max_paragraph_len = max_paragraph_len
+        self.rank_in_runtime = rank_in_runtime
 
         self.load()
 
@@ -357,6 +363,9 @@ class EntityLinkerSep(Component, Serializable):
         self.fasttext_vectorizer = fasttext.load_model(str(expand_path(self.fasttext_vectorizer_filename)))
         if not self.fit_fasttext_vectorizer:
             self.fasttext_faiss_index = faiss.read_index(str(expand_path(self.fasttext_faiss_index_filename)))
+            
+        if self.descr_to_emb_filename:
+            self.descr_to_emb = load_pickle(self.load_path / self.descr_to_emb_filename)
 
     def save(self) -> None:
         pass
@@ -741,10 +750,19 @@ class EntityLinkerSep(Component, Serializable):
                 log.debug(f"search by index time {tm_ind_end - tm_ind_st}")
                 tm_descr_st = time.time()
                 if self.use_descriptions:
-                    entity_ids_list, conf_list = self.rank_by_description(entity_substr_list, entity_offsets_list,
-                                                                          candidate_entities_list, tags,
-                                                                          entities_scores_list, sentences_list,
-                                                                          sentences_offsets_list, substr_lens)
+                    if self.rank_in_runtime:
+                        entity_ids_list, conf_list = self.rank_by_description_runtime(entity_substr_list,
+                                                                                      entity_offsets_list,
+                                                                                      candidate_entities_list, tags,
+                                                                                      entities_scores_list,
+                                                                                      sentences_list,
+                                                                                      sentences_offsets_list,
+                                                                                      substr_lens)
+                    else:
+                        entity_ids_list, conf_list = self.rank_by_description(entity_substr_list, entity_offsets_list,
+                                                                              candidate_entities_list, tags,
+                                                                              entities_scores_list, sentences_list,
+                                                                              sentences_offsets_list, substr_lens)
                 tm_descr_end = time.time()
                 log.debug(f"description time {tm_descr_end - tm_descr_st}")
             entity_ids_batch.append(entity_ids_list)
@@ -776,15 +794,170 @@ class EntityLinkerSep(Component, Serializable):
         entities_with_scores = set(entities_with_scores.items())
 
         return entities_with_scores
-
+        
     def rank_by_description(self, entity_substr_list: List[str],
-                            entity_offsets_list: List[List[int]],
-                            candidate_entities_list: List[List[str]],
-                            tags: List[str],
-                            entities_scores_list: List[Dict[str, Tuple[int, float]]],
-                            sentences_list: List[str],
-                            sentences_offsets_list: List[Tuple[int, int]],
-                            substr_lens: List[int]) -> List[List[str]]:
+                                  entity_offsets_list: List[List[int]],
+                                  candidate_entities_list: List[List[str]],
+                                  tags: List[str],
+                                  entities_scores_list: List[Dict[str, Tuple[int, float]]],
+                                  sentences_list: List[str],
+                                  sentences_offsets_list: List[Tuple[int, int]],
+                                  substr_lens: List[int]) -> List[List[str]]:
+        log.debug(f"rank, entity pos {entity_offsets_list}")
+        log.debug(f"rank, sentences_list {sentences_list}")
+        log.debug(f"rank, sent offsets {sentences_offsets_list}")
+        log.debug(f"rank, substr_lens {substr_lens}")
+        entity_ids_list = []
+        conf_list = []
+        contexts = []
+        sentences_to_nums = {}
+        samples_to_contexts = []
+        contexts_count = 0
+        for sample_num, (entity_substr, (entity_start_offset, entity_end_offset), candidate_entities) in \
+                enumerate(zip(entity_substr_list, entity_offsets_list, candidate_entities_list)):
+            context_sent_nums = set()
+            log.debug(f"entity_offsets {entity_start_offset}, {entity_end_offset}")
+            log.debug(f"candidate_entities {candidate_entities[:10]}")
+            sentence = ""
+            rel_start_offset = 0
+            rel_end_offset = 0
+            found_sentence_num = 0
+            for num, (sent, (sent_start_offset, sent_end_offset)) in \
+                    enumerate(zip(sentences_list, sentences_offsets_list)):
+                if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
+                    sentence = sent
+                    found_sentence_num = num
+                    rel_start_offset = entity_start_offset - sent_start_offset
+                    rel_end_offset = entity_end_offset - sent_start_offset
+                    break
+            log.debug(f"rank, found sentence {sentence}")
+            log.debug(f"rank, relative offsets {rel_start_offset}, {rel_end_offset}")
+            context = ""
+            if sentence:
+                context_sent_nums.add(found_sentence_num)
+                start_of_sentence = 0
+                end_of_sentence = len(sentence)
+                if len(sentence) > self.max_text_len:
+                    start_of_sentence = max(rel_start_offset - self.max_text_len//2, 0)
+                    end_of_sentence = min(rel_end_offset + self.max_text_len//2, len(sentence))
+                if self.include_mention:
+                    context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
+                        sentence[rel_start_offset:rel_end_offset] + "[ENT]" + sentence[rel_end_offset:end_of_sentence]
+                else:
+                    context = sentence[start_of_sentence:rel_start_offset] + "[ENT]" + \
+                              sentence[rel_end_offset:end_of_sentence]
+                if self.full_paragraph:
+                    cur_sent_len = len(re.findall(self.re_tokenizer, context))
+                    first_sentence_num = found_sentence_num
+                    last_sentence_num = found_sentence_num
+                    context = [context]
+                    while True:
+                        added = False
+                        if last_sentence_num < len(sentences_list) - 1:
+                            last_sentence_len = len(re.findall(self.re_tokenizer, sentences_list[last_sentence_num+1]))
+                            if cur_sent_len + last_sentence_len < self.max_paragraph_len:
+                                context.append(sentences_list[last_sentence_num+1])
+                                cur_sent_len += last_sentence_len
+                                context_sent_nums.add(last_sentence_num + 1)
+                                last_sentence_num += 1
+                                added = True
+                        if first_sentence_num > 0:
+                            first_sentence_len = len(re.findall(self.re_tokenizer, sentences_list[first_sentence_num-1]))
+                            if cur_sent_len + first_sentence_len < self.max_paragraph_len:
+                                context = [sentences_list[first_sentence_num - 1]] + context
+                                cur_sent_len += first_sentence_len
+                                context_sent_nums.add(first_sentence_num - 1)
+                                first_sentence_num -= 1
+                                added = True
+                        if not added:
+                            break
+                    context = ' '.join(context)
+                        
+            log.debug(f"rank, context: {context}")
+            context_sent_nums = str(context_sent_nums)
+            if context_sent_nums not in sentences_to_nums:
+                sentences_to_nums[context_sent_nums] = contexts_count
+                samples_to_contexts.append(contexts_count)
+                contexts_count += 1
+                contexts.append(context)
+            else:
+                samples_to_contexts.append(sentences_to_nums[context_sent_nums])
+
+        scores_list = []
+
+        context_embs_res = self.bert_embedder(contexts)[:,:100]
+        context_embs = []
+        for num in samples_to_contexts:
+            context_embs.append(context_embs_res[num])
+
+        for entity_substr, candidate_entities, context_emb in \
+                zip(entity_substr_list, candidate_entities_list, context_embs):
+            candidate_entities_emb = [self.descr_to_emb.get(entity, np.zeros(100, dtype=float)) for entity in candidate_entities]
+            scores = np.array([np.dot(candidate_entity_emb, context_emb) for candidate_entity_emb in candidate_entities_emb])
+            scores = np.exp(scores/2.5) / np.sum(np.exp(scores/2.5))
+            scores = [(entity, round(score, 3)) for entity, score in zip(candidate_entities, scores)]
+            scores_list.append(scores)
+
+        for entity_substr, candidate_entities, tag, substr_len, entities_scores, scores in \
+                zip(entity_substr_list, candidate_entities_list, tags, substr_lens, entities_scores_list, scores_list):
+            log.debug(f"len candidate entities {len(candidate_entities)}")
+            entities_with_scores = [(entity, round(entities_scores.get(entity, (0.0, 0))[0], 2),
+                                     entities_scores.get(entity, (0.0, 0))[1],
+                                     round(score, 2)) for entity, score in scores]
+            log.debug(f"len entities with scores {len(entities_with_scores)}")
+            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001 if
+                                    entity[0].startswith("Q")]
+            entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
+            log.debug(f"entities_with_scores {entities_with_scores}")
+            
+            if not entities_with_scores:
+                top_entities = [self.not_found_str]
+                top_conf = [(0.0, 0, 0.0)]
+            elif entities_with_scores and substr_len == 1 and entities_with_scores[0][1] < 1.0:
+                top_entities = [self.not_found_str]
+                top_conf = [(0.0, 0, 0.0)]
+            elif entities_with_scores and ((entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 90) \
+                or entities_with_scores[0][1] < 0.3 \
+                or (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 20) or \
+                (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 4) or entities_with_scores[0][1] == 0.5):
+                top_entities = [self.not_found_str]
+                top_conf = [(0.0, 0, 0.0)]
+            else:
+                top_entities = [score[0] for score in entities_with_scores]
+                top_conf = [score[1:] for score in entities_with_scores]
+                
+            high_conf_entities = []
+            high_conf_nums = []
+            for elem_num, (entity, conf) in enumerate(zip(top_entities, top_conf)):
+                if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 55 and conf[2] > 0.019:
+                    high_conf_entities.append((entity,)+conf)
+                    high_conf_nums.append(elem_num)
+            
+            high_conf_entities = sorted(high_conf_entities, key=lambda x: (x[1], x[3], x[2]), reverse=True)
+            for n, elem_num in enumerate(high_conf_nums):
+                if elem_num - n >= 0 and elem_num - n < len(top_entities):
+                    del top_entities[elem_num - n]
+                
+            top_entities = [elem[0] for elem in high_conf_entities] + top_entities
+            top_conf = [elem[1:] for elem in high_conf_entities] + top_conf
+
+            if self.num_entities_to_return == 1 and top_entities:
+                entity_ids_list.append(top_entities[0])
+                conf_list.append(top_conf[0])
+            else:
+                entity_ids_list.append(top_entities[:self.num_entities_to_return])
+                conf_list.append(top_conf[:self.num_entities_to_return])
+        return entity_ids_list, conf_list
+        
+
+    def rank_by_description_runtime(self, entity_substr_list: List[str],
+                                          entity_offsets_list: List[List[int]],
+                                          candidate_entities_list: List[List[str]],
+                                          tags: List[str],
+                                          entities_scores_list: List[Dict[str, Tuple[int, float]]],
+                                          sentences_list: List[str],
+                                          sentences_offsets_list: List[Tuple[int, int]],
+                                          substr_lens: List[int]) -> List[List[str]]:
         log.debug(f"rank, entity pos {entity_offsets_list}")
         log.debug(f"rank, sentences_list {sentences_list}")
         log.debug(f"rank, sent offsets {sentences_offsets_list}")
