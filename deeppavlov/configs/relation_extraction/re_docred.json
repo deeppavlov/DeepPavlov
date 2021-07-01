@@ -2,9 +2,7 @@
   "dataset_reader": {
     "class_name": "docred_reader",
     "data_path": "{DOWNLOADS_PATH}/docred",
-    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
-    "generate_additional_neg_samples": true,
-    "num_neg_samples": 10
+    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator"
@@ -17,7 +15,7 @@
         "in": ["input_x", "entity_pos_ner"],
         "out": ["input_x_bert"],
         "class_name": "torch_transformers_re_preprocessor",
-        "vocab_file": "bert-base-cased"
+        "vocab_file": "bert-base-uncased"
       },
       {
         "class_name": "re_torch_transformers_classifier",
@@ -29,7 +27,6 @@
         "load_path": "{MODELS_PATH}/model",
         "model_name": "re_model",
         "pretrained_bert": "bert-base-uncased"
-
       }
     ],
     "out": ["predictions"]
@@ -48,7 +45,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/home/anastasiia/.deeppavlov/",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
       }
