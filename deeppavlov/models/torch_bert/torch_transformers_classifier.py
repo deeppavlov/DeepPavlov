@@ -160,6 +160,8 @@ class TorchTransformersClassifierModel(TorchModel):
 
         if self.return_probas:
             if not self.multilabel:
+                # TODO add a special case for binary classification
+                # pred = torch.nn.functional.sigmoid(logits).squeeze(1)
                 pred = torch.nn.functional.softmax(logits, dim=-1)
             else:
                 pred = torch.nn.functional.sigmoid(logits)

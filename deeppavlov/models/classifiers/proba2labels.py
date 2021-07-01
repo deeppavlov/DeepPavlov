@@ -53,8 +53,12 @@ class Proba2Labels(Component):
         self.confident_threshold = confident_threshold
         self.top_n = top_n
 
-    def __call__(self, data: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 *args, **kwargs) -> Union[List[List[int]], List[int]]:
+    def __call__(self,
+                 data: Union[np.ndarray,
+                             List[List[float]],
+                             List[List[int]]],
+                 *args,
+                 **kwargs) -> Union[List[List[int]], List[int]]:
         """
         Process probabilities to labels
 
@@ -65,6 +69,9 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confident_threshold:
+            # TODO replace with the following
+            # TODO rename to _confidence_ threshold
+            # return [int(el > self.confident_threshold) for el in data]
             return [list(np.where(np.array(d) > self.confident_threshold)[0])
                     for d in data]
         elif self.max_proba:
