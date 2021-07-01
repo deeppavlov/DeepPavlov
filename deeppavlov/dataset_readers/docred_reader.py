@@ -29,7 +29,7 @@ class DocREDDatasetReader(DatasetReader):
             negative_label: str = "Na",
             generate_additional_neg_samples: bool = False,
             num_neg_samples: int = None
-    ) -> Tuple[Dict[str, List[Tuple]], Dict[str, int]]:
+    ) -> Dict[str, List[Tuple]]:
         """
         This class processes the DocRED relation extraction dataset (https://arxiv.org/abs/1906.06127v3).
         Args:
@@ -40,6 +40,7 @@ class DocREDDatasetReader(DatasetReader):
             num_neg_samples: a number of additional negative samples that will be generated for each positive sample.
         Returns:
             DocRED output dictionary in the following format:
+            {"data_type":
                 List[
                     Tuple(
                         List[all tokens of the document],
@@ -83,13 +84,14 @@ class DocREDDatasetReader(DatasetReader):
         data["valid"], _ = self.process_docred_file(os.path.join(data_path, "dev.json"))
 
         # todo: delete!
-        from joblib import dump
-        out = f"/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_dataset_reader/"
-        Path(out).mkdir(parents=True, exist_ok=True)
-        out = os.path.join(out, "all_data")
-        dump(data, out)
+        # from joblib import dump
+        # out = f"/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/"
+        # Path(out).mkdir(parents=True, exist_ok=True)
+        # out = os.path.join(out, "all_data")
+        # dump(data, out)
 
-        return data, self.rel2id
+        # statistic info: POS_REL = 47133, NEG_REL = 1548307
+        return data
 
     def process_docred_file(self, file_path: str, split: float = None) -> Tuple[List, Union[List, None]]:
         """
@@ -217,10 +219,13 @@ class DocREDDatasetReader(DatasetReader):
             a tuple with list of all doc tokens, entity information (positions & NER tags) and relation (=neg_label).
         """
         neg_data_samples = []
+        neg_label_one_hot = self.label_to_one_hot([self.rel2id[self.negative_label]])
         for ent1, ent2 in itertools.permutations(ent_ids2ent.keys(), 2):
             neg_data_samples.append(
-                (doc, [ent_ids2ent[ent1], ent_ids2ent[ent2], ent_ids2ent_tag[ent1][0], ent_ids2ent_tag[ent2][0]],
-                 [self.rel2id[self.negative_label]])
+                (
+                    doc, [ent_ids2ent[ent1], ent_ids2ent[ent2], ent_ids2ent_tag[ent1][0], ent_ids2ent_tag[ent2][0]],
+                    neg_label_one_hot
+                )
             )
             self.stat["NEG_REL"] += 1
         return neg_data_samples
