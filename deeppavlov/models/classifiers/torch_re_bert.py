@@ -26,13 +26,14 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             device: str = "gpu",
-            ner_tags_length: int = 6        # number of ner tags
+            ner_tags_length: int = 3        # number of ner tags
     ):
         super().__init__()
         self.n_classes = n_classes
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.device = device
+        self.ner_tags_length = ner_tags_length
         self.emb_size = emb_size
         self.block_size = block_size
         self.loss_fnt = ATLoss()
@@ -53,8 +54,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
-        self.head_extractor = nn.Linear(2 * self.hidden_size + 2 * ner_tags_length, self.emb_size)
-        self.tail_extractor = nn.Linear(2 * self.hidden_size + 2 * ner_tags_length, self.emb_size)
+        self.head_extractor = nn.Linear(2 * self.hidden_size + 2 * self.ner_tags_length, self.emb_size)
+        self.tail_extractor = nn.Linear(2 * self.hidden_size + 2 * self.ner_tags_length, self.emb_size)
         self.bilinear = nn.Linear(self.emb_size * self.block_size, self.n_classes)
 
     def forward(
@@ -63,7 +64,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             attention_mask: Tensor,
             entity_pos: List,
             ner_tags: List,
-            labels: List
+            labels: List = None
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
@@ -72,9 +73,22 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         hs, rs, ts = self.get_hrt(sequence_output, attention, entity_pos)
 
         # get ner tags of entities
-        hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))])
+        hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))]).to(self.device)
+        out = open("log3.txt", 'a')
+        out.write(str(hs[0])+'\n')
+        out.write("_"*100+'\n')
+        out.write(str(rs[0])+'\n')
+        out.write("_"*100+'\n')
+        out.write(str(hs_ner_tags)+'\n')
+        out.write("_"*100+'\n')
+        out.write(str(hs_ner_tags[0])+'\n')
+        out.write("_"*100+'\n')
         hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)
-        ts_inp = torch.cat([hs, rs, ts_ner_tags], dim=1)
+        ts_inp = torch.cat([ts, rs, ts_ner_tags], dim=1)
+        
+        out.write(str(len(hs_inp[0]))+'\t'+str(2*self.hidden_size + 2*self.ner_tags_length)+'\n')
+        out.write("_"*100+'\n')
+        out.close()
 
         hs = torch.tanh(self.head_extractor(hs_inp))
         ts = torch.tanh(self.tail_extractor(ts_inp))
@@ -128,11 +142,11 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             entity_embs = torch.stack(entity_embs, dim=0)  # [n_e, d]           # entity embeddings for each document
             entity_atts = torch.stack(entity_atts, dim=0)  # [n_e, h, seq_len]
 
-            hs = torch.index_select(entity_embs, 0, torch.tensor([0]))      # all embeddings of the first entity
-            ts = torch.index_select(entity_embs, 0, torch.tensor([1]))          # all embeddings of the second entity
+            hs = torch.index_select(entity_embs, 0, torch.tensor([0]).to(self.device))      # all embeddings of the first entity
+            ts = torch.index_select(entity_embs, 0, torch.tensor([1]).to(self.device))          # all embeddings of the second entity
 
-            h_att = torch.index_select(entity_atts, 0, torch.tensor([0]))
-            t_att = torch.index_select(entity_atts, 0, torch.tensor([1]))
+            h_att = torch.index_select(entity_atts, 0, torch.tensor([0]).to(self.device))
+            t_att = torch.index_select(entity_atts, 0, torch.tensor([1]).to(self.device))
             ht_att = (h_att * t_att).mean(1)
             ht_att = ht_att / (ht_att.sum(1, keepdim=True) + 1e-5)
             rs = contract("ld,rl->rd", sequence_output[i], ht_att)  # ht_i.shape[0] x sequence_output.shape[2]

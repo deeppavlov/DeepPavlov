@@ -329,7 +329,8 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, features: List[List], entity_info: List[List]) -> List[Dict]:
+    def __call__(self, input_info) -> List[Dict]:
+        features, entity_info = zip(*input_info)
         """
         Tokenize and create masks; recalculate the entity positions reagrding the document boarders.
         Args:
@@ -364,7 +365,7 @@ class TorchTransformersREPreprocessor(Component):
         """
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
-        input_ids, attention_mask, entity_pos, ner_tags = [], [], [], []
+        input_features = []
         for doc, entities in zip(features, entity_info):
             count = 0
             doc_wordpiece_tokens = []
@@ -423,26 +424,24 @@ class TorchTransformersREPreprocessor(Component):
 
             enc_ner_tag = self.encode_ner_tag(entities[2], entities[3])
 
-            input_ids.append(encoding['input_ids'])
-            attention_mask.append(encoding['attention_mask'])
-            entity_pos.append([upd_entity1, upd_entity2])
-            ner_tags.append(enc_ner_tag)
+            input_features.append(
+                {
+                    "input_ids": encoding['input_ids'],
+                    "attention_mask": encoding['attention_mask'],
+                    "entity_pos": [upd_entity1, upd_entity2],
+                    "ner_tags": enc_ner_tag
+                }
+            )
 
         # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
-        ner_tags = self.ner_tags_to_one_hot(ner_tags)
+        input_features = self.ner_tags_to_one_hot(input_features)
 
         # todo: wil be deleted
-        from joblib import dump
-        dump(input_ids[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_input_ids")
-        dump(attention_mask[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_attention_mask")
-        dump(entity_pos[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_entity_pos")
-        dump(ner_tags[:50],
-             "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small_ner_tags")
+        # from joblib import dump
+        # dump(input_features[:50],
+        #      "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
 
-        return input_ids, attention_mask, entity_pos, ner_tags          # List[List[int]], List[List[int]], List[List[List[Tuple]]], List[List[List[int]]]
+        return input_features
 
     def encode_ner_tag(self, *ner_tags) -> List:
         """ Encode NER tags with indices """
@@ -455,17 +454,17 @@ class TorchTransformersREPreprocessor(Component):
                 enc_ner_tags.append(self.ner2id[ner_tag])
         return enc_ner_tags
 
-    def ner_tags_to_one_hot(self, ner_tags: List) -> List:
+    def ner_tags_to_one_hot(self, input_features: List) -> List[Dict]:
         """ Iterated over input features and turn NER tags of each of them to one hot encodings """
-        ner_tags_one_hot = []
-        for ner_tag_set in ner_tags:
-            ner_tag_set_one_hot = []
-            for ner_tag in ner_tag_set:
-                tag_one_hot = [0] * len(self.ner2id)
-                tag_one_hot[ner_tag] = 1
-                ner_tag_set_one_hot.append(tag_one_hot)
-            ner_tags_one_hot.append(ner_tag_set_one_hot)
-        return ner_tags_one_hot
+        for inp_f in input_features:
+            tags = []
+            for ner_tag in inp_f["ner_tags"]:
+                ner_tag_one_hot = [0] * len(self.ner2id)
+                ner_tag_one_hot[ner_tag] = 1
+                tags.append(ner_tag_one_hot)
+            inp_f["ner_tags"] = tags
+        return input_features
+
 
 # todo: wil be deleted
 if __name__ == "__main__":

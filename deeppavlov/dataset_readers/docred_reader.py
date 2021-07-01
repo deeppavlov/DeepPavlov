@@ -10,6 +10,7 @@ from overrides import overrides
 import numpy as np
 from sklearn.model_selection import train_test_split
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 
@@ -64,7 +65,7 @@ class DocREDDatasetReader(DatasetReader):
                     ]
         """
 
-        with open(rel2id_path) as file:
+        with open(str(expand_path(rel2id_path))) as file:
             self.rel2id = json.load(file)
         self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         self.negative_label = negative_label
@@ -74,7 +75,7 @@ class DocREDDatasetReader(DatasetReader):
         if self.if_add_neg_samples and not self.num_neg_samples:
             raise ValueError("Please provide a number of negative samples to be generated!")
 
-        data_path = Path(data_path)
+        data_path = Path(data_path).resolve()
         data = {"train": [], "valid": [], "test": []}
 
         # since in the original DocRED test data is given without labels, we will use a subset of train data instead
@@ -186,8 +187,10 @@ class DocREDDatasetReader(DatasetReader):
                 label_one_hot = self.label_to_one_hot(rel_triples[(ent1, ent2)])
                 data_samples.append(
                     (
-                        doc,
-                        [ent_id2ent[ent1], ent_id2ent[ent2], ent_ids2ent_tag[ent1], ent_ids2ent_tag[ent2]],
+                        (
+                         doc,
+                         [ent_id2ent[ent1], ent_id2ent[ent2], ent_ids2ent_tag[ent1], ent_ids2ent_tag[ent2]]
+                        ),
                         label_one_hot
                     )
                 )
@@ -197,8 +200,10 @@ class DocREDDatasetReader(DatasetReader):
             else:
                 data_samples.append(
                     (
-                        doc,
-                        [ent_id2ent[ent1], ent_id2ent[ent2], ent_ids2ent_tag[ent1], ent_ids2ent_tag[ent2]],
+                        (
+                         doc,
+                         [ent_id2ent[ent1], ent_id2ent[ent2], ent_ids2ent_tag[ent1], ent_ids2ent_tag[ent2]]
+                        ),
                         neg_label_one_hot
                     )
                 )
@@ -223,7 +228,10 @@ class DocREDDatasetReader(DatasetReader):
         for ent1, ent2 in itertools.permutations(ent_ids2ent.keys(), 2):
             neg_data_samples.append(
                 (
-                    doc, [ent_ids2ent[ent1], ent_ids2ent[ent2], ent_ids2ent_tag[ent1][0], ent_ids2ent_tag[ent2][0]],
+                    (
+                     doc,
+                     [ent_ids2ent[ent1], ent_ids2ent[ent2], ent_ids2ent_tag[ent1][0], ent_ids2ent_tag[ent2][0]]
+                    ),
                     neg_label_one_hot
                 )
             )
