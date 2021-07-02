@@ -278,7 +278,7 @@ class TripPy(TorchModel):
 
                 # Update dialogue state logits
                 for slot in self.model.slot_list:
-                    updates = outputs[2][slot].max(1)[1]
+                    updates = outputs[2][slot].max(1)[1].cpu()
                     for i, u in enumerate(updates):
                         if u != 0:
                             self.ds_logits[slot][i] = u
@@ -359,16 +359,18 @@ class TripPy(TorchModel):
             self.ds = {slot: 'none' for slot in self.model.slot_list}
 
         for slot in self.model.slot_list:
-            class_logits = per_slot_class_logits[slot][i]
-            start_logits = per_slot_start_logits[slot][i]
-            end_logits = per_slot_end_logits[slot][i]
-            refer_logits = per_slot_refer_logits[slot][i]
+            class_logits = per_slot_class_logits[slot][i].cpu()
+            start_logits = per_slot_start_logits[slot][i].cpu()
+            end_logits = per_slot_end_logits[slot][i].cpu()
+            refer_logits = per_slot_refer_logits[slot][i].cpu()
 
             class_prediction = int(class_logits.argmax())
             start_prediction = int(start_logits.argmax())
             end_prediction = int(end_logits.argmax())
             refer_prediction = int(refer_logits.argmax())
 
+            # DP / DSTC2 uses dontcare instead of none so we also replace none's wth dontcare
+            # Just remove the 2nd part of the or statement to revert to TripPy standard
             if (class_prediction == self.model.class_types.index('dontcare')) or (class_prediction == self.model.class_types.index('none')):
                 self.ds[slot] = 'dontcare'
             elif class_prediction == self.model.class_types.index('copy_value'):
@@ -387,8 +389,8 @@ class TripPy(TorchModel):
         # Referral case. All other slot values need to be seen first in order
         # to be able to do this correctly.
         for slot in self.model.slot_list:
-            class_logits = per_slot_class_logits[slot][i]
-            refer_logits = per_slot_refer_logits[slot][i]
+            class_logits = per_slot_class_logits[slot][i].cpu()
+            refer_logits = per_slot_refer_logits[slot][i].cpu()
 
             class_prediction = int(class_logits.argmax())
             refer_prediction = int(refer_logits.argmax())
