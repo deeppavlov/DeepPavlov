@@ -308,9 +308,10 @@ class TorchTransformersREPreprocessor(Component):
             self,
             vocab_file: str,
             special_token: str = '<ENT>',
+            ner_tags=None,
             do_lower_case: bool = False,
             **kwargs
-    ) -> None:
+    ):
         """
         Args:
             vocab_file: path to vocabulary / name of vocabulary for tokenizer initialization
@@ -319,9 +320,18 @@ class TorchTransformersREPreprocessor(Component):
         Return:
             list of feature batches with input_ids, attention_mask, entity_pos, ner_tags
         """
+
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
-        self.ner2id = {}      # {str(ner tag): ner tag id}
+
+        if ner_tags is None:
+            ner_tags = ['ORG', 'TIME', 'MISC', 'LOC', 'PER', 'NUM']
+        self.ner2id = {tag: tag_id for tag_id, tag in enumerate(ner_tags)}
+
+        out = open("log.txt", 'a')
+        out.write(f"Number of tags: {len(self.ner2id)}" + '\n')
+        out.write(f"Tags are: {self.ner2id}" + '\n')
+        out.close()
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
@@ -329,12 +339,14 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, input_info) -> List[Dict]:
-        features, entity_info = zip(*input_info)
+    def __call__(self, input_info: List[Tuple[List, List]]) -> List[Dict]:
+
+        tokens, entity_info = zip(*input_info)
+
         """
         Tokenize and create masks; recalculate the entity positions reagrding the document boarders.
         Args:
-            features: List of tokens of each document: List[List[tokens in doc]]
+            tokens: List of tokens of each document: List[List[tokens in doc]]
             entity_info: List of information about entities containing in the document:
                 List[
                     List[
@@ -366,7 +378,7 @@ class TorchTransformersREPreprocessor(Component):
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
         input_features = []
-        for doc, entities in zip(features, entity_info):
+        for doc, entities in zip(tokens, entity_info):
             count = 0
             doc_wordpiece_tokens = []
             entity1_pos_start = list(zip(*entities[0]))[0]  # first entity mentions' start positions
@@ -412,7 +424,7 @@ class TorchTransformersREPreprocessor(Component):
 
             encoding = self.tokenizer.encode_plus(
                 doc_wordpiece_tokens, add_special_tokens=True, truncation=True, padding="max_length",
-                return_attention_mask=True,     # return_tensors="pt"
+                return_attention_mask=True,  # return_tensors="pt"
             )
 
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
@@ -433,9 +445,6 @@ class TorchTransformersREPreprocessor(Component):
                 }
             )
 
-        # after all data is processed and the whole ner2id dict is collected, NER tags can be one-hot encoded
-        input_features = self.ner_tags_to_one_hot(input_features)
-
         # todo: wil be deleted
         # from joblib import dump
         # dump(input_features[:50],
@@ -444,38 +453,25 @@ class TorchTransformersREPreprocessor(Component):
         return input_features
 
     def encode_ner_tag(self, *ner_tags) -> List:
-        """ Encode NER tags with indices """
+        """ Encode NER tags with one hot encodings """
         enc_ner_tags = []
         for ner_tag in ner_tags:
-            if ner_tag in self.ner2id:
-                enc_ner_tags.append(self.ner2id[ner_tag])
-            else:
-                self.ner2id[ner_tag] = len(self.ner2id)
-                enc_ner_tags.append(self.ner2id[ner_tag])
+            ner_tag_one_hot = [0] * len(self.ner2id)
+            ner_tag_one_hot[self.ner2id[ner_tag]] = 1
+            enc_ner_tags.append(ner_tag_one_hot)
         return enc_ner_tags
-
-    def ner_tags_to_one_hot(self, input_features: List) -> List[Dict]:
-        """ Iterated over input features and turn NER tags of each of them to one hot encodings """
-        for inp_f in input_features:
-            tags = []
-            for ner_tag in inp_f["ner_tags"]:
-                ner_tag_one_hot = [0] * len(self.ner2id)
-                ner_tag_one_hot[ner_tag] = 1
-                tags.append(ner_tag_one_hot)
-            inp_f["ner_tags"] = tags
-        return input_features
 
 
 # todo: wil be deleted
-if __name__ == "__main__":
-    from joblib import load
-    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-
-    data = load(
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data")
-    data_iter_out = BasicClassificationDatasetIterator(data)
-    tokens = [data[0] for data in data_iter_out.test]
-    entity_info = [data[1] for data in data_iter_out.test]
-    labels = [data[2] for data in data_iter_out.test]
-
-    TorchTransformersREPreprocessor("bert-base-cased").__call__(tokens, entity_info)
+# if __name__ == "__main__":
+#     from joblib import load
+#     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
+#
+#     data = load(
+#         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
+#     )
+#     data_iter_out = BasicClassificationDatasetIterator(data)
+#     entity_info = [data[0] for data in data_iter_out.test]
+#     labels = [data[1] for data in data_iter_out.test]
+#
+#     TorchTransformersREPreprocessor("bert-base-cased").__call__( entity_info)
