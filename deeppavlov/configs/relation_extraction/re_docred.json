@@ -33,7 +33,7 @@
   },
   "train": {
     "epochs": 50,
-    "batch_size": 24,
+    "batch_size": 16,
     "train_metrics": ["f1_weighted", "acc"],
     "metrics": ["f1_weighted", "acc"],
     "validation_patience": 50,

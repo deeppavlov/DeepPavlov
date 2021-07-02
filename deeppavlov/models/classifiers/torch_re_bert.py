@@ -143,10 +143,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                             e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                             e_emb = [e_emb]
                             e_att = torch.zeros(h, c).to(attention)
+                            e_att = [e_att]
                     if len(e_emb) > 0:
-                        out = open("log_e_emb.txt", 'a')
-                        out.write(str(e_emb) + '\n')
-                        out.write("_" * 100 + '\n')
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
