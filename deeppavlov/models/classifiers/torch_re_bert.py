@@ -26,7 +26,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             device: str = "gpu",
-            ner_tags_length: int = 3        # number of ner tags
+            ner_tags_length: int = 6        # number of ner tags
     ):
         super().__init__()
         self.n_classes = n_classes
@@ -54,8 +54,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
-        self.head_extractor = nn.Linear(2 * self.hidden_size + 2 * self.ner_tags_length, self.emb_size)
-        self.tail_extractor = nn.Linear(2 * self.hidden_size + 2 * self.ner_tags_length, self.emb_size)
+        self.head_extractor = nn.Linear(2 * self.hidden_size + self.ner_tags_length, self.emb_size)
+        self.tail_extractor = nn.Linear(2 * self.hidden_size + self.ner_tags_length, self.emb_size)
         self.bilinear = nn.Linear(self.emb_size * self.block_size, self.n_classes)
 
     def forward(
@@ -68,27 +68,40 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
+
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
-        hs, rs, ts = self.get_hrt(sequence_output, attention, entity_pos)
+
+        hs, rs, ts = self.get_hrt(sequence_output, attention, entity_pos)       # Tensors (batch_size x 768)
 
         # get ner tags of entities
         hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))]).to(self.device)
-        out = open("log3.txt", 'a')
-        out.write(str(hs[0])+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(rs[0])+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(hs_ner_tags)+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(hs_ner_tags[0])+'\n')
-        out.write("_"*100+'\n')
+        # out = open("log3.txt", 'a')
+        # out.write(str(hs[0])+'\n')
+        # out.write("_"*100+'\n')
+        # out.write(str(rs[0])+'\n')
+        # out.write("_"*100+'\n')
+        # out.write(str(hs_ner_tags)+'\n')
+        # out.write("_"*100+'\n')
+        # out.write(str(hs_ner_tags[0])+'\n')
+        # out.write("_"*100+'\n')
         hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)
         ts_inp = torch.cat([ts, rs, ts_ner_tags], dim=1)
-        
-        out.write(str(len(hs_inp[0]))+'\t'+str(2*self.hidden_size + 2*self.ner_tags_length)+'\n')
-        out.write("_"*100+'\n')
-        out.close()
+
+        # out.write(str(len(hs_inp[0]))+'\t'+str(2*self.hidden_size + 2*self.ner_tags_length)+'\n')
+        # out.write("_"*100+'\n')
+        # out.close()
+
+        out = open("log.txt", 'a')
+        out.write(f"Attention shape: {attention.shape}" + '\n')
+        out.write(f"Sequence_output shape: {sequence_output.shape}" + '\n')
+        out.write(f"hs shape: {hs.shape}" + '\n')
+        out.write(f"rs shape: {rs.shape}" + '\n')
+        out.write(f"ts shape: {ts.shape}" + '\n')
+        out.write(f"hs_ner_tags shape: {hs_ner_tags.shape}" + '\n')
+        out.write(f"ts_ner_tags shape: {ts_ner_tags.shape}" + '\n')
+        out.write(f"hs_inp shape: {hs_inp.shape}" + '\n')
+        out.write(f"ts_inp shape: {ts_inp.shape}" + '\n')
 
         hs = torch.tanh(self.head_extractor(hs_inp))
         ts = torch.tanh(self.tail_extractor(ts_inp))
@@ -96,6 +109,14 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         b2 = ts.view(-1, self.emb_size // self.block_size, self.block_size)
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)
         logits = self.bilinear(bl)
+
+        out.write(f"hs shape: {hs.shape}" + '\n')
+        out.write(f"ts shape: {ts.shape}" + '\n')
+        out.write(f"b1 shape: {b1.shape}" + '\n')
+        out.write(f"b2 shape: {b2.shape}" + '\n')
+        out.write(f"bl shape: {bl.shape}" + '\n')
+        out.write(f"logits shape: {logits.shape}" + '\n')
+        out.close()
 
         output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes),)
         if labels is not None:
@@ -123,6 +144,9 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                             e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                             e_att = torch.zeros(h, c).to(attention)
                     if len(e_emb) > 0:
+                        out = open("log_e_emb.txt", 'a')
+                        out.write(str(e_emb) + '\n')
+                        out.write("_" * 100 + '\n')
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
@@ -142,8 +166,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             entity_embs = torch.stack(entity_embs, dim=0)  # [n_e, d]           # entity embeddings for each document
             entity_atts = torch.stack(entity_atts, dim=0)  # [n_e, h, seq_len]
 
-            hs = torch.index_select(entity_embs, 0, torch.tensor([0]).to(self.device))      # all embeddings of the first entity
-            ts = torch.index_select(entity_embs, 0, torch.tensor([1]).to(self.device))          # all embeddings of the second entity
+            hs = torch.index_select(entity_embs, 0, torch.tensor([0]).to(self.device))  # embeddings of the first entity
+            ts = torch.index_select(entity_embs, 0, torch.tensor([1]).to(self.device)) # embeddings of the second entity
 
             h_att = torch.index_select(entity_atts, 0, torch.tensor([0]).to(self.device))
             t_att = torch.index_select(entity_atts, 0, torch.tensor([1]).to(self.device))
