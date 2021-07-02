@@ -186,7 +186,10 @@ def round_accuracy(y_true, y_predicted):
     Returns:
         portion of absolutely coincidental samples
     """
-    predictions = [round(x) for x in y_predicted]
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0

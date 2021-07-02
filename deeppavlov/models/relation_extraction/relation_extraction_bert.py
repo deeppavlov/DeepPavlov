@@ -107,7 +107,7 @@ class REBertModel(TorchModel):
         Returns:
             predictions:
         """
-        self.model.eval()
+        #self.model.eval()
 
         _input = {}
         for elem in ['input_ids', 'attention_mask']:
@@ -118,17 +118,15 @@ class REBertModel(TorchModel):
             _input[elem] = inp_elem
 
         with torch.no_grad():
-            pred, *_ = self.model(**_input)
+            indices, probas = self.model(**_input)
             # pred = pred[0]
 
         if self.return_probas:
-            pred = torch.nn.functional.sigmoid(pred)
-            pred = pred.cpu().numpy()
+            pred = probas.cpu().numpy()
             pred[np.isnan(pred)] = 0
         else:
-            pred = pred.cpu().numpy()
+            pred = indices.cpu().numpy()
             pred[np.isnan(pred)] = 0
-            pred = np.argmax(pred, axis=1)
 
         return pred
 

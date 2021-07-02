@@ -34,11 +34,11 @@
   "train": {
     "epochs": 50,
     "batch_size": 32,
-    "train_metrics": ["f1", "acc"],
-    "metrics": ["f1", "acc"],
-    "validation_patience": 5,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
+    "train_metrics": ["f1_weighted", "acc"],
+    "metrics": ["f1_weighted", "acc"],
+    "validation_patience": 50,
+    "val_every_n_batches": 10,
+    "log_every_n_batches": 10,
     "evaluation_targets": ["valid", "train"],
     "show_examples": false,
     "class_name": "torch_trainer"
@@ -47,7 +47,13 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/re_docred"
+      },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/docred.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/docred"
       }
+    ]
   }
 }

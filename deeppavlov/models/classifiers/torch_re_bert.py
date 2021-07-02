@@ -74,21 +74,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
 
         # get ner tags of entities
         hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))]).to(self.device)
-        out = open("log3.txt", 'a')
-        out.write(str(hs[0])+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(rs[0])+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(hs_ner_tags)+'\n')
-        out.write("_"*100+'\n')
-        out.write(str(hs_ner_tags[0])+'\n')
-        out.write("_"*100+'\n')
         hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)
         ts_inp = torch.cat([ts, rs, ts_ner_tags], dim=1)
-        
-        out.write(str(len(hs_inp[0]))+'\t'+str(2*self.hidden_size + 2*self.ner_tags_length)+'\n')
-        out.write("_"*100+'\n')
-        out.close()
 
         hs = torch.tanh(self.head_extractor(hs_inp))
         ts = torch.tanh(self.tail_extractor(ts_inp))
@@ -97,7 +84,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)
         logits = self.bilinear(bl)
 
-        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes),)
+        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes), logits)
         if labels is not None:
             labels_tensors = [torch.tensor(label) for label in labels]
             labels_tensors = torch.stack(labels_tensors).to(logits)
