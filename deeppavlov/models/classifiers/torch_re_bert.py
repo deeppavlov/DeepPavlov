@@ -68,7 +68,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
-
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
 
@@ -118,7 +117,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         out.write(f"logits shape: {logits.shape}" + '\n')
         out.close()
 
-        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes),)
+        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes), logits)
         if labels is not None:
             labels_tensors = [torch.tensor(label) for label in labels]
             labels_tensors = torch.stack(labels_tensors).to(logits)
