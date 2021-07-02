@@ -67,6 +67,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             labels: List = None
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
+        out = open("log.txt", 'a')
+
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
@@ -91,7 +93,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         # out.write("_"*100+'\n')
         # out.close()
 
-        out = open("log.txt", 'a')
         out.write(f"Attention shape: {attention.shape}" + '\n')
         out.write(f"Sequence_output shape: {sequence_output.shape}" + '\n')
         out.write(f"hs shape: {hs.shape}" + '\n')
@@ -134,22 +135,16 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             for e in entity_pos[i]:             # for each entity (= list of entity mentions)
                 if len(e) > 1:
                     e_emb, e_att = [], []
-                    for start, end in e:            # for start and end position of each mention
+                    for start, end in e:        # for start and end position of each mention
                         if start + offset < c:
                             # In case the entity mention is truncated due to limited max seq length.
                             e_emb.append(sequence_output[i, start + offset])
                             e_att.append(attention[i, :, start + offset])
-                        else:
-                            e_emb = torch.zeros(self.hidden_size).to(sequence_output)
-                            e_att = torch.zeros(h, c).to(attention)
                     if len(e_emb) > 0:
-                        out = open("log_e_emb.txt", 'a')
-                        out.write(str(e_emb) + '\n')
-                        out.write("_" * 100 + '\n')
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
-                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 else:
                     start, end = e[0]
@@ -157,7 +152,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]
                     else:
-                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 entity_embs.append(e_emb)           # get an embedding of an entity
                 entity_atts.append(e_att)       # get attention of an entity
@@ -180,6 +175,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         hss = torch.cat(hss, dim=0)
         tss = torch.cat(tss, dim=0)
         rss = torch.cat(rss, dim=0)
+
         return hss, rss, tss
 
     def load(self) -> None:
