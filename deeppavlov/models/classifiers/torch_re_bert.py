@@ -67,8 +67,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             labels: List = None
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
-        out = open("log.txt", 'a')
-
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
@@ -93,6 +91,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         # out.write("_"*100+'\n')
         # out.close()
 
+        out = open("log.txt", 'a')
         out.write(f"Attention shape: {attention.shape}" + '\n')
         out.write(f"Sequence_output shape: {sequence_output.shape}" + '\n')
         out.write(f"hs shape: {hs.shape}" + '\n')
@@ -144,7 +143,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
-                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 else:
                     start, end = e[0]
@@ -152,7 +151,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                         e_emb = sequence_output[i, start + offset]
                         e_att = attention[i, :, start + offset]
                     else:
-                        e_emb = torch.zeros(self.config.hidden_size).to(sequence_output)
+                        e_emb = torch.zeros(self.hidden_size).to(sequence_output)
                         e_att = torch.zeros(h, c).to(attention)
                 entity_embs.append(e_emb)           # get an embedding of an entity
                 entity_atts.append(e_att)       # get attention of an entity

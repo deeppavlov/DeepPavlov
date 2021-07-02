@@ -33,12 +33,12 @@
   },
   "train": {
     "epochs": 50,
-    "batch_size": 32,
+    "batch_size": 16,
     "train_metrics": ["f1_weighted", "acc"],
     "metrics": ["f1_weighted", "acc"],
     "validation_patience": 50,
-    "val_every_n_batches": 10,
-    "log_every_n_batches": 10,
+    "val_every_n_batches": 100,
+    "log_every_n_batches": 100,
     "evaluation_targets": ["valid", "train"],
     "show_examples": false,
     "class_name": "torch_trainer"
