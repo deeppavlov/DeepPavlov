@@ -21,12 +21,20 @@
         "class_name": "re_torch_transformers_classifier",
         "in": ["input_x_bert"],
         "in_y": ["y_ids"],
-        "out": ["predictions"],
+        "out": ["model_output"],
         "n_classes": 97,
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "model_name": "re_model",
         "pretrained_bert": "bert-base-uncased"
+      },
+      {
+        "class_name": "re_postprocessor",
+        "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
+        "rel2label_path": "{DOWNLOADS_PATH}/docred/rel2label.json",
+        "return_rel_labels": true,
+        "in": ["model_output"],
+        "out": ["predictions"]
       }
     ],
     "out": ["predictions"]
@@ -47,11 +55,20 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/re_docred"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/re_docred"
       },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/docred.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/docred"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_docred_model.tar.gz",
+        "subdir": "{MODELS_PATH}/re_docred"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/rel2label.json",
         "subdir": "{DOWNLOADS_PATH}/docred"
       }
     ]

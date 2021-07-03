@@ -129,6 +129,7 @@
   "rel_ranking_bert_infer": "deeppavlov.models.kbqa.rel_ranking_bert_infer:RelRankerBertInfer",
   "rel_ranking_infer": "deeppavlov.models.kbqa.rel_ranking_infer:RelRankerInfer",
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",
+  "re_postprocessor": "deeppavlov.models.relation_extraction.utils:RePostprocessor",
   "re_torch_transformers_classifier": "deeppavlov.models.relation_extraction.relation_extraction_bert:REBertModel",
   "response_base_loader": "deeppavlov.models.preprocessors.response_base_loader:ResponseBaseLoader",
   "ru_adj_to_noun": "deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun",
