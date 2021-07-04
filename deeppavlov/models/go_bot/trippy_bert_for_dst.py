@@ -68,12 +68,12 @@ class BertForDST(BertPreTrainedModel):
         #self.add_module("prev_action_projection", nn.Linear(self.num_actions, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims + self.num_actions, self.num_actions))
         #self.add_module("action_prediction", nn.Linear(config.hidden_size, self.num_actions))
-        #self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
+        self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
 
-        self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
-                                               nn.ReLU(),
-                                               self.dropout,
-                                               nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
+        #self.action_prediction = nn.Sequential(nn.Linear(config.hidden_size + aux_dims, (config.hidden_size + aux_dims)//2),
+        #                                       nn.ReLU(),
+        #                                       self.dropout,
+        #                                       nn.Linear((config.hidden_size + aux_dims)//2, self.num_actions))
 
         self.add_module("action_softmax", nn.Softmax(dim=1))
 
@@ -223,15 +223,9 @@ class BertForDST(BertPreTrainedModel):
         # Not in original TripPy; Predict action & add loss if training; At evaluation acton_label is set to 0
         if not self.slot_list:
             pooled_output_aux = pooled_output
-        #action_logits = getattr(self, 'action_prediction')(torch.cat((pooled_output_aux, self.prev_action_projection(prev_action_label.float())), 1))
         action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
-        #action_logits = getattr(self, 'action_prediction')(pooled_output)
 
-        #print("total_loss_pev", total_loss)
         if action_label is not None:
-
-            #print("LOGITS: ", action_logits)
-            #print("LABEL: ", action_label)
             action_loss = CrossEntropyLoss(reduction="sum")(action_logits, action_label)
 
             # Increase the loss proportional to the amount of slots if present
@@ -241,21 +235,8 @@ class BertForDST(BertPreTrainedModel):
                 multiplier = 1
 
             total_loss += action_loss * multiplier
-
         else:
             action_loss = None
-
-        #action_logits = getattr(self, 'action_softmax')(action_logits)
-
-        #print("ACT LOGITS:", action_logits)
-
-        # TMP
-        #if action_label.shape[0] > 1:
-        #    print("LOGITS:", action_logits)
-        #    print("LOSS:", action_loss)
-        #print("total_loss", total_loss)
-        #action_logits = None
-        #action_loss = None
 
         # add hidden states and attention if they are here
         outputs = (total_loss,) + (per_slot_per_example_loss, per_slot_class_logits, per_slot_start_logits, per_slot_end_logits, per_slot_refer_logits, action_logits, action_loss,) + outputs[2:]

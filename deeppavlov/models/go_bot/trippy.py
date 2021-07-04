@@ -173,33 +173,6 @@ class TripPy(TorchModel):
                 logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
 
 
-
-
-        # Load model from huggingface // from path
-        #self.model = BertForDST.from_pretrained(
-        #    self.pretrained_bert, config=self.config)
-        #print("LOADED FROM:", self.pretrained_bert)
-        # Tokenizer is always the same for bert-base / bert-large
-        # We also always use uncased, as TripPy always lowercases all data in its input
-        # If you think cases are super important for your data, feel free to change the below & remove the .lower() ops in preprocessing
-        #self.tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
-
-        #self.model.to(self.device)
-        #self.optimizer = getattr(torch.optim, self.optimizer_name)(
-        #       self.model.parameters(), **self.optimizer_parameters)
-
-        #self.optimizer = AdamW(self.model.parameters(), **self.optimizer_parameters)
-        #t_total: batches / batch_size  *  epochs
-        #t_total = 550#900 // 4 * 2 # Rough estimate
-        #num_warmup_steps = int(t_total * 0.1)
-        #self.scheduler = get_linear_schedule_with_warmup(self.optimizer, 
-        #                                                num_warmup_steps=num_warmup_steps, 
-        #                                                num_training_steps=t_total)
-
-        #if self.lr_scheduler_name is not None:
-        #    self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-        #        self.optimizer, **self.lr_scheduler_parameters)
-
     def __call__(self,
                  batch: Union[List[List[dict]], List[str]],
                  user_ids: Optional[List] = None) -> List:
@@ -292,33 +265,17 @@ class TripPy(TorchModel):
                                inform)
 
                 # Wrap predicted action (outputs[6]) into a PolicyPrediction
-
-                #print("POLICY")
-                #print(outputs[6].cpu())
-                #print(torch.nn.functional.one_hot(last_turn["action_label"], num_classes=46))
-
                 policy_prediction = PolicyPrediction(
                     outputs[6].cpu().numpy(), None, None, None)
-
-                # Ground truth Policy for testing
-                #policy_prediction = PolicyPrediction(
-                #    torch.nn.functional.one_hot(last_turn["action_label"], num_classes=46).cpu(), None, None, None
-                #)
 
                 # Fill DS with Database results if there are any
                 self.fill_current_state_with_db_results()
 
                 # NLG based on predicted action & dialogue state
-                #print("DS FOR NLG", self.ds)
                 response = self.nlg_manager.decode_response(None,
                                                             policy_prediction,
                                                             self.ds)
 
-
-                #print("DS RESULTS:", self.ds)
-                #print("RESPONSE", response)
-                #print(last_turn["action_label"])
-                #print("RESPONSE:", response)
 
                 # Add system response to responses for possible next round
                 self.batch_dialogues_utterances_responses_info[diag_id].insert(
@@ -440,7 +397,6 @@ class TripPy(TorchModel):
         if self.db_result:
             for k, v in self.db_result.items():
                 self.ds[k] = str(v)
-            #print("FILLED DS", self.ds)
 
     def train_on_batch(self,
                        batch_dialogues_utterances_features: List[List[dict]],

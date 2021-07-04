@@ -61,13 +61,7 @@
         "DATA_PATH": "{DOWNLOADS_PATH}/gobot_md_yaml_minimal",
         "MODELS_PATH": "{ROOT_PATH}/models",
         "MODEL_PATH": "{MODELS_PATH}/gobot_md_yaml_minimal"
-      },
-      "download": [
-        {
-          "url": "http://files.deeppavlov.ai/datasets/gobot_md_yaml_minimal.tar.gz",
-          "subdir": "{DATA_PATH}"
-        }
-      ]
+      }
     }
   }
   
