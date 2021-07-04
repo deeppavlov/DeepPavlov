@@ -28,6 +28,7 @@
         "use_gpu": false,
         "fit_tfidf_vectorizer": false,
         "fit_fasttext_vectorizer": false,
+        "fit_bert_embedder": false,
         "max_tfidf_features": 500,
         "include_mention": false,
         "ngram_range": [2, 2],

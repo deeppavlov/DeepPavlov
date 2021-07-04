@@ -618,15 +618,17 @@ class BertSequenceTagger(BertSequenceNetwork):
         feed_dict = self._build_feed_dict(input_ids, input_masks, y_masks)
         if self.ema:
             self.sess.run(self.ema.switch_to_test_op)
-        if not self.return_probas:
-            if self.use_crf:
-                pred = self._decode_crf(feed_dict)
-            else:
-                pred, seq_lengths = self.sess.run([self.y_predictions, self.seq_lengths], feed_dict=feed_dict)
-                pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        probas = self.sess.run(self.y_probas, feed_dict=feed_dict)
+        if self.use_crf:
+            pred = self._decode_crf(feed_dict)
         else:
-            pred = self.sess.run(self.y_probas, feed_dict=feed_dict)
-        return pred
+            pred, seq_lengths = self.sess.run([self.y_predictions, self.seq_lengths], feed_dict=feed_dict)
+            pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+
+        if not self.return_probas:
+            return pred
+        else:
+            return pred, probas
 
 
 class ExponentialMovingAverage:
