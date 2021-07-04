@@ -37,8 +37,10 @@ class WikidataParser:
         self.log_path.mkdir(parents=True, exist_ok=True)
         self.log_parse_errors = log_parse_errors
         self.log_parse_progress = log_parse_progress
-        os.remove(self.log_path / self.log_parse_errors)
-        os.remove(self.log_path / self.log_parse_progress)
+        if os.path.exists(self.log_path / self.log_parse_errors):
+            os.remove(self.log_path / self.log_parse_errors)
+        if os.path.exists(self.log_path / self.log_parse_progress):
+            os.remove(self.log_path / self.log_parse_progress)
         
         self.manager = mp.Manager()
         if num_processors is None:
@@ -84,7 +86,7 @@ class WikidataParser:
                             objects_list = []
                             objects = entity_dict["claims"][relation]
                             for obj in objects:
-                                if "id" in obj["mainsnak"]["datavalue"]["value"]:
+                                if "datavalue" in obj["mainsnak"] and "value" in obj["mainsnak"]["datavalue"] and "id" in obj["mainsnak"]["datavalue"]["value"]:
                                     objects_list.append(obj["mainsnak"]["datavalue"]["value"]["id"])
                             if objects_list:
                                 triplets.append([relation] + objects_list)
