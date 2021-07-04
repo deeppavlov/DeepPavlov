@@ -14,6 +14,7 @@ class EntitiesParser(Serializable):
                  save_path: str = "~/.deeppavlov/downloads/wikidata_rus",
                  word_to_idlist_filename: str = "word_to_idlist_vx.pickle",
                  entities_types_sets_filename: str = "entities_types_sets.pickle",
+                 q_to_label_filename: str = "q_to_label_vx.pickle",
                  entities_ranking_dict_filename: str = "entities_ranking_dict_vx.pickle",
                  entities_descr_filename: str = "q_to_descr_vx.pickle",
                  filter_tags: bool = True):
@@ -25,6 +26,7 @@ class EntitiesParser(Serializable):
         self.entities_types_sets_filename = entities_types_sets_filename
         self.entities_ranking_dict_filename = entities_ranking_dict_filename
         self.entities_descr_filename = entities_descr_filename
+        self.q_to_label_filename = q_to_label_filename
 
         self.name_to_idlist = defaultdict(list)
         self.word_to_idlist = {}
@@ -34,6 +36,7 @@ class EntitiesParser(Serializable):
         self.types_dict = {}
         self.subclass_dict = {}
         self.entities_types_sets = {"PER": set(), "LOC": set(), "ORG": set(), "AMB": set()}
+        self.q_to_label = {}
         self.used_entities = set()
         self.filter_tags = filter_tags
 
@@ -64,10 +67,7 @@ class EntitiesParser(Serializable):
                          }
 
         self.org_types = {"Q43229", # organization
-                          "Q234460", # text
-                          "Q732577", # publication
-                          "Q11033", # mass media
-                          "Q15621286", # intellectual work
+                          "Q11033" # mass media
                          }
         self.amb_types = {"Q41176" # building
                          }
@@ -87,6 +87,7 @@ class EntitiesParser(Serializable):
         save_pickle(self.entities_ranking_dict, self.save_path / self.entities_ranking_dict_filename)
         save_pickle(self.entities_descr, self.save_path / self.entities_descr_filename)
         save_pickle(self.entities_types_sets, self.save_path / self.entities_types_sets_filename)
+        save_pickle(self.q_to_label, self.save_path / self.q_to_label_filename)
         log.debug("saved files")
 
     def parse(self):
@@ -119,6 +120,7 @@ class EntitiesParser(Serializable):
                 aliases = entity_info.get("aliases", [])
                 if name:
                     self.name_to_idlist[name].append(entity_id)
+                    self.q_to_label[entity_id] = [name]
                 if aliases:
                     for alias in aliases:
                         self.name_to_idlist[alias].append(entity_id)

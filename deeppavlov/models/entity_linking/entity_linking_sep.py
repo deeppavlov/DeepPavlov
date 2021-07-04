@@ -100,39 +100,43 @@ class NerChunkModel(Component):
         entity_substr_batch_list = []
         entity_offsets_batch_list = []
         tags_batch_list = []
+        entity_probas_batch_list = []
         text_len_batch_list = []
         for text_batch, sentences_offsets_batch, sentences_batch in \
                 zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
             tm_ner_st = time.time()
-            ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch = self.ner(text_batch)
-            entity_substr_batch, _, entity_positions_batch = self.ner_parser(ner_tokens_batch, ner_probas_batch)
+            ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch, probas_batch = self.ner(text_batch)
+            entity_substr_batch, entity_positions_batch, entity_probas_batch = \
+                self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch)
             tm_ner_end = time.time()
             log.debug(f"ner time {tm_ner_end - tm_ner_st}")
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_positions_batch {entity_positions_batch}")
-            entity_substr_pos_tags_batch = [[(entity_substr.lower(), entity_substr_positions, tag)
+            entity_pos_tags_probas_batch = [[(entity_substr.lower(), entity_substr_positions, tag, entity_proba)
                                              for tag, entity_substr_list in entity_substr_dict.items()
-                                             for entity_substr, entity_substr_positions in
-                                             zip(entity_substr_list, entity_positions_dict[tag])]
-                                            for entity_substr_dict, entity_positions_dict in
-                                            zip(entity_substr_batch, entity_positions_batch)]
+                                             for entity_substr, entity_substr_positions, entity_proba in
+                                             zip(entity_substr_list, entity_positions_dict[tag], entity_probas_dict[tag])]
+                                            for entity_substr_dict, entity_positions_dict, entity_probas_dict in
+                                            zip(entity_substr_batch, entity_positions_batch, entity_probas_batch)]
             entity_substr_batch = []
             entity_offsets_batch = []
             tags_batch = []
-            for entity_substr_pos_tags, ner_tokens_offsets_list in \
-                    zip(entity_substr_pos_tags_batch, ner_tokens_offsets_batch):
-                if entity_substr_pos_tags:
+            probas_batch = []
+            for entity_pos_tags_probas, ner_tokens_offsets_list in \
+                    zip(entity_pos_tags_probas_batch, ner_tokens_offsets_batch):
+                if entity_pos_tags_probas:
                     entity_offsets_list = []
-                    entity_substr_list, entity_positions_list, tags_list = zip(*entity_substr_pos_tags)
+                    entity_substr_list, entity_positions_list, tags_list, probas_list = zip(*entity_pos_tags_probas)
                     for entity_positions in entity_positions_list:
                         start_offset = ner_tokens_offsets_list[entity_positions[0]][0]
                         end_offset = ner_tokens_offsets_list[entity_positions[-1]][1]
                         entity_offsets_list.append((start_offset, end_offset))
                 else:
-                    entity_substr_list, entity_offsets_list, tags_list = [], [], []
+                    entity_substr_list, entity_offsets_list, tags_list, probas_list = [], [], [], []
                 entity_substr_batch.append(list(entity_substr_list))
                 entity_offsets_batch.append(list(entity_offsets_list))
                 tags_batch.append(list(tags_list))
+                probas_batch.append(list(probas_list))
 
             log.debug(f"entity_substr_batch {entity_substr_batch}")
             log.debug(f"entity_offsets_batch {entity_offsets_batch}")
@@ -140,24 +144,26 @@ class NerChunkModel(Component):
             entity_substr_batch_list.append(entity_substr_batch)
             tags_batch_list.append(tags_batch)
             entity_offsets_batch_list.append(entity_offsets_batch)
+            entity_probas_batch_list.append(probas_batch)
             text_len_batch_list.append([len(text) for text in text_batch])
 
-        doc_entity_substr_batch, doc_tags_batch, doc_entity_offsets_batch = [], [], []
+        doc_entity_substr_batch, doc_tags_batch, doc_entity_offsets_batch, doc_probas_batch = [], [], [], []
         doc_sentences_offsets_batch, doc_sentences_batch = [], []
-        doc_entity_substr, doc_tags, doc_entity_offsets = [], [], []
+        doc_entity_substr, doc_tags, doc_probas, doc_entity_offsets = [], [], [], []
         doc_sentences_offsets, doc_sentences = [], []
         cur_doc_num = 0
         text_len_sum = 0
-        for entity_substr_batch, tags_batch, entity_offsets_batch, sentences_offsets_batch, \
+        for entity_substr_batch, tags_batch, probas_batch, entity_offsets_batch, sentences_offsets_batch, \
             sentences_batch, text_len_batch, nums_batch in \
-                zip(entity_substr_batch_list, tags_batch_list, entity_offsets_batch_list,
+                zip(entity_substr_batch_list, tags_batch_list, entity_probas_batch_list, entity_offsets_batch_list,
                     sentences_offsets_batch_list, sentences_batch_list, text_len_batch_list, nums_batch_list):
-            for entity_substr, tag, entity_offsets, sentences_offsets, sentences, text_len, doc_num in \
-                    zip(entity_substr_batch, tags_batch, entity_offsets_batch, sentences_offsets_batch,
+            for entity_substr, tag, probas, entity_offsets, sentences_offsets, sentences, text_len, doc_num in \
+                    zip(entity_substr_batch, tags_batch, probas_batch, entity_offsets_batch, sentences_offsets_batch,
                         sentences_batch, text_len_batch, nums_batch):
                 if doc_num == cur_doc_num:
                     doc_entity_substr += entity_substr
                     doc_tags += tag
+                    doc_probas += probas
                     doc_entity_offsets += [(start_offset + text_len_sum, end_offset + text_len_sum)
                                            for start_offset, end_offset in entity_offsets]
                     doc_sentences_offsets += [(start_offset + text_len_sum, end_offset + text_len_sum)
@@ -167,11 +173,13 @@ class NerChunkModel(Component):
                 else:
                     doc_entity_substr_batch.append(doc_entity_substr)
                     doc_tags_batch.append(doc_tags)
+                    doc_probas_batch.append(doc_probas)
                     doc_entity_offsets_batch.append(doc_entity_offsets)
                     doc_sentences_offsets_batch.append(doc_sentences_offsets)
                     doc_sentences_batch.append(doc_sentences)
                     doc_entity_substr = entity_substr
                     doc_tags = tag
+                    doc_probas = probas
                     doc_entity_offsets = entity_offsets
                     doc_sentences_offsets = sentences_offsets
                     doc_sentences = sentences
@@ -179,12 +187,13 @@ class NerChunkModel(Component):
                     text_len_sum = 0
         doc_entity_substr_batch.append(doc_entity_substr)
         doc_tags_batch.append(doc_tags)
+        doc_probas_batch.append(doc_probas)
         doc_entity_offsets_batch.append(doc_entity_offsets)
         doc_sentences_offsets_batch.append(doc_sentences_offsets)
         doc_sentences_batch.append(doc_sentences)
 
-        return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_sentences_offsets_batch, \
-               doc_sentences_batch
+        return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_probas_batch, \
+               doc_sentences_offsets_batch, doc_sentences_batch
 
 
 @register('entity_linker_sep')
@@ -198,6 +207,7 @@ class EntityLinkerSep(Component, Serializable):
                  entities_ranking_filename: str,
                  entities_types_sets_filename: str,
                  q_to_label_filename: str,
+                 q_to_descr_filename: str,
                  tfidf_vectorizer_filename: str,
                  tfidf_faiss_index_filename: str,
                  fasttext_vectorizer_filename: str,
@@ -215,6 +225,7 @@ class EntityLinkerSep(Component, Serializable):
                  save_path: str = None,
                  fit_tfidf_vectorizer: bool = False,
                  fit_fasttext_vectorizer: bool = False,
+                 fit_bert_embedder: bool = False,
                  max_tfidf_features: int = 1000,
                  include_mention: bool = False,
                  ngram_range: List[int] = None,
@@ -227,6 +238,8 @@ class EntityLinkerSep(Component, Serializable):
                  full_paragraph: bool = False,
                  max_paragraph_len: int = 280,
                  rank_in_runtime: bool = False,
+                 tag_thres_probas: dict = {"PER": 0.5, "LOC": 0.5, "ORG": 0.5},
+                 bert_emb_batch_size: int = 100,
                  **kwargs) -> None:
         """
 
@@ -268,6 +281,7 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_filename = entities_ranking_filename
         self.entities_types_sets_filename = entities_types_sets_filename
         self.q_to_label_filename = q_to_label_filename
+        self.q_to_descr_filename = q_to_descr_filename
         self.descr_to_emb_filename = descr_to_emb_filename
         self.tfidf_vectorizer_filename = tfidf_vectorizer_filename
         self.tfidf_faiss_index_filename = tfidf_faiss_index_filename
@@ -284,6 +298,7 @@ class EntityLinkerSep(Component, Serializable):
         self.bert_embedder = bert_embedder
         self.fit_tfidf_vectorizer = fit_tfidf_vectorizer
         self.fit_fasttext_vectorizer = fit_fasttext_vectorizer
+        self.fit_bert_embedder = fit_bert_embedder
         self.max_tfidf_features = max_tfidf_features
         self.include_mention = include_mention
         self.ngram_range = ngram_range
@@ -302,6 +317,10 @@ class EntityLinkerSep(Component, Serializable):
         self.full_paragraph = full_paragraph
         self.max_paragraph_len = max_paragraph_len
         self.rank_in_runtime = rank_in_runtime
+        self.tag_thres_probas = tag_thres_probas
+        self.bert_emb_batch_size = bert_emb_batch_size
+        self.q_to_descr = {}
+        self.descr_to_emb = {}
 
         self.load()
 
@@ -336,6 +355,20 @@ class EntityLinkerSep(Component, Serializable):
             self.fasttext_faiss_index.add(np.array(labels_fasttext_vectors))
             faiss.write_index(self.ft_faiss_index, str(expand_path(self.fasttext_faiss_index_filename)))
             
+        if self.fit_bert_embedder:
+            q_to_descr_list = list(self.q_to_descr.items())
+            descr_length = len(q_to_descr_list)
+            
+            num_chunks = descr_length // self.bert_emb_batch_size + int(descr_length % self.bert_emb_batch_size > 0)
+            for chunk_num in range(num_chunks):
+                cur_chunk = q_to_descr_list[chunk_num*self.bert_emb_batch_size:(chunk_num + 1)*self.bert_emb_batch_size]
+                batch_entities = [el[0] for el in cur_chunk]
+                batch_descr = [el[1] for el in cur_chunk]
+                context_embs_res = list(self.bert_embedder(batch_descr)[:,:100])
+                for cur_entity, emb in zip(batch_entities, context_embs_res):
+                    self.descr_to_emb[cur_entity] = emb
+            save_pickle(self.descr_to_emb, self.save_path / self.descr_to_emb_filename)
+            
         self.tfidf_faiss_index.nprobe = self.tfidf_index_nprobe
         self.fasttext_faiss_index.nprobe = self.fasttext_index_nprobe
 
@@ -364,6 +397,9 @@ class EntityLinkerSep(Component, Serializable):
         if not self.fit_fasttext_vectorizer:
             self.fasttext_faiss_index = faiss.read_index(str(expand_path(self.fasttext_faiss_index_filename)))
             
+        if self.q_to_descr_filename:
+            self.q_to_descr = load_pickle(self.load_path / self.q_to_descr_filename)
+            
         if self.descr_to_emb_filename:
             self.descr_to_emb = load_pickle(self.load_path / self.descr_to_emb_filename)
 
@@ -388,6 +424,7 @@ class EntityLinkerSep(Component, Serializable):
     def __call__(self, entity_substr_batch: List[List[str]],
                  entity_offsets_batch: List[List[List[int]]],
                  tags_batch: List[List[str]],
+                 probas_batch: List[List[float]],
                  sentences_offsets_batch: List[List[Tuple[int, int]]],
                  sentences_batch: List[List[str]]
                  ) -> Tuple[List[List[str]], List[List[List[Tuple[float, int, float]]]],
@@ -431,16 +468,16 @@ class EntityLinkerSep(Component, Serializable):
             entity_ids_batch: [[['Q887', 'Q3180012'], ['Q159', 'Q1849069'], ['Q41964', 'Q4476750'],
                                 ['Q5462', 'Q1998912'], ['Q1096949', 'Q1894057'], ['Q874369', 'Q36232823']]]
         """
-        nf_entity_substr_batch, nf_tags_batch, nf_entity_offsets_batch = [], [], []
+        nf_entity_substr_batch, nf_tags_batch, nf_probas_batch, nf_entity_offsets_batch = [], [], [], []
         nf_entity_ids_batch, nf_conf_batch = [], []
-        fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch = [], [], []
+        fnd_entity_substr_batch, fnd_tags_batch, fnd_probas_batch, fnd_entity_offsets_batch = [], [], [], []
 
-        for entity_substr_list, tags_list, entity_offsets_list in \
-                zip(entity_substr_batch, tags_batch, entity_offsets_batch):
-            nf_entity_substr_list, nf_tags_list, nf_entity_offsets_list = [], [], []
+        for entity_substr_list, tags_list, probas_list, entity_offsets_list in \
+                zip(entity_substr_batch, tags_batch, probas_batch, entity_offsets_batch):
+            nf_entity_substr_list, nf_tags_list, nf_probas_list, nf_entity_offsets_list = [], [], [], []
             nf_entity_ids_list, nf_conf_list = [], []
-            fnd_entity_substr_list, fnd_tags_list, fnd_entity_offsets_list = [], [], []
-            for entity_substr, tag, entity_offsets in zip(entity_substr_list, tags_list, entity_offsets_list):
+            fnd_entity_substr_list, fnd_tags_list, fnd_probas_list, fnd_entity_offsets_list = [], [], [], []
+            for entity_substr, tag, proba, entity_offsets in zip(entity_substr_list, tags_list, probas_list, entity_offsets_list):
                 nf = False
                 for tok in self.not_found_tokens:
                     if tok in entity_substr:
@@ -449,6 +486,7 @@ class EntityLinkerSep(Component, Serializable):
                 if nf:
                     nf_entity_substr_list.append(entity_substr)
                     nf_tags_list.append(tag)
+                    nf_probas_list.append(proba)
                     nf_entity_offsets_list.append(entity_offsets)
                     if self.num_entities_to_return == 1:
                         nf_entity_ids_list.append(self.not_found_str)
@@ -459,18 +497,21 @@ class EntityLinkerSep(Component, Serializable):
                 else:
                     fnd_entity_substr_list.append(entity_substr)
                     fnd_tags_list.append(tag)
+                    fnd_probas_list.append(proba)
                     fnd_entity_offsets_list.append(entity_offsets)
             nf_entity_substr_batch.append(nf_entity_substr_list)
             nf_tags_batch.append(nf_tags_list)
+            nf_probas_batch.append(nf_probas_list)
             nf_entity_offsets_batch.append(nf_entity_offsets_list)
             nf_entity_ids_batch.append(nf_entity_ids_list)
             nf_conf_batch.append(nf_conf_list)
             fnd_entity_substr_batch.append(fnd_entity_substr_list)
             fnd_tags_batch.append(fnd_tags_list)
+            fnd_probas_batch.append(fnd_probas_list)
             fnd_entity_offsets_batch.append(fnd_entity_offsets_list)
 
         fnd_entity_ids_batch, fnd_conf_batch = \
-            self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_entity_offsets_batch, sentences_batch,
+            self.link_entities(fnd_entity_substr_batch, fnd_tags_batch, fnd_probas_batch, fnd_entity_offsets_batch, sentences_batch,
                                sentences_offsets_batch)
 
         entity_substr_batch, tags_batch, entity_offsets_batch, entity_ids_batch, conf_batch = [], [], [], [], []
@@ -493,7 +534,9 @@ class EntityLinkerSep(Component, Serializable):
         else:
             return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
 
-    def link_entities(self, entity_substr_batch: List[List[str]], tags_batch: List[List[str]],
+    def link_entities(self, entity_substr_batch: List[List[str]],
+                      tags_batch: List[List[str]],
+                      probas_batch: List[List[float]],
                       entity_offsets_batch: List[List[List[int]]],
                       sentences_batch: List[List[str]],
                       sentences_offsets_batch: List[List[Tuple[int, int]]]) -> List[List[List[Tuple[int, int]]]]:
@@ -503,200 +546,71 @@ class EntityLinkerSep(Component, Serializable):
                                  if word not in self.stopwords and len(word) > 0]
                                 for entity_substr in entity_substr_list]
                                for entity_substr_list in entity_substr_batch]
-        nf_words_doc_nums = []
-        word_count = 0
-        indices_batch = []
-        word_fnd_flags_batch = []
-        word_counts_batch = []
-        fnd_words_batch = []
-        word_tags_batch = []
-        ft_entity_substr_list = []
-        ft_doc_nums = []
-        for doc_num, (entity_substr_list, tags_list) in enumerate(zip(entity_substr_batch, tags_batch)):
-            for entity_substr in entity_substr_list:
-                ft_entity_substr_list.append(entity_substr)
-                ft_doc_nums.append(doc_num)
-            indices = []
-            word_fnd_flags = []
-            word_counts = []
-            word_tags = []
-            fnd_words = []
-            for i, (entity_substr, tag) in enumerate(zip(entity_substr_list, tags_list)):
-                for word in entity_substr:
-                    if word in self.word_to_idlist:
-                        fnd_words.append(word)
-                        word_fnd_flags.append(True)
-                    else:
-                        nf_words_doc_nums.append((word, doc_num))
-                        word_fnd_flags.append(False)
-                    indices.append(i)
-                    word_counts.append(word_count)
-                    word_tags.append(tag)
-                    morph_parsed_word = self.morph_parse(word)
-                    if word != morph_parsed_word:
-                        if morph_parsed_word in self.word_to_idlist:
-                            fnd_words.append(morph_parsed_word)
-                            word_fnd_flags.append(True)
-                        else:
-                            nf_words_doc_nums.append((morph_parsed_word, doc_num))
-                            word_fnd_flags.append(False)
-                        indices.append(i)
-                        word_counts.append(word_count)
-                        word_tags.append(tag)
-                    word_count += 1
-            indices_batch.append(indices)
-            fnd_words_batch.append(fnd_words)
-            word_fnd_flags_batch.append(word_fnd_flags)
-            word_counts_batch.append(word_counts)
-            word_tags_batch.append(word_tags)
-        log.debug(f"words, indices, tags {nf_words_doc_nums}")
-        
-        ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in ft_entity_substr_list]
-        ft_res = []
-        if ft_entity_emb_list:
-            ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list), self.num_faiss_candidate_entities)
-        
-        if len(ft_res) == 2:
-            D_ft_all, I_ft_all = ft_res
-            D_ft_batch, I_ft_batch = [], []
-            D_ft_list, I_ft_list = [], []
-            prev_doc_num = 0
-            for D, I, doc_num in zip(D_ft_all, I_ft_all, ft_doc_nums):
-                if doc_num != prev_doc_num:
-                    D_ft_batch.append(D_ft_list)
-                    I_ft_batch.append(I_ft_list)
-                    if doc_num - prev_doc_num > 1:
-                        for j in range(doc_num - prev_doc_num - 1):
-                            D_ft_batch.append([])
-                            I_ft_batch.append([])
-                    D_ft_list, I_ft_list = [], []
-                D_ft_list.append(D)
-                I_ft_list.append(I)
-                prev_doc_num = doc_num
-            
-            for i in range(len(entity_substr_batch) - len(D_ft_batch)):
-                if D_ft_list:
-                    D_ft_batch.append(D_ft_list)
-                    I_ft_batch.append(I_ft_list)
-                    D_ft_list, I_ft_list = [], []
-                else:
-                    D_ft_batch.append([])
-                    I_ft_batch.append([])
-        else:
-            D_ft_batch = [[] for _ in entity_substr_batch]
-            I_ft_batch = [[] for _ in entity_substr_batch]
-        
-        nf_words, nf_doc_nums = [], []
-        if nf_words_doc_nums:
-            nf_words, nf_doc_nums = zip(*nf_words_doc_nums)
-            nf_words = list(nf_words)
-            nf_doc_nums = list(nf_doc_nums)
-        log.debug(f"nf_words {nf_words} nf_doc_nums {nf_doc_nums}")
-        log.debug(f"fnd words {fnd_words_batch} word counts {word_counts_batch} tags {word_tags_batch}")
-        D_all, I_all = [], []
-        if nf_words:
-            ent_substr_tfidfs = self.tfidf_vectorizer.transform(nf_words).toarray().astype(np.float32)
-            D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
-        D_batch, I_batch = [], []
-        D_list, I_list = [], []
-        prev_doc_num = 0
-        for D, I, doc_num in zip(D_all, I_all, nf_doc_nums):
-            if doc_num != prev_doc_num:    
-                D_batch.append(D_list)
-                I_batch.append(I_list)
-                if doc_num - prev_doc_num > 1:
-                    for j in range(doc_num - prev_doc_num - 1):
-                        D_batch.append([])
-                        I_batch.append([])
-                D_list, I_list = [], []
-            D_list.append(D)
-            I_list.append(I)
-            prev_doc_num = doc_num
-        if D_list:
-            D_batch.append(D_list)
-            I_batch.append(I_list)
-        
-        for i in range(len(entity_substr_batch) - len(D_batch)):
-            D_batch.append([])
-            I_batch.append([])
         
         entity_ids_batch = []
         conf_batch = []
-        for entity_substr_list, entity_offsets_list, sentences_list, sentences_offsets_list, \
-            indices, word_counts, word_tags, tags, fnd_words, word_fnd_flags, D, I, D_ft, I_ft in \
-                zip(entity_substr_batch, entity_offsets_batch, sentences_batch, sentences_offsets_batch,
-                    indices_batch, word_counts_batch, word_tags_batch, tags_batch, fnd_words_batch,
-                    word_fnd_flags_batch, D_batch, I_batch, D_ft_batch, I_ft_batch):
+        for entity_substr_list, entity_offsets_list, sentences_list, sentences_offsets_list, tags_list, probas_list in \
+                zip(entity_substr_batch, entity_offsets_batch, sentences_batch, sentences_offsets_batch, tags_batch, probas_batch):
             entity_ids_list, conf_list = [], []
             if entity_substr_list:
                 tm_ind_st = time.time()
-                substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
-                candidate_entities_dict = OrderedDict()
-                for i in range(len(entity_substr_list)):
-                    candidate_entities_dict[i] = set()
-                prev_word_count = 0
-                prev_index = 0
-                candidate_entities = {}
-                words_i = 0
-                ind_i = 0
-                for i, (index, word_count, tag, flag) in \
-                    enumerate(zip(indices, word_counts, word_tags, word_fnd_flags)):
-                    if flag:
-                        scores_list = [1.0]
-                        ind_list = [fnd_words[words_i]]
-                        words_i += 1
-                    else:
-                        scores_list = D[ind_i]
-                        ind_list = I[ind_i]
-                        if self.num_tfidf_faiss_cells > 1:
-                            scores_list = [1.0 - score for score in scores_list]
-                        ind_i += 1
-                    if word_count != prev_word_count:
-                        if prev_index not in candidate_entities_dict:
-                            candidate_entities_dict[prev_index] = set()
-                        candidate_entities_dict[prev_index] = \
-                            candidate_entities_dict[prev_index].union({(entity, cand_entity_len, score)
-                                                                       for (entity, cand_entity_len), score in
-                                                                       candidate_entities.items()})
-                        candidate_entities = {}
-                    
-                    for ind, score in zip(ind_list, scores_list):
-                        if flag:
-                            entities_set = self.word_to_idlist[ind]
-                        else:
-                            entities_set = self.word_to_idlist[self.word_list[ind]]
-                        entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag]
-                                                                              or entity[0] in self.entities_types_sets[
-                                                                                  "AMB"])}
-                        for entity in entities_set:
-                            if entity in candidate_entities:
-                                if score > candidate_entities[entity]:
-                                    candidate_entities[entity] = score
-                            else:
-                                candidate_entities[entity] = score
-                    prev_index = index
-                    prev_word_count = word_count
-                    if not flag:
-                        debug_words = [(self.word_list[ind], score) for ind, score in zip(ind_list[:10],
-                                                                                          scores_list[:10])]
-                        log.debug(f"{index} candidate_entities {debug_words}")
-                
-                if index not in candidate_entities_dict:
-                    candidate_entities_dict[index] = set()
-                candidate_entities_dict[index] = candidate_entities_dict[index].union({(entity, cand_entity_len, score)
-                                                   for (entity, cand_entity_len), score in
-                                                   candidate_entities.items()})
+                ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in entity_substr_list]
+                ft_res = []
+                if ft_entity_emb_list:
+                    ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list), self.num_faiss_candidate_entities)
+                D_ft_all, I_ft_all = [], []
+                if len(ft_res) == 2:
+                    D_ft_all, I_ft_all = ft_res
+                words = []
+                entity_substr_num = []
+                for i, entity_substr in enumerate(entity_substr_list):
+                    words += entity_substr
+                    entity_substr_num += [i for _ in entity_substr]
 
-                candidate_entities_total = candidate_entities_dict.values()
-                candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
-                                            for candidate_entities, substr_len in
-                                            zip(candidate_entities_total, substr_lens)]
-                
+                ent_substr_tfidfs = self.tfidf_vectorizer.transform(words).toarray().astype(np.float32)
+                D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+
+                ind_i = 0
+                candidate_entities_dict = {index: set() for index in range(len(entity_substr_list))}
                 candidate_entities_ft_total = [[] for _ in entity_substr_list]
-                if D_ft and I_ft:
-                    candidate_entities_ft_dict = OrderedDict()
-                    for index, (entity_substr, scores_list, ind_list, tag) \
-                            in enumerate(zip(entity_substr_list, D_ft, I_ft, tags)):
+                substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
+                for i, (entity_substr, tag, proba, cand_entity_len) in \
+                        enumerate(zip(entity_substr_list, tags_list, probas_list, substr_lens)):
+                    candidate_entities = {}
+                    for word in entity_substr:
+                        entities_set = set()
+                        if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
+                            entities_set = self.word_to_idlist.get(word, set())
+                            entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                            morph_parsed_word = self.morph_parse(word)
+                            if word != morph_parsed_word:
+                                entities_set = entities_set.union(self.word_to_idlist[morph_parsed_word])
+                                entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                            for entity in entities_set:
+                                candidate_entities[entity] = 1.0
+                        else:
+                            scores_list = D_all[ind_i]
+                            ind_list = I_all[ind_i]
+                            if self.num_tfidf_faiss_cells > 1:
+                                scores_list = [1.0 - score for score in scores_list]
+                            for ind, score in zip(ind_list, scores_list):
+                                entities_set = self.word_to_idlist[self.word_list[ind]]
+                                entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                                for entity in entities_set:
+                                    if entity in candidate_entities:
+                                        if score > candidate_entities[entity]:
+                                            candidate_entities[entity] = score
+                                    else:
+                                        candidate_entities[entity] = score
+                        candidate_entities_dict[i] = candidate_entities_dict[i].union({(entity, cand_entity_len, score)
+                                                     for (entity, cand_entity_len), score in
+                                                     candidate_entities.items()})
+                        ind_i += 1
+
+                if isinstance(D_ft_all, np.ndarray):
+                    candidate_entities_ft_dict = {index: [] for index in range(len(entity_substr_list))}
+                    for index, (entity_substr, scores_list, ind_list, tag, proba) \
+                            in enumerate(zip(entity_substr_list, D_ft_all, I_ft_all, tags_list, probas_list)):
                         entities_set = set()
                         for ind, score in zip(ind_list, scores_list):
                             if score < 400.0:
@@ -704,11 +618,16 @@ class EntityLinkerSep(Component, Serializable):
                                 fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
                                 for entity_id in self.label_to_q[entity_label]:
                                     entities_set.add((entity_id, fuzz_ratio))
+                        entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                         candidate_entities_ft_dict[index] = list(entities_set)
                     candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
-                
+                    
+                candidate_entities_total = candidate_entities_dict.values()
+                candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
+                                            for candidate_entities, substr_len in
+                                            zip(candidate_entities_total, substr_lens)]
                 candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
-                
+
                 log.debug(f"length candidate entities list {len(candidate_entities_total)}")
                 candidate_entities_list = []
                 entities_scores_list = []
@@ -753,14 +672,14 @@ class EntityLinkerSep(Component, Serializable):
                     if self.rank_in_runtime:
                         entity_ids_list, conf_list = self.rank_by_description_runtime(entity_substr_list,
                                                                                       entity_offsets_list,
-                                                                                      candidate_entities_list, tags,
+                                                                                      candidate_entities_list, tags_list,
                                                                                       entities_scores_list,
                                                                                       sentences_list,
                                                                                       sentences_offsets_list,
                                                                                       substr_lens)
                     else:
                         entity_ids_list, conf_list = self.rank_by_description(entity_substr_list, entity_offsets_list,
-                                                                              candidate_entities_list, tags,
+                                                                              candidate_entities_list, tags_list,
                                                                               entities_scores_list, sentences_list,
                                                                               sentences_offsets_list, substr_lens)
                 tm_descr_end = time.time()
@@ -1089,3 +1008,9 @@ class EntityLinkerSep(Component, Serializable):
                 entity_labels_list.append(entity_labels)
             entity_labels_batch.append(entity_labels_list)
         return entity_labels_batch
+        
+    def filter_entities_by_tags(self, entities_set, tag, proba):
+        if proba > self.tag_thres_probas[tag]:
+            entities_set = {entity for entity in entities_set if (entity[0] in self.entities_types_sets[tag]
+                                                                  or entity[0] in self.entities_types_sets["AMB"])}
+        return entities_set

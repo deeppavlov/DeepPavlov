@@ -70,6 +70,7 @@ class EntityDetectionParser(Component):
             tags = [line.split('\t')[0] for line in fl.readlines()]
             self.entity_prob_ind = {entity_tag: [i for i, tag in enumerate(tags) if entity_tag in tag]
                                     for entity_tag in self.entity_tags}
+            self.tags_ind = {tag: i for i, tag in enumerate(tags)}
             self.type_prob_ind = [i for i, tag in enumerate(tags) if self.type_tag in tag]
             self.et_prob_ind = [i for tag, ind in self.entity_prob_ind.items() for i in ind] + self.type_prob_ind
             for entity_tag, tag_ind in self.entity_prob_ind.items():
@@ -79,7 +80,8 @@ class EntityDetectionParser(Component):
                 self.tag_ind_dict[ind] = self.type_tag
             self.tag_ind_dict[0] = self.o_tag
 
-    def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]]) -> \
+    def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]],
+                       tokens_probas_batch: np.ndarray) -> \
             Tuple[List[Union[List[str], Dict[str, List[str]]]], List[List[str]],
                   List[Union[List[int], Dict[str, List[List[int]]]]]]:
         """
@@ -93,18 +95,14 @@ class EntityDetectionParser(Component):
             Batch of lists of token indices in the text which correspond to entities
         """
         entities_batch = []
-        types_batch = []
         positions_batch = []
-        for tokens, tokens_info in zip(question_tokens_batch, tokens_info_batch):
-            if isinstance(tokens_info, np.ndarray):
-                tags, tag_probas = self.tags_from_probas(tokens, tokens_info)
-                entities, types, positions = self.entities_from_tags(tokens, tags, tag_probas)
-            else:
-                entities, types, positions = self.entities_from_tags(tokens, tokens_info)
+        probas_batch = []
+        for tokens, tokens_info, probas in zip(question_tokens_batch, tokens_info_batch, tokens_probas_batch):
+            entities, positions, entities_probas = self.entities_from_tags(tokens, tokens_info, probas)
             entities_batch.append(entities)
-            types_batch.append(types)
             positions_batch.append(positions)
-        return entities_batch, types_batch, positions_batch
+            probas_batch.append(entities_probas)
+        return entities_batch, positions_batch, probas_batch
 
     def tags_from_probas(self, tokens, probas):
         """
@@ -131,7 +129,7 @@ class EntityDetectionParser(Component):
 
         return tags, tag_probas
 
-    def entities_from_tags(self, tokens, tags, tag_probas=None):
+    def entities_from_tags(self, tokens, tags, tag_probas):
         """
         This method makes lists of substrings corresponding to entities and entity types
         and a list of indices of tokens which correspond to entities
@@ -147,21 +145,17 @@ class EntityDetectionParser(Component):
             list of indices of tokens which correspond to entities (or a dict of tags (keys)
                 and list of indices of entity tokens)
         """
-        if not tag_probas:
-            tag_probas = [1.0 for _ in tokens]
         entities_dict = defaultdict(list)
-        entity_types = []
         entity_dict = defaultdict(list)
         entity_positions_dict = defaultdict(list)
         entities_positions_dict = defaultdict(list)
-        entity_type = []
-        types_probas = []
-        type_proba = []
+        entities_probas_dict = defaultdict(list)
+        entity_probas_dict = defaultdict(list)
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''),
                           ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
 
         cnt = 0
-        for n, (tok, tag, proba) in enumerate(zip(tokens, tags, tag_probas)):
+        for n, (tok, tag, probas) in enumerate(zip(tokens, tags, tag_probas)):
             if tag.split('-')[-1] in self.entity_tags:
                 f_tag = tag.split("-")[-1]
                 if tag.startswith("B-") and any(entity_dict.values()):
@@ -172,11 +166,15 @@ class EntityDetectionParser(Component):
                         if entity:
                             entities_dict[c_tag].append(entity)
                             entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
+                            cur_probas = entity_probas_dict[c_tag]
+                            entities_probas_dict[c_tag].append(round(sum(cur_probas)/len(cur_probas), 4))
                         entity_dict[c_tag] = []
                         entity_positions_dict[c_tag] = []
+                        entity_probas_dict[c_tag] = []
                 
                 entity_dict[f_tag].append(tok)
                 entity_positions_dict[f_tag].append(cnt)
+                entity_probas_dict[f_tag].append(probas[self.tags_ind[tag]])
 
             elif any(entity_dict.values()):
                 for tag, entity in entity_dict.items():
@@ -187,27 +185,20 @@ class EntityDetectionParser(Component):
                     if entity:
                         entities_dict[c_tag].append(entity)
                         entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
+                        cur_probas = entity_probas_dict[c_tag]
+                        entities_probas_dict[c_tag].append(round(sum(cur_probas)/len(cur_probas), 4))
+                        
                     entity_dict[c_tag] = []
                     entity_positions_dict[c_tag] = []
-            elif len(entity_type) > 0:
-                entity_type = ' '.join(entity_type)
-                for old, new in replace_tokens:
-                    entity_type = entity_type.replace(old, new)
-                entity_types.append(entity_type)
-                entity_type = []
-                types_probas.append(np.mean(type_proba))
-                type_proba = []
+                    entity_probas_dict[c_tag] = []
             cnt += 1
-
-        if entity_types:
-            entity_types = sorted(zip(entity_types, types_probas), key=lambda x: x[1], reverse=True)
-            entity_types = [entity_type[0] for entity_type in entity_types]
 
         entities_list = [entity for tag, entities in entities_dict.items() for entity in entities]
         entities_positions_list = [position for tag, positions in entities_positions_dict.items()
                                    for position in positions]
+        entities_probas_list = [proba for tag, proba  in entities_probas_dict.items() for proba in probas]
 
         if self.return_entities_with_tags:
-            return entities_dict, entity_types, entities_positions_dict
+            return entities_dict, entities_positions_dict, entities_probas_dict
         else:
-            return entities_list, entity_types, entities_positions_list
+            return entities_list, entities_positions_list, entities_probas_list

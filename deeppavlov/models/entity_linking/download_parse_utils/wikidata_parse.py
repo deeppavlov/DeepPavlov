@@ -23,6 +23,9 @@ class WikidataParser:
                  chunk_num_lines: int = 60000,
                  total_lines_num: int = 86000000,
                  save_path: str = "~/.deeppavlov/downloads/wikidata_parse",
+                 log_path: str = "~/.deeppavlov/downloads/wikidata_parse_logs",
+                 log_parse_errors: str = "log_parse_errors.txt",
+                 log_parse_progress: str = "log_parse_progress.txt",
                  num_processors=None):
 
         self.wikidata_filename = wikidata_filename
@@ -30,6 +33,13 @@ class WikidataParser:
         self.total_lines_num = total_lines_num
         self.save_path = Path(save_path).expanduser().resolve()
         self.save_path.mkdir(parents=True, exist_ok=True)
+        self.log_path = Path(log_path).expanduser().resolve()
+        self.log_path.mkdir(parents=True, exist_ok=True)
+        self.log_parse_errors = log_parse_errors
+        self.log_parse_progress = log_parse_progress
+        os.remove(self.log_path / self.log_parse_errors)
+        os.remove(self.log_path / self.log_parse_progress)
+        
         self.manager = mp.Manager()
         if num_processors is None:
             self.num_processors = mp.cpu_count()
@@ -83,8 +93,9 @@ class WikidataParser:
                     number_of_relations = len(entity_dict["claims"])
                     entity_info["number_of_relations"] = number_of_relations
 
-        except:
-            pass
+        except Exception as e:
+            self.log_to_file("process_sample_error", entity_dict, self.log_parse_errors)
+            self.log_to_file("process_sample_error", e, self.log_parse_errors)
 
         return entity_id, entity_info
 
@@ -103,8 +114,9 @@ class WikidataParser:
                 try:
                     entity = json.loads(line)
                     entity_id, entity_info = self.process_sample(entity)
-                except:
-                    pass
+                except Exception as e:
+                    self.log_to_file("run_error", line, self.log_parse_errors)
+                    self.log_to_file("run_error", e, self.log_parse_errors)
                 if entity_id:
                     self.wiki_dict[entity_id] = entity_info
                      
@@ -119,14 +131,23 @@ class WikidataParser:
         num_iterations = 0
         if continue_parsing:
             files = os.listdir(self.save_path)
+            self.log_to_file("already existing files", files, self.log_parse_progress)
             num_iterations = len(files)
+            
+            total_parsed_elements = 0
+            for filename in files:
+                with open(f"{self.save_path}/{filename}", 'r') as fl:
+                    already_parsed_data = pickle.load(fl)
+                    total_parsed_elements += len(already_parsed_data)
+            self.log_to_file("total_parsed_elements", total_parsed_elements, self.log_parse_progress)
 
-            for _ in range(num_iterations * self.chunk_num_lines * self.num_processors):
+            for _ in range(total_parsed_elements):
                 line = self.bz_file.readline()
                 parsed_lines += 1
 
         while True:
             log.debug(f"iteration number {num_iterations}")
+            self.log_to_file("iteration number", num_iterations, self.log_parse_progress)
             self.wiki_dict = self.manager.dict()
             common_list = []
 
@@ -156,3 +177,11 @@ class WikidataParser:
             save_pickle(self.wiki_dict, self.save_path / f"{num_iterations}.pickle")
 
             num_iterations += 1
+            
+    def log_to_file(self, log_title, log_info, filename):
+        with open(self.log_path / filename, 'a') as out:
+            out.write(str(log_title)+'\n')
+            out.write("_"*70+'\n')
+            out.write(str(log_info)+'\n')
+            out.write("_"*70+'\n')
+        out.close()

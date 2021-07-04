@@ -1,4 +1,4 @@
-from main import download_wikidata, parse_wikidata, State
+from main import parse_entities, update_faiss, State
 
 
 if __name__ == '__main__':

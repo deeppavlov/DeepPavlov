@@ -1,10 +1,10 @@
 {
   "chainer": {
-    "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
+    "in": ["entity_substr", "entity_offsets", "tags", "probas", "sentences_offsets", "sentences"],
     "pipe": [
       {
         "class_name": "entity_linker_sep",
-        "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences"],
+        "in": ["entity_substr", "entity_offsets", "tags", "probas", "sentences_offsets", "sentences"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
@@ -28,6 +28,7 @@
         "use_gpu": false,
         "fit_tfidf_vectorizer": false,
         "fit_fasttext_vectorizer": false,
+        "fit_bert_embedder": false,
         "max_tfidf_features": 500,
         "include_mention": false,
         "ngram_range": [2, 2],

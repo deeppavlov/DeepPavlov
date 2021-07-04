@@ -148,19 +148,13 @@ def update_faiss(state: State):
         FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
         config = parse_config('entity_linking_vx_sep_cpu.json')
         config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
-        config['chainer']['pipe'][-1]['fit_vectorizer'] = True
+        config['chainer']['pipe'][-1]['fit_tfidf_vectorizer'] = True
+        config['chainer']['pipe'][-1]['fit_fasttext_vectorizer'] = True
+        config['chainer']['pipe'][-1]['fit_bert_embedder'] = True
         config['chainer']['pipe'][-1]['vectorizer_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['vectorizer_filename']).name
         config['chainer']['pipe'][-1]['faiss_index_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['faiss_index_filename']).name
         build_model(config)
         log.info('faiss cpu updated')
-        config = parse_config('entity_linking_vx_sep_gpu.json')
-        config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
-        config['chainer']['pipe'][-1]['fit_vectorizer'] = True
-        config['chainer']['pipe'][-1]['use_gpu'] = False
-        config['chainer']['pipe'][-1]['vectorizer_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['vectorizer_filename']).name
-        config['chainer']['pipe'][-1]['faiss_index_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['faiss_index_filename']).name
-        build_model(config)
-        log.info('faiss gpu updated')
         safe_rmtree(FAISS_OLD_PATH)
         if FAISS_PATH.exists():
             FAISS_PATH.rename(FAISS_OLD_PATH)
