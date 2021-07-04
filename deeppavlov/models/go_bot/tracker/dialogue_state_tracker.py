@@ -221,6 +221,94 @@ class DialogueStateTracker(FeaturizedTracker):
         return slots
 
 
+class MemorizingDialogueStateTracker(DialogueStateTracker):
+    def get_current_knowledge(self) -> DSTKnowledge:
+        res = super().get_current_knowledge()
+        res.stories = self.stories
+        res.stories_ptrs = self.stories_ptrs
+        return res
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.act2act_id: dict = {}
+        self.act_id2act: dict = {}
+        self.stories = self._load_stories(self.stories_path)
+        self._setup_action_ixes(self.stories)
+        self.stories_ptrs = [-1]*len(self.stories)
+
+
+    @staticmethod
+    def from_gobot_params(parent_tracker: FeaturizedTracker,
+                          nlg_manager: NLGManagerInterface,
+                          policy_network_params: PolicyNetworkParams,
+                          database: Component):
+        slot_names = parent_tracker.slot_names
+
+        # region set formfilling info
+        act2act_id = {a_text: nlg_manager.get_action_id(a_text) for a_text in nlg_manager.known_actions()}
+        action_id2aqd_slots_ids, action_id2req_slots_ids = DialogueStateTracker.extract_reqiured_acquired_slots_ids_mapping(
+            act2act_id, slot_names, nlg_manager, parent_tracker)
+
+        # todo why so ugly and duplicated in multiple users tracker
+        dialogue_state_tracker = MemorizingDialogueStateTracker(slot_names, nlg_manager.num_of_known_actions(),
+                                                                nlg_manager.get_api_call_action_id(),
+                                                                policy_network_params.hidden_size,
+                                                                database,
+                                                                parent_tracker.domain_yml_path,
+                                                                parent_tracker.stories_path)
+
+        dialogue_state_tracker.ffill_act_ids2req_slots_ids = action_id2req_slots_ids
+        dialogue_state_tracker.ffill_act_ids2aqd_slots_ids = action_id2aqd_slots_ids
+        dialogue_state_tracker.act2act_id = act2act_id
+        dialogue_state_tracker.act_id2act = {v:k for k, v in act2act_id.items()}
+        dialogue_state_tracker._setup_action_ixes(dialogue_state_tracker.stories)
+        # endregion set formfilling info
+        return dialogue_state_tracker
+
+    def _setup_action_ixes(self, stories_lidi):
+        for story in stories_lidi:
+            for el in story:
+                act_name_k = (el["action_name"],)
+                if act_name_k in self.act2act_id:
+                    el["action_ix"] = self.act2act_id[act_name_k]
+
+    def _load_stories(self, stories_path: Union[Path, str]):
+        story_lines = []
+        with open(stories_path) as stories_f:
+
+            for line in stories_f:
+                line = line.strip()
+                if not line:
+                    continue
+                if line.startswith("##"):
+                    story_lines.append([])
+                else:
+                    story_lines[-1].append(line)
+        stories = []
+        for story in story_lines:
+            story_adj = []
+            for turn_ix, turn in enumerate(story):
+                if turn_ix % 2 == 0:
+                    continue  # we iterate over system turns
+                else:
+                    story_adj.append({
+                        "utter_needed": story[turn_ix-1].strip(" *"),  # todo smwhr exists a special method for this
+                        "action_name": story[turn_ix].strip(" -"),  # todo smwhr exists a special method for this
+                    })
+            stories.append(story_adj)
+        return stories
+
+    def update_previous_action(self, prev_act_id: int) -> None:
+        super().update_previous_action(prev_act_id)
+        act_name = self.act_id2act[prev_act_id][0]
+        for ix, (story_ptr, story) in enumerate(zip(self.stories_ptrs, self.stories)):
+            next_action_ix = story_ptr + 1
+            if next_action_ix<len(story) and story[next_action_ix]["action_name"] == act_name:
+                self.stories_ptrs[ix] += 1
+
+
+
+
 class MultipleUserStateTrackersPool(object):
     def __init__(self, base_tracker: DialogueStateTracker):
         self._ids_to_trackers = {}
@@ -240,10 +328,11 @@ class MultipleUserStateTrackersPool(object):
         return tracker
 
     def new_tracker(self):
-        # todo deprecated and never used?
-        tracker = DialogueStateTracker(self.base_tracker.slot_names, self.base_tracker.n_actions,
-                                       self.base_tracker.api_call_id, self.base_tracker.hidden_size,
-                                       self.base_tracker.database)
+       # todo deprecated and never used?  (response: nope, but should be removed in favor of init_new_tracker)
+        tracker = self.base_tracker.__class__(
+            self.base_tracker.slot_names, self.base_tracker.n_actions,
+            self.base_tracker.api_call_id, self.base_tracker.hidden_size,
+            self.base_tracker.database)
         return tracker
 
     def get_or_init_tracker(self, user_id: int):
@@ -266,7 +355,12 @@ class MultipleUserStateTrackersPool(object):
         )
         tracker.ffill_act_ids2req_slots_ids = tracker_entity.ffill_act_ids2req_slots_ids
         tracker.ffill_act_ids2aqd_slots_ids = tracker_entity.ffill_act_ids2aqd_slots_ids
-
+        if type(tracker_entity) == MemorizingDialogueStateTracker:
+            # wip: memorizing tracker and policy
+            tracker.act2act_id = tracker_entity.act2act_id
+            tracker.act_id2act = tracker_entity.act_id2act
+        if isinstance(tracker, MemorizingDialogueStateTracker):
+            tracker._setup_action_ixes(tracker.stories)
         self._ids_to_trackers[user_id] = tracker
 
     def reset(self, user_id: int = None) -> None:

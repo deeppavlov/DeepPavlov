@@ -7,7 +7,9 @@ import numpy as np
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import read_yaml
 from deeppavlov.core.common.registry import register
-from deeppavlov.dataset_readers.md_yaml_dialogs_reader import DomainKnowledge, MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.md_yaml_dialogs_reader import \
+    MD_YAML_DialogsDatasetReader
+from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.tracker.dto.tracker_knowledge_interface import TrackerKnowledgeInterface
 from deeppavlov.models.go_bot.tracker.tracker_interface import TrackerInterface
@@ -36,6 +38,7 @@ class FeaturizedTracker(TrackerInterface):
                  # actions_required_acquired_slots_path: Optional[Union[str, Path]]=None,
                  domain_yml_path: Optional[Union[str, Path]]=None,
                  stories_yml_path: Optional[Union[str, Path]]=None,
+                 tracker_mode: str = "NN",
                  **kwargs) -> None:
         self.slot_names = list(slot_names)
         self.domain_yml_path = domain_yml_path
@@ -44,6 +47,8 @@ class FeaturizedTracker(TrackerInterface):
             self._load_actions2slots_formfilling_info_from(domain_yml_path, stories_yml_path)
         self.history = []
         self.current_features = None
+        assert tracker_mode in {"NN", "MEM"}
+        self.mode = tracker_mode
 
     @property
     def state_size(self) -> int:
@@ -216,7 +221,7 @@ class FeaturizedTracker(TrackerInterface):
                 curr_action = step["action"]
                 if curr_action.startswith("form"):
                     curr_action = json.loads(curr_action[len("form"):])["name"]
-                    print(curr_action)
+                    # print(curr_action)
                 if curr_action in form_names:
                     prev_forms.append(curr_action)
                 if curr_action in potential_api_or_db_actions:

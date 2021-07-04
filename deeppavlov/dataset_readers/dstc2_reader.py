@@ -120,6 +120,20 @@ class DSTC2DatasetReader(DatasetReader):
             return [data[idx['start']:idx['end']] for idx in dialog_indices]
         return data
 
+    @classmethod
+    def _read_from_batch(cls, batch, dialogs=False):
+        """Returns data from single batch"""
+        log.debug(f"[loading dialogs from batch of len {len(batch)}]")
+
+        utterances, responses, dialog_indices = \
+            cls._get_turns(batch, with_indices=True)
+
+        data = list(map(cls._format_turn, zip(utterances, responses)))
+
+        if dialogs:
+            return [data[idx['start']:idx['end']] for idx in dialog_indices]
+        return data
+
     @staticmethod
     def _format_turn(turn):
         turn_x, turn_y = turn

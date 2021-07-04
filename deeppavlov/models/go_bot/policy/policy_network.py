@@ -18,7 +18,7 @@ from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresent
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
 # todo
-from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
 from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
@@ -384,7 +384,7 @@ class PolicyNetwork(LRScheduledTFModel):
                        batch_dialogues_targets: BatchDialoguesTargets) -> dict:
 
         feed_dict = {
-            self._dropout_keep_prob: 1.,
+            self._dropout_keep_prob: 1. - self.dropout_rate,
             self._utterance_mask: batch_dialogues_features.b_padded_dialogue_length_mask,
             self._features: batch_dialogues_features.b_featuress,
             self._action: batch_dialogues_targets.b_action_ids,
@@ -453,3 +453,64 @@ class PolicyNetwork(LRScheduledTFModel):
 
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} _save_nn_params()")
+
+class MemorizingPolicy(PolicyNetwork):
+    def __init__(self, network_params_passed: PolicyNetworkParams,
+                 tokens_dims: TokensVectorRepresentationParams,
+                 features_params: MemorizingGoBotParams,
+                 load_path,
+                 save_path,
+                 debug=False,
+                 **kwargs):
+        super().__init__(network_params_passed, tokens_dims, features_params, load_path, save_path, debug, **kwargs)
+        self.intent_ids2intents = features_params.intent_ids2intents
+        self.intents2intent_ids = features_params.intents2intent_ids
+
+    def digitize_features(self,
+                          nlu_response: NLUResponse,
+                          tracker_knowledge: DSTKnowledge) -> DigitizedPolicyFeatures:
+        intent_name = self.intent_ids2intents.get(np.argmax(nlu_response.intents))
+        # compute the actuap prediction
+        concat_feats = intent_name  # todo warning!!! do not merge until rewritten !!!
+        possible_actions = []
+        for story_ix, (story_ptr, story) in enumerate(zip(tracker_knowledge.stories_ptrs, tracker_knowledge.stories)):
+            next_action_ptr = story_ptr + 1
+            if next_action_ptr < len(story) and story[next_action_ptr]["utter_needed"] == intent_name:
+                possible_actions.append((story[next_action_ptr]["action_name"], story[next_action_ptr]["action_ix"]))
+            elif any(ptr > -1 for ptr in tracker_knowledge.stories_ptrs):
+                tracker_knowledge.stories_ptrs[story_ix] = len(story)  # mark this story as no longer accessible
+        if len(possible_actions) > 2:
+            log.debug("STORIES: multiple proceedings available, picked the first one")
+        (action_name, action_ix) = possible_actions[0] if possible_actions else (None, None)
+
+        concat_feats = action_ix
+        return DigitizedPolicyFeatures(None, concat_feats, None)
+
+    def __call__(self, batch_dialogues_features: BatchDialoguesFeatures,
+                 states_c: np.ndarray, states_h: np.ndarray, prob: bool = False,
+                 *args, **kwargs) -> PolicyPrediction:
+
+        states_c = [[states_c]]  # list of list aka batch of dialogues
+        states_h = [[states_h]]  # list of list aka batch of dialogues
+
+        probs = [np.zeros((self.action_size, 1))] * len(batch_dialogues_features)
+        prediction = []
+        for feature_ix, feature in enumerate(batch_dialogues_features.b_featuress):
+            # take intent_name
+            # given the tracker knowledge
+            prediction.extend(feature)
+            if feature is not None and feature:
+                feature_ = feature[0]
+                probs[feature_ix][feature_] = 1.
+
+        policy_prediction = PolicyPrediction(probs, prediction, states_c, states_h)
+
+        return policy_prediction
+
+    def train_on_batch(self,
+                       batch_dialogues_features: BatchDialoguesFeatures,
+                       batch_dialogues_targets: BatchDialoguesTargets) -> dict:
+        log.debug("not trainable policy chosen")
+        return {'loss': 0.,
+                'learning_rate': self.get_learning_rate(),
+                'momentum': self.get_momentum()}

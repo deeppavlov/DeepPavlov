@@ -35,6 +35,7 @@ class UtteranceFeatures:
         tokens_vectorized = nlu_response.tokens_vectorized  # todo proper oop
         self.tokens_embeddings_padded = tokens_vectorized.tokens_embeddings_padded
         self.features = features.concat_feats
+        self._nlu_response = nlu_response
 
 
 class UtteranceTarget:
@@ -84,12 +85,14 @@ class DialogueFeatures:
         self.attn_keys = []
         self.tokens_embeddings_paddeds = []
         self.featuress = []
+        self._nlu_response = []
 
     def append(self, utterance_features: UtteranceFeatures):
         self.action_masks.append(utterance_features.action_mask)
         self.attn_keys.append(utterance_features.attn_key)
         self.tokens_embeddings_paddeds.append(utterance_features.tokens_embeddings_padded)
         self.featuress.append(utterance_features.features)
+        self._nlu_response.append(utterance_features._nlu_response)
 
     def __len__(self):
         return len(self.featuress)
@@ -156,6 +159,7 @@ class PaddedDialogueFeatures(DialogueFeatures):
                                              dialogue_features.tokens_embeddings_paddeds[0])] * padding_length
 
         self.featuress = dialogue_features.featuress + [np.zeros_like(dialogue_features.featuress[0])] * padding_length
+        self._nlu_response = dialogue_features._nlu_response
 
 
 class PaddedDialogueTargets(DialogueTargets):
@@ -203,6 +207,7 @@ class BatchDialoguesFeatures:
         self.b_tokens_embeddings_paddeds = []
         self.b_featuress = []
         self.b_padded_dialogue_length_mask = []
+        self._nlu_responses = []
         self.max_dialogue_length = max_dialogue_length
 
     def append(self, padded_dialogue_features: PaddedDialogueFeatures):
@@ -211,6 +216,7 @@ class BatchDialoguesFeatures:
         self.b_tokens_embeddings_paddeds.append(padded_dialogue_features.tokens_embeddings_paddeds)
         self.b_featuress.append(padded_dialogue_features.featuress)
         self.b_padded_dialogue_length_mask.append(padded_dialogue_features.padded_dialogue_length_mask)
+        self._nlu_responses.append(padded_dialogue_features._nlu_response)
 
     def __len__(self):
         return len(self.b_featuress)

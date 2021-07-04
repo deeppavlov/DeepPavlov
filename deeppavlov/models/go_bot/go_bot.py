@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Dict, Any, List, Optional, Union, Tuple, Type
 
 import numpy as np
 
@@ -25,17 +25,19 @@ from deeppavlov.models.go_bot.nlu.dto.text_vectorization_response import TextVec
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorizer
 from deeppavlov.models.go_bot.dto.dataset_features import UtteranceDataEntry, DialogueDataEntry, \
     BatchDialoguesDataset, UtteranceFeatures, UtteranceTarget, BatchDialoguesFeatures
-from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.nlu.nlu_manager import NLUManager
-from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.policy_network import PolicyNetwork, PolicyNetworkParams, MemorizingPolicy
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.tracker.featurized_tracker import FeaturizedTracker
-from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool
+from deeppavlov.models.go_bot.tracker.dialogue_state_tracker import DialogueStateTracker, MultipleUserStateTrackersPool, \
+    MemorizingDialogueStateTracker
 from pathlib import Path
 
 log = getLogger(__name__)
 
+UtteranceT = Union[dict, str]
 
 # todo logging
 @register("go_bot")
@@ -138,19 +140,29 @@ class GoalOrientedBot(NNModel):
         self.data_handler = TokensVectorizer(debug, word_vocab, bow_embedder, embedder)
 
         # todo make mor abstract
-        self.dialogue_state_tracker = DialogueStateTracker.from_gobot_params(tracker, self.nlg_manager,
+        tracker_class: Type = type(tracker)
+        if tracker.mode == "MEM":
+            tracker_class = MemorizingDialogueStateTracker
+            features_params_class: Type = MemorizingGoBotParams
+            policy_class: Type = MemorizingPolicy
+        elif tracker.mode == "NN":
+            tracker_class = DialogueStateTracker
+            features_params_class: Type = SharedGoBotParams
+            policy_class: Type = PolicyNetwork
+
+        self.dialogue_state_tracker = tracker_class.from_gobot_params(tracker, self.nlg_manager,
                                                                              policy_network_params, database)
         # todo make mor abstract
         self.multiple_user_state_tracker = MultipleUserStateTrackersPool(base_tracker=self.dialogue_state_tracker)
 
         tokens_dims = self.data_handler.get_dims()
-        features_params = SharedGoBotParams.from_configured(self.nlg_manager, self.nlu_manager,
+        features_params = features_params_class.from_configured(self.nlg_manager, self.nlu_manager,
                                                             self.dialogue_state_tracker)
         policy_save_path = Path(save_path, self.POLICY_DIR_NAME)
         policy_load_path = Path(load_path, self.POLICY_DIR_NAME)
 
-        self.policy = PolicyNetwork(policy_network_params, tokens_dims, features_params,
-                                    policy_load_path, policy_save_path, **kwargs)
+        self.policy = policy_class(policy_network_params, tokens_dims, features_params,
+                                   policy_load_path, policy_save_path, **kwargs)
 
         self.dialogues_cached_features = dict()
 
@@ -262,7 +274,7 @@ class GoalOrientedBot(NNModel):
         utterance_data_entry = UtteranceDataEntry.from_features_and_target(utterance_features, utterance_target)
         return utterance_data_entry
 
-    def extract_features_from_utterance_text(self, text, tracker, keep_tracker_state=False) -> UtteranceFeatures:
+    def extract_features_from_utterance_text(self, text: UtteranceT, tracker, keep_tracker_state=False) -> UtteranceFeatures:
         """
         Extract ML features for the input text and the respective tracker.
         Features are aggregated from the
@@ -314,7 +326,7 @@ class GoalOrientedBot(NNModel):
 
         return UtteranceFeatures(nlu_response, tracker_knowledge, digitized_policy_features)
 
-    def _infer(self, user_utterance_text: str, user_tracker: DialogueStateTracker,
+    def _infer(self, user_utterance_text: UtteranceT, user_tracker: DialogueStateTracker,
                keep_tracker_state=False) -> Tuple[BatchDialoguesFeatures, PolicyPrediction]:
         """
         Predict the action to perform in response to given text.
@@ -352,7 +364,7 @@ class GoalOrientedBot(NNModel):
 
         return utterance_batch_features, policy_prediction
 
-    def __call__(self, batch: Union[List[List[dict]], List[str]],
+    def __call__(self, batch: Union[List[List[UtteranceT]], List[UtteranceT]],
                  user_ids: Optional[List] = None) -> Union[List[NLGResponseInterface],
                                                            List[List[NLGResponseInterface]]]:
         if isinstance(batch[0], list):
@@ -361,7 +373,7 @@ class GoalOrientedBot(NNModel):
             # todo unify tracking: no need to distinguish tracking strategies on dialogues and realtime
             res = []
             for dialogue in batch:
-                dialogue: List[dict]
+                dialogue: List[UtteranceT]
                 res.append(self._calc_inferences_for_dialogue(dialogue))
         else:
             # batch is a list of utterances possibly came from different users: real-time inference
@@ -369,7 +381,7 @@ class GoalOrientedBot(NNModel):
             if not user_ids:
                 user_ids = [self.DEFAULT_USER_ID] * len(batch)
             for user_id, user_text in zip(user_ids, batch):
-                user_text: str
+                user_text: UtteranceT
                 res.append(self._realtime_infer(user_id, user_text))
 
         return res
