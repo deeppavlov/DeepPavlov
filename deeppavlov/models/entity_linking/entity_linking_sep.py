@@ -558,147 +558,150 @@ class EntityLinkerSep(Component, Serializable):
                     probas_batch):
             entity_ids_list, conf_list = [], []
             if entity_substr_list:
-                tm_ind_st = time.time()
-                ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in entity_substr_list]
-                ft_res = []
-                if ft_entity_emb_list:
-                    ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list),
-                                                              self.num_faiss_candidate_entities)
-                D_ft_all, I_ft_all = [], []
-                if len(ft_res) == 2:
-                    D_ft_all, I_ft_all = ft_res
-                words = []
-                entity_substr_num = []
-                for i, entity_substr in enumerate(entity_substr_list):
-                    words += entity_substr
-                    entity_substr_num += [i for _ in entity_substr]
+                try:
+                    tm_ind_st = time.time()
+                    ft_entity_emb_list = [self.alies2ft_vec(entity_substr) for entity_substr in entity_substr_list]
+                    ft_res = []
+                    if ft_entity_emb_list:
+                        ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list),
+                                                                  self.num_faiss_candidate_entities)
+                    D_ft_all, I_ft_all = [], []
+                    if len(ft_res) == 2:
+                        D_ft_all, I_ft_all = ft_res
+                    words = []
+                    entity_substr_num = []
+                    for i, entity_substr in enumerate(entity_substr_list):
+                        words += entity_substr
+                        entity_substr_num += [i for _ in entity_substr]
 
-                ent_substr_tfidfs = self.tfidf_vectorizer.transform(words).toarray().astype(np.float32)
-                D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+                    ent_substr_tfidfs = self.tfidf_vectorizer.transform(words).toarray().astype(np.float32)
+                    D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
 
-                ind_i = 0
-                candidate_entities_dict = {index: [] for index in range(len(entity_substr_list))}
-                candidate_entities_ft_total = [[] for _ in entity_substr_list]
-                substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
-                for i, (entity_substr, tag, proba, cand_entity_len) in \
-                        enumerate(zip(entity_substr_list, tags_list, probas_list, substr_lens)):
-                    for word in entity_substr:
-                        candidate_entities = {}
-                        entities_set = set()
-                        morph_parsed_word = self.morph_parse(word)
-                        if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
-                            entities_set = self.word_to_idlist.get(word, set())
-                            entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
-                            if word != morph_parsed_word:
-                                entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, set()))
+                    ind_i = 0
+                    candidate_entities_dict = {index: [] for index in range(len(entity_substr_list))}
+                    candidate_entities_ft_total = [[] for _ in entity_substr_list]
+                    substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
+                    for i, (entity_substr, tag, proba, cand_entity_len) in \
+                            enumerate(zip(entity_substr_list, tags_list, probas_list, substr_lens)):
+                        for word in entity_substr:
+                            candidate_entities = {}
+                            entities_set = set()
+                            morph_parsed_word = self.morph_parse(word)
+                            if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
+                                entities_set = self.word_to_idlist.get(word, set())
                                 entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
-                            for entity in entities_set:
-                                candidate_entities[entity] = 1.0
-                        else:
-                            scores_list = D_all[ind_i]
-                            ind_list = I_all[ind_i]
-                            if self.num_tfidf_faiss_cells > 1:
-                                scores_list = [1.0 - score for score in scores_list]
-                            for ind, score in zip(ind_list, scores_list):
-                                entities_set = self.word_to_idlist[self.word_list[ind]]
-                                entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                                if word != morph_parsed_word:
+                                    entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, set()))
+                                    entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                                 for entity in entities_set:
-                                    if entity in candidate_entities:
-                                        if score > candidate_entities[entity]:
+                                    candidate_entities[entity] = 1.0
+                            else:
+                                scores_list = D_all[ind_i]
+                                ind_list = I_all[ind_i]
+                                if self.num_tfidf_faiss_cells > 1:
+                                    scores_list = [1.0 - score for score in scores_list]
+                                for ind, score in zip(ind_list, scores_list):
+                                    entities_set = self.word_to_idlist[self.word_list[ind]]
+                                    entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                                    for entity in entities_set:
+                                        if entity in candidate_entities:
+                                            if score > candidate_entities[entity]:
+                                                candidate_entities[entity] = score
+                                        else:
                                             candidate_entities[entity] = score
+                            candidate_entities_dict[i] += [(entity, cand_entity_len, score)
+                                                           for (entity, cand_entity_len), score
+                                                           in candidate_entities.items()]
+                            ind_i += 1
+
+                    if isinstance(D_ft_all, np.ndarray):
+                        candidate_entities_ft_dict = {index: [] for index in range(len(entity_substr_list))}
+                        for index, (entity_substr, scores_list, ind_list, tag, proba) \
+                                in enumerate(zip(entity_substr_list, D_ft_all, I_ft_all, tags_list, probas_list)):
+                            entities_set = set()
+                            for ind, score in zip(ind_list, scores_list):
+                                if score < 400.0:
+                                    entity_label = self.labels_list[ind]
+                                    cur_entity_tokens = set([token.lower() for token in entity_substr])
+                                    cur_entity_label_tokens = set(entity_label.lower().split())
+                                    inters_tokens = cur_entity_tokens.intersection(cur_entity_label_tokens)
+                                    if inters_tokens:
+                                        fuzz_ratio = len(inters_tokens) / max(len(cur_entity_tokens),
+                                                                              len(cur_entity_label_tokens))
                                     else:
-                                        candidate_entities[entity] = score
-                        candidate_entities_dict[i] += [(entity, cand_entity_len, score)
-                                                       for (entity, cand_entity_len), score
-                                                       in candidate_entities.items()]
-                        ind_i += 1
+                                        fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(),
+                                                                entity_label.lower()) * 0.01
+                                    for entity_id in self.label_to_q[entity_label]:
+                                        entities_set.add((entity_id, fuzz_ratio))
+                            entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                            candidate_entities_ft_dict[index] = list(entities_set)
+                        candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
 
-                if isinstance(D_ft_all, np.ndarray):
-                    candidate_entities_ft_dict = {index: [] for index in range(len(entity_substr_list))}
-                    for index, (entity_substr, scores_list, ind_list, tag, proba) \
-                            in enumerate(zip(entity_substr_list, D_ft_all, I_ft_all, tags_list, probas_list)):
-                        entities_set = set()
-                        for ind, score in zip(ind_list, scores_list):
-                            if score < 400.0:
-                                entity_label = self.labels_list[ind]
-                                cur_entity_tokens = set([token.lower() for token in entity_substr])
-                                cur_entity_label_tokens = set(entity_label.lower().split())
-                                inters_tokens = cur_entity_tokens.intersection(cur_entity_label_tokens)
-                                if inters_tokens:
-                                    fuzz_ratio = len(inters_tokens) / max(len(cur_entity_tokens),
-                                                                          len(cur_entity_label_tokens))
-                                else:
-                                    fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(),
-                                                            entity_label.lower()) * 0.01
-                                for entity_id in self.label_to_q[entity_label]:
-                                    entities_set.add((entity_id, fuzz_ratio))
-                        entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
-                        candidate_entities_ft_dict[index] = list(entities_set)
-                    candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
+                    candidate_entities_total = candidate_entities_dict.values()
+                    candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
+                                                for candidate_entities, substr_len in
+                                                zip(candidate_entities_total, substr_lens)]
+                    candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
 
-                candidate_entities_total = candidate_entities_dict.values()
-                candidate_entities_total = [self.sum_scores(candidate_entities, substr_len)
-                                            for candidate_entities, substr_len in
-                                            zip(candidate_entities_total, substr_lens)]
-                candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
+                    log.debug(f"length candidate entities list {len(candidate_entities_total)}")
+                    candidate_entities_list = []
+                    entities_scores_list = []
+                    for entity_substr, candidate_entities, candidate_entities_ft \
+                            in zip(entity_substr_list, candidate_entities_total, candidate_entities_ft_total):
+                        log.debug(f"{entity_substr} candidate_entities before ranking {candidate_entities[:10]}")
+                        candidate_entities_dict = {}
+                        for entity, score in candidate_entities:
+                            candidate_entities_dict[entity] = score
+                        for entity, fuzz_score in candidate_entities_ft:
+                            if entity in candidate_entities_dict:
+                                score = candidate_entities_dict[entity]
+                                candidate_entities_dict[entity] = max(score, fuzz_score)
+                            else:
+                                candidate_entities_dict[entity] = fuzz_score
+                        candidate_entities = candidate_entities_dict.items()
 
-                log.debug(f"length candidate entities list {len(candidate_entities_total)}")
-                candidate_entities_list = []
-                entities_scores_list = []
-                for entity_substr, candidate_entities, candidate_entities_ft \
-                        in zip(entity_substr_list, candidate_entities_total, candidate_entities_ft_total):
-                    log.debug(f"{entity_substr} candidate_entities before ranking {candidate_entities[:10]}")
-                    candidate_entities_dict = {}
-                    for entity, score in candidate_entities:
-                        candidate_entities_dict[entity] = score
-                    for entity, fuzz_score in candidate_entities_ft:
-                        if entity in candidate_entities_dict:
-                            score = candidate_entities_dict[entity]
-                            candidate_entities_dict[entity] = max(score, fuzz_score)
+                        candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
+                                              for candidate_entity in candidate_entities]
+                        candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
+
+                        log.debug(f"candidate_entities {candidate_entities[:10]}")
+                        entities_scores = {entity: (substr_score, pop_score)
+                                           for entity, substr_score, pop_score in candidate_entities}
+                        candidate_entities = [candidate_entity[0] for candidate_entity
+                                              in candidate_entities][:self.num_entities_for_bert_ranking]
+                        conf = [candidate_entity[1:] for candidate_entity
+                                in candidate_entities][:self.num_entities_for_bert_ranking]
+                        log.debug(f"{entity_substr} candidate_entities before bert ranking {candidate_entities[:10]}")
+                        candidate_entities_list.append(candidate_entities)
+                        if self.num_entities_to_return == 1 and candidate_entities:
+                            entity_ids_list.append(candidate_entities[0])
+                            conf_list.append(conf[0])
                         else:
-                            candidate_entities_dict[entity] = fuzz_score
-                    candidate_entities = candidate_entities_dict.items()
-
-                    candidate_entities = [candidate_entity + (self.entities_ranking_dict.get(candidate_entity[0], 0),)
-                                          for candidate_entity in candidate_entities]
-                    candidate_entities = sorted(candidate_entities, key=lambda x: (x[1], x[2]), reverse=True)
-
-                    log.debug(f"candidate_entities {candidate_entities[:10]}")
-                    entities_scores = {entity: (substr_score, pop_score)
-                                       for entity, substr_score, pop_score in candidate_entities}
-                    candidate_entities = [candidate_entity[0] for candidate_entity
-                                          in candidate_entities][:self.num_entities_for_bert_ranking]
-                    conf = [candidate_entity[1:] for candidate_entity
-                            in candidate_entities][:self.num_entities_for_bert_ranking]
-                    log.debug(f"{entity_substr} candidate_entities before bert ranking {candidate_entities[:10]}")
-                    candidate_entities_list.append(candidate_entities)
-                    if self.num_entities_to_return == 1 and candidate_entities:
-                        entity_ids_list.append(candidate_entities[0])
-                        conf_list.append(conf[0])
-                    else:
-                        entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
-                        conf_list.append(conf[:self.num_entities_to_return])
-                    entities_scores_list.append(entities_scores)
-                tm_ind_end = time.time()
-                log.debug(f"search by index time {tm_ind_end - tm_ind_st}")
-                tm_descr_st = time.time()
-                if self.use_descriptions:
-                    if self.rank_in_runtime:
-                        entity_ids_list, conf_list = self.rank_by_description_runtime(entity_substr_list,
-                                                                                      entity_offsets_list,
-                                                                                      candidate_entities_list,
-                                                                                      tags_list,
-                                                                                      entities_scores_list,
-                                                                                      sentences_list,
-                                                                                      sentences_offsets_list,
-                                                                                      substr_lens)
-                    else:
-                        entity_ids_list, conf_list = self.rank_by_description(entity_substr_list, entity_offsets_list,
-                                                                              candidate_entities_list, tags_list,
-                                                                              entities_scores_list, sentences_list,
-                                                                              sentences_offsets_list, substr_lens)
-                tm_descr_end = time.time()
-                log.debug(f"description time {tm_descr_end - tm_descr_st}")
+                            entity_ids_list.append(candidate_entities[:self.num_entities_to_return])
+                            conf_list.append(conf[:self.num_entities_to_return])
+                        entities_scores_list.append(entities_scores)
+                    tm_ind_end = time.time()
+                    log.debug(f"search by index time {tm_ind_end - tm_ind_st}")
+                    tm_descr_st = time.time()
+                    if self.use_descriptions:
+                        if self.rank_in_runtime:
+                            entity_ids_list, conf_list = self.rank_by_description_runtime(entity_substr_list,
+                                                                                          entity_offsets_list,
+                                                                                          candidate_entities_list,
+                                                                                          tags_list,
+                                                                                          entities_scores_list,
+                                                                                          sentences_list,
+                                                                                          sentences_offsets_list,
+                                                                                          substr_lens)
+                        else:
+                            entity_ids_list, conf_list = self.rank_by_description(entity_substr_list, entity_offsets_list,
+                                                                                  candidate_entities_list, tags_list,
+                                                                                  entities_scores_list, sentences_list,
+                                                                                  sentences_offsets_list, substr_lens)
+                    tm_descr_end = time.time()
+                    log.debug(f"description time {tm_descr_end - tm_descr_st}")
+                except:
+                    entity_ids_list = ["ERROR" for _ in entity_substr_list]
             entity_ids_batch.append(entity_ids_list)
             conf_batch.append(conf_list)
 
@@ -843,8 +846,9 @@ class EntityLinkerSep(Component, Serializable):
                                      entities_scores.get(entity, (0.0, 0))[1],
                                      round(score, 4)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
-            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001 if
-                                    entity[0].startswith("Q")]
+            entities_with_scores = [entity for entity in entities_with_scores
+                                    if ((entity[3] > 0.1 or entity[1] == 1.0 or entity[2] > 60)
+                                        and entity[0].startswith("Q"))]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
 
@@ -854,12 +858,12 @@ class EntityLinkerSep(Component, Serializable):
             elif entities_with_scores and substr_len == 1 and entities_with_scores[0][1] < 1.0:
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]
-            elif entities_with_scores and ((entities_with_scores[0][3] < 0.0019 and (
+            elif entities_with_scores and ((entities_with_scores[0][3] < 0.1 and (
                     entities_with_scores[0][2] < 90 and entities_with_scores[0][1] < 1.0))
                                            or entities_with_scores[0][1] < 0.3
                                            or (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 20)
-                                           or (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 4)
-                                           or entities_with_scores[0][1] == 0.5):
+                                           or (entities_with_scores[0][3] < 0.1 and entities_with_scores[0][2] < 4)
+                                           or (entities_with_scores[0][1] == 0.5 and tag in {"PER", "LOC"})):
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]
             else:
