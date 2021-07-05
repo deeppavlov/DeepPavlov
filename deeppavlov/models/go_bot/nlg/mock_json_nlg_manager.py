@@ -197,10 +197,14 @@ class MockJSONNLGManager(NLGManagerInterface):
         response = JSONNLGResponse(slots_values, actions_tuple)
         verbose_response = VerboseJSONNLGResponse.from_json_nlg_response(response)
         verbose_response.policy_prediction = policy_prediction
-        verbose_response._nlu_responses = utterance_batch_features._nlu_responses
         response_text = self.generate_template(verbose_response)
         verbose_response.text = response_text
-        return verbose_response
+        if utterance_batch_features:
+            verbose_response._nlu_responses = utterance_batch_features._nlu_responses
+            return verbose_response
+        # TripPy Case - Use same return type as nlg_manager, i.e. str
+        else:
+            return verbose_response.text
 
     def num_of_known_actions(self) -> int:
         """
