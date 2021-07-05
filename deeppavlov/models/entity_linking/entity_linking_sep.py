@@ -584,7 +584,7 @@ class EntityLinkerSep(Component, Serializable):
                             entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                             morph_parsed_word = self.morph_parse(word)
                             if word != morph_parsed_word:
-                                entities_set = entities_set.union(self.word_to_idlist[morph_parsed_word])
+                                entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, []))
                                 entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                             for entity in entities_set:
                                 candidate_entities[entity] = 1.0

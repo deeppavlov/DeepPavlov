@@ -91,7 +91,7 @@ class EntitiesParser(Serializable):
         log.debug("saved files")
 
     def parse(self):
-        log.debug("start parsing entities")
+        log.debug(f"start parsing entities, entities_num {len(self.wiki_dict)}")
         for entity_id in self.wiki_dict:
             entity_info = self.wiki_dict[entity_id]
             triplets = entity_info.get("triplets", [])
@@ -100,18 +100,18 @@ class EntitiesParser(Serializable):
                     self.types_dict[entity_id] = set(objects)
                 if rel == "P279":
                     self.subclass_dict[entity_id] = set(objects)
-        log.debug("parsed types_dict and subclass_dict")
+        log.debug(f"parsed types_dict, {len(self.types_dict)} and subclass_dict, {len(self.subclass_dict)}")
         
         entity_type_count = 0
         for entity_id in self.wiki_dict:
             entity_type = self.find(entity_id)
             entity_type_count += 1
-            if entity_type_count%100000 == 0:
-                log.debug(f"parsed entity types {entity_type_count}")
+            if entity_type_count%500000 == 0:
+                log.debug(f"parsed entity types {entity_type_count} used_entities {len(self.used_entities)}")
             if entity_type:
                 self.used_entities.add(entity_id)
                 self.entities_types_sets[entity_type].add(entity_id)
-        log.debug("parsed used_entities and entities_types_sets")
+        log.debug(f"parsed used_entities and entities_types_sets {len(self.used_entities)}")
         
         for entity_id in self.wiki_dict:
             if entity_id in self.used_entities or not self.filter_tags:

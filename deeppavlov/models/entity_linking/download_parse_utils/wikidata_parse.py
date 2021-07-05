@@ -79,7 +79,7 @@ class WikidataParser:
                 wikipedia_title = entity_dict.get("sitelinks", {}).get("ruwiki", {}).get("title", "")
                 entity_info["wikipedia_title"] = wikipedia_title
 
-                if "claims" in entity_dict and entity_in_russian:
+                if "claims" in entity_dict:
                     triplets = []
                     for relation in entity_dict["claims"]:
                         if relation in ["P31", "P279", "P106", "P734"]:
@@ -101,26 +101,23 @@ class WikidataParser:
 
         return entity_id, entity_info
 
-    def run(self, num_proc, common_list):
+    def run(self, num_proc, lines_list):
         """
         Method for parallel processing of lines from Wikidata file
         """
-        length = len(common_list)
-        chunk_size = length // self.num_processors + 1
-        for i in range(chunk_size):
-            num_sample = self.num_processors * i + num_proc
-            if num_sample < length:
-                line = common_list[num_sample]
-                line = line[:-2]
-                entity_id = ""
-                try:
-                    entity = json.loads(line)
-                    entity_id, entity_info = self.process_sample(entity)
-                except Exception as e:
-                    self.log_to_file("run_error", line, self.log_parse_errors)
-                    self.log_to_file("run_error", e, self.log_parse_errors)
-                if entity_id:
-                    self.wiki_dict[entity_id] = entity_info
+        cur_wiki_dict = {}
+        for line in lines_list:
+            line = line[:-2]
+            entity_id = ""
+            try:
+                entity = json.loads(line)
+                entity_id, entity_info = self.process_sample(entity)
+            except Exception as e:
+                self.log_to_file("run_error", line, self.log_parse_errors)
+                self.log_to_file("run_error", e, self.log_parse_errors)
+            if entity_id:
+                cur_wiki_dict[entity_id] = entity_info
+        self.wiki_dict[num_proc] = cur_wiki_dict
                      
 
     def parse(self, continue_parsing: bool = False):
@@ -168,15 +165,18 @@ class WikidataParser:
 
             workers = []
             for ii in range(self.num_processors):
-                worker = mp.Process(target=self.run, args=(ii, common_list))
+                worker = mp.Process(target=self.run, args=(ii, common_list[ii*self.chunk_num_lines:(ii+1)*self.chunk_num_lines]))
                 workers.append(worker)
                 worker.start()
             for worker in workers:
                 worker.join()
 
-            self.wiki_dict = dict(self.wiki_dict)
+            total_dict = {}
+            for key in self.wiki_dict:
+                for entity in self.wiki_dict[key]:
+                    total_dict[entity] = self.wiki_dict[key][entity]
 
-            save_pickle(self.wiki_dict, self.save_path / f"{num_iterations}.pickle")
+            save_pickle(total_dict, self.save_path / f"{num_iterations}.pickle")
 
             num_iterations += 1
             
