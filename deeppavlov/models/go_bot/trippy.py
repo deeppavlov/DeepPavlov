@@ -32,7 +32,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
-from deeppavlov.models.go_bot.trippy_preprocssing import prepare_trippy_data, get_turn, batch_to_device
+from deeppavlov.models.go_bot.trippy_preprocessing import prepare_trippy_data, get_turn, batch_to_device
 
 
 # EXP
