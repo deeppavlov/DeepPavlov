@@ -220,6 +220,9 @@
   "tree_to_sparql": [
     "{DEEPPAVLOV_PATH}/requirements/udpipe.txt"
   ],
+  "trippy": [
+    "{DEEPPAVLOV_PATH}/requirements/trippy.txt"
+  ],
   "torch_squad_bert_model": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
