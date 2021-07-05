@@ -579,10 +579,10 @@ class EntityLinkerSep(Component, Serializable):
                     candidate_entities = {}
                     for word in entity_substr:
                         entities_set = set()
+                        morph_parsed_word = self.morph_parse(word)
                         if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
                             entities_set = self.word_to_idlist.get(word, set())
                             entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
-                            morph_parsed_word = self.morph_parse(word)
                             if word != morph_parsed_word:
                                 entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, []))
                                 entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
