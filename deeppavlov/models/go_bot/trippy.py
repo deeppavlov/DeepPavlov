@@ -34,10 +34,6 @@ from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPredicti
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
 from deeppavlov.models.go_bot.trippy_preprocessing import prepare_trippy_data, get_turn, batch_to_device
 
-
-# EXP
-from transformers import (AdamW, get_linear_schedule_with_warmup)
-
 logger = getLogger(__name__)
 
 
