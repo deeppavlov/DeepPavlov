@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import re
 import time
 from logging import getLogger
@@ -571,20 +572,20 @@ class EntityLinkerSep(Component, Serializable):
                 D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
 
                 ind_i = 0
-                candidate_entities_dict = {index: set() for index in range(len(entity_substr_list))}
+                candidate_entities_dict = {index: [] for index in range(len(entity_substr_list))}
                 candidate_entities_ft_total = [[] for _ in entity_substr_list]
                 substr_lens = [len(entity_substr) for entity_substr in entity_substr_list]
                 for i, (entity_substr, tag, proba, cand_entity_len) in \
                         enumerate(zip(entity_substr_list, tags_list, probas_list, substr_lens)):
-                    candidate_entities = {}
                     for word in entity_substr:
+                        candidate_entities = {}
                         entities_set = set()
                         morph_parsed_word = self.morph_parse(word)
                         if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
                             entities_set = self.word_to_idlist.get(word, set())
                             entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                             if word != morph_parsed_word:
-                                entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, []))
+                                entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, set()))
                                 entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                             for entity in entities_set:
                                 candidate_entities[entity] = 1.0
@@ -602,9 +603,9 @@ class EntityLinkerSep(Component, Serializable):
                                             candidate_entities[entity] = score
                                     else:
                                         candidate_entities[entity] = score
-                        candidate_entities_dict[i] = candidate_entities_dict[i].union({(entity, cand_entity_len, score)
-                                                     for (entity, cand_entity_len), score in
-                                                     candidate_entities.items()})
+                        candidate_entities_dict[i] += [(entity, cand_entity_len, score)
+                                                       for (entity, cand_entity_len), score
+                                                       in candidate_entities.items()]
                         ind_i += 1
 
                 if isinstance(D_ft_all, np.ndarray):
@@ -615,7 +616,13 @@ class EntityLinkerSep(Component, Serializable):
                         for ind, score in zip(ind_list, scores_list):
                             if score < 400.0:
                                 entity_label = self.labels_list[ind]
-                                fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
+                                cur_entity_tokens = set([token.lower() for token in entity_substr])
+                                cur_entity_label_tokens = set(entity_label.lower().split())
+                                inters_tokens = cur_entity_tokens.intersection(cur_entity_label_tokens)
+                                if inters_tokens:
+                                    fuzz_ratio = len(inters_tokens) / max(len(cur_entity_tokens), len(cur_entity_label_tokens))
+                                else:
+                                    fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(), entity_label.lower()) * 0.01
                                 for entity_id in self.label_to_q[entity_label]:
                                     entities_set.add((entity_id, fuzz_ratio))
                         entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
@@ -633,7 +640,7 @@ class EntityLinkerSep(Component, Serializable):
                 entities_scores_list = []
                 for entity_substr, candidate_entities, candidate_entities_ft \
                         in zip(entity_substr_list, candidate_entities_total, candidate_entities_ft_total):
-                    log.debug(f"candidate_entities before ranking {candidate_entities[:10]}")
+                    log.debug(f"{entity_substr} candidate_entities before ranking {candidate_entities[:10]}")
                     candidate_entities_dict = {}
                     for entity, score in candidate_entities:
                         candidate_entities_dict[entity] = score
@@ -656,7 +663,7 @@ class EntityLinkerSep(Component, Serializable):
                                           in candidate_entities][:self.num_entities_for_bert_ranking]
                     conf = [candidate_entity[1:] for candidate_entity
                             in candidate_entities][:self.num_entities_for_bert_ranking]
-                    log.debug(f"candidate_entities {candidate_entities[:10]}")
+                    log.debug(f"{entity_substr} candidate_entities before bert ranking {candidate_entities[:10]}")
                     candidate_entities_list.append(candidate_entities)
                     if self.num_entities_to_return == 1 and candidate_entities:
                         entity_ids_list.append(candidate_entities[0])
@@ -812,9 +819,9 @@ class EntityLinkerSep(Component, Serializable):
         for entity_substr, candidate_entities, context_emb in \
                 zip(entity_substr_list, candidate_entities_list, context_embs):
             candidate_entities_emb = [self.descr_to_emb.get(entity, np.zeros(100, dtype=float)) for entity in candidate_entities]
-            scores = np.array([np.dot(candidate_entity_emb, context_emb) for candidate_entity_emb in candidate_entities_emb])
-            scores = np.exp(scores/2.5) / np.sum(np.exp(scores/2.5))
-            scores = [(entity, round(score, 3)) for entity, score in zip(candidate_entities, scores)]
+            scores = [np.dot(candidate_entity_emb, context_emb) for candidate_entity_emb in candidate_entities_emb]
+            scores = [max(min((score + 13.0) * 0.05, 1.0), 0.0) for score in scores]
+            scores = [(entity, round(score, 4)) for entity, score in zip(candidate_entities, scores)]
             scores_list.append(scores)
 
         for entity_substr, candidate_entities, tag, substr_len, entities_scores, scores in \
@@ -822,7 +829,7 @@ class EntityLinkerSep(Component, Serializable):
             log.debug(f"len candidate entities {len(candidate_entities)}")
             entities_with_scores = [(entity, round(entities_scores.get(entity, (0.0, 0))[0], 2),
                                      entities_scores.get(entity, (0.0, 0))[1],
-                                     round(score, 2)) for entity, score in scores]
+                                     round(score, 4)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
             entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001 if
                                     entity[0].startswith("Q")]
@@ -835,7 +842,7 @@ class EntityLinkerSep(Component, Serializable):
             elif entities_with_scores and substr_len == 1 and entities_with_scores[0][1] < 1.0:
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]
-            elif entities_with_scores and ((entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 90) \
+            elif entities_with_scores and ((entities_with_scores[0][3] < 0.0019 and (entities_with_scores[0][2] < 90 and entities_with_scores[0][1] < 1.0)) \
                 or entities_with_scores[0][1] < 0.3 \
                 or (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 20) or \
                 (entities_with_scores[0][3] < 0.019 and entities_with_scores[0][2] < 4) or entities_with_scores[0][1] == 0.5):
