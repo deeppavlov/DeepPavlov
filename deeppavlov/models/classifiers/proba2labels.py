@@ -46,12 +46,14 @@ class Proba2Labels(Component):
                  max_proba: bool = None,
                  confidence_threshold: float = None,
                  top_n: int = None,
+                 is_binary: bool = False,
                  **kwargs) -> None:
         """ Initialize class with given parameters"""
 
         self.max_proba = max_proba
         self.confidence_threshold = confidence_threshold
         self.top_n = top_n
+        self.is_binary = is_binary
 
     def __call__(self,
                  data: Union[np.ndarray,
@@ -69,11 +71,11 @@ class Proba2Labels(Component):
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
         if self.confidence_threshold:
-            # TODO replace with the following
-            # TODO rename to _confidence_ threshold
-            # return [int(el > self.confidence_threshold) for el in data]
-            return [list(np.where(np.array(d) > self.confidence_threshold)[0])
-                    for d in data]
+            if self.is_binary:
+                return [int(el > self.confidence_threshold) for el in data]
+            else:
+                return [list(np.where(np.array(d) > self.confidence_threshold)[0])
+                        for d in data]
         elif self.max_proba:
             return [np.argmax(d) for d in data]
         elif self.top_n:

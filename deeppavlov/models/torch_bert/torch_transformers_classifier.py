@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 from logging import getLogger
 from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple
@@ -19,7 +19,9 @@ from typing import List, Dict, Union, Optional, Tuple
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import AutoModelForSequenceClassification, AutoConfig
+from torch.nn import BCEWithLogitsLoss
+from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel
+from transformers.modeling_outputs import SequenceClassifierOutput
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -61,6 +63,7 @@ class TorchTransformersClassifierModel(TorchModel):
                  optimizer_parameters: Optional[dict] = None,
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
+                 is_binary: Optional[bool] = False,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -78,6 +81,8 @@ class TorchTransformersClassifierModel(TorchModel):
         self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
         self.clip_norm = clip_norm
+        self.is_binary = is_binary
+        self.bert_config = None
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -87,7 +92,7 @@ class TorchTransformersClassifierModel(TorchModel):
 
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
-            
+
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
@@ -106,9 +111,7 @@ class TorchTransformersClassifierModel(TorchModel):
 
         _input = {key: value.to(self.device) for key, value in features.items()}
 
-        accepted_keys = self.get_accepted_keys()
-
-        if self.n_classes > 1:
+        if self.n_classes > 1 and not self.is_binary:
             _input["labels"] = torch.from_numpy(np.array(y)).to(self.device)
 
         # regression
@@ -118,10 +121,10 @@ class TorchTransformersClassifierModel(TorchModel):
         self.optimizer.zero_grad()
 
         tokenized = {key: value for (key, value) in _input.items()
-                     if key in accepted_keys}
+                     if key in self.accepted_keys}
 
         loss = self.model(**tokenized).loss
-        if self.is_data_parallel():
+        if self.is_data_parallel:
             loss = loss.mean()
         loss.backward()
         # Clip the norm of the gradients to 1.0.
@@ -148,20 +151,18 @@ class TorchTransformersClassifierModel(TorchModel):
 
         _input = {key: value.to(self.device) for key, value in features.items()}
 
-        accepted_keys = self.get_accepted_keys()
-
         with torch.no_grad():
             tokenized = {key: value for (key, value) in _input.items()
-                         if key in accepted_keys}
+                         if key in self.accepted_keys}
 
             # Forward pass, calculate logit predictions
             logits = self.model(**tokenized)
             logits = logits[0]
 
         if self.return_probas:
-            if not self.multilabel:
-                # TODO add a special case for binary classification
-                # pred = torch.nn.functional.sigmoid(logits).squeeze(1)
+            if self.is_binary:
+                pred = torch.sigmoid(logits).squeeze(1)
+            elif not self.multilabel:
                 pred = torch.nn.functional.softmax(logits, dim=-1)
             else:
                 pred = torch.nn.functional.sigmoid(logits)
@@ -176,17 +177,20 @@ class TorchTransformersClassifierModel(TorchModel):
         return pred
 
     # TODO move to the super class
-    def get_accepted_keys(self) -> Tuple[str]:
-        if self.is_data_parallel():
+    @property
+    def accepted_keys(self) -> Tuple[str]:
+        if self.is_data_parallel:
             accepted_keys = self.model.module.forward.__code__.co_varnames
         else:
             accepted_keys = self.model.forward.__code__.co_varnames
         return accepted_keys
 
     # TODO move to the super class
+    @property
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
+    # TODO this method requires massive refactoring
     @overrides
     def load(self, fname=None):
         if fname is not None:
@@ -199,28 +203,35 @@ class TorchTransformersClassifierModel(TorchModel):
                                                 output_attentions=False,
                                                 output_hidden_states=False)
 
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+            if self.is_binary:
+                self.model = AutoModelForBinaryClassification(config)
+                self.model.load_pretrained_weights(self.pretrained_bert)
+            else:
+                # self.model = AutoModelForSequenceClassification.from_config(config)
+                self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
-            try:
-                hidden_size = self.model.classifier.out_proj.in_features
+                # TODO need a better solution here
+                try:
+                    hidden_size = self.model.classifier.out_proj.in_features
 
-                if self.n_classes != self.model.num_labels:
-                    self.model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
-                    self.model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                    self.model.classifier.out_proj.out_features = self.n_classes
-                    self.model.num_labels = self.n_classes
+                    if self.n_classes != self.model.num_labels:
+                        self.model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes,
+                                                                                               hidden_size))
+                        self.model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                        self.model.classifier.out_proj.out_features = self.n_classes
+                        self.model.num_labels = self.n_classes
 
-            except torch.nn.modules.module.ModuleAttributeError:
-                hidden_size = self.model.classifier.in_features
+                except torch.nn.modules.module.ModuleAttributeError:
+                    hidden_size = self.model.classifier.in_features
 
-                if self.n_classes != self.model.num_labels:
-                    self.model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
-                    self.model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                    self.model.classifier.out_features = self.n_classes
-                    self.model.num_labels = self.n_classes
+                    if self.n_classes != self.model.num_labels:
+                        self.model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
+                        self.model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                        self.model.classifier.out_features = self.n_classes
+                        self.model.num_labels = self.n_classes
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
+            self.bert_config = AutoConfig.from_pretrained(str(expand_path(self.bert_config_file)))
             if self.attention_probs_keep_prob is not None:
                 self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
             if self.hidden_keep_prob is not None:
@@ -265,3 +276,84 @@ class TorchTransformersClassifierModel(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+
+
+class AutoModelForBinaryClassification(torch.nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+        self.config = config
+
+        self.model = AutoModel.from_config(config)
+        self.classifier = BinaryClassificationHead(config)
+
+        self.classifier.init_weights()
+
+    def load_pretrained_weights(self, pretrained_model_name_or_path: Union[str, os.PathLike]):
+        self.model = self.model.from_pretrained(pretrained_model_name_or_path, config=self.config)
+
+    def forward(self,
+                input_ids=None,
+                attention_mask=None,
+                token_type_ids=None,
+                position_ids=None,
+                head_mask=None,
+                inputs_embeds=None,
+                labels=None,
+                output_attentions=None,
+                output_hidden_states=None,
+                return_dict=None):
+
+        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+
+        outputs = self.model(input_ids,
+                             attention_mask=attention_mask,
+                             token_type_ids=token_type_ids,
+                             position_ids=position_ids,
+                             head_mask=head_mask,
+                             inputs_embeds=inputs_embeds,
+                             output_attentions=output_attentions,
+                             output_hidden_states=output_hidden_states,
+                             return_dict=return_dict)
+
+        sequence_output = outputs[0]
+        logits = self.classifier(sequence_output)
+
+        loss = None
+        if labels is not None:
+            loss_fct = BCEWithLogitsLoss()
+            loss = loss_fct(logits, labels)
+        if not return_dict:
+            output = (logits,) + outputs[2:]
+            return ((loss,) + output) if loss is not None else output
+
+        return SequenceClassifierOutput(loss=loss,
+                                        logits=logits,
+                                        hidden_states=outputs.hidden_states,
+                                        attentions=outputs.attentions)
+
+
+class BinaryClassificationHead(torch.nn.Module):
+
+    def __init__(self, config):
+        super().__init__()
+
+        self.config = config
+
+        self.dense = torch.nn.Linear(config.hidden_size, config.hidden_size)
+        self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
+        self.out_proj = torch.nn.Linear(config.hidden_size, 1)
+
+    def init_weights(self):
+        self.dense.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+        if self.dense.bias is not None:
+            self.dense.bias.data.zero_()
+
+    def forward(self, features, **kwargs):
+        x = features[:, 0, :]
+        x = self.dropout(x)
+        x = self.dense(x)
+        x = torch.tanh(x)
+        x = self.dropout(x)
+        x = self.out_proj(x)
+        return x

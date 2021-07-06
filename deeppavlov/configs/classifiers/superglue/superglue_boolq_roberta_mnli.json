@@ -21,7 +21,7 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 192,
+        "max_seq_length": 256,
         "in": ["question", "passage"],
         "out": ["bert_features"]
       },
@@ -46,11 +46,13 @@
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "pretrained_bert": "{BASE_MODEL}",
+        "is_binary": "{BINARY_CLASSIFICATION}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-05
+          "lr": 2e-05,
+          "weight_decay": 0.1
         },
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
@@ -62,7 +64,8 @@
         "in": ["y_pred_probas"],
         "out": ["y_pred_ids"],
         "class_name": "proba2labels",
-        "max_proba": true
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "confidence_threshold": 0.5
       },
       {
         "in": ["y_pred_ids"],
@@ -73,7 +76,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 24,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_epochs": 1,
@@ -90,7 +93,8 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_{BASE_MODEL}"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_{BASE_MODEL}",
+      "BINARY_CLASSIFICATION": true
     }
   }
 }
