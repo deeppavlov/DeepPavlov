@@ -95,6 +95,7 @@
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "multi_squad_retr_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadRetrIterator",
   "multitask_iterator": "deeppavlov.dataset_iterators.multitask_iterator:MultiTaskIterator",
+  "multitask_pal_bert": "deeppavlov.models.multitask_pal_bert.multitask_pal_bert:MultiTaskPalBert",
   "multitask_reader": "deeppavlov.dataset_readers.multitask_reader:MultiTaskReader",
   "nemo_asr": "deeppavlov.models.nemo.asr:NeMoASR",
   "nemo_tts": "deeppavlov.models.nemo.tts:NeMoTTS",
