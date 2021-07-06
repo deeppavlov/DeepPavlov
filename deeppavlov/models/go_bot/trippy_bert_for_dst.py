@@ -21,8 +21,11 @@ from transformers.modeling_bert import BertModel, BertPreTrainedModel
 class BertForDST(BertPreTrainedModel):
     """
     BERT model used by TripPy. 
-    
+
     This extends the basic bert model for dialogue state tracking.
+
+    Args:
+        config: Model-specific attributes & settings
     """
     def __init__(self, config):
         super(BertForDST, self).__init__(config)
@@ -83,11 +86,26 @@ class BertForDST(BertPreTrainedModel):
                 class_label_id=None,
                 diag_state=None,
                 aux_task_def=None,
-                action_label=None,
-                prev_action_label=None):
+                action_label=None):
         """
+        Runs the model and outputs predictions and loss. 
+
         Args:
-          action_label: Action to predict
+            input_ids: BERT tokenized input_ids
+            input_mask: Attention mask of input_ids
+            segment_ids: 1 / 0s to differentiate sentence parts
+            position_ids: Token positions in input_ids
+            head_mask: Mask to hide attention heads
+            start_pos: Labels for slot starting positions
+            end_pos: Labels for slot ending positions
+            inform_slot_id: Labels for whether the system informs
+            refer_id: Labels for whether a slot value is referred from another slot
+            class_label_id: Label for the class type of the slot value, e.g. dontcare
+            diag_state: Current dialogue state of all slots
+            aux_task_def: If there is an auxiliary task, such as classification
+            action_label: Action to predict
+        Returns:
+            outputs: Tuple of logits & losses  
         """
         outputs = self.bert(
             input_ids,
@@ -233,4 +251,3 @@ class BertForDST(BertPreTrainedModel):
         outputs = (total_loss,) + (per_slot_per_example_loss, per_slot_class_logits, per_slot_start_logits, per_slot_end_logits, per_slot_refer_logits, action_logits, action_loss,) + outputs[2:]
 
         return outputs
-        

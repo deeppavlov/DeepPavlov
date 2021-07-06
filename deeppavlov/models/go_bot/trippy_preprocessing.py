@@ -26,11 +26,11 @@ import six
 import numpy as np
 import torch
 
+
+from deeppavlov.models.spelling_correction.levenshtein.searcher_component import LevenshteinSearcherComponent
+
 logger = getLogger(__name__)
 
-
-## EXP ##
-from deeppavlov.models.spelling_correction.levenshtein.searcher_component import LevenshteinSearcherComponent
 
 class DSTExample(object):
     """
@@ -52,8 +52,7 @@ class DSTExample(object):
                  refer_label=None,
                  diag_state=None,
                  class_label=None,
-                 action_label=None,
-                 prev_action_label=None):
+                 action_label=None):
         self.guid = guid
         self.text_a = text_a
         self.text_b = text_b
@@ -68,7 +67,6 @@ class DSTExample(object):
         self.diag_state = diag_state
         self.class_label = class_label
         self.action_label = action_label
-        self.prev_action_label = prev_action_label
 
 # From bert.tokenization (TF code) # From TripPy
 def convert_to_unicode(text):
@@ -427,7 +425,6 @@ def create_examples(batch_dialogues_utterances_contexts_info,
 
             # Not in original TripPy; Get the action label if training time, i.e. we have response data
             action_label = nlg_manager.get_action_id(response["act"]) if (response is not None) and (response["act"] is not None) else 0
-            prev_action_label = nlg_manager.get_action_id(context["prev_resp_act"]) if ("prev_resp_act" in context) and (context["prev_resp_act"] is not None) else 0
 
             # Move the responses one backwards, because the first input should be user only with the response being None
             # The final utterance by the system is not needed in the text, except for the action label (action labels are not moved back)
@@ -499,8 +496,7 @@ def create_examples(batch_dialogues_utterances_contexts_info,
                 refer_label=referral_label,
                 diag_state=prev_ds_lbl_dict,
                 class_label=class_label,
-                action_label=action_label,
-                prev_action_label=prev_action_label)) # Not in original TripPy; The action idx the model is supposed to predict
+                action_label=action_label)) # Not in original TripPy; The action idx the model is supposed to predict
 
             prev_ds = cur_ds # use already transformed cur_ds instead of turn['dialogue_state']
             prev_ds_lbl_dict = ds_lbl_dict.copy()
@@ -944,7 +940,6 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
 
     # Not in original TripPy; Add Action labels
     all_action_labels = torch.tensor([e.action_label for e in examples], dtype=torch.long)
-    all_prev_action_labels =  torch.nn.functional.one_hot(torch.tensor([e.action_label for e in examples], dtype=torch.long), num_classes=nlg_manager.num_of_known_actions())
 
 
     # Possibly have this in main trippy cuz diag state needs to be updated for eval runs
@@ -957,8 +952,7 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
               'refer_id':        all_refer_ids,
               'diag_state':      all_diag_state,
               'class_label_id':  all_class_label_ids, 
-              "action_label":    all_action_labels,
-              "prev_action_label":    all_prev_action_labels}
+              "action_label":    all_action_labels}
 
 
     return inputs, features
