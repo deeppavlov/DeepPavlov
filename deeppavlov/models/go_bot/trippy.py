@@ -187,15 +187,16 @@ class TripPy(TorchModel):
 
         if not(isinstance(batch[0], list)):
             # User inference - Just one dialogue
-            batch = [
+            diag_batch = [
                 [{"text": text, "intents": [{"act": None, "slots": None}]} for text in batch]
                 ]
         else:
+            diag_batch = batch
             # At validation reset for every call
             self.reset()
 
         dialogue_results = []
-        for diag_id, dialogue in enumerate(batch):
+        for diag_id, dialogue in enumerate(diag_batch):
 
             turn_results = []
             for turn_id, turn in enumerate(dialogue):
@@ -211,17 +212,17 @@ class TripPy(TorchModel):
                 self.update_ground_truth_db_result_from_context(turn)
 
                 # Preprocess inputs
-                batch, features = prepare_trippy_data(self.batch_dialogues_utterances_contexts_info,
-                                                      self.batch_dialogues_utterances_responses_info,
-                                                      self.tokenizer,
-                                                      self.slot_names,
-                                                      self.class_types,
-                                                      self.nlg_manager,
-                                                      max_seq_length=self.max_seq_length,
-                                                      debug=self.debug)
+                trippy_batch, features = prepare_trippy_data(self.batch_dialogues_utterances_contexts_info,
+                                                            self.batch_dialogues_utterances_responses_info,
+                                                            self.tokenizer,
+                                                            self.slot_names,
+                                                            self.class_types,
+                                                            self.nlg_manager,
+                                                            max_seq_length=self.max_seq_length,
+                                                            debug=self.debug)
 
                 # Take only the last turn - as we already know the previous ones; We need to feed them one by one to update the ds
-                last_turn = get_turn(batch, index=-1)
+                last_turn = get_turn(trippy_batch, index=-1)
 
                 # Only take them from the last turn
                 input_ids_unmasked = [features[-1].input_ids_unmasked]
@@ -233,15 +234,16 @@ class TripPy(TorchModel):
                 # Move to correct device
                 last_turn = batch_to_device(last_turn, self.device)
 
-                # Run the turn through the model
+                # If there are no slots, remove not needed data
                 if self.has_slots is False:
-                    batch["start_pos"] = None
-                    batch["end_pos"] = None
-                    batch["inform_slot_id"] = None
-                    batch["refer_id"] = None
-                    batch["class_label_id"] = None
-                    batch["diag_state"] = None
+                    last_turn["start_pos"] = None
+                    last_turn["end_pos"] = None
+                    last_turn["inform_slot_id"] = None
+                    last_turn["refer_id"] = None
+                    last_turn["class_label_id"] = None
+                    last_turn["diag_state"] = None
 
+                # Run the turn through the model
                 with torch.no_grad():
                     outputs = self.model(**last_turn)
 
@@ -281,6 +283,15 @@ class TripPy(TorchModel):
 
             dialogue_results.append(turn_results)
         
+        # At real-time interaction make an actual api call if this is the action predicted
+        if (not(isinstance(batch[0], list))) and (policy_prediction.predicted_action_ix == self.nlg_manager.get_api_call_action_id()):
+            self.make_api_call()
+            # Call TripPy again with the same user text - This is how it is done in the DSTC2 Training Data
+            # Note that now the db_results are updated and the last system response has been api_call
+            # Then return the last two system responses of the form [[api_call..., I have found...]]
+            dialogue_results[-1].append(self(batch)[-1][-1])
+            return dialogue_results
+            
 
         # Return NLG generated responses
         return dialogue_results
