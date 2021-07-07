@@ -77,6 +77,8 @@ As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inher
 Output
 -----------------------
 
+One or several of the following 97 relations: 
+
 +-------+-----------------------------------------------------+
 |P6     |  head of government                                 |
 +-------+-----------------------------------------------------+
