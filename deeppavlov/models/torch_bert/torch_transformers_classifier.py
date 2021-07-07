@@ -204,10 +204,9 @@ class TorchTransformersClassifierModel(TorchModel):
                                                 output_hidden_states=False)
 
             if self.is_binary:
-                self.model = AutoModelForBinaryClassification(config)
-                self.model.load_pretrained_weights(self.pretrained_bert)
+                config.add_pooling_layer = False
+                self.model = AutoModelForBinaryClassification(self.pretrained_bert, config)
             else:
-                # self.model = AutoModelForSequenceClassification.from_config(config)
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
                 # TODO need a better solution here
@@ -280,17 +279,15 @@ class TorchTransformersClassifierModel(TorchModel):
 
 class AutoModelForBinaryClassification(torch.nn.Module):
 
-    def __init__(self, config):
+    def __init__(self, pretrained_bert, config):
         super().__init__()
+        self.pretrained_bert = pretrained_bert
         self.config = config
 
-        self.model = AutoModel.from_config(config)
+        self.model = AutoModel.from_pretrained(self.pretrained_bert, self.config)
         self.classifier = BinaryClassificationHead(config)
 
         self.classifier.init_weights()
-
-    def load_pretrained_weights(self, pretrained_model_name_or_path: Union[str, os.PathLike]):
-        self.model = self.model.from_pretrained(pretrained_model_name_or_path, config=self.config)
 
     def forward(self,
                 input_ids=None,
