@@ -70,6 +70,11 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             labels: List = None
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
+        if labels:
+            curr_threshold = None       # for training: no set threshold but adaptive one
+        else:
+            curr_threshold = self.threshold     # for development and test: threshold set in config
+
         output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
@@ -88,7 +93,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)
         logits = self.bilinear(bl)
 
-        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes, threshold=self.threshold), logits)
+        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes, threshold=curr_threshold), logits)
         if labels is not None:
             labels_tensors = [torch.tensor(label) for label in labels]
             labels_tensors = torch.stack(labels_tensors).to(logits)
