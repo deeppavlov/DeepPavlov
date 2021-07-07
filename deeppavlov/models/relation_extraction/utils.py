@@ -24,7 +24,7 @@ class RePostprocessor:
                 rel_indices = np.nonzero(predictions)[0]
                 for index in rel_indices:
                     if index == 0:
-                        rel_labels.append("no_relation")
+                        rel_labels.append("no relation")
                         continue
                     rel_p = self.id2rel[index]
                     rel_label = self.rel2label[rel_p]

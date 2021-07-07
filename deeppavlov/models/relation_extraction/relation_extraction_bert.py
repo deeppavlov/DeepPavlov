@@ -31,6 +31,7 @@ class REBertModel(TorchModel):
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
             clip_norm: Optional[float] = None,
+            threshold: Optional[float] = None,
             **kwargs
     ):
         self.n_classes = n_classes
@@ -40,6 +41,7 @@ class REBertModel(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
+        self.threshold = threshold
 
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
@@ -52,9 +54,6 @@ class REBertModel(TorchModel):
             optimizer_parameters=optimizer_parameters,
             return_probas=return_probas,
             **kwargs)
-
-        # if self.device == "cuda":
-        #     self.model, self.optimizer = amp.initialize(self.model, self.optimizer, opt_level="O1", verbosity=0)
 
     def train_on_batch(self, features: List[Dict], labels: List) -> float:
         """
@@ -82,11 +81,6 @@ class REBertModel(TorchModel):
 
         hidden_states = self.model(**_input)
         loss = hidden_states[0]
-
-        # if self.device == torch.device("cuda"):
-        #     with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-        #         scaled_loss.backward()
-        # else:
         loss.backward()
         self.optimizer.step()
 
@@ -107,7 +101,8 @@ class REBertModel(TorchModel):
         Returns:
             predictions:
         """
-        #self.model.eval()
+
+        self.model.eval()
 
         _input = {}
         for elem in ['input_ids', 'attention_mask']:
@@ -119,15 +114,19 @@ class REBertModel(TorchModel):
 
         with torch.no_grad():
             indices, probas = self.model(**_input)
-            # pred = pred[0]
 
         if self.return_probas:
             pred = probas.cpu().numpy()
             pred[np.isnan(pred)] = 0
+            out = open("log_infer.txt", "a+")
+            out.write("\n" + f"Probas: {pred}" + "\n")
+            out.close()
         else:
             pred = indices.cpu().numpy()
             pred[np.isnan(pred)] = 0
-
+            out = open("log_infer.txt", "a+")
+            out.write("\n" + f"Not Probas: {pred}" + "\n")
+            out.close()
         return pred
 
     def re_model(self, **kwargs) -> nn.Module:
@@ -140,7 +139,8 @@ class REBertModel(TorchModel):
             n_classes=self.n_classes,
             pretrained_bert=self.pretrained_bert,
             bert_tokenizer_config_file=self.pretrained_bert,
-            device=self.device
+            device=self.device,
+            threshold=self.threshold
         )
 
     def collate_fn(self, batch: List[Dict]) -> Tuple[Tensor, Tensor, List, List, List]:
@@ -156,12 +156,19 @@ class REBertModel(TorchModel):
 if __name__ == "__main__":
     from joblib import load
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-    features = load("/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
+    from deeppavlov.models.preprocessors.torch_transformers_preprocessor import TorchTransformersREPreprocessor
     n_classes = 97
 
     data_iter_out = BasicClassificationDatasetIterator(load(
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"))
-    labels = [data[2] for data in data_iter_out.test][:50]
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
+    ))
+    # features = [data[0] for data in data_iter_out.train]
+    # features_processed = TorchTransformersREPreprocessor("bert-base-cased").__call__(features)
+    #
+    # labels = [data[1] for data in data_iter_out.train]
+
+    features_processed = load("/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_transformer_preprocessor/dev_small")
+    labels = [data[1] for data in data_iter_out.train][:len(features_processed)]
 
     # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
     # smplvoc = SimpleVocabulary(
@@ -177,4 +184,4 @@ if __name__ == "__main__":
         load_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         pretrained_bert="bert-base-uncased",
         model_name="re_model",
-    ).train_on_batch(features, labels)
+    ).train_on_batch(features_processed, labels)

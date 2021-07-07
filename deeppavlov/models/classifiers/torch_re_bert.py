@@ -26,7 +26,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             device: str = "gpu",
-            ner_tags_length: int = 6        # number of ner tags
+            ner_tags_length: int = 6,        # number of ner tags
+            threshold: float = None
     ):
         super().__init__()
         self.n_classes = n_classes
@@ -36,6 +37,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.ner_tags_length = ner_tags_length
         self.emb_size = emb_size
         self.block_size = block_size
+        self.threshold = threshold
+
         self.loss_fnt = ATLoss()
 
         # initialize parameters that would be filled later
@@ -75,32 +78,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
 
         # get ner tags of entities
         hs_ner_tags, ts_ner_tags = torch.Tensor([list(ele) for ele in list(zip(*ner_tags))]).to(self.device)
-        # out = open("log3.txt", 'a')
-        # out.write(str(hs[0])+'\n')
-        # out.write("_"*100+'\n')
-        # out.write(str(rs[0])+'\n')
-        # out.write("_"*100+'\n')
-        # out.write(str(hs_ner_tags)+'\n')
-        # out.write("_"*100+'\n')
-        # out.write(str(hs_ner_tags[0])+'\n')
-        # out.write("_"*100+'\n')
         hs_inp = torch.cat([hs, rs, hs_ner_tags], dim=1)
         ts_inp = torch.cat([ts, rs, ts_ner_tags], dim=1)
-
-        # out.write(str(len(hs_inp[0]))+'\t'+str(2*self.hidden_size + 2*self.ner_tags_length)+'\n')
-        # out.write("_"*100+'\n')
-        # out.close()
-
-        out = open("log.txt", 'a')
-        out.write(f"Attention shape: {attention.shape}" + '\n')
-        out.write(f"Sequence_output shape: {sequence_output.shape}" + '\n')
-        out.write(f"hs shape: {hs.shape}" + '\n')
-        out.write(f"rs shape: {rs.shape}" + '\n')
-        out.write(f"ts shape: {ts.shape}" + '\n')
-        out.write(f"hs_ner_tags shape: {hs_ner_tags.shape}" + '\n')
-        out.write(f"ts_ner_tags shape: {ts_ner_tags.shape}" + '\n')
-        out.write(f"hs_inp shape: {hs_inp.shape}" + '\n')
-        out.write(f"ts_inp shape: {ts_inp.shape}" + '\n')
 
         hs = torch.tanh(self.head_extractor(hs_inp))
         ts = torch.tanh(self.tail_extractor(ts_inp))
@@ -109,15 +88,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         bl = (b1.unsqueeze(3) * b2.unsqueeze(2)).view(-1, self.emb_size * self.block_size)
         logits = self.bilinear(bl)
 
-        out.write(f"hs shape: {hs.shape}" + '\n')
-        out.write(f"ts shape: {ts.shape}" + '\n')
-        out.write(f"b1 shape: {b1.shape}" + '\n')
-        out.write(f"b2 shape: {b2.shape}" + '\n')
-        out.write(f"bl shape: {bl.shape}" + '\n')
-        out.write(f"logits shape: {logits.shape}" + '\n')
-        out.close()
-
-        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes), logits)
+        output = (self.loss_fnt.get_label(logits, num_labels=self.n_classes, threshold=self.threshold), logits)
         if labels is not None:
             labels_tensors = [torch.tensor(label) for label in labels]
             labels_tensors = torch.stack(labels_tensors).to(logits)
