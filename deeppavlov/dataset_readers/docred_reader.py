@@ -4,11 +4,10 @@ import os
 import random
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Tuple
 from overrides import overrides
 
 import numpy as np
-from sklearn.model_selection import train_test_split
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -37,6 +36,7 @@ class DocREDDatasetReader(DatasetReader):
             data_path: a path to a folder with dataset files.
             rel2id_path: a path to a file where information about relation to relation id corresponding is stored.
             negative_label: a label which will be used as a negative one (by default in DocRED: "Na")
+            train_dev_test_proportion: a proportion in which the data will be splitted into train, dev and test sets
             generate_additional_neg_samples: boolean; whether to generate additional negative samples or not.
             num_neg_samples: a number of additional negative samples that will be generated for each positive sample.
         Returns:
@@ -94,11 +94,11 @@ class DocREDDatasetReader(DatasetReader):
         # len(train_data) = train_dev_test_proportion * len(dev_data) = train_dev_test_proportion * len(test_data)
         all_labeled_data = train_data + dev_data
         random.shuffle(all_labeled_data)
-        one_fifth = int(len(all_labeled_data)/train_dev_test_proportion)
+        one_prop = int(len(all_labeled_data)/train_dev_test_proportion)
 
-        dev_data = all_labeled_data[:one_fifth]
-        test_data = all_labeled_data[one_fifth + 1: 2*one_fifth]
-        train_data = all_labeled_data[2*one_fifth + 1:]
+        dev_data = all_labeled_data[:one_prop]
+        test_data = all_labeled_data[one_prop + 1: 2 * one_prop]
+        train_data = all_labeled_data[2 * one_prop + 1:]
 
         data = {
             "train": self.process_docred_file(train_data, neg_samples="twice"),
@@ -118,20 +118,18 @@ class DocREDDatasetReader(DatasetReader):
 
     def process_docred_file(self, data: List[Dict], neg_samples: str = None) -> List:
         """
-        Processes a DocRED file and returns a DeepPavlov relevant output
+        Processes a DocRED data and returns a DeepPavlov relevant output
 
         Args:
-            file_path: path to the file.
-            num_neg_samples: number of negative samples that will be generated pro one positive sample.
+            data: List of data units
+            neg_samples: how many negative samples are to be generated
                 Possible values:
                     - None: no negative samples will be generated
                         (relevant to the test set which has from neg samples only)
                     - equal: there will be one negative sample pro positive sample
                     - twice: there will be twice as many negative samples as positive ones
-
         Returns:
-            if splitting: two lists of documents in DocRED output format (see documentation to the "read" function)
-            if no splitting: one list of documents & None
+            one list of processed documents
         """
         processed_data_samples = []
 
@@ -322,6 +320,6 @@ class DocREDDatasetReader(DatasetReader):
 # todo: wil be deleted
 if __name__ == "__main__":
     DocREDDatasetReader().read(
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED",
-        "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/meta/rel2id.json",
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred",
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/meta/rel2id.json",
     )
