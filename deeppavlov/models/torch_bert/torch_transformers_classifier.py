@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+import re
 from logging import getLogger
 from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple
@@ -265,13 +266,23 @@ class TorchTransformersClassifierModel(TorchModel):
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
+                model_state = checkpoint["model_state_dict"]
+                optimizer_state = checkpoint["optimizer_state_dict"]
+
+                # load a multi-gpu model on a single device
+                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
+                    tmp_model_state = {}
+                    for key, value in model_state.items():
+                        tmp_model_state[re.sub("module.", "", key)] = value
+                    model_state = tmp_model_state
+
                 # set strict flag to False if position_ids are missing
                 # this is needed to load models trained on older versions
                 # of transformers library
                 strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
                                          if key.endswith("embeddings.position_ids")])
-                self.model.load_state_dict(checkpoint["model_state_dict"], strict=strict_load_flag)
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                self.model.load_state_dict(model_state, strict=strict_load_flag)
+                self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
