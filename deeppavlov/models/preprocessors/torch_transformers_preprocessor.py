@@ -171,7 +171,7 @@ class TorchTransformersPreprocessor(Component):
                                         text_pair=texts_b,
                                         add_special_tokens=True,
                                         max_length=self.max_seq_length,
-                                        pad_to_max_length=True,
+                                        padding='max_length',
                                         return_attention_mask=True,
                                         truncation=True,
                                         return_tensors='pt')
