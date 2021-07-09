@@ -93,8 +93,14 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_{BASE_MODEL}",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_roberta_mnli",
       "BINARY_CLASSIFICATION": true
-    }
+    },
+    "download": [
+	{
+		"url": "https://files.deeppavlov.ai/v1/superglue/superglue_boolq_roberta_mnli.tar.gz",
+		"subdir": "{MODELS_PATH}"
+	}
+    ]
   }
 }
