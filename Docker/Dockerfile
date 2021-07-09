@@ -20,7 +20,7 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     cd DeepPavlov && \
     git checkout master && \
     git pull && \
-    git checkout e41b802b70b94a7eb1a6db86e5a03e6cb071bff8 && \
+    git checkout 6ca3fed7183c4b444a01667dedbc8d66bef1eb5d && \
     pip install -e . && \
     python -m deeppavlov install entity_linking_vx_sep && \
     python -c 'import deeppavlov.models'
