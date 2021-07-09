@@ -18,16 +18,15 @@
 
 ### Funcs ###
 
+import string
 import re
+from difflib import ndiff
 from logging import getLogger
 from typing import Dict, Any, List, Optional, Union, Tuple
 
 import six
 import numpy as np
 import torch
-
-
-from deeppavlov.models.spelling_correction.levenshtein.searcher_component import LevenshteinSearcherComponent
 
 logger = getLogger(__name__)
 
@@ -148,6 +147,19 @@ def tokenize(utt):
     utt_lower = normalize_text(utt_lower)
     utt_tok = [tok for tok in map(str.strip, re.split("(\W+)", utt_lower)) if len(tok) > 0]
     return utt_tok
+
+def levenshtein_distance_gen(str1, str2):
+    """
+    Returns Levenshtein distance of two strings
+    """
+    counter = {"+": 0, "-": 0}
+    for edit_code, *_ in ndiff(str1, str2):
+        if edit_code == " ":
+            yield max(counter.values())
+            counter = {"+": 0, "-": 0}
+        else: 
+            counter[edit_code] += 1
+    yield max(counter.values())
 
 
 def get_sys_inform(response, slot_type):
@@ -304,9 +316,8 @@ def get_token_and_slot_label(context, response=None):
 
                     # if e.g. "dontcare" skip it; It will be in the diag_state (like in TripPy)
                     # This unfortunately is not robust to slot values that are different from the text & they have to be manually added to replace
-                    # Generally TripPy's text index predicting is brittle and we should move to generating slot values not copying them in the future
+                    # Generally TripPy's text index predicting is brittle and the field should move to generating slot values not copying them in the future
                     if set(value_tok) <= set(usr_utt_tok):
-                        # Will have to be adpated for slot values of len > 1
                         slot_dict = {
                         "exclusive_end": usr_utt_tok.index(value_tok[-1]) + 1,
                         "slot": slot,
@@ -315,26 +326,24 @@ def get_token_and_slot_label(context, response=None):
                         usr_slot_label.append(slot_dict)
 
                     elif value not in ["dontcare", "itdoesntmatter"]:
-                        # Not in original TripPy - Search for most similar values with Levenshtein in case
-                        # Slot value label is not in the user tokens
-                        searcher = LevenshteinSearcherComponent(usr_utt_tok, max_distance=10)
-                        candidates = searcher([[value]])
-                        top_candidate = candidates[0][0][0][1]
 
-                        # The LevenshteinSearcher seems not to work for removal edits
-                        if top_candidate not in usr_utt_tok:
-                            top_candidate = usr_utt_tok[0] # Just randomly take the first token
+                        indices = []
+                        for slot_word in value_tok:
+                            distances = []
+                            for option in usr_utt_tok:
+                                distances.append(sum(levenshtein_distance_gen(slot_word, option)))
+                            indices.append(distances.index(min(distances)))
 
+                        if indices[-1] < indices[0]:
+                            indices[-1] = indices[0]
+                        
                         slot_dict = {
-                        "exclusive_end": usr_utt_tok.index(top_candidate) + 1,
+                        "exclusive_end": indices[-1] + 1,
                         "slot": slot,
-                        "start": usr_utt_tok.index(top_candidate),
-                        "candidate": top_candidate
+                        "start": indices[0]
                         }
                         usr_slot_label.append(slot_dict)
-
     
-
     return sys_utt_tok, sys_slot_label, usr_utt_tok, usr_slot_label
 
 
