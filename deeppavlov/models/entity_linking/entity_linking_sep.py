@@ -238,7 +238,7 @@ class EntityLinkerSep(Component, Serializable):
                  full_paragraph: bool = False,
                  max_paragraph_len: int = 280,
                  rank_in_runtime: bool = False,
-                 tag_thres_probas: dict = {"PER": 0.5, "LOC": 0.5, "ORG": 0.5},
+                 tag_thres_probas: dict = {"PER": 0.79, "LOC": 0.79, "ORG": 0.79},
                  bert_emb_batch_size: int = 100,
                  **kwargs) -> None:
         """
