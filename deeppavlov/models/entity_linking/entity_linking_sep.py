@@ -426,9 +426,9 @@ class EntityLinkerSep(Component, Serializable):
     def __call__(self, entity_substr_batch: List[List[str]],
                  entity_offsets_batch: List[List[List[int]]],
                  tags_batch: List[List[str]],
-                 probas_batch: List[List[float]],
                  sentences_offsets_batch: List[List[Tuple[int, int]]],
-                 sentences_batch: List[List[str]]
+                 sentences_batch: List[List[str]],
+                 probas_batch: List[List[float]] = None
                  ) -> Tuple[List[List[str]], List[List[List[Tuple[float, int, float]]]],
                             List[List[List[int]]], List[List[List[str]]]]:
 
@@ -473,9 +473,13 @@ class EntityLinkerSep(Component, Serializable):
         nf_entity_substr_batch, nf_tags_batch, nf_probas_batch, nf_entity_offsets_batch = [], [], [], []
         nf_entity_ids_batch, nf_conf_batch = [], []
         fnd_entity_substr_batch, fnd_tags_batch, fnd_probas_batch, fnd_entity_offsets_batch = [], [], [], []
+        if probas_batch is None:
+            probas_batch = [[] for _ in entity_substr_batch]
 
-        for entity_substr_list, tags_list, probas_list, entity_offsets_list in \
-                zip(entity_substr_batch, tags_batch, probas_batch, entity_offsets_batch):
+        for entity_substr_list, tags_list, entity_offsets_list, probas_list in \
+                zip(entity_substr_batch, tags_batch, entity_offsets_batch, probas_batch):
+            if not probas_list and entity_substr_list:
+                probas_list = [0.8 for _ in entity_substr_list]
             nf_entity_substr_list, nf_tags_list, nf_probas_list, nf_entity_offsets_list = [], [], [], []
             nf_entity_ids_list, nf_conf_list = [], []
             fnd_entity_substr_list, fnd_tags_list, fnd_probas_list, fnd_entity_offsets_list = [], [], [], []
