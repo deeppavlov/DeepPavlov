@@ -34,21 +34,19 @@ log = getLogger(__name__)
 @register('multitask_pal_bert')
 class MultiTaskPalBert(TorchModel):
     """ Multi-Task Bert Based Model 
-
     Args:
         tasks: Dict of task names along with the labels for each task,
         config: path to pal Bert configuration file,
         pretrained_bert: path of the pretrained bert embeddings
         freeze_embeddings: set True if bert embeddings are to be freezed
         learning_rate: learning rate for the model
-        training_steps_per_epoch: number of steps per epoch,
+        steps_per_epoch: number of steps per epoch,
         num_train_epochs: number of epochs,
         warmup_proportion: warmup proportion for the optimizer,
         gradient_accumulation_steps: number of gradient accumulation steps,
         in_distribution: in_distribution: The distribution of variables listed in the ``"in"`` config parameter between tasks. 
             ``in_distribution`` can be ``None`` if only 1 task is called. In that case all variables
             listed in ``"in"`` are arguments of 1 task. 
-
             ``in_distribution`` can be a dictionary of ``int``. If that is the case, then keys of ``in_distribution``
             are task names and values are numbers of variables from ``"in"`` parameter of config which are inputs of
             corresponding task. The variables in ``"in"`` parameter have to be in the same order the tasks are listed
@@ -62,7 +60,7 @@ class MultiTaskPalBert(TorchModel):
                  pretrained_bert: str = None,
                  freeze_embeddings: bool = False,
                  learning_rate: int = 2e-5,
-                 training_steps_per_epoch: int = 2400,
+                 steps_per_epoch: int = 2400,
                  num_train_epochs: int = 3,
                  warmup_proportion: int = 0.1,
                  gradient_accumulation_steps: int = 1,
@@ -72,12 +70,17 @@ class MultiTaskPalBert(TorchModel):
                  **kwargs) -> None:
 
         self.task_names = list(tasks.keys())
-        self.label_list = [tasks[task]["labels"] for task in tasks]
+        self.tasks_num_classes = [tasks[task]["n_classes"] for task in tasks]
+        self.losses_template = [[] for task in self.task_names]
+        self.train_losses = self.losses_template.copy()
+        self.validation_predictions = self.losses_template.copy()
+        self.validation_steps = 0
+        self.training_steps = 0
         self.config = config
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
         self.learning_rate = learning_rate
-        self.training_steps_per_epoch = training_steps_per_epoch
+        self.steps_per_epoch = steps_per_epoch
         self.num_train_epochs = num_train_epochs
         self.warmup_proportion = warmup_proportion
         self.gradient_accumulation_steps = gradient_accumulation_steps
@@ -86,14 +89,11 @@ class MultiTaskPalBert(TorchModel):
         super().__init__(*args, **kwargs)
 
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
-        """
-        TODO: make use of fname
-        """
         if self.config and os.path.exists(self.config):
             self.config = BertConfig.from_json_file(self.config)
             self.config.num_tasks = len(self.task_names)
             self.model = BertForMultiTask(
-                self.config, [len(labels) for labels in self.label_list])
+                self.config, self.tasks_num_classes)
         else:
             raise ValueError("Config File does not exist at", self.config)
 
@@ -117,29 +117,6 @@ class MultiTaskPalBert(TorchModel):
             log.info("Bert Model Weights Loaded.")
         else:
             raise ConfigError("No pre-trained BERT model is given.")
-
-        if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(
-                    f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(
-                    checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.info(
-                    f"Init from scratch. Load path {weights_path} does not exist.")
 
         if self.freeze_embeddings:
             for n, p in self.model.bert.named_parameters():
@@ -178,99 +155,128 @@ class MultiTaskPalBert(TorchModel):
             optimizer_parameters,
             lr=self.learning_rate,
             warmup=self.warmup_proportion,
-            t_total=self.training_steps_per_epoch * self.num_train_epochs
+            t_total=self.steps_per_epoch * self.num_train_epochs
         )
+
+        if self.load_path:
+            log.info(f"Load path {self.load_path} is given.")
+            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+                raise ConfigError("Provided load path is incorrect!")
+
+            weights_path = Path(self.load_path.resolve())
+            weights_path = weights_path.with_suffix(f".pth.tar")
+            if weights_path.exists():
+                log.info(f"Load path {weights_path} exists.")
+                log.info(
+                    f"Initializing `{self.__class__.__name__}` from saved.")
+
+                # now load the weights, optimizer from saved
+                log.info(f"Loading weights from {weights_path}.")
+                checkpoint = torch.load(weights_path, map_location=self.device)
+                self.model.load_state_dict(checkpoint["model_state_dict"])
+                self.optimizer.load_state_dict(
+                    checkpoint["optimizer_state_dict"])
+                self.epochs_done = checkpoint.get("epochs_done", 0)
+            else:
+                log.info(
+                    f"Init from scratch. Load path {weights_path} does not exist.")
 
     def __call__(self, *args):
         """Make prediction for given features (texts).
-
         Args:
             features: batch of InputFeatures for all tasks
-
         Returns:
             predicted classes or probabilities of each class
-
         """
-        preds = []
-        for task_id, task_features in enumerate(args):
-            # log.info(f"Task ID {task_id} Task Name {self.task_names[task_id]}")
-            input_ids = []
-            attention_masks = []
-            token_type_ids = []
+        if self.validation_steps >= (self.steps_per_epoch / self.gradient_accumulation_steps):
+            self.validation_steps = 0
+            self.validation_predictions = self.losses_template.copy()
+        self.validation_steps += 1
+        n_in = sum([inp for inp in self.in_distribution.values()])
+        task_id = args[0]
+        features = args[1:]
+        args_in = features[:n_in]
+        in_by_tasks = self._distribute_arguments_by_tasks(
+            args_in, {}, self.task_names, "in")
 
-            for input_feature in task_features:
-                input_ids.append(input_feature.input_ids.numpy()[0])
-                attention_masks.append(
-                    input_feature.attention_mask.numpy()[0])
-                token_type_ids.append(
-                    input_feature.token_type_ids.numpy()[0])
+        task_features = in_by_tasks[self.task_names[task_id]]
 
-            logits = self.model(
-                torch.tensor(input_ids, dtype=torch.long).to(self.device),
-                torch.tensor(attention_masks, dtype=torch.long).to(
-                    self.device),
-                torch.tensor(token_type_ids, dtype=torch.long).to(
-                    self.device),
-                task_id,
-                self.task_names[task_id],
-            )
-            logits = logits.detach().cpu().numpy()
-            pred = np.argmax(logits, axis=1)
-            preds.append(pred.tolist())
-        return preds
+        input_ids = []
+        attention_masks = []
+        token_type_ids = []
+        for input_feature in task_features[0]:
+            input_ids.append(input_feature.input_ids.numpy()[0])
+            attention_masks.append(
+                input_feature.attention_mask.numpy()[0])
+            token_type_ids.append(
+                input_feature.token_type_ids.numpy()[0])
+        logits = self.model(
+            torch.tensor(input_ids, dtype=torch.long).to(self.device),
+            torch.tensor(attention_masks, dtype=torch.long).to(
+                self.device),
+            torch.tensor(token_type_ids, dtype=torch.long).to(
+                self.device),
+            task_id,
+            self.task_names[task_id],
+        )
+        logits = logits.detach().cpu().numpy()
+        self.validation_predictions[task_id] = logits.tolist()
+
+        return self.validation_predictions
 
     def train_on_batch(self, *args):
         """Train model on given batch.
         This method calls train_op using features and y (labels).
-
         Args:
             features: batch of InputFeatures
             y: batch of labels (class id)
-
         Returns:
             dict with loss for each task
         """
+        if self.training_steps >= (self.steps_per_epoch / self.gradient_accumulation_steps):
+            self.training_steps = 0
+            self.train_losses = self.losses_template.copy()
+        self.training_steps += 1
         n_in = sum([inp for inp in self.in_distribution.values()])
-        args_in, args_in_y = args[:n_in], args[n_in:]
+        task_id = args[0]
+        features = args[1:]
+        args_in, args_in_y = features[:n_in], features[n_in:]
         in_by_tasks = self._distribute_arguments_by_tasks(
             args_in, {}, self.task_names, "in")
         in_y_by_tasks = self._distribute_arguments_by_tasks(
             args_in_y, {}, self.task_names, "in_y")
-        losses_by_task = []
-        for task_id, task in enumerate(self.task_names):
-            task_features = in_by_tasks[task]
-            task_labels = in_y_by_tasks[task]
-            for features, labels in zip(task_features, task_labels):
-                # log.info(
-                #     f"Training On Task ID {task_id} Task Name {self.task_names[task_id]}")
-                input_ids = []
-                attention_masks = []
-                token_type_ids = []
 
-                for input_feature in features:
-                    input_ids.append(input_feature.input_ids.numpy()[0])
-                    attention_masks.append(
-                        input_feature.attention_mask.numpy()[0])
-                    token_type_ids.append(
-                        input_feature.token_type_ids.numpy()[0])
+        task_features = in_by_tasks[self.task_names[task_id]]
+        task_labels = in_y_by_tasks[self.task_names[task_id]]
 
-                loss, logits = self.model(
-                    torch.tensor(input_ids, dtype=torch.long).to(self.device),
-                    torch.tensor(attention_masks, dtype=torch.long).to(
-                        self.device),
-                    torch.tensor(token_type_ids, dtype=torch.long).to(
-                        self.device),
-                    task_id,
-                    task,
-                    torch.tensor(labels, dtype=torch.long).to(self.device),
-                )
-                if self.gradient_accumulation_steps > 1:
-                    loss = loss/self.gradient_accumulation_steps
-                loss.backward()
-                self.optimizer.step()
-                self.model.zero_grad()
-            losses_by_task.append(loss.item())
-        return {"losses": losses_by_task}
+        input_ids = []
+        attention_masks = []
+        token_type_ids = []
+
+        for input_feature in task_features[0]:
+            input_ids.append(input_feature.input_ids.numpy()[0])
+            attention_masks.append(
+                input_feature.attention_mask.numpy()[0])
+            token_type_ids.append(
+                input_feature.token_type_ids.numpy()[0])
+        loss, logits = self.model(
+            torch.tensor(input_ids, dtype=torch.long).to(self.device),
+            torch.tensor(attention_masks, dtype=torch.long).to(
+                self.device),
+            torch.tensor(token_type_ids, dtype=torch.long).to(
+                self.device),
+            task_id,
+            self.task_names[task_id],
+            torch.tensor(task_labels[0], dtype=torch.long).to(self.device),
+        )
+        if self.gradient_accumulation_steps > 1:
+            loss = loss/self.gradient_accumulation_steps
+        loss.backward()
+        self.optimizer.step()
+        self.model.zero_grad()
+        self.train_losses[task_id] = loss.item()
+
+        return {"losses": self.train_losses}
 
     def _distribute_arguments_by_tasks(self, args, kwargs, task_names, what_to_distribute, in_distribution=None):
 
