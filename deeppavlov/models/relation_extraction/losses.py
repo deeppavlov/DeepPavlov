@@ -25,15 +25,15 @@ class ATLoss(nn.Module):
         th_label[:, 0] = 1.0
         labels[:, 0] = 0.0
 
-        p_mask = labels + th_label          # = 1 for the gold labels + for negative class, 0 otherwise
+        p_mask = labels + th_label          # = 1 for the gold labels + for 0 (negative) class, 0 otherwise
         n_mask = 1 - labels         # = 0 for the gold labels, 1 otherwise
 
         # Rank positive classes to TH
-        logit1 = logits - (1 - p_mask) * 1e30
+        logit1 = logits - (1 - p_mask) * 1e30   # org logits remain for gold labels + 0 class, others are reduced by 1
         loss1 = -(F.log_softmax(logit1, dim=-1) * labels).sum(1)
 
         # Rank TH to negative classes
-        logit2 = logits - (1 - n_mask) * 1e30
+        logit2 = logits - (1 - n_mask) * 1e30  # org logits remain for not gold and not 0-class, others are reduced by 1
         loss2 = -(F.log_softmax(logit2, dim=-1) * th_label).sum(1)
 
         # Sum two parts

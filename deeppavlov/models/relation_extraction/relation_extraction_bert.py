@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import numpy as np
 from torch import Tensor
-# from apex import amp
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register

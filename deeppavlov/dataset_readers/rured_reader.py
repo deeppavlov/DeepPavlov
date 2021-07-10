@@ -67,8 +67,8 @@ class RuREDDatasetReader(DatasetReader):
         processed_samples = []
         neg_samples = []        # list of indices of negative samples
         pos_samples = 0         # counter of positive samples
-        for sample in data:
 
+        for sample in data:
             # record negative sample ids
             if sample["relation"] == "no_relation":
                 neg_samples.append(len(processed_samples))
@@ -108,7 +108,6 @@ class RuREDDatasetReader(DatasetReader):
             processed_samples = [
                 sample for sample_idx, sample in enumerate(processed_samples) if sample_idx not in neg_samples
             ]
-
         else:
             raise ValueError("Unknown negative samples amount! Currently available are 'equal', 'twice' and 'none")
 
@@ -123,29 +122,17 @@ class RuREDDatasetReader(DatasetReader):
 
         return processed_samples, stat
 
-    def filter_negative_samples(self, samples: List[Tuple]) -> List[Tuple]:
-        filtered_samples = []
-        return filtered_samples
-
-    def label_to_one_hot(self, label: int) -> List:
+    def label_to_one_hot(self, label: int) -> List[int]:
         """ Turn labels to one hot encodings """
         relation = [0] * len(self.rel2id)
         relation[label] = 1
         return relation
 
     def add_default_rel_dict(self):
+        """ Creates a default relation to relation if dictionary with RuRED relations """
         return dict(no_relation=0, MEMBER=1, WORKS_AS=2, WORKPLACE=3, OWNERSHIP=4, SUBORDINATE_OF=5, TAKES_PLACE_IN=6,
                     EVENT_TAKES_PART_IN=7, SELLS_TO=8, ALTERNATIVE_NAME=9, HEADQUARTERED_IN=10, PRODUCES=11,
                     ABBREVIATION=12, DATE_DEFUNCT_IN=13, SUBEVENT_OF=14, DATE_FOUNDED_IN=15, DATE_TAKES_PLACE_ON=16,
                     NUMBER_OF_EMPLOYEES_FIRED=17, ORIGINS_FROM=18, ACQUINTANCE_OF=19, PARENT_OF=20, ORGANIZES=21,
                     FOUNDED_BY=22, PLACE_RESIDES_IN=23, BORN_IN=24, AGE_IS=25, RELATIVE=26, NUMBER_OF_EMPLOYEES=27,
                     SIBLING=28, DATE_OF_BIRTH=29)
-
-
-# todo: wil be deleted
-
-
-if __name__ == "__main__":
-    RuREDDatasetReader().read(
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/rured/"
-    )
