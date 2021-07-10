@@ -27,7 +27,7 @@ log = getLogger(__name__)
 
 
 @register('multitask_pal_bert_iterator')
-class MultiTaskIterator:
+class MultiTaskPalBertIterator:
     """
     Class merges data from several dataset iterators. When used for batch generation batches from
     merged dataset iterators are united into one batch. If sizes of merged datasets are different
