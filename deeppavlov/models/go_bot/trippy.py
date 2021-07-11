@@ -274,7 +274,6 @@ class TripPy(TorchModel):
                                                             policy_prediction,
                                                             self.ds)
 
-
                 # Add system response to responses for possible next round
                 self.batch_dialogues_utterances_responses_info[diag_id].insert(
                     -1, {"text": response, "act": None})
