@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from logging import getLogger
 from typing import List, Dict, Tuple
 from collections import defaultdict
+from string import punctuation
 
 import numpy as np
 import pymorphy2
@@ -51,11 +53,13 @@ class NerChunker(Component):
         """
         self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
+        self.punct_ext = punctuation + " " + "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
 
     def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
         """
         This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
- 
+
         Args:
             docs_batch: batch of documents
 
@@ -67,38 +71,85 @@ class NerChunker(Component):
         text_batch = []
         nums_batch_list = []
         nums_batch = []
+        sentences_offsets_batch_list = []
+        sentences_offsets_batch = []
+        sentences_offsets_list = []
+        sentences_batch_list = []
+        sentences_batch = []
+        sentences_list = []
         count_texts = 0
         text = ""
         curr_doc = 0
+        cur_len = 0
+        start = 0
         for n, doc in enumerate(docs_batch):
+            doc = self.sanitize(doc)
             sentences = sent_tokenize(doc)
             for sentence in sentences:
-                if len(text) + len(sentence) < self.max_chunk_len and n == curr_doc:
+                sentence_len = len(sentence.split())
+                if cur_len + sentence_len < self.max_chunk_len and n == curr_doc:
                     text += f"{sentence} "
+                    cur_len += sentence_len
+                    end = start + len(sentence)
+                    sentences_offsets_list.append((start, end))
+                    sentences_list.append(sentence)
+                    start = end + 1
                 else:
                     if count_texts < self.batch_size:
-                        text_batch.append(text.strip())
-                        if n == curr_doc:
-                            nums_batch.append(n)
-                        else:
-                            nums_batch.append(n - 1)
-                        count_texts += 1
+                        text = text.strip()
+                        if text:
+                            text_batch.append(text)
+                            sentences_offsets_batch.append(sentences_offsets_list)
+                            sentences_batch.append(sentences_list)
+                            if n == curr_doc:
+                                nums_batch.append(n)
+                            else:
+                                nums_batch.append(n - 1)
+                            count_texts += 1
                     else:
                         text_batch_list.append(text_batch)
                         text_batch = []
                         nums_batch_list.append(nums_batch)
                         nums_batch = [n]
+                        sentences_offsets_batch_list.append(sentences_offsets_batch)
+                        sentences_batch_list.append(sentences_batch)
                         count_texts = 0
                     curr_doc = n
                     text = f"{sentence} "
+                    cur_len = len(sentence.split())
+                    start = 0
+                    end = start + len(sentence)
+                    sentences_offsets_list = [(start, end)]
+                    sentences_list = [sentence]
+                    start = end + 1
 
+        text = text.strip()
         if text:
-            text_batch.append(text.strip())
+            text_batch.append(text)
             text_batch_list.append(text_batch)
             nums_batch.append(len(docs_batch) - 1)
             nums_batch_list.append(nums_batch)
+            sentences_offsets_batch.append(sentences_offsets_list)
+            sentences_offsets_batch_list.append(sentences_offsets_batch)
+            sentences_batch.append(sentences_list)
+            sentences_batch_list.append(sentences_batch)
 
-        return text_batch_list, nums_batch_list
+        return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list
+
+    def sanitize(self, text):
+        text_len = len(text)
+        if text[text_len - 1] not in {'.', '!', '?'}:
+            i = text_len - 1
+            while text[i] in self.punct_ext and i > 0:
+                i -= 1
+                if (text[i] in {'.', '!', '?'} and text[i - 1].lower() in self.russian_letters) or \
+                        (i > 1 and text[i] in {'.', '!', '?'} and text[i - 1] in '"' and text[
+                            i - 2].lower() in self.russian_letters):
+                    break
+
+            text = text[:i + 1]
+        text = re.sub(r'\s+', ' ', text)
+        return text
 
 
 @register('entity_linker')

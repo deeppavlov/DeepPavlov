@@ -1,8 +1,7 @@
 {
   "dataset_reader": {
-    "class_name": "docred_reader",
-    "data_path": "{DOWNLOADS_PATH}/docred/",
-    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json"
+    "class_name": "rured_reader",
+    "data_path": "{DOWNLOADS_PATH}/rured/"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator"
@@ -15,23 +14,29 @@
         "in": ["input_x"],
         "out": ["input_x_bert"],
         "class_name": "torch_transformers_re_preprocessor",
-        "vocab_file": "bert-base-uncased"
+        "ner_tags": ["WORK_OF_ART", "NORP", "GROUP", "LAW", "NATIONALITY", "EVENT", "DATE", "CURRENCY", "GPE",
+                     "QUANTITY", "FAMILY", "ORDINAL", "RELIGION", "CITY", "MONEY", "AGE", "LOCATION", "PERCENT",
+                     "BOROUGH", "STREET", "PERSON", "REGION", "COUNTRY", "PROFESSION", "ORGANIZATION", "FAC",
+                     "CARDINAL", "PRODUCT", "TIME"],
+        "max_seq_length": 512,
+        "vocab_file": "{TRANSFORMER}"
       },
       {
         "class_name": "re_torch_transformers_classifier",
         "in": ["input_x_bert"],
         "in_y": ["y_ids"],
         "out": ["model_output"],
-        "n_classes": 97,
+        "n_classes": 30,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "model_name": "re_model",
-        "pretrained_bert": "bert-base-uncased"
+        "ner_tags_length": 29,
+        "pretrained_bert": "{TRANSFORMER}"
       },
       {
         "class_name": "re_postprocessor",
-        "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
-        "rel2label_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
+        "rel2id_path": "{DOWNLOADS_PATH}/rured/rel2id.json",
+        "rel2label_path": "{DOWNLOADS_PATH}/rured/rel2label.json",
         "return_rel_labels": true,
         "in": ["model_output"],
         "out": ["predictions"]
@@ -40,7 +45,7 @@
     "out": ["predictions"]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 50,
     "batch_size": 16,
     "train_metrics": ["f1_weighted", "acc"],
     "metrics": ["f1_weighted", "acc"],
@@ -56,20 +61,17 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/re_docred"
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/re_rured"
       },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/docred.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/docred"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/rured.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rured"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_docred_model.tar.gz",
-        "subdir": "{MODELS_PATH}/re_docred"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/rel2label.json",
-        "subdir": "{DOWNLOADS_PATH}/docred"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_rured_model.tar.gz",
+        "subdir": "{MODELS_PATH}/re_rured"
       }
     ]
   }

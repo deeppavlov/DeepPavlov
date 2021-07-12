@@ -159,8 +159,19 @@ class TorchTransformersNerPreprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        tokens_offsets_batch = [[] for _ in tokens]
         if isinstance(tokens[0], str):
-            tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
+            tokens_batch = []
+            tokens_offsets_batch = []
+            for s in tokens:
+                tokens_list = []
+                tokens_offsets_list = []
+                for elem in re.finditer(self._re_tokenizer, s):
+                    tokens_list.append(elem[0])
+                    tokens_offsets_list.append((elem.start(), elem.end()))
+                tokens_batch.append(tokens_list)
+                tokens_offsets_batch.append(tokens_offsets_list)
+            tokens = tokens_batch
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
@@ -210,7 +221,7 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
                 return tokens, subword_tokens, subword_tok_ids, \
                        attention_mask, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
+        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
@@ -309,6 +320,7 @@ class TorchTransformersREPreprocessor(Component):
             vocab_file: str,
             special_token: str = '<ENT>',
             ner_tags=None,
+            max_seq_length: int = 512,
             do_lower_case: bool = False,
             **kwargs
     ):
@@ -327,6 +339,7 @@ class TorchTransformersREPreprocessor(Component):
         if ner_tags is None:
             ner_tags = ['ORG', 'TIME', 'MISC', 'LOC', 'PER', 'NUM']
         self.ner2id = {tag: tag_id for tag_id, tag in enumerate(ner_tags)}
+        self.max_seq_length = max_seq_length
 
         out = open("log.txt", 'a')
         out.write(f"Number of tags: {len(self.ner2id)}" + '\n')
@@ -378,6 +391,10 @@ class TorchTransformersREPreprocessor(Component):
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
         input_features = []
+        doc_wordpiece_tokens_batch = []
+        entity_pos_batch = []
+        ner_tags_batch = []
+        doc_wordpiece_tokens_len = []
         for doc, entities in zip(tokens, entity_info):
             count = 0
             doc_wordpiece_tokens = []
@@ -422,11 +439,6 @@ class TorchTransformersREPreprocessor(Component):
                 doc_wordpiece_tokens += word_tokens
                 count += len(word_tokens)
 
-            encoding = self.tokenizer.encode_plus(
-                doc_wordpiece_tokens, add_special_tokens=True, truncation=True, padding="max_length",
-                return_attention_mask=True,  # return_tensors="pt"
-            )
-
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
             upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
@@ -435,6 +447,22 @@ class TorchTransformersREPreprocessor(Component):
             upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity2]
 
             enc_ner_tag = self.encode_ner_tag(entities[2], entities[3])
+
+            doc_wordpiece_tokens_batch.append(doc_wordpiece_tokens)
+            doc_wordpiece_tokens_len.append(len(doc_wordpiece_tokens))
+            entity_pos_batch.append([upd_entity1, upd_entity2])
+            ner_tags_batch.append(enc_ner_tag)
+
+        self.max_seq_length = max(doc_wordpiece_tokens_len)
+        out = open("log_seq.txt", 'a')
+        out.write(str(self.max_seq_length) + '\n')
+        out.close()
+        for (upd_entity1, upd_entity2), enc_ner_tag, doc_wordpiece_tokens in \
+                zip(entity_pos_batch, ner_tags_batch, doc_wordpiece_tokens_batch):
+            encoding = self.tokenizer.encode_plus(
+                doc_wordpiece_tokens, add_special_tokens=True, truncation=True, max_length=self.max_seq_length,
+                pad_to_max_length=True, return_attention_mask=True,  # return_tensors="pt"
+            )
 
             input_features.append(
                 {
@@ -460,7 +488,6 @@ class TorchTransformersREPreprocessor(Component):
             ner_tag_one_hot[self.ner2id[ner_tag]] = 1
             enc_ner_tags.append(ner_tag_one_hot)
         return enc_ner_tags
-
 
 # todo: wil be deleted
 # if __name__ == "__main__":

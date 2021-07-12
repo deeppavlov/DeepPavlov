@@ -1,0 +1,69 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "class_name": "ner_chunker",
+        "batch_size": 16,
+        "in": ["x"],
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
+      },
+      {
+        "thres_proba": 0.05,
+        "o_tag": "O",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "return_entities_with_tags": true,
+        "class_name": "entity_detection_parser",
+        "id": "edp"
+      },
+      {
+        "class_name": "kbqa_entity_linker",
+        "id": "linker_entities",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "inverted_index_filename": "inverted_index_rus.pickle",
+        "entities_list_filename": "entities_list_rus.pickle",
+        "q2name_filename": "wiki_rus_q_to_name.pickle",
+        "build_inverted_index": false,
+        "lemmatize": true,
+        "use_descriptions": false,
+        "include_mention": false,
+        "use_prefix_tree": false,
+        "lang": "ru"
+      },
+      {
+        "class_name": "ner_chunk_model",
+        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rured.json"},
+        "ner_parser": "#edp",
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
+        "out": ["entity_substr", "entity_offsets", "tags", "probas", "sentences_offsets", "sentences", "tokens", "entity_positions", "sentences_tokens"]
+      },
+      {
+         "class_name": "triplet_extractor",
+         "re_model": {"config_path": "{CONFIGS_PATH}/relation_extraction/re_rured.json"},
+         "el_model": "#linker_entities",
+         "in": ["entity_substr", "entity_offsets", "tags", "probas", "sentences_offsets", "sentences", "tokens", "entity_positions", "sentences_tokens"],
+         "out": ["triplets"]
+      }
+    ],
+    "out": ["triplets"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "NER_PATH": "{MODELS_PATH}/ner_rured"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wiki_rus_files.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      }
+    ]
+  }
+}
