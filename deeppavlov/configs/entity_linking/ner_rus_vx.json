@@ -5,6 +5,7 @@
       {
         "class_name": "ner_chunker",
         "batch_size": 16,
+        "max_chunk_len" : 180,
         "in": ["x"],
         "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
       },
