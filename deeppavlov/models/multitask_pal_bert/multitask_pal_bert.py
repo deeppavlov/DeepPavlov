@@ -21,7 +21,6 @@ import torch
 import os
 from .optimization import BERTAdam
 from .modeling import BertForMultiTask, BertConfig
-from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -56,7 +55,7 @@ class MultiTaskPalBert(TorchModel):
 
     def __init__(self,
                  tasks: Dict[str, Dict],
-                 config: str = None,
+                 config: str = ".configs/pal_config.json",
                  pretrained_bert: str = None,
                  freeze_embeddings: bool = False,
                  learning_rate: int = 2e-5,
@@ -64,19 +63,27 @@ class MultiTaskPalBert(TorchModel):
                  num_train_epochs: int = 3,
                  warmup_proportion: int = 0.1,
                  gradient_accumulation_steps: int = 1,
+                 clip_norm: Optional[float] = None,
+                 one_hot_labels: bool = False,
+                 multilabel: bool = False,
+                 return_probas: bool = False,
                  in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
                  in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
                  *args,
                  **kwargs) -> None:
-
+        path_to_current_file = os.path.realpath(__file__)
+        current_directory = os.path.split(path_to_current_file)[0]
+        self.config = os.path.join(
+            current_directory, "configs/pals_config.json")
+        self.return_probas = return_probas
+        self.one_hot_labels = one_hot_labels
+        self.multilabel = multilabel
+        self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.tasks_num_classes = [tasks[task]["n_classes"] for task in tasks]
-        self.losses_template = [[] for task in self.task_names]
-        self.train_losses = self.losses_template.copy()
-        self.validation_predictions = self.losses_template.copy()
-        self.validation_steps = 0
-        self.training_steps = 0
-        self.config = config
+        self.tasks_type = ["regression" if num_classes ==
+                           1 else "classification" for num_classes in self.tasks_num_classes]
+        self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
         self.learning_rate = learning_rate
@@ -86,6 +93,19 @@ class MultiTaskPalBert(TorchModel):
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.in_distribution = in_distribution
         self.in_y_distribution = in_y_distribution
+
+        if self.multilabel and not self.one_hot_labels:
+            raise RuntimeError(
+                'Use one-hot encoded labels for multilabel classification!')
+
+        if self.multilabel and not self.return_probas:
+            raise RuntimeError(
+                'Set return_probas to True for multilabel classification!')
+
+        if self.return_probas and self.n_classes == 1:
+            raise RuntimeError(
+                'Set return_probas to False for regression task!')
+
         super().__init__(*args, **kwargs)
 
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
@@ -112,7 +132,9 @@ class MultiTaskPalBert(TorchModel):
                     if "pooler.mult" in n and "weight" in n:
                         update[n] = partial["pooler.dense.weight"]
                 else:
-                    update[n] = partial[n]
+                    for val in [n, 'bert.'+n, 'cls.'+n]:
+                        if val in partial:
+                            update[n] = partial[val]
             self.model.bert.load_state_dict(update)
             log.info("Bert Model Weights Loaded.")
         else:
@@ -188,40 +210,48 @@ class MultiTaskPalBert(TorchModel):
         Returns:
             predicted classes or probabilities of each class
         """
-        if self.validation_steps >= (self.steps_per_epoch / self.gradient_accumulation_steps):
-            self.validation_steps = 0
-            self.validation_predictions = self.losses_template.copy()
-        self.validation_steps += 1
+        self.validation_predictions = []
+        # log.info(f"validation step {self.validation_steps} steps per epoch {self.steps_per_epoch}")
         n_in = sum([inp for inp in self.in_distribution.values()])
-        task_id = args[0]
+
         features = args[1:]
         args_in = features[:n_in]
         in_by_tasks = self._distribute_arguments_by_tasks(
             args_in, {}, self.task_names, "in")
 
-        task_features = in_by_tasks[self.task_names[task_id]]
+        for task_id in range(len(self.task_names)):
+            task_features = in_by_tasks[self.task_names[task_id]]
 
-        input_ids = []
-        attention_masks = []
-        token_type_ids = []
-        for input_feature in task_features[0]:
-            input_ids.append(input_feature.input_ids.numpy()[0])
-            attention_masks.append(
-                input_feature.attention_mask.numpy()[0])
-            token_type_ids.append(
-                input_feature.token_type_ids.numpy()[0])
-        logits = self.model(
-            torch.tensor(input_ids, dtype=torch.long).to(self.device),
-            torch.tensor(attention_masks, dtype=torch.long).to(
-                self.device),
-            torch.tensor(token_type_ids, dtype=torch.long).to(
-                self.device),
-            task_id,
-            self.task_names[task_id],
-        )
-        logits = logits.detach().cpu().numpy()
-        self.validation_predictions[task_id] = logits.tolist()
+            _input = {}
+            for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+                _input[elem] = [getattr(f, elem) for f in task_features[0]]
 
+            for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+                _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+
+            with torch.no_grad():
+                tokenized = {key: value for (key, value) in _input.items(
+                ) if key in self.model.forward.__code__.co_varnames}
+
+            logits = self.model(
+                task_id=task_id,
+                name=self.tasks_type[task_id],
+                **tokenized
+            )
+
+            if self.return_probas:
+                if not self.multilabel:
+                    pred = torch.nn.functional.softmax(logits, dim=-1)
+                else:
+                    pred = torch.nn.functional.sigmoid(logits)
+                pred = pred.detach().cpu().numpy()
+            elif self.tasks_num_classes[task_id] > 1:
+                logits = logits.detach().cpu().numpy()
+                pred = np.argmax(logits, axis=1)
+            else:  # regression
+                pred = logits.squeeze(-1).detach().cpu().numpy()
+            self.validation_predictions.append(pred)
+        # log.info(f"validation predictions {self.validation_predictions}")
         return self.validation_predictions
 
     def train_on_batch(self, *args):
@@ -233,10 +263,6 @@ class MultiTaskPalBert(TorchModel):
         Returns:
             dict with loss for each task
         """
-        if self.training_steps >= (self.steps_per_epoch / self.gradient_accumulation_steps):
-            self.training_steps = 0
-            self.train_losses = self.losses_template.copy()
-        self.training_steps += 1
         n_in = sum([inp for inp in self.in_distribution.values()])
         task_id = args[0]
         features = args[1:]
@@ -249,31 +275,36 @@ class MultiTaskPalBert(TorchModel):
         task_features = in_by_tasks[self.task_names[task_id]]
         task_labels = in_y_by_tasks[self.task_names[task_id]]
 
-        input_ids = []
-        attention_masks = []
-        token_type_ids = []
+        _input = {}
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = [getattr(f, elem) for f in task_features[0]]
 
-        for input_feature in task_features[0]:
-            input_ids.append(input_feature.input_ids.numpy()[0])
-            attention_masks.append(
-                input_feature.attention_mask.numpy()[0])
-            token_type_ids.append(
-                input_feature.token_type_ids.numpy()[0])
+        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+        _input['labels'] = torch.from_numpy(
+            np.array(task_labels[0])).to(self.device)
+
+        self.optimizer.zero_grad()
+        tokenized = {key: value for (key, value) in _input.items(
+        ) if key in self.model.forward.__code__.co_varnames}
+
         loss, logits = self.model(
-            torch.tensor(input_ids, dtype=torch.long).to(self.device),
-            torch.tensor(attention_masks, dtype=torch.long).to(
-                self.device),
-            torch.tensor(token_type_ids, dtype=torch.long).to(
-                self.device),
-            task_id,
-            self.task_names[task_id],
-            torch.tensor(task_labels[0], dtype=torch.long).to(self.device),
+            task_id=task_id,
+            name=self.tasks_type[task_id],
+            **tokenized
         )
         if self.gradient_accumulation_steps > 1:
             loss = loss/self.gradient_accumulation_steps
         loss.backward()
+
+        # Clip the norm of the gradients to 1.0.
+        # This is to help prevent the "exploding gradients" problem.
+        if self.clip_norm:
+            torch.nn.utils.clip_grad_norm_(
+                self.model.parameters(), self.clip_norm)
+
         self.optimizer.step()
-        self.model.zero_grad()
+
         self.train_losses[task_id] = loss.item()
 
         return {"losses": self.train_losses}

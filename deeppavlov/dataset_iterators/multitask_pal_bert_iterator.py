@@ -53,10 +53,8 @@ class MultiTaskPalBertIterator:
         self.n_tasks = len(tasks.keys())
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
-        self.steps_done = 0
         self.epochs_done = 0
         self.train = self._extract_data_type('train')
-        self.train_sizes = self._get_train_size(self.train)
         self.valid = self._extract_data_type('valid')
         self.test = self._extract_data_type('test')
         self.data = {
@@ -66,7 +64,7 @@ class MultiTaskPalBertIterator:
             'all': self._unite_dataset_parts(self.train, self.valid, self.test)
         }
 
-    def _get_train_size(self, data: Dict[str, List]):
+    def _get_data_size(self, data: Dict[str, List]):
         """
         By the way the formula for the sample 
         prob - in the best method - is N^(1-0.8*((epoch - 1)/(NUM_EPOCHS - 1))) 
@@ -74,9 +72,10 @@ class MultiTaskPalBertIterator:
         """
         return [len(data[key]) for key in data.keys()]
 
-    def _get_probs(self):
-        alpha = 1.0 - 0.8 * self.epochs_done / (self.num_train_epochs)
-        probs = [p ** alpha for p in self.train_sizes]
+    def _get_probs(self, data_type):
+        alpha = 1.0 - 0.8 * (self.epochs_done / self.num_train_epochs)
+        data = self._get_data(data_type)
+        probs = [p ** alpha for p in self._get_data_size(data)]
         tot = sum(probs)
         probs = [p / tot for p in probs]
         return probs
@@ -86,6 +85,14 @@ class MultiTaskPalBertIterator:
         for task, iterator in self.task_iterators.items():
             dataset_part[task] = getattr(iterator, data_type)
         return dataset_part
+
+    def _get_data(self, data_type):
+        if data_type == "test":
+            return self.test
+        if data_type == "valid":
+            return self.valid
+        else:
+            return self.train
 
     @staticmethod
     def _unite_dataset_parts(*dataset_parts):
@@ -114,39 +121,51 @@ class MultiTaskPalBertIterator:
             Element of inputs or outputs is a tuple which elements are x values of merged tasks in the order
             tasks are present in `tasks` argument of `__init__` method.
         """
-        log.info(f"Train Sizes: {self.train_sizes} \n")
-        self.probs = self._get_probs()
-        log.info(f"Probs: {self.probs}  \n")
+        # log.info(
+        #     f"{data_type} sizes: {self._get_data_size(self._get_data(data_type))} 
         max_task_data_len = max([len(iter_.data[data_type])
                                 for iter_ in self.task_iterators.values()])
         size_of_last_batch = max_task_data_len % batch_size
         if size_of_last_batch == 0:
             size_of_last_batch = batch_size
 
-        n_batches = math.ceil(self.num_train_epochs / batch_size)
-        generators = [RepeatBatchGenerator(iter_, batch_size, data_type, shuffle) for
-                      iter_ in self.task_iterators.values()]
+        n_batches = math.ceil(max_task_data_len / batch_size)
 
-        # one sample batch for each task
-        iters = [iter_ for iter_ in self.task_iterators.values()]
+        if data_type == "train":
+            generators = [RepeatBatchGenerator(iter_, batch_size, data_type, shuffle) for
+                          iter_ in self.task_iterators.values()]
 
-        sample_batch = [i.gen_batches(batch_size).__next__() for i in iters]
+            # one sample batch for each task
+            iters = [iter_ for iter_ in self.task_iterators.values()]
+            sample_batch = [i.gen_batches(
+                batch_size).__next__() for i in iters]
+            x_instances = []
+            y_instances = []
+            for sample_task_batch in sample_batch:
+                x_instances.append(sample_task_batch[0])
+                y_instances.append(sample_task_batch[1])
 
-        x_instances = []
-        y_instances = []
-        for sample_task_batch in sample_batch:
-            x_instances.append(sample_task_batch[0])
-            y_instances.append(sample_task_batch[1])
-
-        for step in range(self.steps_per_epoch):
-            self.epochs_done = self.steps_done % self.steps_per_epoch
-            task_id = np.random.choice(self.n_tasks, p=self._get_probs())
-            batch = generators[task_id].__next__()
-            x_instances[task_id] = batch[0]
-            y_instances[task_id] = batch[1]
-            b = (self.add_task_id(task_id, x_instances), tuple(zip(*y_instances)))
-            self.steps_done += 1
-            yield b
+            for step in range(self.steps_per_epoch):
+                task_id = np.random.choice(
+                    self.n_tasks, p=self._get_probs(data_type))
+                batch = generators[task_id].__next__()
+                x_instances[task_id] = batch[0]
+                y_instances[task_id] = batch[1]
+                b = (self.add_task_id(task_id, x_instances),
+                     tuple(zip(*y_instances)))
+                yield b
+            self.epochs_done += 1
+        else:
+            for task_batches in zip(
+                *[RepeatBatchGenerator(iter_, batch_size, data_type, shuffle, n_batches, size_of_last_batch) for
+                  iter_ in self.task_iterators.values()]
+            ):
+                x_instances, y_instances = [], []
+                for task_batch in task_batches:
+                    x_instances.append(task_batch[0])
+                    y_instances.append(task_batch[1])
+                b = (self.add_task_id(-1, x_instances), tuple(zip(*y_instances)))
+                yield b
 
     def add_task_id(self, task_id, x_instances):
         x_in = []
@@ -199,7 +218,7 @@ class RepeatBatchGenerator:
 
     def __init__(
             self,
-            dataset_iterator: Union[MultiTaskIterator, DataLearningIterator],
+            dataset_iterator: Union[DataLearningIterator],
             batch_size: int,
             data_type: str,
             shuffle: bool,

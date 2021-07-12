@@ -679,7 +679,7 @@ class BertForMultiTask(nn.Module):
         token_type_ids,
         attention_mask,
         task_id,
-        name="cola",
+        name="classification",
         labels=None,
     ):
         _, pooled_output = self.bert(
@@ -687,12 +687,12 @@ class BertForMultiTask(nn.Module):
         pooled_output = self.dropout(pooled_output)
         logits = self.classifier[task_id](pooled_output)
 
-        if labels is not None and name != "sts":
+        if labels is not None and name != "regression":
             loss_fct = CrossEntropyLoss()
             loss = loss_fct(logits, labels)
             return loss, logits
         # STS is a regression task.
-        elif labels is not None and name == "sts":
+        elif labels is not None and name == "regression":
             loss_fct = MSELoss()
             loss = loss_fct(logits, labels.unsqueeze(1))
             return loss, logits

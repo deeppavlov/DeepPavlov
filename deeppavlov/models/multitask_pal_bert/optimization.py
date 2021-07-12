@@ -187,8 +187,8 @@ class BERTAdam(Optimizer):
 
                 # Decay the first and second moment running average coefficient
                 # In-place operations to update the averages at the same time
-                next_m.mul_(beta1).add_(1 - beta1, grad)
-                next_v.mul_(beta2).addcmul_(1 - beta2, grad, grad)
+                next_m.mul_(beta1).add_(grad, alpha=1.0 - beta1)
+                next_v.mul_(beta2).addcmul_(grad, grad, value=1.0 - beta2)
                 update = next_m / (next_v.sqrt() + group["e"])
 
                 # Just adding the square of the weights to the loss function is *not*
