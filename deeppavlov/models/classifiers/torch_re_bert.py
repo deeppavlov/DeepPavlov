@@ -26,7 +26,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             device: str = "gpu",
-            ner_tags_length: int = 6,        # number of ner tags
+            num_ner_tags: int = 6,        # number of ner tags
             threshold: float = None
     ):
         super().__init__()
@@ -34,7 +34,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.device = device
-        self.ner_tags_length = ner_tags_length
+        self.num_ner_tags = num_ner_tags
         self.emb_size = emb_size
         self.block_size = block_size
         self.threshold = threshold
@@ -57,8 +57,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.sep_token_id = tokenizer.sep_token_id
 
         self.hidden_size = self.config.hidden_size
-        self.head_extractor = nn.Linear(2 * self.hidden_size + self.ner_tags_length, self.emb_size)
-        self.tail_extractor = nn.Linear(2 * self.hidden_size + self.ner_tags_length, self.emb_size)
+        self.head_extractor = nn.Linear(2 * self.hidden_size + self.num_ner_tags, self.emb_size)
+        self.tail_extractor = nn.Linear(2 * self.hidden_size + self.num_ner_tags, self.emb_size)
         self.bilinear = nn.Linear(self.emb_size * self.block_size, self.n_classes)
 
     def forward(
