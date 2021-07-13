@@ -29,6 +29,8 @@ We have trained BERT-base model for other languages and domains:
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  Conversational RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__,
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
+-  Conversational DistilRuBERT, Russian, cased, 6-layer, 768-hidden, 12-heads, 135.4M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-6_H-768_A-12_pt.tar.gz>`__
+-  Conversational DistilRuBERT-tiny, Russian, cased, 2-layer, 768-hidden, 12-heads, 107M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-2_H-768_A-12_pt.tar.gz>`__
 -  Sentence Multilingual BERT, 101 languages, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,
@@ -49,6 +51,13 @@ English cased version of BERT-base as initialization for English Conversational 
 
 Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [8]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
+
+Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [13]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
+
+1. Masked language modeling loss (between student output logits for tokens and its true labels)
+2. Kullback-Leibler divergence (between student and teacher output logits)
+3. Cosine embedding loss (between averaged hidden states of the teacher and hidden states of the student)
+4. Mean squared error loss (between averaged attention maps of the teacher and attention maps of the student)
 
 Sentence Multilingual BERT is a representation-based sentence encoder for 101 languages of Multilingual BERT.
 It is initialized with Multilingual BERT and then fine-tuned on english MultiNLI [9]_ and on dev set of multilingual XNLI [10]_.
@@ -196,3 +205,4 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [10] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
 .. [11] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
 .. [12] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
+.. [13] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.
