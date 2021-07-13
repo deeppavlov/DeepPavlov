@@ -201,10 +201,12 @@ class TorchSquadTransformersPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
+                 return_tokens: bool = False, 
+                 add_token_type_ids: bool = False, 
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
+        self.add_token_type_ids = add_token_type_ids
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -239,7 +241,16 @@ class TorchSquadTransformersPreprocessor(Component):
                 pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
-                encoded_dict['token_type_ids'] = torch.tensor([0])
+                if self.add_token_type_ids:
+                    input_ids = encoded_dict['input_ids']
+                    seq_len = input_ids.size(1)
+                    sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
+                    len_a = min(sep + 1, seq_len)
+                    len_b = seq_len - len_a
+                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int), 
+                                                                torch.ones(1, len_b, dtype=int)), dim=1)
+                else:
+                    encoded_dict['token_type_ids'] = torch.tensor([0])
 
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
                                           attention_mask=encoded_dict['attention_mask'],
