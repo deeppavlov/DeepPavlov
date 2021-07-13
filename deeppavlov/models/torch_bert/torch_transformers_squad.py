@@ -197,10 +197,7 @@ class TorchTransformersSquad(TorchModel):
         with torch.no_grad():
             input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
             # Forward pass, calculate logit predictions
-            outputs = self.model(input_ids=b_input_ids,
-                                 attention_mask=b_input_masks,
-                                 token_type_ids=b_input_type_ids,
-                                 return_dict=True)
+            outputs = self.model(**input_)
 
             logits_st = outputs.start_logits
             logits_end = outputs.end_logits
