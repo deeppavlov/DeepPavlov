@@ -134,15 +134,18 @@ class TorchTransformersSquad(TorchModel):
         y_end = [x[0] for x in y_end]
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
+        
+        input_ = {'input_ids': b_input_ids, 
+                  'attention_mask': b_input_masks, 
+                  'token_type_ids': b_input_type_ids, 
+                  'start_positions': b_y_st, 
+                  'end_positions': b_y_end, 
+                  'return_dict': True
+                 }
 
         self.optimizer.zero_grad()
-
-        loss = self.model(input_ids=b_input_ids,
-                          attention_mask=b_input_masks,
-                          token_type_ids=b_input_type_ids,
-                          start_positions=b_y_st,
-                          end_positions=b_y_end,
-                          return_dict=True).loss
+        input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
+        loss = self.model(**input_).loss
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -154,6 +157,18 @@ class TorchTransformersSquad(TorchModel):
             self.lr_scheduler.step()
 
         return {'loss': loss.item()}
+
+    @property
+    def accepted_keys(self) -> Tuple[str]:
+        if self.is_data_parallel:
+            accepted_keys = self.model.module.forward.__code__.co_varnames
+        else:
+            accepted_keys = self.model.forward.__code__.co_varnames
+        return accepted_keys
+
+    @property
+    def is_data_parallel(self) -> bool:
+        return isinstance(self.model, torch.nn.DataParallel)
 
     def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
         """get predictions using features as input
@@ -172,8 +187,15 @@ class TorchTransformersSquad(TorchModel):
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        
+        input_ = {'input_ids': b_input_ids, 
+                  'attention_mask': b_input_masks, 
+                  'token_type_ids': b_input_type_ids, 
+                  'return_dict': True
+                 }
 
         with torch.no_grad():
+            input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
             # Forward pass, calculate logit predictions
             outputs = self.model(input_ids=b_input_ids,
                                  attention_mask=b_input_masks,
