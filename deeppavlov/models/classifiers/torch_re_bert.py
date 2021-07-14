@@ -102,8 +102,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         return output
 
     def get_hrt(self, sequence_output: Tensor, attention: Tensor, entity_pos: List) -> Tuple[Tensor, Tensor, Tensor]:
-        offset = 1
-        n, h, _, c = attention.size()
+        _, h, _, max_sequence_length = attention.size()
         hss, tss, rss = [], [], []
         for i in range(len(entity_pos)):            # for each training sample (= doc)
             entity_embs, entity_atts = [], []
@@ -111,24 +110,24 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
                 if len(e) > 1:
                     e_emb, e_att = [], []
                     for start, end in e:        # for start and end position of each mention
-                        if start + offset < c:
-                            # In case the entity mention is truncated due to limited max seq length.
-                            e_emb.append(sequence_output[i, start + offset])
-                            e_att.append(attention[i, :, start + offset])
+                        # skip the entity pair if the entity mention is truncated due to limited max seq length.
+                        if start + 1 < max_sequence_length:
+                            e_emb.append(sequence_output[i, start + 1])
+                            e_att.append(attention[i, :, start + 1])
                     if len(e_emb) > 0:
                         e_emb = torch.logsumexp(torch.stack(e_emb, dim=0), dim=0)
                         e_att = torch.stack(e_att, dim=0).mean(0)
                     else:
                         e_emb = torch.zeros(self.hidden_size).to(sequence_output)
-                        e_att = torch.zeros(h, c).to(attention)
+                        e_att = torch.zeros(h, max_sequence_length).to(attention)
                 else:
                     start, end = e[0]
-                    if start + offset < c:
-                        e_emb = sequence_output[i, start + offset]
-                        e_att = attention[i, :, start + offset]
+                    if start + 1 < max_sequence_length:
+                        e_emb = sequence_output[i, start + 1]
+                        e_att = attention[i, :, start + 1]
                     else:
                         e_emb = torch.zeros(self.hidden_size).to(sequence_output)
-                        e_att = torch.zeros(h, c).to(attention)
+                        e_att = torch.zeros(h, max_sequence_length).to(attention)
                 entity_embs.append(e_emb)           # get an embedding of an entity
                 entity_atts.append(e_att)       # get attention of an entity
 

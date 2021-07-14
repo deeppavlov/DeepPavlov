@@ -394,7 +394,6 @@ class TorchTransformersREPreprocessor(Component):
         doc_wordpiece_tokens_batch = []
         entity_pos_batch = []
         ner_tags_batch = []
-        doc_wordpiece_tokens_len = []
         for doc, entities in zip(tokens, entity_info):
             count = 0
             doc_wordpiece_tokens = []
@@ -442,26 +441,25 @@ class TorchTransformersREPreprocessor(Component):
             upd_entity1 = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
             upd_entity2 = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
-            # build text entities for self check
+            # text entities for self check
             upd_entity1_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity1]
             upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity2]
 
             enc_ner_tag = self.encode_ner_tag(entities[2], entities[3])
 
-            doc_wordpiece_tokens_batch.append(doc_wordpiece_tokens)
-            doc_wordpiece_tokens_len.append(len(doc_wordpiece_tokens))
+            doc_wordpiece_tokens_batch.append(doc_wordpiece_tokens[:self.max_seq_length])   # add truncated tokens
             entity_pos_batch.append([upd_entity1, upd_entity2])
             ner_tags_batch.append(enc_ner_tag)
 
-        self.max_seq_length = max(doc_wordpiece_tokens_len)
-        out = open("log_seq.txt", 'a')
-        out.write(str(self.max_seq_length) + '\n')
-        out.close()
         for (upd_entity1, upd_entity2), enc_ner_tag, doc_wordpiece_tokens in \
                 zip(entity_pos_batch, ner_tags_batch, doc_wordpiece_tokens_batch):
             encoding = self.tokenizer.encode_plus(
-                doc_wordpiece_tokens, add_special_tokens=True, truncation=True, max_length=self.max_seq_length,
-                pad_to_max_length=True, return_attention_mask=True,  # return_tensors="pt"
+                doc_wordpiece_tokens,
+                add_special_tokens=True,
+                truncation=True,
+                max_length=self.max_seq_length,
+                pad_to_max_length=True,
+                return_attention_mask=True,  # return_tensors="pt"
             )
 
             input_features.append(
@@ -489,16 +487,17 @@ class TorchTransformersREPreprocessor(Component):
             enc_ner_tags.append(ner_tag_one_hot)
         return enc_ner_tags
 
+
 # todo: wil be deleted
-# if __name__ == "__main__":
-#     from joblib import load
-#     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-#
-#     data = load(
-#         "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
-#     )
-#     data_iter_out = BasicClassificationDatasetIterator(data)
-#     entity_info = [data[0] for data in data_iter_out.test]
-#     labels = [data[1] for data in data_iter_out.test]
-#
-#     TorchTransformersREPreprocessor("bert-base-cased").__call__( entity_info)
+if __name__ == "__main__":
+    from joblib import load
+    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
+
+    data = load(
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
+    )
+    data_iter_out = BasicClassificationDatasetIterator(data)
+    entity_info = [data[0] for data in data_iter_out.test]
+    labels = [data[1] for data in data_iter_out.test]
+
+    TorchTransformersREPreprocessor("bert-base-cased").__call__(entity_info)
