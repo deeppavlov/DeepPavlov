@@ -75,7 +75,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         else:
             curr_threshold = self.threshold     # for development and test: threshold set in config
 
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask, output_attentions=True)
+        output = self.model(input_ids=input_ids, attention_mask=attention_mask)
         sequence_output = output[0]  # Tensor (batch_size x input_length x 768)
         attention = output[-1][-1]  # Tensor (batch_size x 12 x input_length x input_length)
 
@@ -157,7 +157,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
             self.config = AutoConfig.from_pretrained(
-                self.pretrained_bert, num_labels=self.n_classes, output_attentions=False, output_hidden_states=False
+                self.pretrained_bert, num_labels=self.n_classes, output_attentions=True, output_hidden_states=True
             )
             self.model = BertModel.from_pretrained(self.pretrained_bert, config=self.config)
 

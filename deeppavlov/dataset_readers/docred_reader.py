@@ -79,15 +79,17 @@ class DocREDDatasetReader(DatasetReader):
 
         data_path = Path(data_path).resolve()
 
-        with open(os.path.join(data_path, "train_annotated.json")) as file:
-            train_data = json.load(file)
+        with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
+            train_data = json.load(file_ann)
+        with open(os.path.join(data_path, "train_distant.json")) as file_ds:
+            train_data += json.load(file_ds)
 
         with open(os.path.join(data_path, "dev.json")) as file:
             dev_data = json.load(file)
 
         with open(os.path.join(data_path, "test.json")) as file:
             test_data = json.load(file)
-            # process test data without labels (maybe will need later as negatives...)
+            # process test data without labels (maybe use later as negatives...)
             test_processed = self.process_docred_file(test_data, neg_samples=None)
 
         # merge dev and train data and split them again so that:

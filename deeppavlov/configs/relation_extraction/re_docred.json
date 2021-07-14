@@ -22,10 +22,11 @@
         "in": ["input_x_bert"],
         "in_y": ["y_ids"],
         "out": ["model_output"],
-        "n_classes": 97,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "model_name": "re_model",
+        "n_classes": 97,
+        "num_ner_tags": 6,
         "pretrained_bert": "bert-base-uncased"
       },
       {
@@ -53,7 +54,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "~/../anastasiia/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/re_docred"
