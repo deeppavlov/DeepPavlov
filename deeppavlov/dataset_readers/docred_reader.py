@@ -69,7 +69,6 @@ class DocREDDatasetReader(DatasetReader):
 
         with open(str(expand_path(rel2id_path))) as file:
             self.rel2id = json.load(file)
-        self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         self.negative_label = negative_label
         self.if_add_neg_samples = generate_additional_neg_samples
         self.num_neg_samples = num_neg_samples
@@ -81,7 +80,7 @@ class DocREDDatasetReader(DatasetReader):
 
         with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
             train_data = json.load(file_ann)
-        with open(os.path.join(data_path, "train_distant.json")) as file_ds:
+        with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
             train_data += json.load(file_ds)
 
         with open(os.path.join(data_path, "dev.json")) as file:
@@ -103,9 +102,9 @@ class DocREDDatasetReader(DatasetReader):
         train_data = all_labeled_data[2 * one_prop + 1:]
 
         data = {
-            "train": self.process_docred_file(train_data, neg_samples="twice"),
-            "valid": self.process_docred_file(dev_data, neg_samples="equal"),
-            "test": self.process_docred_file(test_data, neg_samples="equal")
+            "train": self.process_docred_file(train_data, neg_samples="thrice", data_type="train"),
+            "valid": self.process_docred_file(dev_data, neg_samples="equal", data_type="valid"),
+            "test": self.process_docred_file(test_data, neg_samples="equal", data_type="test")
         }
 
         # todo: delete!
@@ -118,7 +117,7 @@ class DocREDDatasetReader(DatasetReader):
         # statistic info: POS_REL = 47133, NEG_REL = 1548307
         return data
 
-    def process_docred_file(self, data: List[Dict], neg_samples: str = None) -> List:
+    def process_docred_file(self, data: List[Dict], neg_samples: str = None, data_type: str = None) -> List:
         """
         Processes a DocRED data and returns a DeepPavlov relevant output
 
@@ -130,9 +129,11 @@ class DocREDDatasetReader(DatasetReader):
                         (relevant to the test set which has from neg samples only)
                     - equal: there will be one negative sample pro positive sample
                     - twice: there will be twice as many negative samples as positive ones
+                    - thrice: there will be thrice as many negative samples as positive ones
         Returns:
             one list of processed documents
         """
+        self.stat = {"POS_REL": 0, "NEG_REL": 0}  # collect statistics of positive and negative samples
         processed_data_samples = []
 
         for data_unit in data:
@@ -169,7 +170,12 @@ class DocREDDatasetReader(DatasetReader):
                     labels, ent_ids2ent_pos, ent_ids2ent_tag, doc, neg_samples=neg_samples
                 )
 
-        logger.info(f"Positive samples: {self.stat['POS_REL']}. Negative samples: {self.stat['NEG_REL']}.")
+        if data_type:
+            logger.info(f"Data: {data_type}  Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
+
+        self.stat.pop("POS_REL")
+        self.stat.pop("NEG_REL")
+
         return processed_data_samples
 
     def construct_pos_neg_samples(
@@ -219,18 +225,27 @@ class DocREDDatasetReader(DatasetReader):
                     continue
 
                 # if there is no relation hold between entities, save them (and a corresponding sample) as negative one
-                if neg_samples == "equal" and num_neg_samples != num_pos_samples:
+                if neg_samples == "equal" and num_neg_samples < num_pos_samples:
                     num_neg_samples += 1
                     data_samples.append(
                         self.generate_data_sample(doc, ent1, ent2, neg_label_one_hot, ent_id2ent, ent_id2ent_tag)
                     )
+                    self.stat["NEG_REL"] += 1
 
-                elif neg_samples == "twice" and num_neg_samples != 2 * num_pos_samples:
+                elif neg_samples == "twice" and num_neg_samples < 2 * num_pos_samples:
                     num_neg_samples += 1
                     data_samples.append(
                         self.generate_data_sample(doc, ent1, ent2, neg_label_one_hot, ent_id2ent, ent_id2ent_tag)
                     )
-                self.stat["NEG_REL"] += 1
+                    self.stat["NEG_REL"] += 1
+
+                elif neg_samples == "thrice" and num_neg_samples < 3 * num_pos_samples:
+                    num_neg_samples += 1
+                    data_samples.append(
+                        self.generate_data_sample(doc, ent1, ent2, neg_label_one_hot, ent_id2ent, ent_id2ent_tag)
+                    )
+                    self.stat["NEG_REL"] += 1
+
         return data_samples
 
     def construct_neg_samples(

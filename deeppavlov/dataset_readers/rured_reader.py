@@ -4,7 +4,11 @@ import random
 from typing import Dict, List, Tuple
 from pathlib import Path
 from logging import getLogger
+from colour import Color
+from matplotlib import colors
+from matplotlib.ticker import PercentFormatter
 from overrides import overrides
+import matplotlib.pyplot as plt
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -30,6 +34,7 @@ class RuREDDatasetReader(DatasetReader):
         else:
             self.rel2id = rel2id
         self.stat = {}
+        self.ner_stat = {}
 
         with open(os.path.join(data_path, "train.json"), encoding='utf-8') as file:
             train_data = json.load(file)
@@ -45,6 +50,16 @@ class RuREDDatasetReader(DatasetReader):
         test_data, self.stat["test"] = self.process_rured_file(test_data, num_neg_samples="equal")
 
         data = {"train": train_data, "valid": dev_data, "test": test_data}
+
+        self.ner_stat = dict(list(reversed(sorted(self.ner_stat.items(), key=lambda item: item[1]))))
+        print(self.ner_stat)
+
+        red = Color("red")
+        colors = list(red.range_to(Color("blue"), len(self.ner_stat)))
+        colors = [color.rgb for color in colors]
+        plt.bar(self.ner_stat.keys(), self.ner_stat.values(), color=colors)
+        plt.xticks(rotation=270)
+        plt.show()
 
         return data
 
@@ -74,6 +89,16 @@ class RuREDDatasetReader(DatasetReader):
                 neg_samples.append(len(processed_samples))
             else:
                 pos_samples += 1
+
+            if sample["subj_type"] in self.ner_stat:
+                self.ner_stat[sample["subj_type"]] += 1
+            else:
+                self.ner_stat[sample["subj_type"]] = 1
+
+            if sample["obj_type"] in self.ner_stat:
+                self.ner_stat[sample["obj_type"]] += 1
+            else:
+                self.ner_stat[sample["obj_type"]] = 1
 
             processed_samples.append(
                 (
@@ -136,3 +161,10 @@ class RuREDDatasetReader(DatasetReader):
                     NUMBER_OF_EMPLOYEES_FIRED=17, ORIGINS_FROM=18, ACQUINTANCE_OF=19, PARENT_OF=20, ORGANIZES=21,
                     FOUNDED_BY=22, PLACE_RESIDES_IN=23, BORN_IN=24, AGE_IS=25, RELATIVE=26, NUMBER_OF_EMPLOYEES=27,
                     SIBLING=28, DATE_OF_BIRTH=29)
+
+
+# todo: wil be deleted
+if __name__ == "__main__":
+    RuREDDatasetReader().read(
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/rured"
+    )
