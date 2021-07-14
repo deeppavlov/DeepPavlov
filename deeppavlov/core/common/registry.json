@@ -67,7 +67,7 @@
   "huggingface_dataset_reader": "deeppavlov.dataset_readers.huggingface_dataset_reader:HuggingFaceDatasetReader",
   "hybrid_ner_model": "deeppavlov.models.ner.NER_model:HybridNerModel",
   "imdb_reader": "deeppavlov.dataset_readers.imdb_reader:ImdbReader",
-  "input_splitter": "deeppavlov.models.multitask_bert.multitask_bert:InputSplitter",
+  "input_splitter": "deeppavlov.models.preprocessors.input_splitter:InputSplitter",
   "insurance_reader": "deeppavlov.dataset_readers.insurance_reader:InsuranceReader",
   "jieba_tokenizer": "deeppavlov.models.tokenizers.jieba_tokenizer:JiebaTokenizer",
   "joint_tagger_parser": "deeppavlov.models.syntax_parser.joint:JointTaggerParser",
