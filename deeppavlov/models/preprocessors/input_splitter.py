@@ -43,5 +43,4 @@ class InputSplitter:
         for item in inp:
             for i, key in enumerate(self.keys_to_extract):
                 extracted[i].append(item[key])
-        print("Extracted: ", extracted)
         return extracted
