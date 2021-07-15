@@ -30,7 +30,7 @@
         "load_path": "{MODEL_PATH}/model",
         "model_name": "re_model",
         "n_classes": 30,
-        "ner_tags_length": 29,
+        "num_ner_tags": 29,
         "pretrained_bert": "{TRANSFORMER}"
       },
       {

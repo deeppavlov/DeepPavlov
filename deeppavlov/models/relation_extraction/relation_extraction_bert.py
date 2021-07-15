@@ -85,8 +85,6 @@ class REBertModel(TorchModel):
         loss.backward()
         self.optimizer.step()
 
-        re_docred_evaluate("", hidden_states[1], )
-
         # Clip the norm of the gradients to prevent the "exploding gradients" problem
         if self.clip_norm:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)

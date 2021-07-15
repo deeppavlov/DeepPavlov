@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "docred_reader",
+    "dev_test_data_size": 150,
     "data_path": "{DOWNLOADS_PATH}/docred/",
     "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json"
   },
@@ -42,22 +43,22 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 8,
-    "log_every_n_batches": 1,
+    "batch_size": 16,
+    "log_every_n_batches": 100,
     "train_metrics": ["f1_weighted", "acc"],
     "evaluation_targets": ["valid", "train"],
     "metrics": ["f1_weighted", "acc"],
     "validation_patience": 50,
-    "val_every_n_batches": 1,
+    "val_every_n_batches": 100,
     "show_examples": false,
     "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/../anastasiia/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/re_docred_ver3_ent_truncated"
+      "MODEL_PATH": "{MODELS_PATH}/re_docred_ann_n_ds_dgx1"
       },
     "download": [
       {

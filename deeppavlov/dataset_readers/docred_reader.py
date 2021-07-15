@@ -26,7 +26,8 @@ class DocREDDatasetReader(DatasetReader):
             data_path: str,
             rel2id_path: str,
             negative_label: str = "Na",
-            train_dev_test_proportion: int = 7,
+            train_valid_test_proportion: int = None,
+            valid_test_data_size: str = None,
             generate_additional_neg_samples: bool = False,
             num_neg_samples: int = None
     ) -> Dict[str, List[Tuple]]:
@@ -36,7 +37,7 @@ class DocREDDatasetReader(DatasetReader):
             data_path: a path to a folder with dataset files.
             rel2id_path: a path to a file where information about relation to relation id corresponding is stored.
             negative_label: a label which will be used as a negative one (by default in DocRED: "Na")
-            train_dev_test_proportion: a proportion in which the data will be splitted into train, dev and test sets
+            train_valid_test_proportion: a proportion in which the data will be splitted into train, valid and test sets
             generate_additional_neg_samples: boolean; whether to generate additional negative samples or not.
             num_neg_samples: a number of additional negative samples that will be generated for each positive sample.
         Returns:
@@ -76,48 +77,86 @@ class DocREDDatasetReader(DatasetReader):
         if self.if_add_neg_samples and not self.num_neg_samples:
             raise ValueError("Please provide a number of negative samples to be generated!")
 
+        if train_valid_test_proportion and valid_test_data_size:
+            raise ValueError(
+                f"The train, valid and test splitting should be done either basing on their proportional values to each "
+                f"other (train_valid_test_proportion parameter), or on the absolute size of valid and test data "
+                f"(valid_test_data_size parameter). They can't be used simultaneously."
+            )
+
+        self.train_valid_test_proportion = train_valid_test_proportion
+        self.valid_test_data_size = valid_test_data_size
+
         data_path = Path(data_path).resolve()
 
-        # with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
-        #     train_data = json.load(file_ann)
-        # with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
-        #     train_data += json.load(file_ds)
-        with open(os.path.join(data_path, "train_snippet.json"), encoding="UTF-8") as file_ds:
-            train_data = json.load(file_ds)
+        with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
+            train_data = json.load(file_ann)
+        with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
+            train_data += json.load(file_ds)
 
-        with open(os.path.join(data_path, "dev.json")) as file:
-            dev_data = json.load(file)
+        with open(os.path.join(data_path, "valid.json")) as file:
+            valid_data = json.load(file)
 
         with open(os.path.join(data_path, "test.json")) as file:
             test_data = json.load(file)
             # process test data without labels (maybe use later as negatives...)
             test_processed = self.process_docred_file(test_data, neg_samples=None)
 
-        # merge dev and train data and split them again so that:
-        # len(train_data) = train_dev_test_proportion * len(dev_data) = train_dev_test_proportion * len(test_data)
-        all_labeled_data = train_data + dev_data
-        random.shuffle(all_labeled_data)
-        one_prop = int(len(all_labeled_data)/train_dev_test_proportion)
+        # merge valid and train data and split them again into train, valid & test
+        if self.train_valid_test_proportion:
+            train_data, test_data, valid_data = self.split_by_relative(list(train_data + valid_data))
+        elif self.valid_test_data_size:
+            train_data, test_data, valid_data = self.split_by_absolute(list(train_data + valid_data))
 
-        dev_data = all_labeled_data[:one_prop]
-        test_data = all_labeled_data[one_prop + 1: 2 * one_prop]
-        train_data = all_labeled_data[2 * one_prop + 1:]
+        else:
+            raise ValueError(
+                f"The train, valid and test splitting should be done either basing on their proportional values to each "
+                f"other (train_valid_test_proportion parameter), or on the absolute size of valid and test data "
+                f"(valid_test_data_size parameter). One of them should be set to the not-None value."
+            )
 
         data = {
-            "train": self.process_docred_file(train_data, neg_samples="thrice", data_type="train"),
-            "valid": self.process_docred_file(dev_data, neg_samples="equal", data_type="valid"),
+            "train": self.process_docred_file(train_data, neg_samples="twice", data_type="train"),
+            "valid": self.process_docred_file(valid_data, neg_samples="equal", data_type="valid"),
             "test": self.process_docred_file(test_data, neg_samples="equal", data_type="test")
         }
 
-        # todo: delete!
-        # from joblib import dump
-        # out = f"/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/docred/out_dataset_reader_without_neg/"
-        # Path(out).mkdir(parents=True, exist_ok=True)
-        # out = os.path.join(out, "all_data")
-        # dump(data, out)
-
-        # statistic info: POS_REL = 47133, NEG_REL = 1548307
         return data
+
+    def split_by_absolute(self, all_labeled_data: List) -> Tuple[List, List, List]:
+        """
+        All annotated data from DocRED is splitted into train, valid and test sets in following proportions:
+          len(valid_data) = len(test_data) = self.valid_test_data_size
+          len(train_data) = len(all data) - 2 * self.valid_test_data_size
+        Args:
+            all_labeled_data: List of all annotated data samples
+        Return:
+            Lists of train, valid and test data
+        """
+        if (int(self.valid_test_data_size) * 3) > len(all_labeled_data):
+            raise ValueError(
+                f"The dataset size {len(all_labeled_data)} is too small for taking {self.valid_test_data_size} samples"
+                f"for valid and test. Reduce the size of valid and test set."
+            )
+
+        random.shuffle(all_labeled_data)
+        valid_data = all_labeled_data[:int(self.valid_test_data_size)]
+        test_data = all_labeled_data[int(self.valid_test_data_size) + 1: 2 * int(self.valid_test_data_size)]
+        train_data = all_labeled_data[2 * int(self.valid_test_data_size) + 1:]
+        return train_data, valid_data, test_data
+
+    def split_by_relative(self, all_labeled_data: List) -> Tuple[List, List, List]:
+        """
+        All annotated data from DocRED is splitted into train, valid and test sets in following proportions:
+          len(train_data) = train_valid_test_proportion * len(valid_data) = train_valid_test_proportion * len(test_data)
+        """
+        random.shuffle(all_labeled_data)
+        one_prop = int(len(all_labeled_data)/int(self.train_valid_test_proportion))
+
+        valid_data = all_labeled_data[:one_prop]
+        test_data = all_labeled_data[one_prop + 1: 2 * one_prop]
+        train_data = all_labeled_data[2 * one_prop + 1:]
+        return train_data, valid_data, test_data
 
     def process_docred_file(self, data: List[Dict], neg_samples: str = None, data_type: str = None) -> List:
         """
@@ -173,6 +212,7 @@ class DocREDDatasetReader(DatasetReader):
                 )
 
         if data_type:
+            print(f"Data: {data_type}  Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
             logger.info(f"Data: {data_type}  Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
 
         self.stat.pop("POS_REL")
@@ -187,6 +227,7 @@ class DocREDDatasetReader(DatasetReader):
         Transforms the relevant information into an entry of the DocRED reader output. The entities between which
         the relation is hold will serve as an annotation for positive samples, while all other entity pairs will be
         used to construct the negative samples.
+
         Args:
             labels: information about relation found in a document (whole labels list of the original DocRED)
             ent_id2ent: a dictionary {entity id: [entity mentions' positions]}
@@ -256,6 +297,7 @@ class DocREDDatasetReader(DatasetReader):
         """
         Turn the annotated documents but without any positive relation label to the negative samples in a format of
             the DocRED reader output.
+
         Args:
             ent_id2ent: a dictionary {entity id: [entity mentions' positions]}
             ent_id2ent_tag: a dictionary {entity id: entity NER tag}
@@ -341,4 +383,5 @@ if __name__ == "__main__":
     DocREDDatasetReader().read(
         "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred",
         "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/meta/rel2id.json",
+        valid_test_data_size=100
     )
