@@ -9,6 +9,7 @@ from torch import Tensor
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.metrics.re_eval import re_docred_evaluate
 from deeppavlov.models.classifiers.torch_re_bert import BertWithAdaThresholdLocContextPooling
 
 log = getLogger(__name__)
@@ -21,7 +22,7 @@ class REBertModel(TorchModel):
             self,
             n_classes: int,
             model_name: str,
-            num_ner_tags: int = None,
+            num_ner_tags: int,
             pretrained_bert: str = None,
             bert_config_file: Optional[str] = None,
             criterion: str = "CrossEntropyLoss",
@@ -35,6 +36,7 @@ class REBertModel(TorchModel):
             **kwargs
     ):
         self.n_classes = n_classes
+        self.num_ner_tags = num_ner_tags
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.return_probas = return_probas
@@ -42,11 +44,6 @@ class REBertModel(TorchModel):
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
         self.threshold = threshold
-
-        if not num_ner_tags:
-            self.num_ner_tags = 6
-        else:
-            self.num_ner_tags = num_ner_tags
 
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
@@ -73,7 +70,6 @@ class REBertModel(TorchModel):
         _input = {'labels': labels}
         for elem in ['input_ids', 'attention_mask']:
             inp_elem = [f[elem] for f in features]
-            print("length of input elem", len(inp_elem))
             _input[elem] = torch.LongTensor(inp_elem).to(self.device)
         for elem in ['entity_pos', 'ner_tags']:
             inp_elem = [f[elem] for f in features]
@@ -88,6 +84,8 @@ class REBertModel(TorchModel):
         loss = hidden_states[0]
         loss.backward()
         self.optimizer.step()
+
+        re_docred_evaluate("", hidden_states[1], )
 
         # Clip the norm of the gradients to prevent the "exploding gradients" problem
         if self.clip_norm:
@@ -119,6 +117,11 @@ class REBertModel(TorchModel):
 
         with torch.no_grad():
             indices, probas = self.model(**_input)
+
+        out = open("log_pred.txt", 'a')
+        out.write(str(indices) + "\n")
+        out.write(str(probas) + "\n")
+        out.close()
 
         if self.return_probas:
             pred = probas.cpu().numpy()
@@ -173,8 +176,8 @@ if __name__ == "__main__":
     #
     # labels = [data[1] for data in data_iter_out.train]
 
-    features_processed = load("/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_transformer_preprocessor/dev_small")
-    labels = [data[1] for data in data_iter_out.train][:len(features_processed)]
+    features_processed = load("/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_transformer_preprocessor/dev_small")[:50]
+    labels = [data[1] for data in data_iter_out.train][:50]
 
     # from DeepPavlov.deeppavlov.core.data.simple_vocab import SimpleVocabulary
     # smplvoc = SimpleVocabulary(
@@ -190,4 +193,5 @@ if __name__ == "__main__":
         load_path="/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_model/model",
         pretrained_bert="bert-base-uncased",
         model_name="re_model",
+        num_ner_tags=6
     ).train_on_batch(features_processed, labels)

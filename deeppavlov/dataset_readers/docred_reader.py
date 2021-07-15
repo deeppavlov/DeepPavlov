@@ -78,10 +78,12 @@ class DocREDDatasetReader(DatasetReader):
 
         data_path = Path(data_path).resolve()
 
-        with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
-            train_data = json.load(file_ann)
-        with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
-            train_data += json.load(file_ds)
+        # with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
+        #     train_data = json.load(file_ann)
+        # with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
+        #     train_data += json.load(file_ds)
+        with open(os.path.join(data_path, "train_snippet.json"), encoding="UTF-8") as file_ds:
+            train_data = json.load(file_ds)
 
         with open(os.path.join(data_path, "dev.json")) as file:
             dev_data = json.load(file)

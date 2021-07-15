@@ -33,7 +33,7 @@
         "class_name": "re_postprocessor",
         "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
         "rel2label_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
-        "return_rel_labels": true,
+        "return_rel_labels": false,
         "in": ["model_output"],
         "out": ["predictions"]
       }
@@ -42,13 +42,13 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 16,
+    "batch_size": 8,
+    "log_every_n_batches": 1,
     "train_metrics": ["f1_weighted", "acc"],
+    "evaluation_targets": ["valid", "train"],
     "metrics": ["f1_weighted", "acc"],
     "validation_patience": 50,
-    "val_every_n_batches": 100,
-    "log_every_n_batches": 100,
-    "evaluation_targets": ["valid", "train"],
+    "val_every_n_batches": 1,
     "show_examples": false,
     "class_name": "torch_trainer"
   },
@@ -57,7 +57,7 @@
       "ROOT_PATH": "~/../anastasiia/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/re_docred"
+      "MODEL_PATH": "{MODELS_PATH}/re_docred_ver3_ent_truncated"
       },
     "download": [
       {

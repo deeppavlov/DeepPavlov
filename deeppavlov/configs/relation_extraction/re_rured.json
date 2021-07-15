@@ -47,8 +47,8 @@
   "train": {
     "epochs": 50,
     "batch_size": 16,
-    "train_metrics": ["f1_weighted", "acc"],
-    "metrics": ["f1_weighted", "acc"],
+    "train_metrics": ["acc"],
+    "metrics": ["acc"],
     "validation_patience": 50,
     "val_every_n_batches": 100,
     "log_every_n_batches": 100,
