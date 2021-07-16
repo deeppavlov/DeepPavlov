@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 import torch
 import os
+
 from .optimization import BERTAdam
 from .modeling import BertForMultiTask, BertConfig
 
@@ -101,10 +102,6 @@ class MultiTaskPalBert(TorchModel):
         if self.multilabel and not self.return_probas:
             raise RuntimeError(
                 'Set return_probas to True for multilabel classification!')
-
-        if self.return_probas and self.n_classes == 1:
-            raise RuntimeError(
-                'Set return_probas to False for regression task!')
 
         super().__init__(*args, **kwargs)
 
@@ -211,7 +208,6 @@ class MultiTaskPalBert(TorchModel):
             predicted classes or probabilities of each class
         """
         self.validation_predictions = []
-        # log.info(f"validation step {self.validation_steps} steps per epoch {self.steps_per_epoch}")
         n_in = sum([inp for inp in self.in_distribution.values()])
 
         features = args[1:]
@@ -263,6 +259,7 @@ class MultiTaskPalBert(TorchModel):
         Returns:
             dict with loss for each task
         """
+        log.info("TRAIN_ON_BATCH called")
         n_in = sum([inp for inp in self.in_distribution.values()])
         task_id = args[0]
         features = args[1:]
@@ -281,9 +278,15 @@ class MultiTaskPalBert(TorchModel):
 
         for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-        _input['labels'] = torch.from_numpy(
-            np.array(task_labels[0])).to(self.device)
 
+        if self.tasks_type[task_id] == "regression":
+            _input['labels'] = torch.tensor(
+                np.array(task_labels[0], dtype=float), dtype=torch.float32).to(self.device)
+        else:
+            _input['labels'] = torch.from_numpy(
+                np.array(task_labels[0])).to(self.device)
+        log.info(
+            f"task label {task_labels} task labels after processing {_input['labels']}")
         self.optimizer.zero_grad()
         tokenized = {key: value for (key, value) in _input.items(
         ) if key in self.model.forward.__code__.co_varnames}
