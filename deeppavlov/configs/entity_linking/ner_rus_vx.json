@@ -6,6 +6,8 @@
         "class_name": "ner_chunker",
         "batch_size": 16,
         "max_chunk_len" : 180,
+        "max_seq_len" : 400,
+        "vocab_file": "{BERT_PATH}/vocab.txt",
         "in": ["x"],
         "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
       },
