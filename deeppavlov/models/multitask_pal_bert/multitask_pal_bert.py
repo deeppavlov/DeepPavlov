@@ -247,7 +247,6 @@ class MultiTaskPalBert(TorchModel):
             else:  # regression
                 pred = logits.squeeze(-1).detach().cpu().numpy()
             self.validation_predictions.append(pred)
-        # log.info(f"validation predictions {self.validation_predictions}")
         return self.validation_predictions
 
     def train_on_batch(self, *args):
@@ -259,7 +258,6 @@ class MultiTaskPalBert(TorchModel):
         Returns:
             dict with loss for each task
         """
-        log.info("TRAIN_ON_BATCH called")
         n_in = sum([inp for inp in self.in_distribution.values()])
         task_id = args[0]
         features = args[1:]
@@ -285,8 +283,6 @@ class MultiTaskPalBert(TorchModel):
         else:
             _input['labels'] = torch.from_numpy(
                 np.array(task_labels[0])).to(self.device)
-        log.info(
-            f"task label {task_labels} task labels after processing {_input['labels']}")
         self.optimizer.zero_grad()
         tokenized = {key: value for (key, value) in _input.items(
         ) if key in self.model.forward.__code__.co_varnames}

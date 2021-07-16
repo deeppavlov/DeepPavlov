@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Union, Iterable
+from logging import getLogger
 
-import numpy as np
-
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
+
+log = getLogger(__name__)
 
 
 @register('multitask_pal_bert_preprocessor')

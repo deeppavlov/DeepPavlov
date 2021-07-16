@@ -14,9 +14,8 @@
 
 import copy
 import math
-from random import sample
 import numpy as np
-from logging import getLogger, info
+from logging import getLogger
 from typing import Iterator, List, Optional, Tuple, Union, Dict
 
 from deeppavlov.core.common.registry import register
@@ -121,8 +120,6 @@ class MultiTaskPalBertIterator:
             Element of inputs or outputs is a tuple which elements are x values of merged tasks in the order
             tasks are present in `tasks` argument of `__init__` method.
         """
-        # log.info(
-        #     f"{data_type} sizes: {self._get_data_size(self._get_data(data_type))} 
         max_task_data_len = max([len(iter_.data[data_type])
                                 for iter_ in self.task_iterators.values()])
         size_of_last_batch = max_task_data_len % batch_size
