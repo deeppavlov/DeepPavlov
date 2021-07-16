@@ -192,8 +192,8 @@ class NerChunkModel(Component):
         doc_sentences_offsets_batch.append(doc_sentences_offsets)
         doc_sentences_batch.append(doc_sentences)
 
-        return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_probas_batch, \
-               doc_sentences_offsets_batch, doc_sentences_batch
+        return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, \
+               doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
 
 
 @register('entity_linker_sep')
@@ -877,7 +877,13 @@ class EntityLinkerSep(Component, Serializable):
             high_conf_entities = []
             high_conf_nums = []
             for elem_num, (entity, conf) in enumerate(zip(top_entities, top_conf)):
-                if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 55 and conf[2] > 0.019:
+                if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 29 and conf[2] > 0.019:
+                    conf = list(conf)
+                    if conf[1] > 55:
+                        conf[2] = 1.0
+                    else:
+                        conf[2] = 0.98
+                    conf = tuple(conf)
                     high_conf_entities.append((entity,) + conf)
                     high_conf_nums.append(elem_num)
 
