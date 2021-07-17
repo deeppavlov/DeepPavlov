@@ -140,6 +140,10 @@ class TripPy(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
+        # Data Parallelism in case of Multi-GPU setup
+        if torch.cuda.device_count() > 1:
+            print("Let's use", torch.cuda.device_count(), "GPUs!")
+            self.model = torch.nn.DataParallel(self.model)
 
         self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
