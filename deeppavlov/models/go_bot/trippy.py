@@ -17,8 +17,6 @@ from logging import getLogger
 from typing import Dict, Any, List, Optional, Union, Tuple
 from pathlib import Path
 
-from numpy.lib.twodim_base import diag
-
 import torch
 from overrides import overrides
 from transformers.modeling_bert import BertConfig
@@ -28,7 +26,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
@@ -252,7 +249,7 @@ class TripPy(TorchModel):
                     outputs = self.model(**last_turn)
 
                 # Update dialogue state logits
-                for slot in self.model.slot_list:
+                for slot in self.slot_names:
                     updates = outputs[2][slot].max(1)[1].cpu()
                     for i, u in enumerate(updates):
                         if u != 0:
@@ -323,9 +320,9 @@ class TripPy(TorchModel):
         i = 0
 
         if self.ds is None:
-            self.ds = {slot: 'none' for slot in self.model.slot_list}
+            self.ds = {slot: 'none' for slot in self.slot_names}
 
-        for slot in self.model.slot_list:
+        for slot in self.slot_names:
             class_logits = per_slot_class_logits[slot][i].cpu()
             start_logits = per_slot_start_logits[slot][i].cpu()
             end_logits = per_slot_end_logits[slot][i].cpu()
@@ -338,36 +335,36 @@ class TripPy(TorchModel):
 
             # DP / DSTC2 uses dontcare instead of none so we also replace none's wth dontcare
             # Just remove the 2nd part of the or statement to revert to TripPy standard
-            if (class_prediction == self.model.class_types.index('dontcare')) or (class_prediction == self.model.class_types.index('none')):
+            if (class_prediction == self.class_types.index('dontcare')) or (class_prediction == self.class_types.index('none')):
                 self.ds[slot] = 'dontcare'
-            elif class_prediction == self.model.class_types.index('copy_value'):
+            elif class_prediction == self.class_types.index('copy_value'):
                 input_tokens = self.tokenizer.convert_ids_to_tokens(
                     input_ids_unmasked[i])
                 self.ds[slot] = ' '.join(
                     input_tokens[start_prediction:end_prediction + 1])
                 self.ds[slot] = re.sub("(^| )##", "", self.ds[slot])
-            elif 'true' in self.model.class_types and class_prediction == self.model.class_types.index('true'):
+            elif 'true' in self.class_types and class_prediction == self.class_types.index('true'):
                 self.ds[slot] = 'true'
-            elif 'false' in self.model.class_types and class_prediction == self.model.class_types.index('false'):
+            elif 'false' in self.class_types and class_prediction == self.class_types.index('false'):
                 self.ds[slot] = 'false'
-            elif class_prediction == self.model.class_types.index('inform'):
+            elif class_prediction == self.class_types.index('inform'):
                 self.ds[slot] = inform[i][slot]
 
         # Referral case. All other slot values need to be seen first in order
         # to be able to do this correctly.
-        for slot in self.model.slot_list:
+        for slot in self.slot_names:
             class_logits = per_slot_class_logits[slot][i].cpu()
             refer_logits = per_slot_refer_logits[slot][i].cpu()
 
             class_prediction = int(class_logits.argmax())
             refer_prediction = int(refer_logits.argmax())
 
-            if 'refer' in self.model.class_types and class_prediction == self.model.class_types.index('refer'):
+            if 'refer' in self.class_types and class_prediction == self.class_types.index('refer'):
                 # Only slots that have been mentioned before can be referred to.
                 # One can think of a situation where one slot is referred to in the same utterance.
                 # This phenomenon is however currently not properly covered in the training data
                 # label generation process.
-                self.ds[slot] = self.ds[self.model.slot_list[refer_prediction - 1]]
+                self.ds[slot] = self.ds[self.slot_names[refer_prediction - 1]]
 
     def make_api_call(self) -> None:
         db_results = []
@@ -399,11 +396,11 @@ class TripPy(TorchModel):
         if self.current_db_result is not None:
             self.db_result = self.current_db_result
 
-    def update_ground_truth_db_result_from_context(self, context: Dict[str, Any]):
+    def update_ground_truth_db_result_from_context(self, context: Dict[str, Any]) -> None:
         self.current_db_result = context.get('db_result', None)
         self._update_db_result()
 
-    def fill_current_state_with_db_results(self) -> dict:
+    def fill_current_state_with_db_results(self) -> None:
         if self.db_result:
             for k, v in self.db_result.items():
                 self.ds[k] = str(v)
@@ -450,12 +447,17 @@ class TripPy(TorchModel):
 
         # Backpropagation
         loss = outputs[0]
+        action_loss = outputs[7]
+
+        if torch.cuda.device_count() > 1:
+            loss = loss.mean()
+            action_loss = action_loss.mean()
+
         loss.backward()
         # Clip gradients
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
         self.optimizer.step()
-        #self.scheduler.step()
-        return {"total_loss": loss.cpu().item(), "action_loss": outputs[7].cpu().item()}
+        return {"total_loss": loss.cpu().item(), "action_loss": action_loss.cpu().item()}
 
     def reset(self, user_id: Union[None, str, int] = None) -> None:
         """
