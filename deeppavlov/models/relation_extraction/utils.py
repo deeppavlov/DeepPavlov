@@ -27,7 +27,10 @@ class RePostprocessor:
                         rel_labels.append("no relation")
                         continue
                     rel_p = self.id2rel[index]
-                    rel_label = (rel_p, self.rel2label[rel_p])
+                    if rel_p in self.rel2label:
+                        rel_label = (rel_p, self.rel2label[rel_p])
+                    else:
+                        rel_label = ("-", rel_p)
                     rel_labels.append(rel_label)
                 rel_labels_batch.append(rel_labels)
             return rel_labels_batch
