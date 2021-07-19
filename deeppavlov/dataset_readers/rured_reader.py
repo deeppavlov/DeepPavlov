@@ -5,8 +5,6 @@ from typing import Dict, List, Tuple
 from pathlib import Path
 from logging import getLogger
 from colour import Color
-from matplotlib import colors
-from matplotlib.ticker import PercentFormatter
 from overrides import overrides
 import matplotlib.pyplot as plt
 
@@ -52,8 +50,6 @@ class RuREDDatasetReader(DatasetReader):
         data = {"train": train_data, "valid": dev_data, "test": test_data}
 
         self.ner_stat = dict(list(reversed(sorted(self.ner_stat.items(), key=lambda item: item[1]))))
-        print(self.ner_stat)
-
         red = Color("red")
         colors = list(red.range_to(Color("blue"), len(self.ner_stat)))
         colors = [color.rgb for color in colors]

@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "docred_reader",
-    "dev_test_data_size": 150,
+    "valid_test_data_size": 150,
     "data_path": "{DOWNLOADS_PATH}/docred/",
     "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json"
   },
@@ -28,13 +28,14 @@
         "model_name": "re_model",
         "n_classes": 97,
         "num_ner_tags": 6,
-        "pretrained_bert": "bert-base-uncased"
+        "pretrained_bert": "bert-base-uncased",
+        "return_probas": true
       },
       {
         "class_name": "re_postprocessor",
         "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
         "rel2label_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
-        "return_rel_labels": false,
+        "return_rel_labels": true,
         "in": ["model_output"],
         "out": ["predictions"]
       }
@@ -42,7 +43,7 @@
     "out": ["predictions"]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 50,
     "batch_size": 16,
     "log_every_n_batches": 100,
     "train_metrics": ["f1_weighted", "acc"],
@@ -58,7 +59,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/re_docred_ann_n_ds_dgx1"
+      "MODEL_PATH": "{MODELS_PATH}/re_docred_old_setting"
       },
     "download": [
       {
