@@ -12,12 +12,11 @@ class ATLoss(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, logits: Tensor, labels: Tensor, th_label: int = None) -> float:
+    def forward(self, logits: Tensor, labels: Tensor) -> float:
         """
         Args:
             logits: predicted probabilities (shape: batch size x num classes)
             labels: one-hot encoded true labels (shape: batch size x num classes)
-            th_label:
         """
 
         # TH label

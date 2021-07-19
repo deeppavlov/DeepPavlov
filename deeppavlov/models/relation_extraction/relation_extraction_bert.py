@@ -9,7 +9,6 @@ from torch import Tensor
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.metrics.re_eval import re_docred_evaluate
 from deeppavlov.models.classifiers.torch_re_bert import BertWithAdaThresholdLocContextPooling
 
 log = getLogger(__name__)
@@ -160,6 +159,7 @@ class REBertModel(TorchModel):
         return out
 
 
+# todo: will be deleted!
 if __name__ == "__main__":
     from joblib import load
     from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator

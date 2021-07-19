@@ -29,7 +29,7 @@ class DocREDDatasetReader(DatasetReader):
             rel_info_path: str,
             negative_label: str = "Na",
             train_valid_test_proportion: int = None,
-            valid_test_data_size: str = None,
+            valid_test_data_size: int = None,
             generate_additional_neg_samples: bool = False,
             num_neg_samples: int = None
     ) -> Dict[str, List[Tuple]]:
@@ -55,8 +55,8 @@ class DocREDDatasetReader(DatasetReader):
                                 List[
                                     # Tuples with information about text mentions of entity 1.
                                     # E.g., if entity 1 was mentioned two times in the document:
-                                    Tuple(start position of mention 1 of entity 1, end position of mention 1 of entity 1),
-                                    Tuple(start position of mention 2 of entity 1, end position of mention 2 of entity 1)
+                                    Tuple(start position of mention 1 of ent 1, end position of mention 1 of ent 1),
+                                    Tuple(start position of mention 2 of ent 1, end position of mention 2 of ent 1)
                                     ],
                                 List[
                                     # Tuples with information about text mentions of entity 2
@@ -89,7 +89,7 @@ class DocREDDatasetReader(DatasetReader):
 
         if train_valid_test_proportion and valid_test_data_size:
             raise ValueError(
-                f"The train, valid and test splitting should be done either basing on their proportional values to each "
+                f"The train, valid and test splitting should be done either basing on their proportional values to each"
                 f"other (train_valid_test_proportion parameter), or on the absolute size of valid and test data "
                 f"(valid_test_data_size parameter). They can't be used simultaneously."
             )
@@ -120,14 +120,19 @@ class DocREDDatasetReader(DatasetReader):
 
         else:
             raise ValueError(
-                f"The train, valid and test splitting should be done either basing on their proportional values to each "
+                f"The train, valid and test splitting should be done either basing on their proportional values to each"
                 f"other (train_valid_test_proportion parameter), or on the absolute size of valid and test data "
                 f"(valid_test_data_size parameter). One of them should be set to the not-None value."
             )
 
-        train_data, train_stat = self.process_docred_file(train_data, neg_samples="twice", data_type="train")
-        valid_data, valid_stat = self.process_docred_file(valid_data, neg_samples="equal", data_type="valid")
-        test_data, test_stat = self.process_docred_file(test_data, neg_samples="equal", data_type="test")
+        logger.info("Train data processing...")
+        train_data, train_stat = self.process_docred_file(train_data, neg_samples="twice")
+
+        logger.info("Valid data processing...")
+        valid_data, valid_stat = self.process_docred_file(valid_data, neg_samples="equal")
+
+        logger.info("Test data processing...")
+        test_data, test_stat = self.process_docred_file(test_data, neg_samples="equal")
 
         self.print_statistics(train_stat, valid_stat, test_stat)
 
@@ -135,7 +140,7 @@ class DocREDDatasetReader(DatasetReader):
 
         return data
 
-    def split_by_absolute(self, all_labeled_data: List) -> Tuple[List, Dict]:
+    def split_by_absolute(self, all_labeled_data: List) -> Tuple[List, List, List]:
         """
         All annotated data from DocRED is splitted into train, valid and test sets in following proportions:
           len(valid_data) = len(test_data) = self.valid_test_data_size
@@ -170,7 +175,7 @@ class DocREDDatasetReader(DatasetReader):
         train_data = all_labeled_data[2 * one_prop + 1:]
         return train_data, valid_data, test_data
 
-    def process_docred_file(self, data: List[Dict], neg_samples: str = None, data_type: str = None) -> List:
+    def process_docred_file(self, data: List[Dict], neg_samples: str = None) -> Tuple[List, Dict]:
         """
         Processes a DocRED data and returns a DeepPavlov relevant output
 
@@ -225,10 +230,7 @@ class DocREDDatasetReader(DatasetReader):
                 )
                 processed_data_samples += curr_processed_data_samples
 
-        if data_type:
-            print(f"Data: {data_type}  Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
-            logger.info(f"Data: {data_type}  Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
-
+        logger.info(f"Pos samples: {self.stat['POS_REL']}  Neg samples: {self.stat['NEG_REL']}.")
         self.stat.pop("POS_REL")
         self.stat.pop("NEG_REL")
 
@@ -314,7 +316,7 @@ class DocREDDatasetReader(DatasetReader):
 
     def construct_neg_samples(
             self, ent_id2ent: Dict, ent_id2ent_tag: Dict, doc: List
-    ) -> List[Tuple[List, List, List]]:
+    ) -> List[Tuple[Tuple[List, List], List]]:
         """
         Turn the annotated documents but without any positive relation label to the negative samples in a format of
             the DocRED reader output.
@@ -336,7 +338,11 @@ class DocREDDatasetReader(DatasetReader):
             self.stat["NEG_REL"] += 1
         return neg_data_samples
 
-    def generate_data_sample(self, doc, ent1, ent2, label, ent_id2ent, ent_id2ent_tag):
+    @staticmethod
+    def generate_data_sample(
+            doc: List, ent1: int, ent2: int, label: List, ent_id2ent: Dict, ent_id2ent_tag: Dict
+    ) -> Tuple[Tuple[List, List], List]:
+        """ Creates an entry of processed docred corpus """
         return (
             (
                 doc,
@@ -399,6 +405,17 @@ class DocREDDatasetReader(DatasetReader):
         return relation
 
     def print_statistics(self, train_stat: Dict, valid_stat: Dict, test_stat: Dict) -> None:
+        """ Print out the relation statistics as a markdown table """
         df = pd.DataFrame([self.rel2relid, train_stat, valid_stat, test_stat]).T
         df.columns = ['d{}'.format(i) for i, col in enumerate(df, 1)]
         logger.info(df.to_markdown())
+
+
+# todo: wil be deleted
+if __name__ == "__main__":
+    DocREDDatasetReader().read(
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred",
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/meta/rel2id.json",
+        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/rel_info.json",
+        valid_test_data_size=100
+    )
