@@ -906,6 +906,9 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
         features: ???
 
     """
+    if not slot_list:
+        slot_list = ["dummy"]
+
     examples = create_examples(batch_dialogues_utterances_contexts_info,
                                batch_dialogues_utterances_responses_info,
                                slot_list=slot_list,

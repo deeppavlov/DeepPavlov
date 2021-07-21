@@ -81,12 +81,7 @@ class TripPy(TorchModel):
         self.nlg_manager = nlg_manager
         self.save_path = save_path
         self.max_seq_length = max_seq_length
-        if not slot_names:
-            self.slot_names = ["dummy"]
-            self.has_slots = False
-        else:
-            self.slot_names = slot_names
-            self.has_slots = True
+        self.slot_names = slot_names
         self.class_types = class_types
         self.debug = debug
 
@@ -100,7 +95,7 @@ class TripPy(TorchModel):
         self.config.dst_refer_loss_for_nonpointable = refer_loss_for_nonpointable
         self.config.dst_class_aux_feats_inform = class_aux_feats_inform
         self.config.dst_class_aux_feats_ds = class_aux_feats_ds
-        self.config.dst_slot_list = slot_names # This will be empty if there are no slots
+        self.config.dst_slot_list = self.slot_names
         self.config.dst_class_types = class_types
         self.config.dst_class_labels = len(class_types)
 
@@ -236,7 +231,7 @@ class TripPy(TorchModel):
                 last_turn = batch_to_device(last_turn, self.device)
 
                 # If there are no slots, remove not needed data
-                if self.has_slots is False:
+                if not(self.slot_names):
                     last_turn["start_pos"] = None
                     last_turn["end_pos"] = None
                     last_turn["inform_slot_id"] = None
@@ -433,14 +428,13 @@ class TripPy(TorchModel):
         # Move to correct device
         batch = batch_to_device(batch, self.device)
 
-        if self.has_slots is False:
+        if not(self.slot_names):
             batch["start_pos"] = None
             batch["end_pos"] = None
             batch["inform_slot_id"] = None
             batch["refer_id"] = None
             batch["class_label_id"] = None
             batch["diag_state"] = None
-
 
         # Feed through model
         outputs = self.model(**batch)
@@ -449,6 +443,7 @@ class TripPy(TorchModel):
         loss = outputs[0]
         action_loss = outputs[7]
 
+        # Average device results in case of multi-gpu setup
         if torch.cuda.device_count() > 1:
             loss = loss.mean()
             action_loss = action_loss.mean()
