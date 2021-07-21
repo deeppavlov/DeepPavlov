@@ -187,6 +187,7 @@ class NerChunkModel(Component):
                     cur_doc_num = doc_num
                     text_len_sum = 0
         doc_entity_substr_batch.append(doc_entity_substr)
+        doc_entity_substr_batch = self.sanitize_entity_substr(doc_entity_substr_batch)
         doc_tags_batch.append(doc_tags)
         doc_probas_batch.append(doc_probas)
         doc_entity_offsets_batch.append(doc_entity_offsets)
@@ -195,6 +196,16 @@ class NerChunkModel(Component):
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, \
                doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
+               
+    def sanitize_entity_substr(self, entity_substr_batch: List[List[str]]):
+        new_entity_substr_batch = []
+        for entity_substr_list in entity_substr_batch:
+            new_entity_substr_list = []
+            for entity_substr in entity_substr_list:
+                entity_substr = entity_substr.replace(" ' ", ' "').replace(" '", '"').replace("' ", '"')
+                new_entity_substr_list.append(entity_substr)
+            new_entity_substr_batch.append(new_entity_substr_list)
+        return new_entity_substr_batch
 
 
 @register('entity_linker_sep')
@@ -653,6 +664,7 @@ class EntityLinkerSep(Component, Serializable):
                       sentences_offsets_batch: List[List[Tuple[int, int]]]) -> List[List[List[Tuple[int, int]]]]:
         log.debug(f"entity substr batch {entity_substr_batch}")
         log.debug(f"entity offsets batch {entity_offsets_batch}")
+        entity_substr_batch = [[entity_substr.replace('"', '') for entity_substr in entity_substr_list] for entity_substr_list in entity_substr_batch]
         entity_substr_batch = [[[word for word in entity_substr.split(' ')
                                  if (word not in self.stopwords or word == "ли") and len(word) > 0 and word not in punctuation]
                                 for entity_substr in entity_substr_list]

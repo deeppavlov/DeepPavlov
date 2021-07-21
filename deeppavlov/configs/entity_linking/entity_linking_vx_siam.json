@@ -17,17 +17,17 @@
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"],
         "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
-        "load_path": "/home/evseev/.deeppavlov/downloads/wikidata_rus",
-        "save_path": "/home/evseev/.deeppavlov/downloads/wikidata_rus",
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
-        "q_to_label_filename": "/archive/evseev/.deeppavlov/downloads/wikidata_rus/q_to_label_vx.pickle",
-        "q_to_label_out_filename": "/home/evseev/.deeppavlov/downloads/wikidata_rus/q_to_label_out_vx.pickle",
-        "tfidf_vectorizer_filename": "/home/evseev/.deeppavlov/downloads/wikidata_rus/tfidf_vectorizer_vx.pk",
-        "tfidf_faiss_index_filename": "/home/evseev/.deeppavlov/downloads/wikidata_rus/tfidf_faiss_vectors_cpu.index",
-        "fasttext_vectorizer_filename": "/archive/evseev/.deeppavlov/downloads/wikidata_rus/fasttext_dim100_ws10",
-        "fasttext_faiss_index_filename": "/archive/evseev/.deeppavlov/downloads/wikidata_rus/fasstext_faiss_vectors_cpu.index",
+        "q_to_label_filename": "q_to_label_vx.pickle",
+        "q_to_label_out_filename": "q_to_label_out_vx.pickle",
+        "tfidf_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_vectorizer_vx.pk",
+        "tfidf_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_faiss_vectors_cpu.index",
+        "fasttext_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasttext_dim100_ws10",
+        "fasttext_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasstext_faiss_vectors_cpu.index",
         "q_to_descr_filename": "q_to_descr_vx.pickle",
         "entity_ranker": "#entity_descr_ranking",
         "rank_in_runtime": true,
@@ -78,12 +78,12 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/entity_ranking_bert_rus_no_mention.tar.gz",
-        "subdir": "{MODELS_PATH}/entity_ranking_bert_rus_no_mention"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/q_to_descr_emb_trained.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/q_to_descr_vx.pickle",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/siamese_el_ranking/siamese_el_ranking.tar.gz",
+        "subdir": "{MODELS_PATH}/siamese_bert_el_ranking"
       }
     ]
   }
