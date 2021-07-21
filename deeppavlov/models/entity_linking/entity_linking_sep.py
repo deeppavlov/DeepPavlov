@@ -384,8 +384,8 @@ class EntityLinkerSep(Component, Serializable):
         self.word_list = list(self.word_to_idlist.keys())
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
-        self.q_to_label = load_pickle(self.q_to_label_filename)
-        self.q_to_label_out = load_pickle(self.q_to_label_out_filename)
+        self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
+        self.q_to_label_out = load_pickle(self.load_path / self.q_to_label_out_filename)
         self.label_to_q = {}
         for q_id in self.q_to_label:
             for label in self.q_to_label[q_id]:
