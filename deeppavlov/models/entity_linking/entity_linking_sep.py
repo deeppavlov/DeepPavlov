@@ -17,6 +17,7 @@ import time
 from logging import getLogger
 from typing import List, Dict, Tuple
 from collections import defaultdict
+from string import punctuation
 
 import numpy as np
 import pymorphy2
@@ -207,6 +208,7 @@ class EntityLinkerSep(Component, Serializable):
                  entities_ranking_filename: str,
                  entities_types_sets_filename: str,
                  q_to_label_filename: str,
+                 q_to_label_out_filename: str,
                  q_to_descr_filename: str,
                  tfidf_vectorizer_filename: str,
                  tfidf_faiss_index_filename: str,
@@ -215,7 +217,8 @@ class EntityLinkerSep(Component, Serializable):
                  entity_ranker=None,
                  bert_embedder=None,
                  descr_to_emb_filename: str = None,
-                 num_faiss_candidate_entities: int = 20,
+                 num_ft_faiss_candidate_entities: int = 50,
+                 num_tfidf_faiss_candidate_entities: int = 10,
                  num_entities_for_bert_ranking: int = 50,
                  num_tfidf_faiss_cells: int = 50,
                  num_ft_faiss_cells: int = 50,
@@ -236,7 +239,7 @@ class EntityLinkerSep(Component, Serializable):
                  max_text_len: int = 300,
                  lemmatize: bool = False,
                  full_paragraph: bool = False,
-                 max_paragraph_len: int = 280,
+                 max_paragraph_len: int = 100,
                  rank_in_runtime: bool = False,
                  tag_thres_probas: dict = {"PER": 0.79, "LOC": 0.79, "ORG": 0.79},
                  bert_emb_batch_size: int = 100,
@@ -281,6 +284,7 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_filename = entities_ranking_filename
         self.entities_types_sets_filename = entities_types_sets_filename
         self.q_to_label_filename = q_to_label_filename
+        self.q_to_label_out_filename = q_to_label_out_filename
         self.q_to_descr_filename = q_to_descr_filename
         self.descr_to_emb_filename = descr_to_emb_filename
         self.tfidf_vectorizer_filename = tfidf_vectorizer_filename
@@ -288,7 +292,8 @@ class EntityLinkerSep(Component, Serializable):
         self.fasttext_vectorizer_filename = fasttext_vectorizer_filename
         self.fasttext_faiss_index_filename = fasttext_faiss_index_filename
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
-        self.num_faiss_candidate_entities = num_faiss_candidate_entities
+        self.num_tfidf_faiss_candidate_entities = num_tfidf_faiss_candidate_entities
+        self.num_ft_faiss_candidate_entities = num_ft_faiss_candidate_entities
         self.num_tfidf_faiss_cells = num_tfidf_faiss_cells
         self.num_ft_faiss_cells = num_ft_faiss_cells
         self.tfidf_index_nprobe = tfidf_index_nprobe
@@ -379,7 +384,8 @@ class EntityLinkerSep(Component, Serializable):
         self.word_list = list(self.word_to_idlist.keys())
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
-        self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
+        self.q_to_label = load_pickle(self.q_to_label_filename)
+        self.q_to_label_out = load_pickle(self.q_to_label_out_filename)
         self.label_to_q = {}
         for q_id in self.q_to_label:
             for label in self.q_to_label[q_id]:
@@ -535,6 +541,103 @@ class EntityLinkerSep(Component, Serializable):
             entity_ids_batch.append(entity_ids_list)
             conf_batch.append(conf_list)
         entity_labels_batch = self.find_labels(entity_ids_batch)
+        
+        for i in range(len(entity_substr_batch)):
+            entity_substr_list = entity_substr_batch[i]
+            conf_list = conf_batch[i]
+            entity_ids_list = entity_ids_batch[i]
+            tags_list = tags_batch[i]
+            entity_labels_list = entity_labels_batch[i]
+            full_names = {}
+            full_names_2 = {}
+            for entity_substr, tag, entity_ids, conf, entity_labels in \
+                zip(entity_substr_list, tags_list, entity_ids_list, conf_list, entity_labels_list):
+                if tag == "PER" and len(entity_substr.split()) > 1:
+                    entity_substr_tuple = tuple(entity_substr.split())
+                    found_conf = conf[0]
+                    if entity_ids != ["not in wiki"]:
+                        full_names[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                    if found_conf[1] > 50 and found_conf[2] > 0.3:
+                        full_names[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                    if found_conf[1] > 20 and found_conf[2] > 0.2:
+                        full_names_2[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                if tag == "PER" and len(entity_substr.split()) == 1:
+                    entity_label_split = entity_labels[0].lower().split()
+                    entity_substr_tuple = tuple(entity_label_split)
+                    found_conf = conf[0]
+                    if "," not in entity_labels[0] and "ли" not in entity_label_split \
+                            and (entity_substr[:-2].startswith(entity_label_split[-1][:-2]) \
+                                 or entity_label_split[-1][:-2].startswith(entity_substr[:-2])) \
+                            and len(entity_substr) > 3 and len(entity_label_split[-1]) > 3:
+                        if found_conf[1] > 50 and found_conf[2] > 0.3:
+                            full_names[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                        if found_conf[1] > 20 and found_conf[2] > 0.2:
+                            full_names_2[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                    if "," in entity_labels[0] and "ли" not in entity_label_split \
+                            and (entity_substr[:-2].startswith(entity_label_split[0][:-2]) \
+                                 or entity_label_split[0][:-2].startswith(entity_substr[:-2])) \
+                            and len(entity_substr) > 3 and len(entity_label_split[0]) > 3:
+                        if found_conf[1] > 50 and found_conf[2] > 0.3:
+                            full_names[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                        if found_conf[1] > 20 and found_conf[2] > 0.2:
+                            full_names_2[entity_substr_tuple] = [tag, entity_ids, conf, entity_labels]
+                        
+            putin = []
+            for entity_substr, tag, entity_ids, conf, entity_labels in \
+                zip(entity_substr_list, tags_list, entity_ids_list, conf_list, entity_labels_list):
+                if "путин" in entity_substr and entity_ids[0] == "Q7747":
+                    putin = [tag, entity_ids, conf, entity_labels]
+            
+            for j in range(len(entity_substr_list)):
+                entity_substr = entity_substr_list[j]
+                if tags_list[j] == "PER"and len(entity_substr.split()) <= 2:
+                    found_full_name = ""
+                    entity_substr_split = entity_substr.split()
+                    if len(entity_substr.split()) == 1:
+                        for full_name in full_names:
+                            for elem in full_name:
+                                if len(entity_substr) > 3 and len(elem) > 3 \
+                                        and (entity_substr[:-2].startswith(elem[:-2]) or elem[:-2].startswith(entity_substr[:-2])):
+                                    found_full_name = full_name
+                                    break
+                            if found_full_name:
+                                break
+                    
+                    if len(entity_substr.split()) == 2 and entity_ids_list[j] == ["not in wiki"]:
+                        for full_name in full_names_2:
+                            found_cnt = 0
+                            for entity_substr_elem in entity_substr_split:
+                                for elem in full_name:
+                                    if len(entity_substr_elem) > 3 and len(elem) > 3 \
+                                            and (entity_substr_elem[:-2].startswith(elem[:-2])
+                                                 or elem[:-2].startswith(entity_substr_elem[:-2])):
+                                        found_cnt += 1
+                                        break
+                            if found_cnt == 2:
+                                found_full_name = full_name
+                                break
+                    if found_full_name:
+                        found_entity_info = []
+                        if found_full_name in full_names:
+                            found_entity_info = full_names[found_full_name]
+                        if found_full_name in full_names_2:
+                            found_entity_info = full_names_2[found_full_name]
+                        if found_entity_info:
+                            tags_list[j] = found_entity_info[0]
+                            entity_ids_list[j] = found_entity_info[1]
+                            conf_list[j] = found_entity_info[2]
+                            entity_labels_list[j] = found_entity_info[3]
+                
+                if entity_substr.lower() == "ввп" and putin:
+                    tags_list[j] = putin[0]
+                    entity_ids_list[j] = putin[1]
+                    conf_list[j] = putin[2]
+                    entity_labels_list[j] = putin[3]
+            
+            conf_batch[i] = conf_list
+            entity_ids_batch[i] = entity_ids_list
+            tags_batch[i] = tags_list
+            entity_labels_batch[i] = entity_labels_list
 
         if self.return_confidences:
             return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, \
@@ -551,7 +654,7 @@ class EntityLinkerSep(Component, Serializable):
         log.debug(f"entity substr batch {entity_substr_batch}")
         log.debug(f"entity offsets batch {entity_offsets_batch}")
         entity_substr_batch = [[[word for word in entity_substr.split(' ')
-                                 if word not in self.stopwords and len(word) > 0]
+                                 if (word not in self.stopwords or word == "ли") and len(word) > 0 and word not in punctuation]
                                 for entity_substr in entity_substr_list]
                                for entity_substr_list in entity_substr_batch]
 
@@ -568,7 +671,7 @@ class EntityLinkerSep(Component, Serializable):
                     ft_res = []
                     if ft_entity_emb_list:
                         ft_res = self.fasttext_faiss_index.search(np.array(ft_entity_emb_list),
-                                                                  self.num_faiss_candidate_entities)
+                                                                  self.num_ft_faiss_candidate_entities)
                     D_ft_all, I_ft_all = [], []
                     if len(ft_res) == 2:
                         D_ft_all, I_ft_all = ft_res
@@ -579,7 +682,7 @@ class EntityLinkerSep(Component, Serializable):
                         entity_substr_num += [i for _ in entity_substr]
 
                     ent_substr_tfidfs = self.tfidf_vectorizer.transform(words).toarray().astype(np.float32)
-                    D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_faiss_candidate_entities)
+                    D_all, I_all = self.tfidf_faiss_index.search(ent_substr_tfidfs, self.num_tfidf_faiss_candidate_entities)
 
                     ind_i = 0
                     candidate_entities_dict = {index: [] for index in range(len(entity_substr_list))}
@@ -593,10 +696,20 @@ class EntityLinkerSep(Component, Serializable):
                             morph_parsed_word = self.morph_parse(word)
                             if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
                                 entities_set = self.word_to_idlist.get(word, set())
-                                entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                                if tag == "ORG":
+                                    entities_set_1 = self.filter_entities_by_tags(entities_set, "ORG", proba)
+                                    entities_set_2 = self.filter_entities_by_tags(entities_set, "LOC", proba)
+                                    entities_set = entities_set_1.union(entities_set_2)
+                                else:
+                                    entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                                 if word != morph_parsed_word:
                                     entities_set = entities_set.union(self.word_to_idlist.get(morph_parsed_word, set()))
-                                    entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
+                                    if tag == "ORG":
+                                        entities_set_1 = self.filter_entities_by_tags(entities_set, "ORG", proba)
+                                        entities_set_2 = self.filter_entities_by_tags(entities_set, "LOC", proba)
+                                        entities_set = entities_set_1.union(entities_set_2)
+                                    else:
+                                        entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                                 for entity in entities_set:
                                     candidate_entities[entity] = 1.0
                             else:
@@ -629,14 +742,25 @@ class EntityLinkerSep(Component, Serializable):
                                     cur_entity_tokens = set([token.lower() for token in entity_substr])
                                     cur_entity_label_tokens = set(entity_label.lower().split())
                                     inters_tokens = cur_entity_tokens.intersection(cur_entity_label_tokens)
-                                    if inters_tokens:
-                                        fuzz_ratio = len(inters_tokens) / max(len(cur_entity_tokens),
-                                                                              len(cur_entity_label_tokens))
-                                    else:
-                                        fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(),
-                                                                entity_label.lower()) * 0.01
-                                    for entity_id in self.label_to_q[entity_label]:
-                                        entities_set.add((entity_id, fuzz_ratio))
+                                    num_matches = 0
+                                    for cur_entity_tok in cur_entity_tokens:
+                                        for cur_entity_label_tok in cur_entity_label_tokens:
+                                            if cur_entity_tok[:2] == cur_entity_label_tok[:2] \
+                                                    and (fuzz.ratio(cur_entity_tok, cur_entity_label_tok) > 70.0 \
+                                                    or (len(cur_entity_tok) == 3 and len(cur_entity_label_tok) == 3)):
+                                                num_matches += 1
+                                                break
+                                    if (len(cur_entity_tokens) == 1 and num_matches == 1) \
+                                            or (len(cur_entity_tokens) == 2 and num_matches == 2) \
+                                            or (len(cur_entity_tokens) > 2 and abs(num_matches - len(cur_entity_tokens)) <= 1):
+                                        if inters_tokens:
+                                            fuzz_ratio = len(inters_tokens) / max(len(cur_entity_tokens),
+                                                                                  len(cur_entity_label_tokens))
+                                        else:
+                                            fuzz_ratio = fuzz.ratio(' '.join(entity_substr).lower(),
+                                                                    entity_label.lower()) * 0.01
+                                        for entity_id in self.label_to_q[entity_label]:
+                                            entities_set.add((entity_id, fuzz_ratio))
                             entities_set = self.filter_entities_by_tags(entities_set, tag, proba)
                             candidate_entities_ft_dict[index] = list(entities_set)
                         candidate_entities_ft_total = list(candidate_entities_ft_dict.values())
@@ -648,6 +772,7 @@ class EntityLinkerSep(Component, Serializable):
                     candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
 
                     log.debug(f"length candidate entities list {len(candidate_entities_total)}")
+                    
                     candidate_entities_list = []
                     entities_scores_list = []
                     for entity_substr, candidate_entities, candidate_entities_ft \
@@ -878,13 +1003,13 @@ class EntityLinkerSep(Component, Serializable):
             high_conf_nums = []
             for elem_num, (entity, conf) in enumerate(zip(top_entities, top_conf)):
                 if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 29 and conf[2] > 0.019:
-                    conf = list(conf)
-                    if conf[1] > 55:
-                        conf[2] = 1.0
+                    new_conf = list(conf)
+                    if new_conf[1] > 55:
+                        new_conf[2] = 1.0
                     else:
-                        conf[2] = 0.98
-                    conf = tuple(conf)
-                    high_conf_entities.append((entity,) + conf)
+                        new_conf[2] = 0.98
+                    new_conf = tuple(new_conf)
+                    high_conf_entities.append((entity,) + new_conf)
                     high_conf_nums.append(elem_num)
 
             high_conf_entities = sorted(high_conf_entities, key=lambda x: (x[1], x[3], x[2]), reverse=True)
@@ -980,7 +1105,10 @@ class EntityLinkerSep(Component, Serializable):
             log.debug(f"rank, context: {context}")
             contexts.append(context)
 
-        scores_list = self.entity_ranker.batch_rank_rels(contexts, candidate_entities_list)
+        if hasattr(self.entity_ranker, "batch_rank_rels"):
+            scores_list = self.entity_ranker.batch_rank_rels(contexts, candidate_entities_list)
+        else:
+            scores_list = self.entity_ranker(contexts, candidate_entities_list)
 
         for entity_substr, candidate_entities, tag, substr_len, entities_scores, scores in \
                 zip(entity_substr_list, candidate_entities_list, tags, substr_lens, entities_scores_list, scores_list):
@@ -989,8 +1117,8 @@ class EntityLinkerSep(Component, Serializable):
                                      entities_scores.get(entity, (0.0, 0))[1],
                                      round(score, 2)) for entity, score in scores]
             log.debug(f"len entities with scores {len(entities_with_scores)}")
-            entities_with_scores = [entity for entity in entities_with_scores if entity[3] > 0.001 if
-                                    entity[0].startswith("Q")]
+            entities_with_scores = [entity for entity in entities_with_scores
+                                    if (entity[3] > 0.1 and entity[1] > 0.6 and entity[0].startswith("Q"))]
             entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             log.debug(f"entities_with_scores {entities_with_scores}")
 
@@ -1004,7 +1132,7 @@ class EntityLinkerSep(Component, Serializable):
                                            or entities_with_scores[0][1] < 0.3
                                            or (entities_with_scores[0][3] < 0.13 and entities_with_scores[0][2] < 20)
                                            or (entities_with_scores[0][3] < 0.3 and entities_with_scores[0][2] < 4)
-                                           or entities_with_scores[0][1] == 0.5):
+                                           or entities_with_scores[0][1] < 0.6):
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]
             else:
@@ -1014,8 +1142,12 @@ class EntityLinkerSep(Component, Serializable):
             high_conf_entities = []
             high_conf_nums = []
             for elem_num, (entity, conf) in enumerate(zip(top_entities, top_conf)):
-                if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 55 and conf[2] > 0.8:
-                    high_conf_entities.append((entity,) + conf)
+                if len(conf) == 3 and conf[0] == 1.0 and conf[1] > 50 and conf[2] > 0.3:
+                    new_conf = list(conf)
+                    if new_conf[1] > 55:
+                        new_conf[2] = 1.0
+                    new_conf = tuple(new_conf)
+                    high_conf_entities.append((entity,) + new_conf)
                     high_conf_nums.append(elem_num)
 
             high_conf_entities = sorted(high_conf_entities, key=lambda x: (x[1], x[3], x[2]), reverse=True)
@@ -1025,7 +1157,7 @@ class EntityLinkerSep(Component, Serializable):
 
             top_entities = [elem[0] for elem in high_conf_entities] + top_entities
             top_conf = [elem[1:] for elem in high_conf_entities] + top_conf
-
+            
             if self.num_entities_to_return == 1 and top_entities:
                 entity_ids_list.append(top_entities[0])
                 conf_list.append(top_conf[0])
@@ -1033,6 +1165,11 @@ class EntityLinkerSep(Component, Serializable):
                 entity_ids_list.append(top_entities[:self.num_entities_to_return])
                 conf_list.append(top_conf[:self.num_entities_to_return])
         return entity_ids_list, conf_list
+        
+    def first_element(self, entity_labels):
+        if isinstance(entity_labels, list):
+            return entity_labels[0]
+        return entity_labels
 
     def find_labels(self, entity_ids_batch: List[List[List[str]]]):
         entity_labels_batch = []
@@ -1040,9 +1177,9 @@ class EntityLinkerSep(Component, Serializable):
             entity_labels_list = []
             for entity_ids in entity_ids_list:
                 if isinstance(entity_ids, list):
-                    entity_labels = [self.q_to_label.get(entity_id, [entity_id])[0] for entity_id in entity_ids]
+                    entity_labels = [self.first_element(self.q_to_label_out.get(entity_id, [entity_id])) for entity_id in entity_ids]
                 elif isinstance(entity_ids, str):
-                    entity_labels = self.q_to_label.get(entity_ids, entity_ids)[0]
+                    entity_labels = self.first_element(self.q_to_label_out.get(entity_ids, entity_ids))
                 else:
                     entity_labels = ["not in wiki" for _ in entity_ids]
                 entity_labels_list.append(entity_labels)

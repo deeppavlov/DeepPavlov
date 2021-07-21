@@ -93,8 +93,12 @@ class NerChunker(Component):
             sentences_list = []
             sentences_offsets_list = []
             cur_len = 0
-            doc = self.sanitize(doc)
-            sentences = sent_tokenize(doc)
+            doc_pieces = doc.split("\n")
+            doc_pieces = [self.sanitize(doc_piece) for doc_piece in doc_pieces]
+            doc_pieces = [doc_piece for doc_piece in doc_pieces if len(doc_piece) > 1]
+            sentences = []
+            for doc_piece in doc_pieces:
+                sentences += sent_tokenize(doc_piece)
             for sentence in sentences:
                 cur_chunk_len = 0
                 sentence_tokens = re.findall(self.re_tokenizer, sentence)
@@ -179,7 +183,8 @@ class NerChunker(Component):
 
     def sanitize(self, text):
         text_len = len(text)
-        if text[text_len - 1] not in {'.', '!', '?'}:
+        
+        if text_len > 0 and text[text_len - 1] not in {'.', '!', '?'}:
             i = text_len - 1
             while text[i] in self.punct_ext and i > 0:
                 i -= 1
