@@ -3,7 +3,7 @@ FROM deeppavlov/base-gpu:0.12.0
 RUN cd DeepPavlov && \
     git checkout master && \
     git pull && \
-    git checkout 38a70682cc4de8d9b348a0437f432db7cfb4d6d2 && \
+    git checkout 2896815e3f2e45889a21cf19f3fb13ca930b02bb && \
     pip install -e . && \
     python -m deeppavlov install entity_linking_vx_siam
 
