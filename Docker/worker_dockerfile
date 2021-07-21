@@ -3,7 +3,7 @@ FROM deeppavlov/base-gpu:0.12.0
 RUN cd DeepPavlov && \
     git checkout master && \
     git pull && \
-    git checkout a1057ee2bfafbc3faeb9f06b41fabd9b43a73907 && \
+    git checkout 076ed60572f2db7ad001cdcdc1674570e29a3d61 && \
     pip install -e . && \
     python -m deeppavlov install entity_linking_vx_sep
 
