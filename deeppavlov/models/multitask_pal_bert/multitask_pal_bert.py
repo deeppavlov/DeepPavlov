@@ -17,10 +17,11 @@ from typing import List, Dict, Union, Optional
 from pathlib import Path
 
 import numpy as np
+from overrides import overrides
 import torch
 import os
 
-from .optimization import BERTAdam
+from transformers import AdamW
 from .modeling import BertForMultiTask, BertConfig
 
 from deeppavlov.core.common.errors import ConfigError
@@ -56,13 +57,11 @@ class MultiTaskPalBert(TorchModel):
 
     def __init__(self,
                  tasks: Dict[str, Dict],
-                 config: str = ".configs/pal_config.json",
                  pretrained_bert: str = None,
                  freeze_embeddings: bool = False,
-                 learning_rate: int = 2e-5,
-                 steps_per_epoch: int = 2400,
-                 num_train_epochs: int = 3,
-                 warmup_proportion: int = 0.1,
+                 optimizer_parameters: dict = {"lr": 2e-5},
+                 lr_scheduler: Optional[str] = None,
+                 lr_scheduler_parameters: dict = {},
                  gradient_accumulation_steps: int = 1,
                  clip_norm: Optional[float] = None,
                  one_hot_labels: bool = False,
@@ -87,10 +86,9 @@ class MultiTaskPalBert(TorchModel):
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
-        self.learning_rate = learning_rate
-        self.steps_per_epoch = steps_per_epoch
-        self.num_train_epochs = num_train_epochs
-        self.warmup_proportion = warmup_proportion
+        self.optimizer_parameters = optimizer_parameters
+        self.lr_scheduler_name = lr_scheduler
+        self.lr_scheduler_parameters = lr_scheduler_parameters
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.in_distribution = in_distribution
         self.in_y_distribution = in_y_distribution
@@ -103,19 +101,23 @@ class MultiTaskPalBert(TorchModel):
             raise RuntimeError(
                 'Set return_probas to True for multilabel classification!')
 
-        super().__init__(*args, **kwargs)
+        super().__init__(load_before_drop=False, **kwargs)
 
-    def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
+    @overrides
+    def init_from_opt(self) -> None:
+        """Initialize from scratch `self.model` with the architecture built in  `model_func (MultitaskBert)` method of this class
+            along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
+            `self.optimizer_parameters`, optionally initialize `self.lr_scheduler` as `self.lr_scheduler_name` from
+            `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
+        """
         if self.config and os.path.exists(self.config):
             self.config = BertConfig.from_json_file(self.config)
             self.config.num_tasks = len(self.task_names)
             self.model = BertForMultiTask(
                 self.config, self.tasks_num_classes)
+            self.model.to(self.device)
         else:
             raise ValueError("Config File does not exist at", self.config)
-
-        if fname is not None:
-            self.load_path = fname
 
         if self.pretrained_bert:
             partial = torch.load(self.pretrained_bert, map_location="cpu")
@@ -137,29 +139,16 @@ class MultiTaskPalBert(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
-        if self.freeze_embeddings:
-            for n, p in self.model.bert.named_parameters():
-                if (
-                    "aug" in n
-                    or "classifier" in n
-                    or "mult" in n
-                    or "gamma" in n
-                    or "beta" in n
-                ):
-                    continue
-                p.requires_grad = False
-                log.info("Bert Embeddings Freezed")
-        self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
-        optimizer_parameters = [
+        model_parameters = [
             {
                 "params": [
                     p for n, p in self.model.named_parameters()
                     if not any(nd in n for nd in no_decay)
                     and not any(nd in n for nd in base)
                 ],
-                "weight_decay_rate": 0.01,
+                "weight_decay": 0.01,
             },
             {
                 "params": [
@@ -167,15 +156,22 @@ class MultiTaskPalBert(TorchModel):
                     if any(nd in n for nd in no_decay)
                     and not any(nd in n for nd in base)
                 ],
-                "weight_decay_rate": 0.0,
+                "weight_decay": 0.0,
             },
         ]
-        self.optimizer = BERTAdam(
-            optimizer_parameters,
-            lr=self.learning_rate,
-            warmup=self.warmup_proportion,
-            t_total=self.steps_per_epoch * self.num_train_epochs
+        self.optimizer = AdamW(
+            model_parameters,
+            **self.optimizer_parameters
         )
+
+        if self.lr_scheduler_name:
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
+
+    @overrides
+    def load(self, fname: Optional[str] = None) -> None:
+        if fname is not None:
+            self.load_path = fname
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
@@ -189,6 +185,9 @@ class MultiTaskPalBert(TorchModel):
                 log.info(
                     f"Initializing `{self.__class__.__name__}` from saved.")
 
+                # firstly, initialize with random weights and previously saved parameters
+                self.init_from_opt()
+
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
@@ -199,6 +198,24 @@ class MultiTaskPalBert(TorchModel):
             else:
                 log.info(
                     f"Init from scratch. Load path {weights_path} does not exist.")
+                self.init_from_opt()
+        else:
+            log.info(
+                f"Init from scratch. Load path {self.load_path} is not provided.")
+            self.init_from_opt()
+
+        if self.freeze_embeddings:
+            for n, p in self.model.bert.named_parameters():
+                if (
+                    "aug" in n
+                    or "classifier" in n
+                    or "mult" in n
+                    or "gamma" in n
+                    or "beta" in n
+                ):
+                    continue
+                p.requires_grad = False
+                log.info("Bert Embeddings Freezed")
 
     def __call__(self, *args):
         """Make prediction for given features (texts).
@@ -229,11 +246,11 @@ class MultiTaskPalBert(TorchModel):
                 tokenized = {key: value for (key, value) in _input.items(
                 ) if key in self.model.forward.__code__.co_varnames}
 
-            logits = self.model(
-                task_id=task_id,
-                name=self.tasks_type[task_id],
-                **tokenized
-            )
+                logits = self.model(
+                    task_id=task_id,
+                    name=self.tasks_type[task_id],
+                    **tokenized
+                )
 
             if self.return_probas:
                 if not self.multilabel:
