@@ -234,11 +234,16 @@ class TorchSquadTransformersPreprocessor(Component):
             texts_b = [None] * len(texts_a)
 
         input_features = []
-        tokens = []
+        tokens = [] 
         for text_a, text_b in zip(texts_a, texts_b):
             encoded_dict = self.tokenizer.encode_plus(
-                text=text_a, text_pair=text_b, add_special_tokens=True, max_length=self.max_seq_length,
-                pad_to_max_length=True, return_attention_mask=True, return_tensors='pt')
+                text=text_a, text_pair=text_b, 
+                add_special_tokens=True, 
+                max_length=self.max_seq_length,
+                truncation=True,
+                padding='max_length',
+                return_attention_mask=True, 
+                return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
                 if self.add_token_type_ids:

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import json
 import math
 from logging import getLogger
@@ -140,6 +141,8 @@ class TorchTransformersSquad(TorchModel):
         self.optimizer.zero_grad()
         input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
         loss = self.model(**input_).loss
+        if self.is_data_parallel:
+            loss = loss.mean()
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -258,6 +261,9 @@ class TorchTransformersSquad(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
+
         self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
@@ -279,8 +285,20 @@ class TorchTransformersSquad(TorchModel):
                 # now load the weights, optimizer from saved
                 logger.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                model_state = checkpoint["model_state_dict"]
+                optimizer_state = checkpoint["optimizer_state_dict"]
+
+                # load a multi-gpu model on a single device
+                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
+                    tmp_model_state = {}
+                    for key, value in model_state.items():
+                        tmp_model_state[re.sub("module.", "", key)] = value
+                    model_state = tmp_model_state
+
+                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
+                                         if key.endswith("embeddings.position_ids")])
+                self.model.load_state_dict(model_state, strict=strict_load_flag)
+                self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
