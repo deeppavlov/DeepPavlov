@@ -13,8 +13,8 @@
 # limitations under the License.
 
 
-from typing import Dict, Optional, List
 import re
+from typing import Dict, Optional, List
 
 from datasets import load_dataset, Dataset
 from overrides import overrides
@@ -66,7 +66,6 @@ class HuggingFaceDatasetReader(DatasetReader):
 
 def interleave_splits(splits: List[str]) -> List[str]:
     return [f"{splits[0]}+{splits[1]}[:50%]", f"{splits[1]}[-50%:]", splits[2]]
-    # return [f"{splits[0]}", f"{splits[1]}", splits[2]]
 
 
 def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:

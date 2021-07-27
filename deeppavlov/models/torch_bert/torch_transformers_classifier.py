@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
+
 import re
 from logging import getLogger
 from pathlib import Path
@@ -342,7 +342,6 @@ class AutoModelForBinaryClassification(torch.nn.Module):
 
 
 class BinaryClassificationHead(torch.nn.Module):
-
     def __init__(self, config):
         super().__init__()
 

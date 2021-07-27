@@ -148,7 +148,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/0.16/ner/ner_rus_bert_torch.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "subdir": "{MODELS_PATH}"
       }
     ]
   }

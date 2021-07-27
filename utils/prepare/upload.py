@@ -56,7 +56,7 @@ def upload(config_in_file):
 
     print("tmp_tar", tmp_tar)
     command = f'scp -r {tmp_folder}{model_name}* share.ipavlov.mipt.ru:/home/export/v1/{class_name}'
-    donwload_url = f'https://files.deeppavlov.ai/v1/{class_name}/{model_name}.tar.gz'
+    donwload_url = f'http://files.deeppavlov.ai/v1/{class_name}/{model_name}.tar.gz'
     print(command, donwload_url, sep='\n')
 
 

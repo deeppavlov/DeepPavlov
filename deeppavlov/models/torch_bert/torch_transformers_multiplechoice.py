@@ -58,7 +58,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6},
+                 optimizer_parameters: Optional[dict] = None,
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
@@ -81,7 +81,10 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
-            
+
+        if optimizer_parameters is None:
+            optimizer_parameters = {"lr": 1e-3, "weight_decay": 0.01, "betas": (0.9, 0.999), "eps": 1e-6}
+
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
                          **kwargs)
@@ -156,7 +159,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         return pred
 
     @overrides
-    def load(self, fname=None):
+    def load(self, fname = None):
         if fname is not None:
             self.load_path = fname
 

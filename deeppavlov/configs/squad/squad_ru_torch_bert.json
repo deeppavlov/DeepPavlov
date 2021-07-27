@@ -162,13 +162,13 @@
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/",
+      "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_ru_torch_bert/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "https://files.deeppavlov.ai/v1/squad/squad_ru_torch_bert.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_ru_torch_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
     ]
   }

@@ -13,19 +13,19 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Dict, Union, Optional
 from pathlib import Path
+from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
 from overrides import overrides
-from transformers.data.processors.utils import InputFeatures
 from transformers import AutoModelForSequenceClassification, AutoConfig
+from transformers.data.processors.utils import InputFeatures
 
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 

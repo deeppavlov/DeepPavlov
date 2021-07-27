@@ -98,7 +98,7 @@
     },
     "download": [
 	{
-		"url": "https://files.deeppavlov.ai/v1/superglue/superglue_boolq_roberta_mnli.tar.gz",
+		"url": "http://files.deeppavlov.ai/v1/superglue/superglue_boolq_roberta_mnli.tar.gz",
 		"subdir": "{MODELS_PATH}"
 	}
     ]

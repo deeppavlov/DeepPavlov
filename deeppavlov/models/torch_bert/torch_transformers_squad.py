@@ -114,13 +114,6 @@ class TorchTransformersSquad(TorchModel):
             dict with loss and learning_rate values
 
         """
-        # input_ids = [f.input_ids for f in features]
-        # input_masks = [f.attention_mask for f in features]
-        # input_type_ids = [f.token_type_ids for f in features]
-        #
-        # b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        # b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        # b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
 
         input_ids = [f.input_ids for f in features]
         input_masks = [f.attention_mask for f in features]
@@ -135,13 +128,14 @@ class TorchTransformersSquad(TorchModel):
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
         
-        input_ = {'input_ids': b_input_ids, 
-                  'attention_mask': b_input_masks, 
-                  'token_type_ids': b_input_type_ids, 
-                  'start_positions': b_y_st, 
-                  'end_positions': b_y_end, 
-                  'return_dict': True
-                 }
+        input_ = {
+            'input_ids': b_input_ids,
+            'attention_mask': b_input_masks,
+            'token_type_ids': b_input_type_ids,
+            'start_positions': b_y_st,
+            'end_positions': b_y_end,
+            'return_dict': True
+        }
 
         self.optimizer.zero_grad()
         input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
@@ -183,16 +177,17 @@ class TorchTransformersSquad(TorchModel):
         input_ids = [f.input_ids for f in features]
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
-        
+
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
         
-        input_ = {'input_ids': b_input_ids, 
-                  'attention_mask': b_input_masks, 
-                  'token_type_ids': b_input_type_ids, 
-                  'return_dict': True
-                 }
+        input_ = {
+            'input_ids': b_input_ids,
+            'attention_mask': b_input_masks,
+            'token_type_ids': b_input_type_ids,
+            'return_dict': True
+        }
 
         with torch.no_grad():
             input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}

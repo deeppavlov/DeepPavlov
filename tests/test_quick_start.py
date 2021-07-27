@@ -116,7 +116,12 @@ PARAMS = {
         ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_boolq_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -189,7 +194,9 @@ PARAMS = {
         ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
             ("i see 1 cat", ({"number": '1'},))],
         ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_torch.json", "ner_ontonotes_bert_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_mult_torch.json", "ner_ontonotes_bert_mult_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
         ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
@@ -301,6 +308,7 @@ PARAMS = {
         ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_torch_bert.json", "squad_ru_torch_bert", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],

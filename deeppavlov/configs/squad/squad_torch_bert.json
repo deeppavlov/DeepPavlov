@@ -167,7 +167,7 @@
     },
     "download": [
       {
-        "url": "https://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
         "subdir": "{ROOT_PATH}/models"
       }
     ]
