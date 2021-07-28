@@ -83,11 +83,11 @@ class WikiParser:
             if parser_info == "query_execute":
                 candidate_output = []
                 try:
-                    what_return, query_seq, filter_info, order_info, answer_types, return_if_found = query
+                    what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
                     if answer_types:
                         query_answer_types = answer_types
                     candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
-                                                                 query_answer_types)
+                                                                 query_answer_types, rel_types)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
@@ -156,6 +156,13 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(types)
+            elif parser_info == "find_type_labels":
+                type_labels = []
+                #try:
+                type_labels = self.find_type_labels(*query)
+                #except:
+                #    log.info("Wrong arguments are passed to wiki parser")
+                wiki_parser_output.append(type_labels)
             elif parser_info == "retrieve_paths":
                 paths = []
                 rels = []
@@ -229,6 +236,13 @@ class WikiParser:
                         if "backw" in triplets:
                             uncompressed_triplets["backw"] = self.uncompress(triplets["backw"])
                     wiki_parser_output.append(uncompressed_triplets)
+            elif parser_info == "find_triplets_for_rel":
+                triplets = []
+                try:
+                    found_triplets, c = self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}", "")
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(list(found_triplets))
             elif parser_info == "parse_triplets" and self.file_format == "pickle":
                 for entity in query:
                     self.parse_triplets(entity)
@@ -242,7 +256,8 @@ class WikiParser:
                 query_seq: List[List[str]],
                 filter_info: List[Tuple[str]] = None,
                 order_info: namedtuple = None,
-                answer_types: List[str] = None) -> List[List[str]]:
+                answer_types: List[str] = None,
+                rel_types: List[str] = None) -> List[List[str]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -259,7 +274,7 @@ class WikiParser:
         extended_combs = []
         combs = []
         
-        for n, query in enumerate(query_seq):
+        for n, (query, rel_type) in enumerate(zip(query_seq, rel_types)):
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             """
                 n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
@@ -272,7 +287,7 @@ class WikiParser:
                        unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
             """
             if n == 0:
-                combs = self.search(query, unknown_elem_positions)
+                combs = self.search(query, unknown_elem_positions, rel_type)
                 # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
             else:
                 if combs:
@@ -300,11 +315,11 @@ class WikiParser:
                             known_values = [comb[known_elem] for known_elem in known_elements]
                             for known_elem, known_value in zip(known_elements, known_values):
                                 filled_query = [elem.replace(known_elem, known_value) for elem in query]
-                                new_combs = self.search(filled_query, unknown_elem_positions)
+                                new_combs = self.search(filled_query, unknown_elem_positions, rel_type)
                                 for new_comb in new_combs:
                                     extended_combs.append({**comb, **new_comb})
                     else:
-                        new_combs = self.search(query, unknown_elem_positions)
+                        new_combs = self.search(query, unknown_elem_positions, rel_type)
                         for comb in combs:
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
@@ -336,23 +351,30 @@ class WikiParser:
                 combs = [[elem[key] for key in what_return] for elem in combs]
             
             if answer_types:
-                answer_types = set(answer_types)
-                combs = [[entity for entity in comb
-                              if answer_types.intersection(self.find_types(entity))] for comb in combs]
+                if answer_types == ["date"]:
+                    combs = [[entity for entity in comb
+                                  if re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for comb in combs]
+                else:
+                    answer_types = set(answer_types)
+                    combs = [[entity for entity in comb
+                                  if answer_types.intersection(self.find_types(entity))] for comb in combs]
                 combs = [comb for comb in combs if any([entity for entity in comb])]
 
         return combs
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]]) -> List[Dict[str, str]]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         if self.file_format == "hdt":
             combs = []
             triplets, cnt = self.document.search_triples(subj, rel, obj)
             if cnt < self.max_comb_num:
-                if rel == self.prefixes["description"]:
+                if rel == self.prefixes["description"] or rel == self.prefixes["label"]:
                     triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
-                combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+                    combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
+                else:
+                    combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
+                          if triplet[1].startswith(self.prefixes["rels"][rel_type])]
             else:
                 log.debug("max comb num exceede")
         else:
@@ -404,6 +426,7 @@ class WikiParser:
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('.', '').replace('$', '')
+                
                 return entity
 
             elif entity.isdigit():
@@ -427,7 +450,7 @@ class WikiParser:
         date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
         if date_info:
             year, month, day = date_info[0]
-            if "how old" in question.lower():
+            if "how old" in question.lower() or "сколько лет" in question.lower():
                 entity = datetime.datetime.now().year - int(year)
             elif "в каком году" in question.lower():
                 entity = year
@@ -438,7 +461,7 @@ class WikiParser:
                 entity = date.strftime("%d %B %Y")
             else:
                 entity = year
-            return entity
+            return str(entity)
         entity = entity.lstrip('+-')
         return entity
 
@@ -646,6 +669,58 @@ class WikiParser:
                     types = triplet[1:]
         types = set(types)
         return types
+        
+    def find_subclasses(self, entity: str):
+        types = []
+        if self.file_format == "hdt":
+            if not entity.startswith("http"):
+                entity = f"{self.prefixes['entity']}/{entity}"
+            tr, c = self.document.search_triples(entity, f"{self.prefixes['rels']['direct']}/P279", "")
+            types = [triplet[2].split('/')[-1] for triplet in tr]
+        if self.file_format == "pickle":
+            entity = entity.split('/')[-1]
+            triplets = self.document.get(entity, {}).get("forw", [])
+            triplets = self.uncompress(triplets)
+            for triplet in triplets:
+                if triplet[0] == "P279":
+                    types = triplet[1:]
+        types = set(types)
+        return types
+        
+    def find_type_labels(self, entities_list: Union[str, Tuple[str]], entities: List[str], question: str, answer: str, rels: str,
+                               rels_ids, conf: float) -> List[str]:
+        type_labels = []
+        if isinstance(entities_list, str):
+            types = self.find_types(entities_list)
+            for tp in types:
+                type_label = self.find_label(tp, question)
+                if type_label and type_label.lower() != "not found":
+                    type_labels.append((entity, entities, type_label, answer, rels, rels_ids, conf))
+                if len(type_label.split()) > 3:
+                    subclasses = self.find_subclasses(tp)
+                    for subcls in subclasses:
+                        subcls_label = self.find_label(subcls, question)
+                        if subcls_label and subcls_label.lower() != "not found":
+                            type_labels.append((entity, entities, subcls_label, answer, rels, rels_ids, conf))
+        else:
+            type_labels_list = []
+            for entity in entities_list:
+                types = self.find_types(entity)
+                for tp in types:
+                    type_label = self.find_label(tp, question)
+                    if type_label and type_label.lower() != "not found":
+                        type_labels_list.append(type_label)
+                    if len(type_label.split()) > 3:
+                        subclasses = self.find_subclasses(tp)
+                        for subcls in subclasses:
+                            subcls_label = self.find_label(subcls, question)
+                            if subcls_label and subcls_label.lower() != "not found":
+                                type_labels_list.append(subcls_label)
+            type_labels_list = list(set(type_labels_list))
+            for type_label in type_labels_list:
+                type_labels.append((entity, entities, type_label, answer, rels, rels_ids, conf))
+        
+        return type_labels
 
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
