@@ -82,7 +82,8 @@
     "evaluation_targets": ["train", "valid"],
     "class_name": "torch_trainer",
     "tensorboard_log_dir": "{MODEL_PATH}/",
-    "pytest_max_batches": 2
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 2
   },
   "metadata": {
     "variables": {
