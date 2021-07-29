@@ -14,7 +14,7 @@
     "seed": 42
   },
   "chainer": {
-    "in": ["choice1", "choice2"],
+    "in": ["contexts_list", "choices_list"],
     "in_y": ["y"],
     "pipe": [
       {
@@ -22,7 +22,7 @@
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 64,
-        "in": ["choice1", "choice2"],
+        "in": ["contexts_list", "choices_list"],
         "out": ["bert_features"]
       },
       {
