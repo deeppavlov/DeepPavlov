@@ -52,6 +52,8 @@ ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
 FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_text', None)
 
+LIST_ARGUMENTS_INFER_CHECK = (['Dummy text', 'Dummy text'], ['Dummy text', 'Dummy text'], None)
+
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "faq": {
@@ -119,7 +121,7 @@ PARAMS = {
         ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
