@@ -120,8 +120,7 @@ PARAMS = {
         ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_boolq_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
