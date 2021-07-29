@@ -41,6 +41,7 @@ class ATLoss(nn.Module):
         return loss
 
     def get_label(self, logits: Tensor, num_labels: int = -1, threshold: float = None) -> Tensor:
+        """ Calculated the labels """
         if threshold:
             th_logit = torch.full((len(logits), 1), threshold)
         else:

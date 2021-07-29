@@ -154,10 +154,3 @@ class RuREDDatasetReader(DatasetReader):
                     NUMBER_OF_EMPLOYEES_FIRED=17, ORIGINS_FROM=18, ACQUINTANCE_OF=19, PARENT_OF=20, ORGANIZES=21,
                     FOUNDED_BY=22, PLACE_RESIDES_IN=23, BORN_IN=24, AGE_IS=25, RELATIVE=26, NUMBER_OF_EMPLOYEES=27,
                     SIBLING=28, DATE_OF_BIRTH=29)
-
-
-# todo: wil be deleted
-if __name__ == "__main__":
-    RuREDDatasetReader().read(
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/rured"
-    )

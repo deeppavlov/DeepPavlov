@@ -409,13 +409,3 @@ class DocREDDatasetReader(DatasetReader):
         df = pd.DataFrame([self.rel2relid, train_stat, valid_stat, test_stat]).T
         df.columns = ['d{}'.format(i) for i, col in enumerate(df, 1)]
         logger.info(df.to_markdown())
-
-
-# todo: wil be deleted
-if __name__ == "__main__":
-    DocREDDatasetReader().read(
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred",
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/meta/rel2id.json",
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/rel_info.json",
-        valid_test_data_size=100
-    )
