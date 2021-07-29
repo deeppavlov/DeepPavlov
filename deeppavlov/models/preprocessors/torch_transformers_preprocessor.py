@@ -17,9 +17,9 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union, Dict, Any
+from typing import Tuple, List, Optional, Union
 
-from transformers import AutoTokenizer, BertTokenizer
+from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
@@ -65,8 +65,9 @@ class TorchTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
-        List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+    def __call__(
+            self, texts_a: List[str], texts_b: Optional[List[str]] = None
+    ) -> Union[List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
@@ -159,19 +160,10 @@ class TorchTransformersNerPreprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
-        tokens_offsets_batch = [[] for _ in tokens]
+
         if isinstance(tokens[0], str):
-            tokens_batch = []
-            tokens_offsets_batch = []
-            for s in tokens:
-                tokens_list = []
-                tokens_offsets_list = []
-                for elem in re.finditer(self._re_tokenizer, s):
-                    tokens_list.append(elem[0])
-                    tokens_offsets_list.append((elem.start(), elem.end()))
-                tokens_batch.append(tokens_list)
-                tokens_offsets_batch.append(tokens_offsets_list)
-            tokens = tokens_batch
+            tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
+
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
@@ -205,8 +197,7 @@ class TorchTransformersNerPreprocessor(Component):
 
         if tags is not None:
             if self.provide_subword_tags:
-                return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, subword_tags
+                return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -219,8 +210,7 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, nonmasked_tags
+                return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers, nonmasked_tags
         return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
@@ -341,11 +331,6 @@ class TorchTransformersREPreprocessor(Component):
         self.ner2id = {tag: tag_id for tag_id, tag in enumerate(ner_tags)}
         self.max_seq_length = max_seq_length
 
-        out = open("log.txt", 'a')
-        out.write(f"Number of tags: {len(self.ner2id)}" + '\n')
-        out.write(f"Tags are: {self.ner2id}" + '\n')
-        out.close()
-
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
@@ -459,7 +444,7 @@ class TorchTransformersREPreprocessor(Component):
                 truncation=True,
                 max_length=self.max_seq_length,
                 pad_to_max_length=True,
-                return_attention_mask=True,  # return_tensors="pt"
+                return_attention_mask=True
             )
 
             input_features.append(
@@ -471,11 +456,6 @@ class TorchTransformersREPreprocessor(Component):
                 }
             )
 
-        # todo: wil be deleted
-        # from joblib import dump
-        # dump(input_features[:50],
-        #      "/Users/asedova/Documents/04_deeppavlov/deeppavlov_fork/DocRED/out_transformer_preprocessor/dev_small")
-
         return input_features
 
     def encode_ner_tag(self, *ner_tags) -> List:
@@ -486,18 +466,3 @@ class TorchTransformersREPreprocessor(Component):
             ner_tag_one_hot[self.ner2id[ner_tag]] = 1
             enc_ner_tags.append(ner_tag_one_hot)
         return enc_ner_tags
-
-
-# todo: wil be deleted
-if __name__ == "__main__":
-    from joblib import load
-    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-
-    data = load(
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
-    )
-    data_iter_out = BasicClassificationDatasetIterator(data)
-    entity_info = [data[0] for data in data_iter_out.test]
-    labels = [data[1] for data in data_iter_out.test]
-
-    TorchTransformersREPreprocessor("bert-base-cased").__call__(entity_info)

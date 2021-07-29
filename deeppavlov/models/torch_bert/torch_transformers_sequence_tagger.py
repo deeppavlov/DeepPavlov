@@ -136,7 +136,6 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     full_range = torch.arange(batch_size * max_token_seq_len).to(torch.int64)
     # full_range -> [0, 1, 2, 3, 4, 5, 6, 7, 8]
     nonword_indices_flat = torch.masked_select(full_range, torch.logical_not(x_mask))
-
     # # y_idxs -> [5, 7, 8]
 
     # get a sequence of units corresponding to the start subtokens of the words
@@ -316,18 +315,16 @@ class TorchTransformersSequenceTagger(TorchModel):
             # Move logits and labels to CPU and to numpy arrays
             logits = token_from_subtoken(logits[0].detach().cpu(), torch.from_numpy(y_masks))
 
-        probas = torch.nn.functional.softmax(logits, dim=-1)
-        probas = probas.detach().cpu().numpy()
-
-        logits = logits.detach().cpu().numpy()
-        pred = np.argmax(logits, axis=-1)
-        seq_lengths = np.sum(y_masks, axis=1)
-        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
-
         if self.return_probas:
-            return pred, probas
+            pred = torch.nn.functional.softmax(logits, dim=-1)
+            pred = pred.detach().cpu().numpy()
         else:
-            return pred
+            logits = logits.detach().cpu().numpy()
+            pred = np.argmax(logits, axis=-1)
+            seq_lengths = np.sum(y_masks, axis=1)
+            pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+
+        return pred
 
     @overrides
     def load(self, fname=None):
