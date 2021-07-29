@@ -52,7 +52,9 @@ class TransformersBertEmbedder(Serializable):
         self.model = transformers.BertModel.from_pretrained(self.load_path, config=self.config).eval().to(self.device)
         self.dim = self.model.config.hidden_size
 
-    def __call__(self, subtoken_ids_batch: Collection[Collection[int]], startofwords_batch: Collection[Collection[int]],
+    def __call__(self,
+                 subtoken_ids_batch: Collection[Collection[int]],
+                 startofwords_batch: Collection[Collection[int]],
                  attention_batch: Collection[Collection[int]]) -> Tuple[Collection[Collection[Collection[float]]],
                                                                         Collection[Collection[Collection[float]]],
                                                                         Collection[Collection[float]],
@@ -66,11 +68,13 @@ class TransformersBertEmbedder(Serializable):
                 for every other subtoken
             attention_batch: a mask matrix with ``1`` for every significant subtoken and ``0`` for paddings
         """
-        ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device, dtype = torch.long)
+        ids_tensor = torch.tensor(subtoken_ids_batch, device=self.device, dtype=torch.long)
         startofwords_tensor = torch.tensor(startofwords_batch, device=self.device).bool()
         attention_tensor = torch.tensor(attention_batch, device=self.device)
         with torch.no_grad():
-            last_hidden, pooler_output = self.model(ids_tensor, attention_tensor)
+            output = self.model(ids_tensor, attention_tensor)
+            last_hidden = output.last_hidden_state
+            pooler_output = output.pooler_output
             attention_tensor = attention_tensor.unsqueeze(-1)
             max_emb = torch.max(last_hidden - 1e9 * (1 - attention_tensor), dim=1)[0]
             subword_emb = last_hidden * attention_tensor
