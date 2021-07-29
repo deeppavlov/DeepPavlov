@@ -21,7 +21,6 @@ from overrides import overrides
 import torch
 import os
 
-from transformers import AdamW
 from .modeling import BertForMultiTask, BertConfig
 
 from deeppavlov.core.common.errors import ConfigError
@@ -37,14 +36,17 @@ class MultiTaskPalBert(TorchModel):
     """ Multi-Task Bert Based Model 
     Args:
         tasks: Dict of task names along with the labels for each task,
-        config: path to pal Bert configuration file,
         pretrained_bert: path of the pretrained bert embeddings
-        freeze_embeddings: set True if bert embeddings are to be freezed
-        learning_rate: learning rate for the model
-        steps_per_epoch: number of steps per epoch,
-        num_train_epochs: number of epochs,
-        warmup_proportion: warmup proportion for the optimizer,
+        freeze_embeddings: set True if bert embeddings are to be freezed,
+        optimizer: optimizer name defaults to AdamW,
+        optimizer_parameters: optimizer parameters,
+        lr_scheduler: name of the lr scheduler,
+        lr_scheduler_paramters: lr scheduler parameters for the scheduler,
         gradient_accumulation_steps: number of gradient accumulation steps,
+        clip_norm: normalization: value for gradient clipping,
+        one_hot_labels: set to true if using one hot labels,
+        multilabel: set true for multilabel class,
+        return_probas: set true to return prediction probas,
         in_distribution: in_distribution: The distribution of variables listed in the ``"in"`` config parameter between tasks. 
             ``in_distribution`` can be ``None`` if only 1 task is called. In that case all variables
             listed in ``"in"`` are arguments of 1 task. 
@@ -59,6 +61,7 @@ class MultiTaskPalBert(TorchModel):
                  tasks: Dict[str, Dict],
                  pretrained_bert: str = None,
                  freeze_embeddings: bool = False,
+                 optimizer: str = "AdamW",
                  optimizer_parameters: dict = {"lr": 2e-5},
                  lr_scheduler: Optional[str] = None,
                  lr_scheduler_parameters: dict = {},
@@ -86,6 +89,7 @@ class MultiTaskPalBert(TorchModel):
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
+        self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler
         self.lr_scheduler_parameters = lr_scheduler_parameters
@@ -101,7 +105,12 @@ class MultiTaskPalBert(TorchModel):
             raise RuntimeError(
                 'Set return_probas to True for multilabel classification!')
 
-        super().__init__(load_before_drop=False, **kwargs)
+        super().__init__(
+            optimizer_parameters=self.optimizer_parameters,
+            lr_scheduler=self.lr_scheduler_name,
+            lr_scheduler_parameters=self.lr_scheduler_parameters,
+            **kwargs
+        )
 
     @overrides
     def init_from_opt(self) -> None:
@@ -111,10 +120,10 @@ class MultiTaskPalBert(TorchModel):
             `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
         """
         if self.config and os.path.exists(self.config):
-            self.config = BertConfig.from_json_file(self.config)
-            self.config.num_tasks = len(self.task_names)
+            self.bert_config = BertConfig.from_json_file(self.config)
+            self.bert_config.num_tasks = len(self.task_names)
             self.model = BertForMultiTask(
-                self.config, self.tasks_num_classes)
+                self.bert_config, self.tasks_num_classes)
             self.model.to(self.device)
         else:
             raise ValueError("Config File does not exist at", self.config)
@@ -159,10 +168,9 @@ class MultiTaskPalBert(TorchModel):
                 "weight_decay": 0.0,
             },
         ]
-        self.optimizer = AdamW(
-            model_parameters,
-            **self.optimizer_parameters
-        )
+
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            model_parameters, **self.optimizer_parameters)
 
         if self.lr_scheduler_name:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
@@ -300,7 +308,6 @@ class MultiTaskPalBert(TorchModel):
         else:
             _input['labels'] = torch.from_numpy(
                 np.array(task_labels[0])).to(self.device)
-        self.optimizer.zero_grad()
         tokenized = {key: value for (key, value) in _input.items(
         ) if key in self.model.forward.__code__.co_varnames}
 
@@ -320,7 +327,9 @@ class MultiTaskPalBert(TorchModel):
                 self.model.parameters(), self.clip_norm)
 
         self.optimizer.step()
-
+        if self.lr_scheduler:
+            self.lr_scheduler.step()  # Update learning rate schedule
+        self.optimizer.zero_grad()
         self.train_losses[task_id] = loss.item()
 
         return {"losses": self.train_losses}

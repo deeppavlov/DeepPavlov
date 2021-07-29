@@ -53,15 +53,16 @@ class MultiTaskPalBertIterator:
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
         self.epochs_done = 0
-        self.train = self._extract_data_type('train')
-        self.valid = self._extract_data_type('valid')
-        self.test = self._extract_data_type('test')
         self.data = {
-            'train': self.train,
-            'valid': self.valid,
-            'test': self.test,
-            'all': self._unite_dataset_parts(self.train, self.valid, self.test)
+            'train': self._extract_data_type('train'),
+            'valid': self._extract_data_type('valid'),
+            'test': self._extract_data_type('test'),
+            'all': self._unite_dataset_parts(self._extract_data_type('train'),
+                                             self._extract_data_type('valid'),
+                                             self._extract_data_type('test'))
         }
+        self.sample_x_instances = None
+        self.sample_y_instances = None
 
     def _get_data_size(self, data: Dict[str, List]):
         """
@@ -86,12 +87,10 @@ class MultiTaskPalBertIterator:
         return dataset_part
 
     def _get_data(self, data_type):
-        if data_type == "test":
-            return self.test
-        if data_type == "valid":
-            return self.valid
+        if data_type in self.data.keys():
+            return self.data[data_type]
         else:
-            return self.train
+            raise KeyError(f"Key for {data_type} not found in data")
 
     @staticmethod
     def _unite_dataset_parts(*dataset_parts):
@@ -103,6 +102,16 @@ class MultiTaskPalBertIterator:
                 else:
                     united[task] = united[task] + data
         return united
+
+    def _init_sample_tasks_batch(self, batch_size = 1):
+        iters = [iter_ for iter_ in self.task_iterators.values()]
+        sample_batch = [i.gen_batches(batch_size).__next__() for i in iters]
+        self.sample_x_instances = []
+        self.sample_y_instances = []
+        for sample_task_batch in sample_batch:
+            self.sample_x_instances.append(sample_task_batch[0])
+            self.sample_y_instances.append(sample_task_batch[1])
+
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
@@ -132,20 +141,18 @@ class MultiTaskPalBertIterator:
             generators = [RepeatBatchGenerator(iter_, batch_size, data_type, shuffle) for
                           iter_ in self.task_iterators.values()]
 
-            # one sample batch for each task
-            iters = [iter_ for iter_ in self.task_iterators.values()]
-            sample_batch = [i.gen_batches(
-                batch_size).__next__() for i in iters]
-            x_instances = []
-            y_instances = []
-            for sample_task_batch in sample_batch:
-                x_instances.append(sample_task_batch[0])
-                y_instances.append(sample_task_batch[1])
-
+            # one sample batch of batch_size 1 for each task
+            if not self.sample_x_instances or not self.sample_y_instances:
+                self._init_sample_tasks_batch(batch_size)
+            
+            # probs only required while training
+            probs = self._get_probs("train")
             for step in range(self.steps_per_epoch):
                 task_id = np.random.choice(
-                    self.n_tasks, p=self._get_probs(data_type))
+                    self.n_tasks, p=probs)
                 batch = generators[task_id].__next__()
+                x_instances = self.sample_x_instances.copy()
+                y_instances = self.sample_y_instances.copy()
                 x_instances[task_id] = batch[0]
                 y_instances[task_id] = batch[1]
                 b = (self.add_task_id(task_id, x_instances),
