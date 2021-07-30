@@ -145,7 +145,8 @@ PARAMS = {
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "distil": {
-        ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "entity_linking": {
         ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
