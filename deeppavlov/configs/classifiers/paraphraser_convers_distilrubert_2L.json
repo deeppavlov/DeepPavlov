@@ -73,11 +73,11 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/paraphraser_convers_distilrubert_2L_torch"
+      "MODEL_PATH": "{MODELS_PATH}/paraphraser_convers_distilrubert_2L"
     },
     "download": [
         {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/paraphraser_convers_distilrubert_2L_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/paraphraser_convers_distilrubert_2L.tar.gz",
         "subdir": "{MODELS_PATH}"
         }
     ]
