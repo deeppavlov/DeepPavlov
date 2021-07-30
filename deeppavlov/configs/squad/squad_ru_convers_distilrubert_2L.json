@@ -21,7 +21,7 @@
     ],
     "pipe": [
       {
-        "class_name": "torch_squad_transformers_preprocessor", 
+        "class_name": "torch_squad_transformers_preprocessor",
         "add_token_type_ids": true, 
         "vocab_file": "{TRANSFORMER}",
         "do_lower_case": "{lowercase}",
@@ -68,11 +68,11 @@
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "attention_probs_keep_prob": 0.0,
+        "attention_probs_keep_prob": 0.11,
         "hidden_keep_prob": 0.33, 
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 3.67e-5
+          "lr": 9e-05
         },
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 1.5,
@@ -159,13 +159,13 @@
       "lowercase": false, 
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational",
+      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_6L_torch"
+      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_2L"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_6L_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_2L.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

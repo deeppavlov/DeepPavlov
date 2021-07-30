@@ -18,7 +18,7 @@
         "class_name": "torch_transformers_squad_infer",
         "lang": "ru", 
         "batch_size": 128,
-        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_convers_distilrubert_2L_torch.json",
+        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_convers_distilrubert_6L.json",
         "vocab_file": "{TRANSFORMER}",
         "do_lower_case": "{lowercase}",
         "max_seq_length": 256,
@@ -61,14 +61,14 @@
       "lowercase": false, 
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational",
+      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_2L_torch",
+      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_6L",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_2L_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_6L.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

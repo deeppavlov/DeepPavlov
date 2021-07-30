@@ -57,15 +57,15 @@
         "class_name": "torch_transformers_sequence_tagger",
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
-        "attention_probs_keep_prob": 0.11,
-        "hidden_keep_prob": 0.11, 
+        "attention_probs_keep_prob": 0.44,
+        "hidden_keep_prob": 0.89, 
         "return_probas": false,
         "encoder_layer_ids": [
           -1
         ],
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 5.45e-05,
+          "lr": 2.78e-05,
           "weight_decay": 1e-06,
           "betas": [
             0.9,
@@ -142,12 +142,12 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models", 
-      "MODEL_PATH": "{MODELS_PATH}/ner_rus_conversational_distilrubert_2L_torch", 
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational"
+      "MODEL_PATH": "{MODELS_PATH}/ner_rus_conversational_distilrubert_6L",
+      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational"
     }, 
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_conversational_distilrubert_2L_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_conversational_distilrubert_6L.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
