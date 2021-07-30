@@ -1,0 +1,76 @@
+{
+  "dataset_reader": {
+    "class_name": "squad_dataset_reader",
+    "dataset": "SberSQuADClean",
+    "url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/squad_ru_clean/"
+  },
+  "dataset_iterator": {
+    "class_name": "squad_iterator",
+    "seed": 1337,
+    "shuffle": true
+  },
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+        {
+        "class_name": "torch_transformers_squad_infer",
+        "lang": "ru", 
+        "batch_size": 128,
+        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_convers_distilrubert_6L.json",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{lowercase}",
+        "max_seq_length": 256,
+        "in": ["context_raw", "question_raw"],
+        "out": ["ans_predicted", "ans_start_predicted", "logits"]
+        }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+  },
+  "train": {
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid"
+    ],
+    "log_every_n_batches": 250,
+    "val_every_n_batches": 500,
+    "batch_size": 10,
+    "validation_patience": 10,
+    "metrics": [
+      {
+        "name": "squad_v2_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v2_em",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans_raw", "ans_predicted"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "lowercase": false, 
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_6L",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_6L.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  }
+}
