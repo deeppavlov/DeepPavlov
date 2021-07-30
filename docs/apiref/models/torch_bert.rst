@@ -26,12 +26,12 @@ deeppavlov.models.torch_bert
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_squad.TorchTransformersSquad
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADInferModel
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_squad.TorchTransformersSquadInfer
 
     .. automethod:: __call__
 

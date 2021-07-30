@@ -13,12 +13,12 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "class_name": "torch_squad_bert_infer",
+        "class_name": "torch_transformers_squad_infer",
         "batch_size": 10,
         "squad_model_config": "{CONFIGS_PATH}/squad/squad_torch_bert.json",
         "vocab_file": "bert-base-cased",
         "do_lower_case": false,
-        "max_seq_length": 512,
+        "max_seq_length": 384,
         "in": ["context_raw", "question_raw"],
         "out": ["ans_predicted", "ans_start_predicted", "logits"]
       }
@@ -57,15 +57,12 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
+      "TRANSFORMER": "bert-base-cased",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert",
+      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert/{TRANSFORMER}",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
-    {
-	    "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_torch_bert_v0.tar.gz",
-	    "subdir": "{ROOT_PATH}/models"
-    }
     ]
   }
 }
