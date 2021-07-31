@@ -128,10 +128,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_imdb_conv_bert_v0/"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"

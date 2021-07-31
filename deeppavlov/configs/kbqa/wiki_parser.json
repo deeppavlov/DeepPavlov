@@ -1,0 +1,30 @@
+{
+  "chainer": {
+    "in": ["parser_info", "query"],
+    "pipe": [
+      {
+        "class_name": "wiki_parser",
+        "in": ["parser_info", "query"],
+        "out": ["wiki_parser_output"],
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_compr.pickle",
+        "file_format": "pickle",
+        "lang": "@en"
+      }
+    ],
+    "out": ["wiki_parser_output"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_compr.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      }
+    ]
+  }
+}

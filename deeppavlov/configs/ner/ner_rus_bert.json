@@ -98,10 +98,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1",
       "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_rus_bert_v1.tar.gz",

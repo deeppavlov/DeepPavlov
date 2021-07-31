@@ -45,12 +45,13 @@ class DocumentChunker(Component):
 
     def __init__(self, sentencize_fn: Callable = sent_tokenize, keep_sentences: bool = True,
                  tokens_limit: int = 400, flatten_result: bool = False,
-                 paragraphs: bool = False, *args, **kwargs) -> None:
+                 paragraphs: bool = False, number_of_paragraphs: int = -1, *args, **kwargs) -> None:
         self._sentencize_fn = sentencize_fn
         self.keep_sentences = keep_sentences
         self.tokens_limit = tokens_limit
         self.flatten_result = flatten_result
         self.paragraphs = paragraphs
+        self.number_of_paragraphs = number_of_paragraphs
 
     def __call__(self, batch_docs: List[Union[str, List[str]]],
                  batch_docs_ids: Optional[List[Union[str, List[str]]]] = None) -> \
@@ -88,6 +89,8 @@ class DocumentChunker(Component):
                     split_doc = doc.split('\n\n')
                     split_doc = [sd.strip() for sd in split_doc]
                     split_doc = list(filter(lambda x: len(x) > 40, split_doc))
+                    if self.number_of_paragraphs != -1:
+                        split_doc = split_doc[:self.number_of_paragraphs]
                     batch_chunks.append(split_doc)
                     batch_chunks_ids.append([id] * len(split_doc))
                 else:

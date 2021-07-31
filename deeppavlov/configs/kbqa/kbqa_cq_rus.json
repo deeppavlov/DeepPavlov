@@ -159,17 +159,6 @@
       "NER_PATH": "{MODELS_PATH}/ner_ent_and_type_rus",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/udpipe.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/wikihow.txt"
-    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"

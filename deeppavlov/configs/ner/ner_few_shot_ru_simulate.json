@@ -130,11 +130,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz",

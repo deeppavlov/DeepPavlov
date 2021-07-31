@@ -28,10 +28,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/multi_cased_L-12_H-768_A-12_pt"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
-    ],
     "labels": {},
     "download": [
       {

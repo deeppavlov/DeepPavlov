@@ -44,9 +44,6 @@
       "DATA_PATH": "{ROOT_PATH}/downloads/dstc2",
       "SLOT_VALS_PATH": "{DATA_PATH}/dstc_slot_vals.json"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/dstc_slot_vals.tar.gz",

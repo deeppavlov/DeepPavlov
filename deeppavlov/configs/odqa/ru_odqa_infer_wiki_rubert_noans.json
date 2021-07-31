@@ -64,10 +64,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "download": [
     ]
   }

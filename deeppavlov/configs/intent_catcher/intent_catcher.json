@@ -1,0 +1,97 @@
+{
+  "dataset_reader": {
+    "class_name": "intent_catcher_reader",
+    "data_path": "{DOWNLOADS_PATH}/intent_catcher_data"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator",
+    "seed": 42
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": [
+          "y"
+        ],
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
+        "in": "y",
+        "out": "y_ids"
+      },
+      {
+        "in": [
+          "x"
+        ],
+        "in_y": [
+          "y_ids"
+        ],
+        "out": [
+          "y_pred_probas"
+        ],
+        "class_name": "intent_catcher",
+        "embeddings": "use",
+        "limit": 10,
+        "multilabel": false,
+        "number_of_layers": 1,
+        "number_of_intents": 23,
+        "hidden_dim": 256,
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "mode": "train"
+      },
+      {
+        "in": "y_pred_probas",
+        "out": "y_pred_ids",
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": "y_pred_ids",
+        "out": "y_pred_labels",
+        "ref": "classes_vocab"
+      }
+    ],
+    "out": [
+      "y_pred_labels"
+    ]
+  },
+  "train": {
+    "epochs": 25,
+    "batch_size": 100,
+    "metrics": [
+      "accuracy",
+      "f1_macro"
+    ],
+    "validation_patience": 5,
+    "val_every_n_epochs": 5,
+    "log_every_n_epochs": 5,
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "nn_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/intent_catcher"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/intent_catcher/intent_catcher.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers"
+      }
+    ]
+  }
+}

@@ -165,11 +165,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1",
       "WORK_PATH": "{MODELS_PATH}/syntax_ru_syntagrus"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",

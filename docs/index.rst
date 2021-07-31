@@ -42,6 +42,7 @@ Welcome to DeepPavlov's documentation!
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
+   Intent Catcher <features/models/intent_catcher>
 
 
 .. toctree::
@@ -51,7 +52,6 @@ Welcome to DeepPavlov's documentation!
    
    Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
-   Sequence-To-Sequence Dialogue Bot <features/skills/seq2seq_go_bot>
    Frequently Asked Questions Answering <features/skills/faq>
    AIML <features/skills/aiml_skill>
    Rasa <features/skills/rasa_skill>

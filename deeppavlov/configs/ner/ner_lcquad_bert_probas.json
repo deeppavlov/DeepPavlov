@@ -96,10 +96,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
       "NER_PATH": "{MODELS_PATH}/ner_lcquad"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "labels": {
       "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"

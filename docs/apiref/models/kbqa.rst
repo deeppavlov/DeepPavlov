@@ -28,11 +28,6 @@ deeppavlov.models.kbqa
     .. automethod:: __init__
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.kbqa.rel_ranking_mt_bert_infer.RelRankerMTBertInfer
-
-    .. automethod:: __init__
-    .. automethod:: __call__
-
 .. autoclass:: deeppavlov.models.kbqa.template_matcher.TemplateMatcher
 
     .. automethod:: __init__
@@ -44,11 +39,6 @@ deeppavlov.models.kbqa
     .. automethod:: __call__
 
 .. autoclass:: deeppavlov.models.kbqa.tree_to_sparql.TreeToSparql
-
-    .. automethod:: __init__
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.kbqa.tree_to_sparql.UdpipeParser
 
     .. automethod:: __init__
     .. automethod:: __call__

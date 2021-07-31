@@ -19,9 +19,9 @@
     ],
     "pipe": [
       {
-        "class_name": "torch_transformers_preprocessor",
-        "vocab_file": "bert-base-cased",
-        "do_lower_case": false,
+        "class_name": "torch_squad_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{LOWERCASE}",
         "max_seq_length": 384,
         "return_tokens": true,
         "in": [
@@ -35,7 +35,7 @@
       },
       {
         "class_name": "squad_bert_mapping",
-        "do_lower_case": false,
+        "do_lower_case": "{LOWERCASE}",
         "in": [
           "context_raw",
           "bert_features",
@@ -48,7 +48,7 @@
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
-        "do_lower_case": false,
+        "do_lower_case": "{LOWERCASE}",
         "in": [
           "ans_raw",
           "ans_raw_start",
@@ -61,19 +61,19 @@
         ]
       },
       {
-        "class_name": "torch_squad_bert_model",
-        "pretrained_bert": "bert-base-cased",
-        "save_path": "{MODELS_PATH}/model",
-        "load_path": "{MODELS_PATH}/model",
+        "class_name": "torch_transformers_squad",
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-5,
-          "weight_decay": 1e-2,
+          "lr": 2e-05,
+          "weight_decay": 0.01,
           "betas": [
             0.9,
             0.999
           ],
-          "eps": 1e-6
+          "eps": 1e-06
         },
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
@@ -158,20 +158,18 @@
   },
   "metadata": {
     "variables": {
+      "LOWERCASE": true,
+      "TRANSFORMER": "bert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_torch_bert_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
         "subdir": "{ROOT_PATH}/models"
       }
     ]
   }
 }
-
