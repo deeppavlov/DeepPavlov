@@ -9,7 +9,7 @@ Let’s shape the future of Conversational AI together. An internship is for asp
 who are passionate about Conversational AI technology and offer diverse perspectives.
 
 As an intern, you will work on some of the most ambitious technical problems, develop new ML solutions that will impact
-future DeepPavlov products and make lives of DeepPavlov users easier.
+future DeepPavlov products and make the lives of DeepPavlov users easier.
 
 All interns are paired with a mentor and will participate directly in DeepPavlov's groundbreaking work.
 There are no restrictions on publications based on internships. International candidates are welcome to apply.
