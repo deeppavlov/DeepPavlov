@@ -14,7 +14,7 @@
 
 import re
 from logging import getLogger
-from typing import Dict, Any, List, Optional, Union, Tuple
+from typing import Dict, Any, List, Optional, Union, Tuple, Callable
 from pathlib import Path
 
 import torch
@@ -75,6 +75,8 @@ class TripPy(TorchModel):
                  class_aux_feats_inform: bool = True,
                  class_aux_feats_ds: bool = True,
                  database: Component = None,
+                 make_api_call: Callable = None,
+                 fill_current_state_with_db_results: Callable = None,
                  debug: bool = False,
                  **kwargs) -> None:
 
@@ -111,6 +113,15 @@ class TripPy(TorchModel):
 
         self.database = database
         self.clip_norm = clip_norm
+
+        # If the user as provided a make_api_call function
+        # and a fill_current_state_with_db_results function use them
+        if make_api_call:
+            # Override the functions for TripPy
+            TripPy.make_api_call = make_api_call
+            TripPy.fill_current_state_with_db_results = fill_current_state_with_db_results
+
+
         super().__init__(save_path=save_path,  
                         optimizer_parameters=optimizer_parameters,
                         **kwargs)
