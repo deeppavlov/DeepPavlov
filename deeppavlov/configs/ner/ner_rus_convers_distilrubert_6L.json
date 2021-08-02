@@ -1,8 +1,8 @@
-{
+ {
   "dataset_reader": {
     "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/conll2003/",
-    "dataset_name": "conll2003",
+    "data_path": "{DOWNLOADS_PATH}/total_rus/",
+    "dataset_name": "collection_rus",
     "provide_pos": false
   },
   "dataset_iterator": {
@@ -57,14 +57,15 @@
         "class_name": "torch_transformers_sequence_tagger",
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
-        "attention_probs_keep_prob": 0.5,
+        "attention_probs_keep_prob": 0.44,
+        "hidden_keep_prob": 0.89, 
         "return_probas": false,
         "encoder_layer_ids": [
           -1
         ],
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-05,
+          "lr": 2.78e-05,
           "weight_decay": 1e-06,
           "betas": [
             0.9,
@@ -108,7 +109,7 @@
   },
   "train": {
     "epochs": 30,
-    "batch_size": 16,
+    "batch_size": 10,
     "metrics": [
       {
         "name": "ner_f1",
@@ -129,25 +130,24 @@
     "val_every_n_batches": 20,
     "log_every_n_batches": 20,
     "show_examples": false,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 8,
     "evaluation_targets": [
       "valid",
       "test"
     ],
+    "tensorboard_log_dir": "{MODEL_PATH}/",
     "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "bert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert/{TRANSFORMER}"
-    },
+      "MODELS_PATH": "{ROOT_PATH}/models", 
+      "MODEL_PATH": "{MODELS_PATH}/ner_rus_conversational_distilrubert_6L",
+      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational"
+    }, 
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/0.16/ner/ner_conll2003_torch_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_conversational_distilrubert_6L.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

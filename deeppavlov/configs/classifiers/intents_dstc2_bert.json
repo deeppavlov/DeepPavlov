@@ -59,7 +59,7 @@
         "in": "y_pred_probas",
         "out": "y_pred_ids",
         "class_name": "proba2labels",
-        "confident_threshold": 0.5
+        "confidence_threshold": 0.5
       },
       {
         "in": "y_pred_ids",

@@ -49,15 +49,15 @@ def labels2onehot(labels: [List[str], List[List[str]], np.ndarray], classes: [li
     return y
 
 
-def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes: [list, np.ndarray]) -> List[List]:
+def proba2labels(proba: [list, np.ndarray], confidence_threshold: float, classes: [list, np.ndarray]) -> List[List]:
     """
     Convert vectors of probabilities to labels using confident threshold
-    (if probability to belong with the class is bigger than confident_threshold, sample belongs with the class;
+    (if probability to belong with the class is bigger than confidence_threshold, sample belongs with the class;
     if no probabilities bigger than confident threshold, sample belongs with the class with the biggest probability)
 
     Args:
         proba: list of samples where each sample is a vector of probabilities to belong with given classes
-        confident_threshold (float): boundary of probability to belong with a class
+        confidence_threshold (float): boundary of probability to belong with a class
         classes: array of classes' names
 
     Returns:
@@ -65,7 +65,7 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     """
     y = []
     for sample in proba:
-        to_add = np.where(sample > confident_threshold)[0]
+        to_add = np.where(sample > confidence_threshold)[0]
         if len(to_add) > 0:
             y.append(np.array(classes)[to_add].tolist())
         else:
@@ -74,16 +74,16 @@ def proba2labels(proba: [list, np.ndarray], confident_threshold: float, classes:
     return y
 
 
-def proba2onehot(proba: [list, np.ndarray], confident_threshold: float, classes: [list, np.ndarray]) -> np.ndarray:
+def proba2onehot(proba: [list, np.ndarray], confidence_threshold: float, classes: [list, np.ndarray]) -> np.ndarray:
     """
     Convert vectors of probabilities to one-hot representations using confident threshold
 
     Args:
         proba: samples where each sample is a vector of probabilities to belong with given classes
-        confident_threshold: boundary of probability to belong with a class
+        confidence_threshold: boundary of probability to belong with a class
         classes: array of classes' names
 
     Returns:
         2d array with one-hot representation of given samples
     """
-    return labels2onehot(proba2labels(proba, confident_threshold, classes), classes)
+    return labels2onehot(proba2labels(proba, confidence_threshold, classes), classes)

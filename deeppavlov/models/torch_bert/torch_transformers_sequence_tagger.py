@@ -136,6 +136,7 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     full_range = torch.arange(batch_size * max_token_seq_len).to(torch.int64)
     # full_range -> [0, 1, 2, 3, 4, 5, 6, 7, 8]
     nonword_indices_flat = torch.masked_select(full_range, torch.logical_not(x_mask))
+
     # # y_idxs -> [5, 7, 8]
 
     # get a sequence of units corresponding to the start subtokens of the words
@@ -276,8 +277,9 @@ class TorchTransformersSequenceTagger(TorchModel):
         b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
-        loss, logits = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
-                                  labels=b_labels)
+        loss = self.model(input_ids=b_input_ids,
+                          attention_mask=b_input_masks,
+                          labels=b_labels).loss
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -347,7 +349,7 @@ class TorchTransformersSequenceTagger(TorchModel):
             raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
-        
+
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:

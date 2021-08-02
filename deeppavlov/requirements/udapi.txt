@@ -1,0 +1,1 @@
+git+https://github.com/udapi/udapi-python.git@1e4004f577f3c6e471528ce4b87dd570ce8f2706

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import json
 import math
 from logging import getLogger
@@ -21,7 +22,7 @@ from typing import List, Tuple, Optional, Dict
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import BertForQuestionAnswering, BertConfig, BertTokenizer
+from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov import build_model
@@ -35,12 +36,12 @@ logger = getLogger(__name__)
 
 
 def softmax_mask(val, mask):
-    INF = 1e30
-    return -INF * (1 - mask.to(torch.float32)) + val
+    inf = 1e30
+    return -inf * (1 - mask.to(torch.float32)) + val
 
 
-@register('torch_squad_bert_model')
-class TorchBertSQuADModel(TorchModel):
+@register('torch_transformers_squad')
+class TorchTransformersSquad(TorchModel):
     """Bert-based on PyTorch model for SQuAD-like problem setting:
     It predicts start and end position of answer for given question and context.
 
@@ -71,8 +72,7 @@ class TorchBertSQuADModel(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 0.01, "weight_decay": 0.01,
-                                               "betas": (0.9, 0.999), "eps": 1e-6},
+                 optimizer_parameters: Optional[dict] = None,
                  bert_config_file: Optional[str] = None,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
@@ -80,6 +80,12 @@ class TorchBertSQuADModel(TorchModel):
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
                  **kwargs) -> None:
+
+        if not optimizer_parameters:
+            optimizer_parameters = {"lr": 0.01,
+                                    "weight_decay": 0.01,
+                                    "betas": (0.9, 0.999),
+                                    "eps": 1e-6}
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
@@ -109,6 +115,7 @@ class TorchBertSQuADModel(TorchModel):
             dict with loss and learning_rate values
 
         """
+
         input_ids = [f.input_ids for f in features]
         input_masks = [f.attention_mask for f in features]
         input_type_ids = [f.token_type_ids for f in features]
@@ -121,13 +128,21 @@ class TorchBertSQuADModel(TorchModel):
         y_end = [x[0] for x in y_end]
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
+        
+        input_ = {
+            'input_ids': b_input_ids,
+            'attention_mask': b_input_masks,
+            'token_type_ids': b_input_type_ids,
+            'start_positions': b_y_st,
+            'end_positions': b_y_end,
+            'return_dict': True
+        }
 
         self.optimizer.zero_grad()
-
-        outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks,
-                             token_type_ids=b_input_type_ids,
-                             start_positions=b_y_st, end_positions=b_y_end)
-        loss = outputs[0]
+        input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
+        loss = self.model(**input_).loss
+        if self.is_data_parallel:
+            loss = loss.mean()
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -139,6 +154,18 @@ class TorchBertSQuADModel(TorchModel):
             self.lr_scheduler.step()
 
         return {'loss': loss.item()}
+
+    @property
+    def accepted_keys(self) -> Tuple[str]:
+        if self.is_data_parallel:
+            accepted_keys = self.model.module.forward.__code__.co_varnames
+        else:
+            accepted_keys = self.model.forward.__code__.co_varnames
+        return accepted_keys
+
+    @property
+    def is_data_parallel(self) -> bool:
+        return isinstance(self.model, torch.nn.DataParallel)
 
     def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
         """get predictions using features as input
@@ -157,11 +184,21 @@ class TorchBertSQuADModel(TorchModel):
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        
+        input_ = {
+            'input_ids': b_input_ids,
+            'attention_mask': b_input_masks,
+            'token_type_ids': b_input_type_ids,
+            'return_dict': True
+        }
 
         with torch.no_grad():
+            input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
             # Forward pass, calculate logit predictions
-            outputs = self.model(input_ids=b_input_ids, attention_mask=b_input_masks, token_type_ids=b_input_type_ids)
-            logits_st, logits_end = outputs[:2]
+            outputs = self.model(**input_)
+
+            logits_st = outputs.start_logits
+            logits_end = outputs.end_logits
 
             bs = b_input_ids.size()[0]
             seq_len = b_input_ids.size()[-1]
@@ -205,19 +242,27 @@ class TorchBertSQuADModel(TorchModel):
         if fname is not None:
             self.load_path = fname
 
-        if self.pretrained_bert and not Path(self.pretrained_bert).is_file():
-            self.model = BertForQuestionAnswering.from_pretrained(
-                self.pretrained_bert, output_attentions=False, output_hidden_states=False)
+        if self.pretrained_bert:
+            logger.info(f"From pretrained {self.pretrained_bert}.")
+            config = AutoConfig.from_pretrained(self.pretrained_bert,
+                                                output_attentions=False,
+                                                output_hidden_states=False)
+
+            self.model = AutoModelForQuestionAnswering.from_pretrained(self.pretrained_bert, config=config)
+
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = BertConfig.from_json_file(str(expand_path(self.bert_config_file)))
+            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
 
             if self.attention_probs_keep_prob is not None:
                 self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = BertForQuestionAnswering(config=self.bert_config)
+            self.model = AutoModelForQuestionAnswering(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
+
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
 
         self.model.to(self.device)
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
@@ -240,15 +285,27 @@ class TorchBertSQuADModel(TorchModel):
                 # now load the weights, optimizer from saved
                 logger.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                model_state = checkpoint["model_state_dict"]
+                optimizer_state = checkpoint["optimizer_state_dict"]
+
+                # load a multi-gpu model on a single device
+                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
+                    tmp_model_state = {}
+                    for key, value in model_state.items():
+                        tmp_model_state[re.sub("module.", "", key)] = value
+                    model_state = tmp_model_state
+
+                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
+                                         if key.endswith("embeddings.position_ids")])
+                self.model.load_state_dict(model_state, strict=strict_load_flag)
+                self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
 
 
-@register('torch_squad_bert_infer')
-class TorchBertSQuADInferModel(Component):
+@register('torch_transformers_squad_infer')
+class TorchTransformersSquadInfer(Component):
     """This model wraps BertSQuADModel to make predictions on longer than 512 tokens sequences.
 
     It splits context on chunks with `max_seq_length - 3 - len(question)` length, preserving sentences boundaries.
@@ -287,10 +344,10 @@ class TorchBertSQuADInferModel(Component):
 
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
         self.batch_size = batch_size
 
