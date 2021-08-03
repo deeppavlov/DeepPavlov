@@ -23,7 +23,7 @@
     "seed": 42
   },
   "chainer": {
-    "in": ["query", "passage"],
+    "in": ["idx", "query", "passage"],
     "in_y": ["y"],
     "pipe": [
       {
