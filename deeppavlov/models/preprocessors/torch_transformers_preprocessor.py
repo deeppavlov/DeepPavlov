@@ -512,7 +512,7 @@ class RecordExampleAccumulator:
         self.record_counter: Dict[str, int] = defaultdict(lambda: 0)
         self.nested_len: Dict[str, int] = dict()
         self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
-        self.nested_examples: Dict[RecordNestedExample] = dict()
+        self.nested_examples: Dict[str, RecordNestedExample] = dict()
         self.collected_indices: Set[int] = set()
         self.returned_indices: Set[int] = set()
 
