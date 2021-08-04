@@ -181,12 +181,11 @@ def preprocess_record(examples: Dataset) -> Dict[str,
         """
         return re.sub(r"\n@highlight\n", ". ", context)
 
-    # TODO remove slicing
-    queries: List[str] = examples["query"][:100]
-    passages: List[str] = [remove_highlight(passage) for passage in examples["passage"]][:100]
-    answers: List[List[str]] = examples["answers"][:100]
-    entities: List[List[str]] = examples["entities"][:100]
-    indices: List[Dict[str, int]] = examples["idx"][:100]
+    queries: List[str] = examples["query"]
+    passages: List[str] = [remove_highlight(passage) for passage in examples["passage"]]
+    answers: List[List[str]] = examples["answers"]
+    entities: List[List[str]] = examples["entities"]
+    indices: List[Dict[str, int]] = examples["idx"]
 
     merged_indices: List[str] = []
     filled_queries: List[str] = []
