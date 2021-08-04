@@ -477,7 +477,7 @@ class TorchRecordPostprocessor:
 
     def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
         if (self.record_example_accumulator.examples_processed >= num_examples[0]
-                or self.prev_num_examples != num_examples):
+                or self.prev_num_examples != num_examples[0]):
             self.prev_num_examples = num_examples
             self.reset_accumulator()
         probas = y_pred_probas[:, 1]
