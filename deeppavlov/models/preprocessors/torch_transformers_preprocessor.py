@@ -204,8 +204,8 @@ class TorchSquadTransformersPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False, 
-                 add_token_type_ids: bool = False, 
+                 return_tokens: bool = False,
+                 add_token_type_ids: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
@@ -237,15 +237,15 @@ class TorchSquadTransformersPreprocessor(Component):
             texts_b = [None] * len(texts_a)
 
         input_features = []
-        tokens = [] 
+        tokens = []
         for text_a, text_b in zip(texts_a, texts_b):
             encoded_dict = self.tokenizer.encode_plus(
-                text=text_a, text_pair=text_b, 
-                add_special_tokens=True, 
+                text=text_a, text_pair=text_b,
+                add_special_tokens=True,
                 max_length=self.max_seq_length,
                 truncation=True,
                 padding='max_length',
-                return_attention_mask=True, 
+                return_attention_mask=True,
                 return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
@@ -255,7 +255,7 @@ class TorchSquadTransformersPreprocessor(Component):
                     sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
                     len_a = min(sep + 1, seq_len)
                     len_b = seq_len - len_a
-                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int), 
+                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int),
                                                                 torch.ones(1, len_b, dtype=int)), dim=1)
                 else:
                     encoded_dict['token_type_ids'] = torch.tensor([0])
@@ -472,14 +472,22 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
 class TorchRecordPostprocessor:
 
     def __init__(self, *args, **kwargs):
-        self.record_example_accumulator = RecordExampleAccumulator()
+        self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
+        self.prev_num_examples: Union[int, None] = None
 
-    def __call__(self, idx, y, y_pred_probas, entities, *args, **kwargs):
-        probas = y_pred_probas[:, 0]
+    def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
+        if (self.record_example_accumulator.examples_processed >= num_examples[0]
+                or self.prev_num_examples != num_examples):
+            self.prev_num_examples = num_examples
+            self.reset_accumulator()
+        probas = y_pred_probas[:, 1]
         for index, label, probability, entity in zip(idx, y, probas, entities):
             self.record_example_accumulator.add_flat_example(index, label, probability, entity)
             self.record_example_accumulator.collect_nested_example(index)
         return self.record_example_accumulator.return_examples()
+
+    def reset_accumulator(self):
+        self.record_example_accumulator = RecordExampleAccumulator()
 
 
 @dataclass
@@ -500,6 +508,7 @@ class RecordNestedExample:
 class RecordExampleAccumulator:
 
     def __init__(self):
+        self.examples_processed: int = 0
         self.record_counter: Dict[str, int] = defaultdict(lambda: 0)
         self.nested_len: Dict[str, int] = dict()
         self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
@@ -512,6 +521,7 @@ class RecordExampleAccumulator:
         if index not in self.nested_len:
             self.nested_len[index] = self.get_expected_len(index)
         self.record_counter[index] += 1
+        self.examples_processed += 1
 
     def ready_to_nest(self, index) -> bool:
         return self.record_counter[index] == self.nested_len[index]
@@ -548,5 +558,3 @@ class RecordExampleAccumulator:
     @staticmethod
     def get_expected_len(index: str) -> int:
         return int(index.split("-")[-1])
-
-

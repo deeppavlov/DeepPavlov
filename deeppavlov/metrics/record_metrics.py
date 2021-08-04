@@ -11,16 +11,28 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 @register_metric("record_f1_score")
 def record_f1_score(record_examples: List[RecordNestedExample]):
-    print(record_examples)
     if not record_examples:
         return 0.
     f1_scores = []
     for example in record_examples:
         example_f1s = []
         for answer in example.answers:
-            example_f1s.append(string_f1_score(example.prediction, answer))
+            example_f1s.append(exact_match_score(example.prediction, answer))
         f1_scores.append(max(example_f1s))
     return np.mean(f1_scores)
+
+
+@register_metric("record_em_score")
+def record_em_score(record_examples: List[RecordNestedExample]):
+    if not record_examples:
+        return 0.
+    em_scores = []
+    for example in record_examples:
+        example_ems = []
+        for answer in example.answers:
+            example_ems.append(string_f1_score(example.prediction, answer))
+        em_scores.append(max(example_ems))
+    return np.mean(em_scores)
 
 
 def normalize_answer(s):

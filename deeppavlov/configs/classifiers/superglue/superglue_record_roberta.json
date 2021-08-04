@@ -18,13 +18,13 @@
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
-    "features": ["idx", "query", "passage", "entities"],
+    "features": ["idx", "query", "passage", "entities", "num_examples"],
     "label": "label",
     "seed": 42,
     "use_label_name": false
   },
   "chainer": {
-    "in": ["idx", "query", "passage", "entities"],
+    "in": ["idx", "query", "passage", "entities", "num_examples"],
     "in_y": ["y"],
     "pipe": [
       {
@@ -55,7 +55,7 @@
       },
       {
         "class_name": "torch_record_postprocessor",
-        "in": ["idx", "y", "y_pred_probas", "entities"],
+        "in": ["idx", "y", "y_pred_probas", "entities", "num_examples"],
         "out": ["record_examples"]
       }
     ],
@@ -64,13 +64,20 @@
   "train": {
     "batch_size": 4,
     "metrics": [
-      {"name": "record_f1_score",
-       "inputs": ["record_examples"]}
+      {
+        "name": "record_f1_score",
+        "inputs": ["record_examples"]
+      },
+      {
+        "name": "record_em_score",
+        "inputs": ["record_examples"]
+      }
     ],
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "class_name": "torch_trainer",
+    "evaluation_targets": ["valid"],
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2
   }

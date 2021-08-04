@@ -71,14 +71,16 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = [
                 binary_downsample(
                     add_label_names(
-                        dataset_split.map(preprocess_record, batched=True, remove_columns=["answers"]),
+                        dataset_split.map(preprocess_record,
+                                          batched=True,
+                                          remove_columns=["answers"]),
                         label_column=label_column,
                         label_names=["False", "True"]
                     ),
                     ratio=1.,
                     seed=42,
                     label_column=label_column
-                ) for dataset_split in dataset
+                ).map(add_num_examples, batched=True, batch_size=None) for dataset_split in dataset
             ]
         return dict(zip(split_mapping.keys(), dataset))
 
@@ -180,11 +182,11 @@ def preprocess_record(examples: Dataset) -> Dict[str,
         return re.sub(r"\n@highlight\n", ". ", context)
 
     # TODO remove slicing
-    queries: List[str] = examples["query"][:1000]
-    passages: List[str] = [remove_highlight(passage) for passage in examples["passage"]][:10]
-    answers: List[List[str]] = examples["answers"][:1000]
-    entities: List[List[str]] = examples["entities"][:1000]
-    indices: List[Dict[str, int]] = examples["idx"][:1000]
+    queries: List[str] = examples["query"][:100]
+    passages: List[str] = [remove_highlight(passage) for passage in examples["passage"]][:100]
+    answers: List[List[str]] = examples["answers"][:100]
+    entities: List[List[str]] = examples["entities"][:100]
+    indices: List[Dict[str, int]] = examples["idx"][:100]
 
     merged_indices: List[str] = []
     filled_queries: List[str] = []
@@ -265,3 +267,8 @@ def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label
     # the same logic is not applicable to cases with > 2 classes
     else:
         raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
+
+
+def add_num_examples(dataset: Dataset):
+    num_examples = len(dataset[next(iter(dataset))])
+    return {"num_examples": [num_examples] * num_examples}
