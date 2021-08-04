@@ -31,7 +31,7 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 320,
+        "max_seq_length": 300,
         "in": ["query", "passage"],
         "out": ["bert_features"]
       },
@@ -62,7 +62,7 @@
     "out": ["y_pred_probas"]
   },
   "train": {
-    "batch_size": 4,
+    "batch_size": 32,
     "metrics": [
       {
         "name": "record_f1_score",
