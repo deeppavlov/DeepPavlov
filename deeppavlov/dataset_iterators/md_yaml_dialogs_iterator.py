@@ -38,7 +38,6 @@ class RASADict(dict):
 @register('md_yaml_dialogs_iterator')
 class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
     """
-
     """
 
     def __init__(self,
@@ -166,17 +165,12 @@ class TurnIterator:
 
     def _clarify_slots_values(self, slots_dstc2formatted):
         slots_key = []
-        #print("self.intents.slot_name2text2value", self.intents.slot_name2text2value)
         for slot_name, slot_value in slots_dstc2formatted:
-            #print("PRSN, SAV", (slot_name, slot_value))
-            #slot_actual_value = self.intents.slot_name2text2value.get(slot_name,
-            #                                                          {}).get(
-            #    slot_value, slot_value)
-            slot_actual_value = slot_value
-            print("SN, SAV", (slot_name, slot_actual_value))
+            slot_actual_value = self.intents.slot_name2text2value.get(slot_name,
+                                                                      {}).get(
+                slot_value, slot_value)
             slots_key.append((slot_name, slot_actual_value))
         slots_key = tuple(sorted(slots_key))
-        print("SK", slots_key)
         return slots_key
 
     def parse_user_intent(self):
@@ -213,15 +207,6 @@ class TurnIterator:
         possible_keys = sorted(possible_keys,
                                key=lambda action_s: action_s.count('+'))
         for possible_action_key in possible_keys:
-            print("POS KEYS", possible_keys)
-            print("INFO:", self.intents.intent2slots2text)
-            print("SAV", slots_actual_values)
-            print("this.intents.intent2slots2text keys",self.intents.intent2slots2text.keys())
-
-            if possible_action_key not in self.intents.intent2slots2text:
-                print("NOTFOUND:", possible_action_key)
-                continue
-
             if self.intents.intent2slots2text[possible_action_key].get(
                     slots_actual_values):
                 slots_used_values = slots_actual_values
@@ -248,7 +233,7 @@ class TurnIterator:
                                         e[0] not in slots_lazy_key]
                     return slots_to_exclude, slots_used_values, possible_action_key
 
-        #raise KeyError("no possible NLU candidates found")
+        raise KeyError("no possible NLU candidates found")
 
     def user_action2text(self, user_action: str, slots_li=None):
         """
