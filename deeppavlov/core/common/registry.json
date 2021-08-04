@@ -183,6 +183,7 @@
   "torch_transformers_squad_infer": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquadInfer",
   "torch_transformers_squad": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad",
   "torch_text_classification_model": "deeppavlov.models.classifiers.torch_classification_model:TorchTextClassificationModel",
+  "torch_record_postprocessor": "deeppavlov.models.torch_transformers_preprocessor:TorchRecordPostprocessor",
   "torch_trainer": "deeppavlov.core.trainers.torch_trainer:TorchTrainer",
   "torch_transformers_classifier": "deeppavlov.models.torch_bert.torch_transformers_classifier:TorchTransformersClassifierModel",
   "torch_transformers_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersPreprocessor",

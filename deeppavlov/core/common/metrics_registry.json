@@ -38,5 +38,6 @@
   "squad_v1_em": "deeppavlov.metrics.squad_metrics:squad_v1_exact_match",
   "squad_v1_f1": "deeppavlov.metrics.squad_metrics:squad_v1_f1",
   "squad_v2_em": "deeppavlov.metrics.squad_metrics:squad_v2_exact_match",
-  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1"
+  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1",
+  "record_f1_score": "deeppavlov.metrics.record_metrics:record_f1_score"
 }

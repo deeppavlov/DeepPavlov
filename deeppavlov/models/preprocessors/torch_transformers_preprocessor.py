@@ -14,11 +14,14 @@
 
 import re
 import random
+from collections import defaultdict
+from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union, Dict
+from typing import Tuple, List, Optional, Union, Dict, Set
 
+import numpy as np
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
@@ -463,3 +466,87 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
             input_features.append(sub_list_features)
 
         return input_features
+
+
+@register("torch_record_postprocessor")
+class TorchRecordPostprocessor:
+
+    def __init__(self, *args, **kwargs):
+        self.record_example_accumulator = RecordExampleAccumulator()
+
+    def __call__(self, idx, y, y_pred_probas, entities, *args, **kwargs):
+        probas = y_pred_probas[:, 0]
+        for index, label, probability, entity in zip(idx, y, probas, entities):
+            self.record_example_accumulator.add_flat_example(index, label, probability, entity)
+            self.record_example_accumulator.collect_nested_example(index)
+        return self.record_example_accumulator.return_examples()
+
+
+@dataclass
+class RecordFlatExample:
+    index: str
+    label: int
+    probability: float
+    entity: str
+
+
+@dataclass
+class RecordNestedExample:
+    index: str
+    prediction: str
+    answers: List[str]
+
+
+class RecordExampleAccumulator:
+
+    def __init__(self):
+        self.record_counter: Dict[str, int] = defaultdict(lambda: 0)
+        self.nested_len: Dict[str, int] = dict()
+        self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
+        self.nested_examples: Dict[RecordNestedExample] = dict()
+        self.collected_indices: Set[int] = set()
+        self.returned_indices: Set[int] = set()
+
+    def add_flat_example(self, index, label, probability, entity):
+        self.flat_examples[index].append(RecordFlatExample(index, label, probability, entity))
+        if index not in self.nested_len:
+            self.nested_len[index] = self.get_expected_len(index)
+        self.record_counter[index] += 1
+
+    def ready_to_nest(self, index) -> bool:
+        return self.record_counter[index] == self.nested_len[index]
+
+    def collect_nested_example(self, index):
+        if self.ready_to_nest(index):
+            example_list: List[RecordFlatExample] = self.flat_examples[index]
+            entities: List[str] = []
+            labels: List[int] = []
+            probabilities: List[float] = []
+            answers: List[str] = []
+
+            for example in example_list:
+                entities.append(example.entity)
+                labels.append(example.label)
+                probabilities.append(example.probability)
+                if example.label == 1:
+                    answers.append(example.entity)
+
+            prediction_index = np.argmax(probabilities)
+            prediction = entities[prediction_index]
+
+            self.nested_examples[index] = RecordNestedExample(index, prediction, answers)
+            self.collected_indices.add(index)
+
+    def return_examples(self) -> List[RecordNestedExample]:
+        indices_to_return: Set[int] = self.collected_indices.difference(self.returned_indices)
+        examples_to_return: List[RecordNestedExample] = []
+        for index in indices_to_return:
+            examples_to_return.append(self.nested_examples[index])
+        self.returned_indices.update(indices_to_return)
+        return examples_to_return
+
+    @staticmethod
+    def get_expected_len(index: str) -> int:
+        return int(index.split("-")[-1])
+
+
