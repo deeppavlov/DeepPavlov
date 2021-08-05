@@ -17,7 +17,7 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union
+from typing import Tuple, List, Optional, Union, Dict
 
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
