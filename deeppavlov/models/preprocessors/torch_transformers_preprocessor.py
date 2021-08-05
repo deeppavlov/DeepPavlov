@@ -473,12 +473,9 @@ class TorchRecordPostprocessor:
 
     def __init__(self, *args, **kwargs):
         self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
-        self.prev_num_examples: Union[int, None] = None
 
     def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
-        if (self.record_example_accumulator.examples_processed >= num_examples[0]
-                or self.prev_num_examples != num_examples[0]):
-            self.prev_num_examples = num_examples
+        if self.record_example_accumulator.examples_processed >= num_examples[0]:
             self.reset_accumulator()
         probas = y_pred_probas[:, 1]
         for index, label, probability, entity in zip(idx, y, probas, entities):

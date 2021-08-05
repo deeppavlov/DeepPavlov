@@ -1,7 +1,7 @@
 {
   "metadata": {
     "variables": {
-      "BASE_MODEL": "roberta-base",
+      "BASE_MODEL": "roberta-large",
       "TASK": "record",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
@@ -62,7 +62,7 @@
     "out": ["y_pred_probas"]
   },
   "train": {
-    "batch_size": 32,
+    "batch_size": 24,
     "metrics": [
       {
         "name": "record_f1_score",
