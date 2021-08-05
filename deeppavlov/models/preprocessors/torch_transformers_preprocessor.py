@@ -19,7 +19,7 @@ from pathlib import Path
 import torch
 from typing import Tuple, List, Optional, Union, Dict
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
