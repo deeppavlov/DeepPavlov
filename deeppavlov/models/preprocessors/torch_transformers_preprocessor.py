@@ -473,14 +473,15 @@ class TorchRecordPostprocessor:
 
     def __init__(self, *args, **kwargs):
         self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
+        self.total_examples: Optional[int, None] = None
 
     def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
-        if self.record_example_accumulator.examples_processed >= num_examples[0]:
-            self.reset_accumulator()
-        probas = y_pred_probas[:, 1]
-        for index, label, probability, entity in zip(idx, y, probas, entities):
+        self.total_examples = num_examples[0]
+        for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
             self.record_example_accumulator.add_flat_example(index, label, probability, entity)
             self.record_example_accumulator.collect_nested_example(index)
+            if self.record_example_accumulator.examples_processed >= self.total_examples:
+                self.reset_accumulator()
         return self.record_example_accumulator.return_examples()
 
     def reset_accumulator(self):
