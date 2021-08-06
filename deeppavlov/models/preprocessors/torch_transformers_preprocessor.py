@@ -476,11 +476,16 @@ class TorchRecordPostprocessor:
         self.total_examples: Optional[int, None] = None
 
     def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
-        self.total_examples = num_examples[0]
+        if self.total_examples != num_examples[0]:
+            # start over if num_examples is different
+            # implying that a different split is being evaluated
+            self.reset_accumulator()
+            self.total_examples = num_examples[0]
         for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
             self.record_example_accumulator.add_flat_example(index, label, probability, entity)
             self.record_example_accumulator.collect_nested_example(index)
             if self.record_example_accumulator.examples_processed >= self.total_examples:
+                # start over if all examples were processed
                 self.reset_accumulator()
         return self.record_example_accumulator.return_examples()
 

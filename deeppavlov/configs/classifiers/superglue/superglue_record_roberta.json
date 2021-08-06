@@ -72,26 +72,34 @@
   },
   "train": {
     "batch_size": 24,
-    "metrics": [
+    "train_metrics": [
       {
         "name": "accuracy",
         "inputs": ["y", "y_pred_ids"]
+      }
+    ],
+    "metrics": [
+      {
+        "name": "record_em_score",
+        "inputs": ["record_examples"]
       },
       {
         "name": "record_f1_score",
         "inputs": ["record_examples"]
       },
       {
-        "name": "record_em_score",
-        "inputs": ["record_examples"]
+        "name": "accuracy",
+        "inputs": ["y", "y_pred_ids"]
       }
     ],
+    "validation_patience": 10,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "class_name": "torch_trainer",
     "evaluation_targets": ["valid"],
     "tensorboard_log_dir": "{MODEL_PATH}/",
-    "pytest_max_batches": 2
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 2
   }
 }
