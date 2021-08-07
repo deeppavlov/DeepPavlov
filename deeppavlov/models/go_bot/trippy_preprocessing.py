@@ -245,10 +245,10 @@ def get_tok_label(prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok,
                 assert sum(usr_utt_tok_label + sys_utt_tok_label) == 0
                 if (slot_type not in prev_ds_dict or value != prev_ds_dict[slot_type]):
                     # Added clarifications
-                    print("Value: {} for slot type {} does not exist in utterance: {}".format(value, slot_type, usr_utt_tok))
-                    print("Other Information: ", prev_ds_dict, usr_slot_label, sys_utt_tok)
-                    print("Most likely have to add the incorrect utterance token to be replaced with the value see normalizations in the code.")
-                    print("This error is likely because of a mismatch in the slot value & the actual text!\n \
+                    logger.info("Value: {} for slot type {} does not exist in utterance: {}".format(value, slot_type, usr_utt_tok))
+                    logger.info("Other Information: ", prev_ds_dict, usr_slot_label, sys_utt_tok)
+                    logger.info("Most likely have to add the incorrect utterance token to be replaced with the value see normalizations in the code.")
+                    logger.info("This error is likely because of a mismatch in the slot value & the actual text!\n \
                           E.g. the slot value is pricerange: moderate but the text contains only moderately\n \
                           Possibly add a replacement to the normalization.")
                     raise ValueError('Copy value cannot found in Dial %s Turn %s' % (str(dial_id), str(turn_id)))
