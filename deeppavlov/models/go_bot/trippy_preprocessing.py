@@ -199,7 +199,9 @@ def get_tok_label(prev_ds_dict, cur_ds_dict, slot_type, sys_utt_tok,
                   sys_slot_label, usr_utt_tok, usr_slot_label, dial_id,
                   turn_id, slot_last_occurrence=True):
     """
-    Creates labels of 11111111 for where an slot value is uttered by user/system
+    Creates labels of 11111111 for where a slot value is uttered by user/system.
+    E.g. "I want French food" - if French is the slot value, the resulting 
+    representation would be 0010. The BERT model is then tasked to perform binary prediction for each token.
 
     Adapted from TripPy get_tok_label.
     The position of the last occurrence of the slot value will be used.
