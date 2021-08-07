@@ -107,11 +107,11 @@ def interleave_splits(splits: List[str], percentage: int = 50) -> List[str]:
 
 
 def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
-    """COPA preprocessing to be applied by the map function
+    """COPA preprocessing to be applied by the map function.
     Args:
         examples: an instance of Dataset class
     Returns:
-        Dict[str, List[List[str]]] with processed features represented as nested
+        Dict[str, List[List[str]]]: processed features represented as nested
         list with number of elements corresponding to the number of choices
         (2 in this case)
     """
@@ -135,19 +135,21 @@ def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
 
 
 def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
-    """BoolQ preprocessing to be applied by the map function
+    """BoolQ preprocessing to be applied by the map function. The preprocessing boils down
+    to removing redundant titles from the passages.
     Args:
         examples: an instance of Dataset class
     Returns:
-        ...
+        Dict[str, List[str]]: processed features (just the passage in this case)
     """
 
     def remove_passage_title(passage: str) -> str:
-        """Removes the title of a given passage
+        """Removes the title of a given passage. The motivation is that the title duplicates
+        the beginning of the text body, which means that it's redundant. We remove to save space.
         Args:
-            ...
+            passage: a single `passage` string
         Returns:
-            ...
+            str: the same `passage` string with the title removed
         """
         return re.sub(r"^.+-- ", "", passage)
 
@@ -159,11 +161,11 @@ def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
 def preprocess_record(examples: Dataset) -> Dict[str,
                                                  Union[List[str],
                                                        List[int]]]:
-    """ReCoRD preprocessing
+    """ReCoRD preprocessing to be applied by the map function.
     Args:
-        ...
+        examples: an instance of Dataset class
     Returns:
-        ...
+        Dict[str, Union[List[str], List[int]]]:
     """
 
     def fill_placeholder(sentence: str, candidate: str) -> str:
