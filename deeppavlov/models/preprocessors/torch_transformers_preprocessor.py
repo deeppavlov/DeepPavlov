@@ -499,6 +499,9 @@ class TorchRecordPostprocessor:
 
 @dataclass
 class RecordFlatExample:
+    """Dataclass to store a flattened ReCoRD example. Contains `probability` for
+    a given `entity` candidate, as well as its label.
+    """
     index: str
     label: int
     probability: float
@@ -507,12 +510,26 @@ class RecordFlatExample:
 
 @dataclass
 class RecordNestedExample:
+    """Dataclass to store a nested ReCoRD example. Contains a single predicted entity, as well as
+    a list of correct answers.
+    """
     index: str
     prediction: str
     answers: List[str]
 
 
 class RecordExampleAccumulator:
+    """ReCoRD example accumulator
+
+    Attributes:
+        examples_processed:
+        record_counter:
+        nested_len:
+        flat_examples:
+        nested_examples:
+        collected_indices:
+        returned_indices:
+    """
 
     def __init__(self):
         self.examples_processed: int = 0
@@ -520,20 +537,31 @@ class RecordExampleAccumulator:
         self.nested_len: Dict[str, int] = dict()
         self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
         self.nested_examples: Dict[str, RecordNestedExample] = dict()
-        self.collected_indices: Set[int] = set()
-        self.returned_indices: Set[int] = set()
+        self.collected_indices: Set[str] = set()
+        self.returned_indices: Set[str] = set()
 
-    def add_flat_example(self, index, label, probability, entity):
+    def add_flat_example(self, index: str, label: int, probability: float, entity: str):
         self.flat_examples[index].append(RecordFlatExample(index, label, probability, entity))
         if index not in self.nested_len:
             self.nested_len[index] = self.get_expected_len(index)
         self.record_counter[index] += 1
         self.examples_processed += 1
 
-    def ready_to_nest(self, index) -> bool:
+    def ready_to_nest(self, index: str) -> bool:
+        """Checks whether all the flat examples for a given index were collected at this point.
+        Args:
+            index: the index of the candidate nested example
+        Returns:
+            bool: indicates whether the collected flat examples can be combined into a nested example
+        """
         return self.record_counter[index] == self.nested_len[index]
 
-    def collect_nested_example(self, index):
+    def collect_nested_example(self, index: str):
+        """Combines a list of flat examples denoted by the given index into a single nested example
+        provided that all the necessary flat example have been collected by this time.
+        Args:
+            index: the index of the candidate nested example
+        """
         if self.ready_to_nest(index):
             example_list: List[RecordFlatExample] = self.flat_examples[index]
             entities: List[str] = []
@@ -555,7 +583,13 @@ class RecordExampleAccumulator:
             self.collected_indices.add(index)
 
     def return_examples(self) -> List[RecordNestedExample]:
-        indices_to_return: Set[int] = self.collected_indices.difference(self.returned_indices)
+        """Determines which nested example were not yet returned during the current evaluation
+        cycle and returns them. May return an empty list if there are no new nested examples
+        to return yet.
+        Returns:
+            List[RecordNestedExample]: zero or more nested examples
+        """
+        indices_to_return: Set[str] = self.collected_indices.difference(self.returned_indices)
         examples_to_return: List[RecordNestedExample] = []
         for index in indices_to_return:
             examples_to_return.append(self.nested_examples[index])
@@ -564,4 +598,11 @@ class RecordExampleAccumulator:
 
     @staticmethod
     def get_expected_len(index: str) -> int:
+        """
+        Calculates the total number of flat examples denoted by the give index
+        Args:
+            index: the index to calculate the number of examples for
+        Returns:
+            int: the expected number of examples for this index
+        """
         return int(index.split("-")[-1])

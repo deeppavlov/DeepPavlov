@@ -54,6 +54,7 @@ class HuggingFaceDatasetReader(DatasetReader):
         if 'split' in kwargs:
             raise RuntimeError('Split argument was used. Use train, valid, test arguments instead of split.')
 
+        # pop elements not relevant to BuilderConfig
         downsample_ratio = kwargs.pop("downsample_ratio", 1.)
         seed = kwargs.pop("seed", 42)
         percentage = kwargs.get("dev_percentage", 50)
