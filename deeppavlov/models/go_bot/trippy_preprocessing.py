@@ -907,6 +907,7 @@ def prepare_trippy_data(batch_dialogues_utterances_contexts_info: List[List[dict
         features: ???
 
     """
+    # TripPy always expects a slot list, so even if there are not slots we create a dummy - This will not affect predictions.
     if not slot_list:
         slot_list = ["dummy"]
 
