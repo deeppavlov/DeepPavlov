@@ -624,6 +624,7 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
         # length is less than the specified length.
         # Account for [CLS], [SEP], [SEP], [SEP] with "- 4" (BERT)
         # Account for <s>, </s></s>, </s></s>, </s> with "- 6" (RoBERTa)
+        # Note that RoBERTa is not actually compatible with this DP version, but can be easily added. Follow the original TripPy code to add if necessary.
         if len(tokens_a) + len(tokens_b) + len(history) > max_seq_length - model_specs['TOKEN_CORRECTION']:
             if debug:
                 logger.info("Truncate Example %s. Total len=%d." % (guid, len(tokens_a) + len(tokens_b) + len(history)))
