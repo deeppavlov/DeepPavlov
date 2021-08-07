@@ -53,6 +53,11 @@ class HuggingFaceDatasetReader(DatasetReader):
         """
         if 'split' in kwargs:
             raise RuntimeError('Split argument was used. Use train, valid, test arguments instead of split.')
+
+        downsample_ratio = kwargs.pop("downsample_ratio", 1.)
+        seed = kwargs.pop("seed", 42)
+        percentage = kwargs.get("dev_percentage", 50)
+
         split_mapping = {'train': train, 'valid': valid, 'test': test}
         # filter unused splits
         split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
@@ -60,7 +65,6 @@ class HuggingFaceDatasetReader(DatasetReader):
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "boolq":
-            percentage = kwargs.get("dev_percentage", 50)
             dataset = load_dataset(path=path,
                                    name=name,
                                    split=interleave_splits(splits=list(split_mapping.values()),
@@ -69,8 +73,6 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "record":
             label_column = "label"
-            downsample_ratio = kwargs.get("downsample_ratio", 1.)
-            seed = kwargs.get("seed", 42)
             dataset = [
                 binary_downsample(
                     add_label_names(
