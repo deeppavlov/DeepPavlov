@@ -60,14 +60,17 @@ class HuggingFaceDatasetReader(DatasetReader):
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "boolq":
+            percentage = kwargs.get("dev_percentage", 50)
             dataset = load_dataset(path=path,
                                    name=name,
                                    split=interleave_splits(splits=list(split_mapping.values()),
-                                                           percentage=50),
+                                                           percentage=percentage),
                                    **kwargs)
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         elif path == "super_glue" and name == "record":
             label_column = "label"
+            downsample_ratio = kwargs.get("downsample_ratio", 1.)
+            seed = kwargs.get("seed", 42)
             dataset = [
                 binary_downsample(
                     add_label_names(
@@ -77,8 +80,8 @@ class HuggingFaceDatasetReader(DatasetReader):
                         label_column=label_column,
                         label_names=["False", "True"]
                     ),
-                    ratio=1.,
-                    seed=42,
+                    ratio=downsample_ratio,
+                    seed=seed,
                     label_column=label_column
                 ).map(add_num_examples, batched=True, batch_size=None) for dataset_split in dataset
             ]

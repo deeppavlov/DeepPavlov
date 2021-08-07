@@ -1,13 +1,14 @@
 {
   "metadata": {
     "variables": {
-      "BASE_MODEL": "roberta-large",
+      "BASE_MODEL": "roberta-base",
       "TASK": "record",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_{TASK}_{BASE_MODEL}",
-      "BINARY_CLASSIFICATION": true
+      "BINARY_CLASSIFICATION": false,
+      "SEED": 42
     }
   },
   "dataset_reader": {
@@ -15,13 +16,15 @@
     "path": "super_glue",
     "name": "{TASK}",
     "train": "train",
-    "valid": "validation"
+    "valid": "validation",
+    "seed": "{SEED}",
+    "downsample_ratio": 1.0
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
     "features": ["idx", "query", "passage", "entities", "num_examples"],
     "label": "label",
-    "seed": 42,
+    "seed": "{SEED}",
     "use_label_name": false
   },
   "chainer": {
@@ -56,14 +59,15 @@
         "out": ["y_pred_probas"]
       },
       {
+        "class_name": "proba2labels",
         "in": ["y_pred_probas"],
         "out": ["y_pred_ids"],
-        "class_name": "proba2labels",
         "is_binary": "{BINARY_CLASSIFICATION}",
-        "confidence_threshold": 0.5
+        "max_proba": true
       },
       {
         "class_name": "torch_record_postprocessor",
+        "is_binary": "{BINARY_CLASSIFICATION}",
         "in": ["idx", "y", "y_pred_probas", "entities", "num_examples"],
         "out": ["record_examples"]
       }

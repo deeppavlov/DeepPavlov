@@ -471,11 +471,15 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
 @register("torch_record_postprocessor")
 class TorchRecordPostprocessor:
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, is_binary: bool = False, *args, **kwargs):
         self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
         self.total_examples: Optional[int, None] = None
+        self.is_binary: bool = is_binary
 
     def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
+        if not self.is_binary:
+            # if we have outputs for both classes `0` and `1`
+            y_pred_probas = y_pred_probas[:, 1]
         if self.total_examples != num_examples[0]:
             # start over if num_examples is different
             # implying that a different split is being evaluated
