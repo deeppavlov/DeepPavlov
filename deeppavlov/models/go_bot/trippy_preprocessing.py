@@ -654,7 +654,6 @@ def convert_examples_to_features(examples, slot_list, class_types, tokenizer, ma
 
     def _get_start_end_pos(class_type, token_label_ids, max_seq_length):
         if class_type == 'copy_value' and 1 not in token_label_ids:
-            #logger.warn("copy_value label, but token_label not detected. Setting label to 'none'.")
             class_type = 'none'
         start_pos = 0
         end_pos = 0
