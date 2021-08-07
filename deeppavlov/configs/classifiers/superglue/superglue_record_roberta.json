@@ -1,7 +1,7 @@
 {
   "metadata": {
     "variables": {
-      "BASE_MODEL": "roberta-base",
+      "BASE_MODEL": "roberta-large",
       "TASK": "record",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
@@ -18,7 +18,7 @@
     "train": "train",
     "valid": "validation",
     "seed": "{SEED}",
-    "downsample_ratio": 1.0
+    "downsample_ratio": 1.5
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
@@ -35,7 +35,7 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 300,
+        "max_seq_length": 320,
         "in": ["query", "passage"],
         "out": ["bert_features"]
       },
