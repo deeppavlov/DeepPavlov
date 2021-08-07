@@ -75,6 +75,7 @@ class BertForDST(BertPreTrainedModel):
         self.aux_loss_fct = CrossEntropyLoss()
         self.refer_loss_fct = CrossEntropyLoss(reduction='none')
         self.class_loss_fct = CrossEntropyLoss(reduction='none')
+        self.action_loss_fct = CrossEntropyLoss(reduction="sum")
 
         self.init_weights()
 
@@ -237,7 +238,7 @@ class BertForDST(BertPreTrainedModel):
         action_logits = getattr(self, 'action_prediction')(pooled_output_aux)
 
         if action_label is not None:
-            action_loss = CrossEntropyLoss(reduction="sum")(action_logits, action_label)
+            action_loss = self.action_loss_fct(action_logits, action_label)
 
             # Increase the loss proportional to the amount of slots if present
             if self.slot_list:
