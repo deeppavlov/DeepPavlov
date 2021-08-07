@@ -271,7 +271,7 @@ def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label
         sorted_dataset: Dataset = dataset.sort(label_column, reverse=True)
         # but we need to reshuffle the dataset before returning it
         return sorted_dataset.select(range(num_positive + num_negative)).shuffle(seed=seed)
-    # the same logic is not applicable to cases with > 2 classes
+    # the same logic is not applicable to cases with != 2 classes
     else:
         raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
 
