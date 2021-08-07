@@ -71,6 +71,11 @@ class BertForDST(BertPreTrainedModel):
         self.add_module("action_prediction", nn.Linear(config.hidden_size + aux_dims, self.num_actions))
         self.add_module("action_softmax", nn.Softmax(dim=1))
 
+        # Loss functions
+        self.aux_loss_fct = CrossEntropyLoss()
+        self.refer_loss_fct = CrossEntropyLoss(reduction='none')
+        self.class_loss_fct = CrossEntropyLoss(reduction='none')
+
         self.init_weights()
 
     def forward(self,
@@ -125,8 +130,7 @@ class BertForDST(BertPreTrainedModel):
             if aux_task_def['task_type'] == "classification":
                 aux_logits = getattr(self, 'aux_out_projection')(pooled_output)
                 aux_logits = self.dropout_heads(aux_logits)
-                aux_loss_fct = CrossEntropyLoss()
-                aux_loss = aux_loss_fct(aux_logits, class_label_id)
+                aux_loss = self.aux_loss_fct(aux_logits, class_label_id)
                 # add hidden states and attention if they are here
                 return (aux_loss,) + outputs[2:]
             elif aux_task_def['task_type'] == "span":
@@ -201,9 +205,7 @@ class BertForDST(BertPreTrainedModel):
                 start_pos[slot].clamp_(0, ignored_index)
                 end_pos[slot].clamp_(0, ignored_index)
 
-                class_loss_fct = CrossEntropyLoss(reduction='none')
                 token_loss_fct = CrossEntropyLoss(reduction='none', ignore_index=ignored_index)
-                refer_loss_fct = CrossEntropyLoss(reduction='none')
 
                 start_loss = token_loss_fct(start_logits, start_pos[slot])
                 end_loss = token_loss_fct(end_logits, end_pos[slot])
@@ -213,12 +215,12 @@ class BertForDST(BertPreTrainedModel):
                 if not self.token_loss_for_nonpointable:
                     token_loss *= token_is_pointable
 
-                refer_loss = refer_loss_fct(refer_logits, refer_id[slot])
+                refer_loss = self.refer_loss_fct(refer_logits, refer_id[slot])
                 token_is_referrable = torch.eq(class_label_id[slot], self.refer_index).float()
                 if not self.refer_loss_for_nonpointable:
                     refer_loss *= token_is_referrable
 
-                class_loss = class_loss_fct(class_logits, class_label_id[slot])
+                class_loss = self.class_loss_fct(class_logits, class_label_id[slot])
 
                 if self.refer_index > -1:
                     per_example_loss = (self.class_loss_ratio) * class_loss + ((1 - self.class_loss_ratio) / 2) * token_loss + ((1 - self.class_loss_ratio) / 2) * refer_loss
