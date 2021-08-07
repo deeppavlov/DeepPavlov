@@ -204,7 +204,7 @@ class NNTrainer(FitTrainer):
             log.info('Saving model')
             self.save()
         elif self.improved(score, self.score_best):
-            log.info('Improved best {} of {}'.format(m_name, score))
+            log.info(f'Improved best {m_name} from {self.score_best} to {score}')
             self.score_best = score
             log.info('Saving model')
             self.save()
