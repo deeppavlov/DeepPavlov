@@ -30,9 +30,9 @@ from deeppavlov.models.go_bot.nlg.nlg_manager import NLGManagerInterface
 from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
 from deeppavlov.models.go_bot.trippy_bert_for_dst import BertForDST
 from deeppavlov.models.go_bot.trippy_preprocessing import prepare_trippy_data, get_turn, batch_to_device
+from deeppavlov.models.go_bot.trippy_dst import TripPyDST
 
 logger = getLogger(__name__)
-
 
 @register('trippy')
 class TripPy(TorchModel):
@@ -40,7 +40,9 @@ class TripPy(TorchModel):
     Go-bot architecture based on https://arxiv.org/abs/2005.02877.
 
     Parameters:
+        nlg_manager: DeepPavlov NLGManager responsible for answer generation
         save_path: Where to save the model
+        slot_names: Names of all slots present in the data
         class_types: TripPy Class types - Predefined to most commonly used; Add True&False if slots which can take on those values
         pretrained_bert: bert-base-uncased or full path to pretrained model
         bert_config: Can be path to a file in case different from bert-base-uncased config
@@ -55,6 +57,9 @@ class TripPy(TorchModel):
         refer_loss_for_nonpointable: Whether the refer loss for classes other than refer contribute towards total loss.
         class_aux_feats_inform: Whether or not to use the identity of informed slots as auxiliary features for class prediction.
         class_aux_feats_ds: Whether or not to use the identity of slots in the current dialog state as auxiliary featurs for class prediction.
+        database: Optional database which will be queried by make_api_call by default
+        make_api_call: Optional function to replace default api calling
+        fill_current_state_with_db_results: Optional function t replace default db result filling
         debug: Turn on debug mode to get logging information on input examples & co
     """
     def __init__(self,
@@ -103,24 +108,10 @@ class TripPy(TorchModel):
 
         self.config.num_actions = nlg_manager.num_of_known_actions()
 
-        # Parameters for user interaction
-        self.batch_dialogues_utterances_contexts_info = [[]]
-        # We always have one more user response than system response at inference
-        self.batch_dialogues_utterances_responses_info = [[None]]
-
-        self.ds = None
-        self.ds_logits = None
-
-        self.database = database
         self.clip_norm = clip_norm
 
-        # If the user as provided a make_api_call function
-        # and a fill_current_state_with_db_results function use them
-        if make_api_call:
-            # Override the functions for TripPy
-            TripPy.make_api_call = make_api_call
-            TripPy.fill_current_state_with_db_results = fill_current_state_with_db_results
-
+        # Get TripPy-specific Dialogue State Tracker
+        self.dst = TripPyDST(slot_names, class_types, database, make_api_call, fill_current_state_with_db_results)
 
         super().__init__(save_path=save_path,  
                         optimizer_parameters=optimizer_parameters,
@@ -200,7 +191,7 @@ class TripPy(TorchModel):
         else:
             diag_batch = batch
             # At validation reset for every call
-            self.reset()
+            self.dst.reset()
 
         dialogue_results = []
         for diag_id, dialogue in enumerate(diag_batch):
@@ -208,19 +199,20 @@ class TripPy(TorchModel):
             turn_results = []
             for turn_id, turn in enumerate(dialogue):
                 # Reset dialogue state if no dialogue state yet or the dialogue is empty (i.e. its a new dialogue)
-                if (self.ds_logits is None) or (diag_id >= len(self.batch_dialogues_utterances_contexts_info)):
-                    self.reset()
+                #if (self.ds_logits is None) or (diag_id >= len(self.batch_dialogues_utterances_contexts_info)):
+                if (self.dst.ds_logits is None) or (diag_id >= len(self.dst.batch_dialogues_utterances_contexts_info)):
+                    self.dst.reset()
                     diag_id = 0
 
                 # Append context to the dialogue
-                self.batch_dialogues_utterances_contexts_info[diag_id].append(turn)
+                self.dst.batch_dialogues_utterances_contexts_info[diag_id].append(turn)
 
                 # Update Database
-                self.update_ground_truth_db_result_from_context(turn)
+                self.dst.update_ground_truth_db_result_from_context(turn)
 
                 # Preprocess inputs
-                trippy_input, features = prepare_trippy_data(self.batch_dialogues_utterances_contexts_info,
-                                                            self.batch_dialogues_utterances_responses_info,
+                trippy_input, features = prepare_trippy_data(self.dst.batch_dialogues_utterances_contexts_info,
+                                                            self.dst.batch_dialogues_utterances_responses_info,
                                                             self.tokenizer,
                                                             self.slot_names,
                                                             self.class_types,
@@ -236,7 +228,7 @@ class TripPy(TorchModel):
                 inform = [features[-1].inform]
 
                 # Update data-held dialogue state based on new logits
-                last_turn["diag_state"] = self.ds_logits
+                last_turn["diag_state"] = self.dst.ds_logits
 
                 # Move to correct device
                 last_turn = batch_to_device(last_turn, self.device)
@@ -259,30 +251,31 @@ class TripPy(TorchModel):
                     updates = outputs[2][slot].max(1)[1].cpu()
                     for i, u in enumerate(updates):
                         if u != 0:
-                            self.ds_logits[slot][i] = u
+                            self.dst.ds_logits[slot][i] = u
 
                 # Update self.ds (dialogue state) slotfilled values based on logits
-                self.update_ds(outputs[2],
+                self.dst.update_ds(outputs[2],
                                outputs[3],
                                outputs[4],
                                outputs[5],
                                input_ids_unmasked,
-                               inform)
+                               inform,
+                               self.tokenizer)
 
                 # Wrap predicted action (outputs[6]) into a PolicyPrediction
                 policy_prediction = PolicyPrediction(
                     outputs[6].cpu().numpy(), None, None, None)
 
                 # Fill DS with Database results if there are any
-                self.fill_current_state_with_db_results()
+                self.dst.fill_current_state_with_db_results()
 
                 # NLG based on predicted action & dialogue state
                 response = self.nlg_manager.decode_response(None,
                                                             policy_prediction,
-                                                            self.ds)
+                                                            self.dst.ds)
 
                 # Add system response to responses for possible next round
-                self.batch_dialogues_utterances_responses_info[diag_id].insert(
+                self.dst.batch_dialogues_utterances_responses_info[diag_id].insert(
                     -1, {"text": response, "act": None})
 
                 turn_results.append(response)
@@ -291,125 +284,15 @@ class TripPy(TorchModel):
         
         # At real-time interaction make an actual api call if this is the action predicted
         if (not(isinstance(batch[0], list))) and (policy_prediction.predicted_action_ix == self.nlg_manager.get_api_call_action_id()):
-            self.make_api_call()
+            self.dst.make_api_call()
             # Call TripPy again with the same user text - This is how it is done in the DSTC2 Training Data
             # Note that now the db_results are updated and the last system response has been api_call
             # Then return the last two system responses of the form [[api_call..., I have found...]]
             dialogue_results[-1].append(self(batch)[-1][-1])
             return dialogue_results
             
-
         # Return NLG generated responses
         return dialogue_results
-
-    def update_ds(self,
-                  per_slot_class_logits,
-                  per_slot_start_logits,
-                  per_slot_end_logits,
-                  per_slot_refer_logits,
-                  input_ids_unmasked,
-                  inform):
-        """
-        Updates slot-filled dialogue state based on model predictions.
-        This function roughly corresponds to "predict_and_format" in the original TripPy code.
-
-        Args:
-            per_slot_class_logits: dict of class logits
-            per_slot_start_logits: dict of start logits
-            per_slot_end_logits: dict of end logits
-            per_slot_refer_logits: dict of refer logits
-            input_ids_unmasked: The unmasked input_ids from features to extract the preds
-            inform: dict of inform logits
-        """
-        # We set the index to 0, since we only look at the last turn
-        # This function can be modified to look at multiple turns by iterating over them
-        i = 0
-
-        if self.ds is None:
-            self.ds = {slot: 'none' for slot in self.slot_names}
-
-        for slot in self.slot_names:
-            class_logits = per_slot_class_logits[slot][i].cpu()
-            start_logits = per_slot_start_logits[slot][i].cpu()
-            end_logits = per_slot_end_logits[slot][i].cpu()
-            refer_logits = per_slot_refer_logits[slot][i].cpu()
-
-            class_prediction = int(class_logits.argmax())
-            start_prediction = int(start_logits.argmax())
-            end_prediction = int(end_logits.argmax())
-            refer_prediction = int(refer_logits.argmax())
-
-            # DP / DSTC2 uses dontcare instead of none so we also replace none's wth dontcare
-            # Just remove the 2nd part of the or statement to revert to TripPy standard
-            if (class_prediction == self.class_types.index('dontcare')) or (class_prediction == self.class_types.index('none')):
-                self.ds[slot] = 'dontcare'
-            elif class_prediction == self.class_types.index('copy_value'):
-                input_tokens = self.tokenizer.convert_ids_to_tokens(
-                    input_ids_unmasked[i])
-                self.ds[slot] = ' '.join(
-                    input_tokens[start_prediction:end_prediction + 1])
-                self.ds[slot] = re.sub("(^| )##", "", self.ds[slot])
-            elif 'true' in self.class_types and class_prediction == self.class_types.index('true'):
-                self.ds[slot] = 'true'
-            elif 'false' in self.class_types and class_prediction == self.class_types.index('false'):
-                self.ds[slot] = 'false'
-            elif class_prediction == self.class_types.index('inform'):
-                self.ds[slot] = inform[i][slot]
-
-        # Referral case. All other slot values need to be seen first in order
-        # to be able to do this correctly.
-        for slot in self.slot_names:
-            class_logits = per_slot_class_logits[slot][i].cpu()
-            refer_logits = per_slot_refer_logits[slot][i].cpu()
-
-            class_prediction = int(class_logits.argmax())
-            refer_prediction = int(refer_logits.argmax())
-
-            if 'refer' in self.class_types and class_prediction == self.class_types.index('refer'):
-                # Only slots that have been mentioned before can be referred to.
-                # One can think of a situation where one slot is referred to in the same utterance.
-                # This phenomenon is however currently not properly covered in the training data
-                # label generation process.
-                self.ds[slot] = self.ds[self.slot_names[refer_prediction - 1]]
-
-    def make_api_call(self) -> None:
-        db_results = []
-        if self.database is not None:
-
-            # filter slot keys with value equal to 'dontcare' as
-            # there is no such value in database records
-            # and remove unknown slot keys (for example, 'this' in dstc2 tracker)
-            db_slots = {
-                s: v for s, v in self.ds.items() if v != 'dontcare' and s in self.database.keys
-            }
-
-            db_results = self.database([db_slots])[0]
-
-            # filter api results if there are more than one
-            # TODO: add sufficient criteria for database results ranking
-            if len(db_results) > 1:
-                db_results = [r for r in db_results if r != self.db_result]
-            else:
-                print("Failed to get any results for: ", db_slots)
-        else:
-            logger.warning("No database specified.")
-
-        logger.info(f"Made api_call with {self.ds.keys()}, got {len(db_results)} results.")
-        self.current_db_result = {} if not db_results else db_results[0]
-        self._update_db_result()
-
-    def _update_db_result(self):
-        if self.current_db_result is not None:
-            self.db_result = self.current_db_result
-
-    def update_ground_truth_db_result_from_context(self, context: Dict[str, Any]) -> None:
-        self.current_db_result = context.get('db_result', None)
-        self._update_db_result()
-
-    def fill_current_state_with_db_results(self) -> None:
-        if self.db_result:
-            for k, v in self.db_result.items():
-                self.ds[k] = str(v)
 
     def train_on_batch(self,
                        batch_dialogues_utterances_features: List[List[dict]],
@@ -464,16 +347,3 @@ class TripPy(TorchModel):
         torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
         self.optimizer.step()
         return {"total_loss": loss.cpu().item(), "action_loss": action_loss.cpu().item()}
-
-    def reset(self, user_id: Union[None, str, int] = None) -> None:
-        """
-        Reset dialogue state trackers.
-        """
-        self.ds_logits = {slot: torch.tensor([0]) for slot in self.slot_names}
-        self.ds = None
-
-        self.batch_dialogues_utterances_contexts_info = [[]]
-        self.batch_dialogues_utterances_responses_info = [[None]]
-
-        self.db_result = None
-        self.current_db_result = None
