@@ -56,13 +56,19 @@ class HuggingFaceDatasetReader(DatasetReader):
             raise RuntimeError('Split argument was used. Use train, valid, test arguments instead of split.')
 
         # pop elements not relevant to BuilderConfig
-        downsample_ratio = kwargs.pop("downsample_ratio", 1.)
+        downsample_ratio: Union[List[float], float] = kwargs.pop("downsample_ratio", 1.)
         seed = kwargs.pop("seed", 42)
         percentage = kwargs.get("dev_percentage", 50)
 
         split_mapping = {'train': train, 'valid': valid, 'test': test}
         # filter unused splits
         split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
+
+        if isinstance(downsample_ratio, float):
+            downsample_ratio = downsample_ratio * len(split_mapping)
+        elif isinstance(downsample_ratio, list) and len(downsample_ratio) != len(split_mapping):
+            raise ValueError("The number of downsample ratios must be the same as the number of splits")
+
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
@@ -84,10 +90,12 @@ class HuggingFaceDatasetReader(DatasetReader):
                         label_column=label_column,
                         label_names=["False", "True"]
                     ),
-                    ratio=downsample_ratio,
+                    ratio=ratio,
                     seed=seed,
                     label_column=label_column
-                ).map(add_num_examples, batched=True, batch_size=None) for dataset_split in dataset
+                ).map(add_num_examples, batched=True, batch_size=None)
+                for dataset_split, ratio
+                in zip(dataset, downsample_ratio)
             ]
         return dict(zip(split_mapping.keys(), dataset))
 
