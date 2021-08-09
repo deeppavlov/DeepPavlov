@@ -164,28 +164,32 @@ def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
 def preprocess_record(examples: Dataset) -> Dict[str,
                                                  Union[List[str],
                                                        List[int]]]:
-    """ReCoRD preprocessing to be applied by the map function.
+    """ReCoRD preprocessing to be applied by the map function. This transforms the original
+    nested structure of the dataset into a flat one. New indices are generated to allow for
+    the restoration of the original structure. The resulting dataset amounts to a binary
+    classification problem.
     Args:
         examples: an instance of Dataset class
     Returns:
-        Dict[str, Union[List[str], List[int]]]:
+        Dict[str, Union[List[str], List[int]]]: flattened features of the dataset
     """
 
     def fill_placeholder(sentence: str, candidate: str) -> str:
-        """
+        """Fills `@placeholder` of a given query with the provided entity
         Args:
-            ...
+            sentence: query to fill
+            candidate: entity candidate for the query
         Returns:
-            ...
+            str: `sentence` with `@placeholder` replaced with `candidate`
         """
         return re.sub(r"@placeholder", candidate.replace("\\", ""), sentence)
 
     def remove_highlight(context: str) -> str:
-        """
+        """Removes highlights from a given passage
         Args:
-            ...
+            context: a passage to remove highlights from
         Returns:
-            ...
+            str: `context` with highlights removed
         """
         return re.sub(r"\n@highlight\n", ". ", context)
 
@@ -195,10 +199,15 @@ def preprocess_record(examples: Dataset) -> Dict[str,
     entities: List[List[str]] = examples["entities"]
     indices: List[Dict[str, int]] = examples["idx"]
 
+    # new indices for flat examples
     merged_indices: List[str] = []
+    # queries with placeholders filled
     filled_queries: List[str] = []
+    # duplicated passages
     extended_passages: List[str] = []
+    # contains one entity per flat example
     flat_entities: List[str] = []
+    # whether the entity in this example is found in the answers (0 or 1)
     labels: List[int] = []
 
     for query, passage, list_of_answers, list_of_entities, index in zip(queries,
@@ -247,14 +256,15 @@ def add_label_names(dataset: Dataset, label_column: str, label_names: List[str])
 
 
 def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label_column: str = "label") -> Dataset:
-    """Downsamples a given dataset split
+    """Downsamples a given dataset to the specified negative to positive examples ratio. Only works with
+    binary classification datasets with labels denoted as `0` and `1`.
     Args:
-        dataset:
-        ratio:
+        dataset: a Dataset to downsample
+        ratio: negative to positive examples ratio to maintain
         seed: a seed for shuffling
         label_column: the name of `label` column such as 'label' or 'labels'
     Returns:
-        ...
+        Dataset: a downsample dataset
     """
     dataset_labels = dataset.unique(label_column)
     # `test` split shouldn't be downsampled
@@ -276,6 +286,14 @@ def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label
         raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
 
 
-def add_num_examples(dataset: Dataset):
+def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
+    """Adds the total number of examples in a given dataset to
+    each individual example. Must be applied to the whole dataset (i.e. `batched=True, batch_size=None`),
+    otherwise the number will be incorrect.
+    Args:
+        dataset: a Dataset to add number of examples to
+    Returns:
+        Dict[str, List[int]]: total number of examples repeated for each example
+    """
     num_examples = len(dataset[next(iter(dataset))])
     return {"num_examples": [num_examples] * num_examples}
