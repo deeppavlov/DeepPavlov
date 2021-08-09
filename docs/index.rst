@@ -86,6 +86,14 @@ Welcome to DeepPavlov's documentation!
 .. toctree::
    :glob:
    :maxdepth: 3
+   :caption: Internships
+
+   Internships <internships/internships>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
    :caption: Package Reference
 
    apiref/*

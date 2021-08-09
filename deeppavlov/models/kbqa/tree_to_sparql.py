@@ -17,12 +17,10 @@ from typing import Any, List, Tuple, Dict, Union
 from logging import getLogger
 from collections import defaultdict
 
-import nltk
 import numpy as np
 import pymorphy2
 import re
 from scipy.sparse import csr_matrix
-from ufal_udpipe import Model as udModel, Pipeline
 from udapi.block.read.conllu import Conllu
 from udapi.core.node import Node
 
@@ -110,33 +108,6 @@ class RuAdjToNoun:
         matrix = csr_matrix((data, indices, indptr), shape=(len(words), self.max_word_length * self.alphabet_length))
 
         return matrix
-
-
-@register('udpipe_parser')
-class UdpipeParser(Component):
-    """
-        Class for building syntactic trees from sentences using UDPipe
-    """
-
-    def __init__(self, udpipe_filename: str, **kwargs):
-        """
-
-        Args:
-            udpipe_filename: file with UDPipe model
-            **kwargs:
-        """
-        self.udpipe_filename = udpipe_filename
-        self.ud_model = udModel.load(str(expand_path(self.udpipe_filename)))
-        self.full_ud_model = Pipeline(self.ud_model, "vertical", Pipeline.DEFAULT, Pipeline.DEFAULT, "conllu")
-
-    def __call__(self, sentences_batch: List[str]):
-        conll_outputs = []
-        for sentence in sentences_batch:
-            sentence_tokens = nltk.word_tokenize(sentence)
-            sentence_inp = '\n'.join(sentence_tokens)
-            conll_output = self.full_ud_model.process(sentence_inp)
-            conll_outputs.append(conll_output)
-        return conll_outputs
 
 
 @register('tree_to_sparql')

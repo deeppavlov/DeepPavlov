@@ -1,7 +1,9 @@
 {
   "dataset_reader": {
     "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
+    "dataset": "SberSQuADClean",
+    "url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/squad_ru_clean/"
   },
   "dataset_iterator": {
     "class_name": "squad_iterator",
@@ -75,7 +77,7 @@
           ],
           "eps": 1e-06
         },
-        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
         "in": [
           "bert_features"
@@ -121,8 +123,6 @@
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 5,
     "validation_patience": 10,
     "metrics": [
       {
@@ -158,17 +158,17 @@
   },
   "metadata": {
     "variables": {
-      "LOWERCASE": true,
-      "TRANSFORMER": "bert-base-uncased",
+      "LOWERCASE": false,
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/squad_ru_torch_bert/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_ru_torch_bert.tar.gz",
+        "subdir": "{MODELS_PATH}"
       }
     ]
   }
