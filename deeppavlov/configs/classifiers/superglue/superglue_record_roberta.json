@@ -18,7 +18,7 @@
     "train": "train",
     "valid": "validation",
     "seed": "{SEED}",
-    "downsample_ratio": [1.8, -1]
+    "downsample_ratio": [1.8, 2]
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
