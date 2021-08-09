@@ -14,6 +14,7 @@
 
 
 import re
+from collections import Counter
 from math import floor
 from typing import Dict, Optional, List, Union
 
@@ -255,7 +256,12 @@ def add_label_names(dataset: Dataset, label_column: str, label_names: List[str])
     return dataset.cast(new_features)
 
 
-def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label_column: str = "label") -> Dataset:
+def binary_downsample(dataset: Dataset,
+                      ratio: float = 0.,
+                      seed: int = 42,
+                      label_column: str = "label",
+                      *,
+                      do_correction: bool = True) -> Dataset:
     """Downsamples a given dataset to the specified negative to positive examples ratio. Only works with
     binary classification datasets with labels denoted as `0` and `1`.
     Args:
@@ -263,9 +269,39 @@ def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label
         ratio: negative to positive examples ratio to maintain
         seed: a seed for shuffling
         label_column: the name of `label` column such as 'label' or 'labels'
+        do_correction: correct resampled indices
     Returns:
-        Dataset: a downsample dataset
+        Dataset: a downsampled dataset
     """
+
+    def replace_indices(data: Dataset, index_map: Dict[str, str]) -> Dict[str, List[str]]:
+        idx: List[str] = [index_map.get(el, el) for el in data["idx"]]
+        return {"idx": idx}
+
+    def get_correct_indices_map(data: Dataset) -> Dict[str, str]:
+        """Generate a dictionary with replacements for indices that
+        are no longer correct due to downsampling (i.e. the total number
+        of elements denoted by the last part of an index has changed)
+        Args:
+            data: a downsampled Dataset
+        Returns:
+            Dict[str, str]: a dictionary containing replacement indices
+        """
+        actual_n_elements: Counter = Counter(data["idx"])
+        corrected_index_map: Dict[str, str] = dict()
+        for idx, n_elements in actual_n_elements.items():
+            expected_n_elements: int = int(idx.split("-")[-1])
+            if expected_n_elements != n_elements:
+                new_idx: List[str] = idx.split("-")
+                new_idx[-1]: str = str(n_elements)
+                new_idx: str = "-".join(new_idx)
+                corrected_index_map[idx] = new_idx
+        return corrected_index_map
+
+    def correct_indices(data: Dataset) -> Dataset:
+        index_map: Dict[str, str] = get_correct_indices_map(data)
+        return data.map(replace_indices, batched=True, fn_kwargs={"index_map": index_map})
+
     dataset_labels = dataset.unique(label_column)
     # `test` split shouldn't be downsampled
     if dataset_labels == [-1]:
@@ -280,7 +316,10 @@ def binary_downsample(dataset: Dataset, ratio: float = 0., seed: int = 42, label
         # while the rest are labeled with `0`
         sorted_dataset: Dataset = dataset.sort(label_column, reverse=True)
         # but we need to reshuffle the dataset before returning it
-        return sorted_dataset.select(range(num_positive + num_negative)).shuffle(seed=seed)
+        shuffled_dataset: Dataset = sorted_dataset.select(range(num_positive + num_negative)).shuffle(seed=seed)
+        if do_correction:
+            shuffled_dataset = correct_indices(shuffled_dataset)
+        return shuffled_dataset
     # the same logic is not applicable to cases with != 2 classes
     else:
         raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
