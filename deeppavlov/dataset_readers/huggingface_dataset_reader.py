@@ -307,6 +307,12 @@ def binary_downsample(dataset: Dataset,
         return corrected_index_map
 
     def correct_indices(data: Dataset) -> Dataset:
+        """Sets correct number of examples in downsampled indices
+        Args:
+            data: a downsampled dataset
+        Returns:
+            Dataset: the same dataset with correct indices
+        """
         index_map: Dict[str, str] = get_correct_indices_map(data)
         return data.map(replace_indices, batched=True, fn_kwargs={"index_map": index_map})
 
