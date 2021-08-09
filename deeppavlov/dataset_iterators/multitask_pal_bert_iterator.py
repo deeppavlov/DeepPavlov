@@ -41,33 +41,48 @@ class MultiTaskPalBertIterator:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
 
-    def __init__(self, data: dict, num_train_epochs: int, steps_per_epoch: int, tasks: dict):
+    def __init__(
+        self,
+        data: dict,
+        num_train_epochs: int,
+        steps_per_epoch: int,
+        tasks: dict,
+        gradient_accumulation_steps: Optional[int] = 1,
+    ):
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
-            task_iterator_params['class_name'] = task_iterator_params['iterator_class_name']
-            del task_iterator_params['iterator_class_name']
+            task_iterator_params["class_name"] = task_iterator_params[
+                "iterator_class_name"
+            ]
+            del task_iterator_params["iterator_class_name"]
             self.task_iterators[task_name] = from_params(
-                task_iterator_params, data=data[task_name])
+                task_iterator_params, data=data[task_name]
+            )
         self.n_tasks = len(tasks.keys())
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.epochs_done = 0
+        self.steps_taken = 0
+        self.task_id = None
         self.data = {
-            'train': self._extract_data_type('train'),
-            'valid': self._extract_data_type('valid'),
-            'test': self._extract_data_type('test'),
-            'all': self._unite_dataset_parts(self._extract_data_type('train'),
-                                             self._extract_data_type('valid'),
-                                             self._extract_data_type('test'))
+            "train": self._extract_data_type("train"),
+            "valid": self._extract_data_type("valid"),
+            "test": self._extract_data_type("test"),
+            "all": self._unite_dataset_parts(
+                self._extract_data_type("train"),
+                self._extract_data_type("valid"),
+                self._extract_data_type("test"),
+            ),
         }
         self.sample_x_instances = None
         self.sample_y_instances = None
 
     def _get_data_size(self, data: Dict[str, List]):
         """
-        By the way the formula for the sample 
-        prob - in the best method - is N^(1-0.8*((epoch - 1)/(NUM_EPOCHS - 1))) 
+        By the way the formula for the sample
+        prob - in the best method - is N^(1-0.8*((epoch - 1)/(NUM_EPOCHS - 1)))
         so the sample prob is proportional to the number of train examples N
         """
         return [len(data[key]) for key in data.keys()]
@@ -103,7 +118,7 @@ class MultiTaskPalBertIterator:
                     united[task] = united[task] + data
         return united
 
-    def _init_sample_tasks_batch(self, batch_size = 1):
+    def _init_sample_tasks_batch(self, batch_size=1):
         iters = [iter_ for iter_ in self.task_iterators.values()]
         sample_batch = [i.gen_batches(batch_size).__next__() for i in iters]
         self.sample_x_instances = []
@@ -112,12 +127,13 @@ class MultiTaskPalBertIterator:
             self.sample_x_instances.append(sample_task_batch[0])
             self.sample_y_instances.append(sample_task_batch[1])
 
-
-    def gen_batches(self, batch_size: int, data_type: str = 'train',
-                    shuffle: bool = None) -> Iterator[Tuple[tuple, tuple]]:
-        """Generate batches and expected output to train neural networks. Batches from task iterators
-        are united into one batch. Every element of the largest dataset is used once whereas smaller
-        datasets are repeated until their size is equal to the largest dataset.
+    def gen_batches(
+        self, batch_size: int, data_type: str = "train", shuffle: bool = None
+    ) -> Iterator[Tuple[tuple, tuple]]:
+        """Generate batches and expected output to train neural networks. Batches from
+        task iterators are united into one batch. Every element of the largest dataset
+        is used once whereas smaller datasets are repeated until their size is equal to
+        the largest dataset.
 
         Args:
             batch_size: number of samples in batch
@@ -125,12 +141,13 @@ class MultiTaskPalBertIterator:
             shuffle: whether to shuffle dataset before batching
 
         Yields:
-            a tuple of a batch of inputs and a batch of expected outputs. Inputs and outputs are tuples.
-            Element of inputs or outputs is a tuple which elements are x values of merged tasks in the order
-            tasks are present in `tasks` argument of `__init__` method.
+            A tuple of a batch of inputs and a batch of expected outputs.
+            Inputs and outputs are tuples. Element of inputs or outputs is a tuple which
+            elements are x values of merged tasks in the ordertasks are present in
+            `tasks` argument of `__init__` method.
         """
         max_task_data_len = max([len(iter_.data[data_type])
-                                for iter_ in self.task_iterators.values()])
+                                 for iter_ in self.task_iterators.values()])
         size_of_last_batch = max_task_data_len % batch_size
         if size_of_last_batch == 0:
             size_of_last_batch = batch_size
@@ -138,31 +155,49 @@ class MultiTaskPalBertIterator:
         n_batches = math.ceil(max_task_data_len / batch_size)
 
         if data_type == "train":
-            generators = [RepeatBatchGenerator(iter_, batch_size, data_type, shuffle) for
-                          iter_ in self.task_iterators.values()]
+            generators = [
+                RepeatBatchGenerator(iter_, batch_size, data_type, shuffle)
+                for iter_ in self.task_iterators.values()
+            ]
 
             # one sample batch of batch_size 1 for each task
             if not self.sample_x_instances or not self.sample_y_instances:
                 self._init_sample_tasks_batch(batch_size)
-            
+
             # probs only required while training
             probs = self._get_probs("train")
             for step in range(self.steps_per_epoch):
-                task_id = np.random.choice(
-                    self.n_tasks, p=probs)
-                batch = generators[task_id].__next__()
+                if (
+                    self.steps_taken + 1
+                ) % self.gradient_accumulation_steps or self.task_id:
+                    self.task_id = np.random.choice(self.n_tasks, p=probs)
+                batch = generators[self.task_id].__next__()
                 x_instances = self.sample_x_instances.copy()
                 y_instances = self.sample_y_instances.copy()
-                x_instances[task_id] = batch[0]
-                y_instances[task_id] = batch[1]
-                b = (self.add_task_id(task_id, x_instances),
-                     tuple(zip(*y_instances)))
+                x_instances[self.task_id] = batch[0]
+                y_instances[self.task_id] = batch[1]
+                b = (
+                    self.add_task_id(self.task_id, x_instances),
+                    tuple(zip(*y_instances)),
+                )
+                self.steps_taken += 1
                 yield b
             self.epochs_done += 1
+            # one additional step is taken while logging training metrics
+            self.steps_taken -= 1
         else:
             for task_batches in zip(
-                *[RepeatBatchGenerator(iter_, batch_size, data_type, shuffle, n_batches, size_of_last_batch) for
-                  iter_ in self.task_iterators.values()]
+                *[
+                    RepeatBatchGenerator(
+                        iter_,
+                        batch_size,
+                        data_type,
+                        shuffle,
+                        n_batches,
+                        size_of_last_batch,
+                    )
+                    for iter_ in self.task_iterators.values()
+                ]
             ):
                 x_instances, y_instances = [], []
                 for task_batch in task_batches:
@@ -180,19 +215,25 @@ class MultiTaskPalBertIterator:
             x_in.append(tuple(task_examples))
         return tuple(x_in)
 
-    def get_instances(self, data_type: str = 'train'):
-        """Returns a tuple of inputs and outputs from all datasets. Lengths of inputs and outputs are equal to
-        the size of the largest dataset. Smaller datasets are repeated until their sizes are equal to the
-        size of the largest dataset.
+    def get_instances(self, data_type: str = "train"):
+        """Returns a tuple of inputs and outputs from all datasets. Lengths of
+        and outputs are equal to the size of the largest dataset. Smaller
+        datasets are repeated until their sizes are equal to the size of the
+        largest dataset.
 
         Args:
             data_type: can be either 'train', 'test', or 'valid'
 
         Returns:
-            a tuple of all inputs for a data type and all expected outputs for a data type
+            A tuple of all inputs for a data type and all expected outputs
+            for a data type.
         """
         max_task_data_len = max(
-            [len(iter_.get_instances(data_type)[0]) for iter_ in self.task_iterators.values()])
+            [
+                len(iter_.get_instances(data_type)[0])
+                for iter_ in self.task_iterators.values()
+            ]
+        )
         x_instances = []
         y_instances = []
         for task_name, iter_ in self.task_iterators.items():
@@ -208,8 +249,9 @@ class MultiTaskPalBertIterator:
 
 
 class RepeatBatchGenerator:
-    """Repeating dataset. If there is not enough elements in the dataset to form another batch, elements for the batch 
-    are drawn in the beginning of the dataset. Optionally dataset is reshuffled before a repeat.
+    """Repeating dataset. If there is not enough elements in the dataset to form another
+    batch, elements for the batch are drawn in the beginning of the dataset. Optionally
+    dataset is reshuffled before a repeat.
 
     Args:
         dataset_iterator: dataset iterator from which batches are drawn.
@@ -217,29 +259,32 @@ class RepeatBatchGenerator:
         data_type: "train", "valid", or "test"
         shuffle: whether dataset will be shuffled before each repeat.
         n_batches: the number of batches that will be generated.
-        size_of_the_last_batch: used if dataset size is not evenly divisible by batch size.
+        size_of_the_last_batch: used if dataset size not evenly divisible by batch size.
     """
 
     def __init__(
-            self,
-            dataset_iterator: Union[DataLearningIterator],
-            batch_size: int,
-            data_type: str,
-            shuffle: bool,
-            n_batches: Optional[int] = None,
-            size_of_last_batch: Optional[int] = None
+        self,
+        dataset_iterator: Union[DataLearningIterator],
+        batch_size: int,
+        data_type: str,
+        shuffle: bool,
+        n_batches: Optional[int] = None,
+        size_of_last_batch: Optional[int] = None,
     ):
         self.dataset_iterator = dataset_iterator
         self.batch_size = batch_size
         self.data_type = data_type
         self.shuffle = shuffle
         self.n_batches = n_batches
-        self.size_of_last_batch = self.batch_size if size_of_last_batch is None else size_of_last_batch
+        self.size_of_last_batch = (
+            self.batch_size if size_of_last_batch is None else size_of_last_batch)
 
         self.inner_batch_size = math.gcd(
-            len(self.dataset_iterator.data[data_type]), batch_size)
+            len(self.dataset_iterator.data[data_type]), batch_size
+        )
         self.gen = self.dataset_iterator.gen_batches(
-            self.inner_batch_size, self.data_type, self.shuffle)
+            self.inner_batch_size, self.data_type, self.shuffle
+        )
         self.batch_count = 0
 
     def __iter__(self):
@@ -254,16 +299,21 @@ class RepeatBatchGenerator:
                 xx, yy = next(self.gen)
             except StopIteration:
                 self.gen = self.dataset_iterator.gen_batches(
-                    self.inner_batch_size, self.data_type, self.shuffle)
+                    self.inner_batch_size, self.data_type, self.shuffle
+                )
                 continue
-            assert len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size, \
-                "self.inner_batch_size equals greatest common divisor of dataset size and " \
-                "required batch size so dataset size has to divisible by task batch size evenly."
+            assert (
+                len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size
+            ), (
+                "self.inner_batch_size equals greatest common divisor of dataset size "
+                "and required batch size so dataset size has to divisible by task batch "
+                "size evenly."
+            )
             x += xx
             y += yy
         assert len(x) == self.batch_size and len(y) == self.batch_size
         self.batch_count += 1
         if self.batch_count == self.n_batches:
-            x = x[:self.size_of_last_batch]
-            y = y[:self.size_of_last_batch]
+            x = x[: self.size_of_last_batch]
+            y = y[: self.size_of_last_batch]
         return x, y

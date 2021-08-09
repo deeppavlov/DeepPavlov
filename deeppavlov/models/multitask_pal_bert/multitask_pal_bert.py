@@ -33,7 +33,7 @@ log = getLogger(__name__)
 
 @register('multitask_pal_bert')
 class MultiTaskPalBert(TorchModel):
-    """ Multi-Task Bert Based Model 
+    """Multi-Task Bert Based Model
     Args:
         tasks: Dict of task names along with the labels for each task,
         pretrained_bert: path of the pretrained bert embeddings
@@ -43,37 +43,43 @@ class MultiTaskPalBert(TorchModel):
         lr_scheduler: name of the lr scheduler,
         lr_scheduler_paramters: lr scheduler parameters for the scheduler,
         gradient_accumulation_steps: number of gradient accumulation steps,
+        steps_per_epoch: number of steps taken per epoch
         clip_norm: normalization: value for gradient clipping,
         one_hot_labels: set to true if using one hot labels,
         multilabel: set true for multilabel class,
         return_probas: set true to return prediction probas,
-        in_distribution: in_distribution: The distribution of variables listed in the ``"in"`` config parameter between tasks. 
-            ``in_distribution`` can be ``None`` if only 1 task is called. In that case all variables
-            listed in ``"in"`` are arguments of 1 task. 
-            ``in_distribution`` can be a dictionary of ``int``. If that is the case, then keys of ``in_distribution``
-            are task names and values are numbers of variables from ``"in"`` parameter of config which are inputs of
-            corresponding task. The variables in ``"in"`` parameter have to be in the same order the tasks are listed
-            in ``in_distribution``.
-        in_y_distribution: The same as ``in_distribution`` for ``"in_y"`` config parameter.,
+        in_distribution: in_distribution: The distribution of variables listed
+        in the ``"in"`` config parameter between tasks.
+            ``in_distribution`` can be ``None`` if only 1 task is called.
+            In that case all variableslisted in ``"in"`` are arguments of 1 task.
+            ``in_distribution`` can be a dictionary of ``int``. If that is the
+            case, then keys of ``in_distribution`` are task names and values are
+            numbers of variables from ``"in"`` parameter of config which are inputs
+            of corresponding task. The variables in ``"in"`` parameter have to be
+            in the same order the tasks are listed in ``in_distribution``.
+        in_y_distribution: Same as ``in_distribution`` for ``"in_y"`` config parameter.,
     """
 
-    def __init__(self,
-                 tasks: Dict[str, Dict],
-                 pretrained_bert: str = None,
-                 freeze_embeddings: bool = False,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 2e-5},
-                 lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: dict = {},
-                 gradient_accumulation_steps: int = 1,
-                 clip_norm: Optional[float] = None,
-                 one_hot_labels: bool = False,
-                 multilabel: bool = False,
-                 return_probas: bool = False,
-                 in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
-                 in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
-                 *args,
-                 **kwargs) -> None:
+    def __init__(
+        self,
+        tasks: Dict[str, Dict],
+        pretrained_bert: str = None,
+        freeze_embeddings: bool = False,
+        optimizer: str = "AdamW",
+        optimizer_parameters: dict = {"lr": 2e-5},
+        lr_scheduler: Optional[str] = None,
+        lr_scheduler_parameters: dict = {},
+        gradient_accumulation_steps: Optional[int] = 1,
+        steps_per_epoch: Optional[int] = None,
+        clip_norm: Optional[float] = None,
+        one_hot_labels: bool = False,
+        multilabel: bool = False,
+        return_probas: bool = False,
+        in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
+        in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
+        *args,
+        **kwargs,
+    ) -> None:
         path_to_current_file = os.path.realpath(__file__)
         current_directory = os.path.split(path_to_current_file)[0]
         self.config = os.path.join(
@@ -84,8 +90,10 @@ class MultiTaskPalBert(TorchModel):
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.tasks_num_classes = [tasks[task]["n_classes"] for task in tasks]
-        self.tasks_type = ["regression" if num_classes ==
-                           1 else "classification" for num_classes in self.tasks_num_classes]
+        self.tasks_type = [
+            "regression" if num_classes == 1 else "classification"
+            for num_classes in self.tasks_num_classes
+        ]
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
@@ -94,30 +102,41 @@ class MultiTaskPalBert(TorchModel):
         self.lr_scheduler_name = lr_scheduler
         self.lr_scheduler_parameters = lr_scheduler_parameters
         self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.steps_per_epoch = steps_per_epoch
         self.in_distribution = in_distribution
         self.in_y_distribution = in_y_distribution
+        self.steps_taken = 0
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError(
-                'Use one-hot encoded labels for multilabel classification!')
+                "Use one-hot encoded labels for multilabel classification!"
+            )
 
         if self.multilabel and not self.return_probas:
             raise RuntimeError(
-                'Set return_probas to True for multilabel classification!')
+                "Set return_probas to True for multilabel classification!"
+            )
+
+        if self.gradient_accumulation_steps > 1 and not self.steps_per_epoch:
+            raise RuntimeError(
+                "Provide steps per epoch when using gradient accumulation"
+            )
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
             lr_scheduler=self.lr_scheduler_name,
             lr_scheduler_parameters=self.lr_scheduler_parameters,
-            **kwargs
+            **kwargs,
         )
 
     @overrides
     def init_from_opt(self) -> None:
-        """Initialize from scratch `self.model` with the architecture built in  `model_func (MultitaskBert)` method of this class
-            along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
-            `self.optimizer_parameters`, optionally initialize `self.lr_scheduler` as `self.lr_scheduler_name` from
-            `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
+        """Initialize from scratch `self.model` with the architecture built
+        in `model_func (MultitaskBert)` method of this class along with
+        `self.optimizer` as `self.optimizer_name` from `torch.optim` and
+        parameters `self.optimizer_parameters`, optionally initialize
+        `self.lr_scheduler` as `self.lr_scheduler_name` from
+        `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
         """
         if self.config and os.path.exists(self.config):
             self.bert_config = BertConfig.from_json_file(self.config)
@@ -140,7 +159,7 @@ class MultiTaskPalBert(TorchModel):
                     if "pooler.mult" in n and "weight" in n:
                         update[n] = partial["pooler.dense.weight"]
                 else:
-                    for val in [n, 'bert.'+n, 'cls.'+n]:
+                    for val in [n, "bert." + n, "cls." + n]:
                         if val in partial:
                             update[n] = partial[val]
             self.model.bert.load_state_dict(update)
@@ -153,7 +172,8 @@ class MultiTaskPalBert(TorchModel):
         model_parameters = [
             {
                 "params": [
-                    p for n, p in self.model.named_parameters()
+                    p
+                    for n, p in self.model.named_parameters()
                     if not any(nd in n for nd in no_decay)
                     and not any(nd in n for nd in base)
                 ],
@@ -161,7 +181,8 @@ class MultiTaskPalBert(TorchModel):
             },
             {
                 "params": [
-                    p for n, p in self.model.named_parameters()
+                    p
+                    for n, p in self.model.named_parameters()
                     if any(nd in n for nd in no_decay)
                     and not any(nd in n for nd in base)
                 ],
@@ -170,11 +191,13 @@ class MultiTaskPalBert(TorchModel):
         ]
 
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            model_parameters, **self.optimizer_parameters)
+            model_parameters, **self.optimizer_parameters
+        )
 
         if self.lr_scheduler_name:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
+            self.lr_scheduler = getattr(
+                torch.optim.lr_scheduler, self.lr_scheduler_name
+            )(self.optimizer, **self.lr_scheduler_parameters)
 
     @overrides
     def load(self, fname: Optional[str] = None) -> None:
@@ -183,7 +206,9 @@ class MultiTaskPalBert(TorchModel):
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
+            if isinstance(
+                    self.load_path,
+                    Path) and not self.load_path.parent.is_dir():
                 raise ConfigError("Provided load path is incorrect!")
 
             weights_path = Path(self.load_path.resolve())
@@ -193,7 +218,8 @@ class MultiTaskPalBert(TorchModel):
                 log.info(
                     f"Initializing `{self.__class__.__name__}` from saved.")
 
-                # firstly, initialize with random weights and previously saved parameters
+                # firstly, initialize with random weights and previously saved
+                # parameters
                 self.init_from_opt()
 
                 # now load the weights, optimizer from saved
@@ -238,26 +264,26 @@ class MultiTaskPalBert(TorchModel):
         features = args[1:]
         args_in = features[:n_in]
         in_by_tasks = self._distribute_arguments_by_tasks(
-            args_in, {}, self.task_names, "in")
+            args_in, {}, self.task_names, "in"
+        )
 
         for task_id in range(len(self.task_names)):
             task_features = in_by_tasks[self.task_names[task_id]]
 
             _input = {}
-            for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+            for elem in ["input_ids", "attention_mask", "token_type_ids"]:
                 _input[elem] = [getattr(f, elem) for f in task_features[0]]
-
-            for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
                 _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
 
             with torch.no_grad():
-                tokenized = {key: value for (key, value) in _input.items(
-                ) if key in self.model.forward.__code__.co_varnames}
+                tokenized = {
+                    key: value
+                    for (key, value) in _input.items()
+                    if key in self.model.forward.__code__.co_varnames
+                }
 
                 logits = self.model(
-                    task_id=task_id,
-                    name=self.tasks_type[task_id],
-                    **tokenized
+                    task_id=task_id, name=self.tasks_type[task_id], **tokenized
                 )
 
             if self.return_probas:
@@ -288,36 +314,39 @@ class MultiTaskPalBert(TorchModel):
         features = args[1:]
         args_in, args_in_y = features[:n_in], features[n_in:]
         in_by_tasks = self._distribute_arguments_by_tasks(
-            args_in, {}, self.task_names, "in")
+            args_in, {}, self.task_names, "in"
+        )
         in_y_by_tasks = self._distribute_arguments_by_tasks(
-            args_in_y, {}, self.task_names, "in_y")
+            args_in_y, {}, self.task_names, "in_y"
+        )
 
         task_features = in_by_tasks[self.task_names[task_id]]
         task_labels = in_y_by_tasks[self.task_names[task_id]]
 
         _input = {}
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
+        for elem in ["input_ids", "attention_mask", "token_type_ids"]:
             _input[elem] = [getattr(f, elem) for f in task_features[0]]
-
-        for elem in ['input_ids', 'attention_mask', 'token_type_ids']:
             _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
 
         if self.tasks_type[task_id] == "regression":
-            _input['labels'] = torch.tensor(
-                np.array(task_labels[0], dtype=float), dtype=torch.float32).to(self.device)
+            _input["labels"] = torch.tensor(
+                np.array(task_labels[0], dtype=float), dtype=torch.float32
+            ).to(self.device)
         else:
-            _input['labels'] = torch.from_numpy(
-                np.array(task_labels[0])).to(self.device)
-        tokenized = {key: value for (key, value) in _input.items(
-        ) if key in self.model.forward.__code__.co_varnames}
+            _input["labels"] = torch.from_numpy(np.array(task_labels[0])).to(
+                self.device
+            )
+        tokenized = {
+            key: value
+            for (key, value) in _input.items()
+            if key in self.model.forward.__code__.co_varnames
+        }
 
         loss, logits = self.model(
-            task_id=task_id,
-            name=self.tasks_type[task_id],
-            **tokenized
+            task_id=task_id, name=self.tasks_type[task_id], **tokenized
         )
-        if self.gradient_accumulation_steps > 1:
-            loss = loss/self.gradient_accumulation_steps
+
+        loss = loss / self.gradient_accumulation_steps
         loss.backward()
 
         # Clip the norm of the gradients to 1.0.
@@ -326,15 +355,23 @@ class MultiTaskPalBert(TorchModel):
             torch.nn.utils.clip_grad_norm_(
                 self.model.parameters(), self.clip_norm)
 
-        self.optimizer.step()
-        if self.lr_scheduler:
-            self.lr_scheduler.step()  # Update learning rate schedule
-        self.optimizer.zero_grad()
+        if (self.steps_taken + 1) % self.gradient_accumulation_steps == 0 or (
+                self.steps_taken + 1) % self.steps_per_epoch == 0:
+            self.optimizer.step()
+            if self.lr_scheduler:
+                self.lr_scheduler.step()  # Update learning rate schedule
+            self.optimizer.zero_grad()
         self.train_losses[task_id] = loss.item()
-
+        self.steps_taken += 1
         return {"losses": self.train_losses}
 
-    def _distribute_arguments_by_tasks(self, args, kwargs, task_names, what_to_distribute, in_distribution=None):
+    def _distribute_arguments_by_tasks(
+            self,
+            args,
+            kwargs,
+            task_names,
+            what_to_distribute,
+            in_distribution=None):
 
         if args and kwargs:
             raise ValueError("You may use args or kwargs but not both")
@@ -352,17 +389,24 @@ class MultiTaskPalBert(TorchModel):
             distribution = self.in_y_distribution
         else:
             raise ValueError(
-                f"`what_to_distribute` can be 'in' or 'in_y', {repr(what_to_distribute)} is given")
+                f"`what_to_distribute` can be 'in' or 'in_y', {repr(what_to_distribute)} is given"
+            )
 
         if distribution is None:
             if len(task_names) != 1:
-                raise ValueError(f"If no `{what_to_distribute}_distribution` is not provided there have to be only 1"
-                                 "task for inference")
-            return {task_names[0]: list(kwargs.values()) if kwargs else list(args)}
+                raise ValueError(
+                    f"If no `{what_to_distribute}_distribution` is not provided there have to be only 1"
+                    "task for inference")
+            return {
+                task_names[0]: list(kwargs.values()) if kwargs else list(args)}
 
-        if all([isinstance(task_distr, int) for task_distr in distribution.values()]):
+        if all([isinstance(task_distr, int)
+               for task_distr in distribution.values()]):
             ints = True
-        elif all([isinstance(task_distr, list) for task_distr in distribution.values()]):
+        elif all(
+            [isinstance(task_distr, list)
+             for task_distr in distribution.values()]
+        ):
             ints = False
         else:
             raise ConfigError(
@@ -382,8 +426,9 @@ class MultiTaskPalBert(TorchModel):
 
         if args and not ints:
             ints = True
-            distribution = {task_name: len(
-                in_distr) for task_name, in_distr in distribution.items()}
+            distribution = {
+                task_name: len(in_distr) for task_name,
+                in_distr in distribution.items()}
         if ints:
             if kwargs:
                 values = list(kwargs.values())
@@ -418,5 +463,6 @@ class MultiTaskPalBert(TorchModel):
             set_all = set(kwargs.keys())
             if set_used != set_all:
                 raise ConfigError(
-                    f"There are unused '{what_to_distribute}' parameters {set_all - set_used}")
+                    f"There are unused '{what_to_distribute}' parameters {set_all - set_used}"
+                )
         return args_by_task
