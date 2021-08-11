@@ -1,11 +1,28 @@
 {
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "roberta-large-mnli",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_roberta_mnli",
+      "BINARY_CLASSIFICATION": true
+    },
+    "download": [
+	{
+		"url": "http://files.deeppavlov.ai/v1/superglue/superglue_boolq_roberta_mnli.tar.gz",
+		"subdir": "{MODELS_PATH}"
+	}
+    ]
+  },
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
     "path": "super_glue",
     "name": "boolq",
     "train": "train",
     "valid": "validation",
-    "test": "test"
+    "test": "test",
+    "dev_percentage": 50
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
@@ -87,21 +104,5 @@
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2,
     "pytest_batch_size": 2
-  },
-  "metadata": {
-    "variables": {
-      "BASE_MODEL": "roberta-large-mnli",
-      "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_boolq_roberta_mnli",
-      "BINARY_CLASSIFICATION": true
-    },
-    "download": [
-	{
-		"url": "http://files.deeppavlov.ai/v1/superglue/superglue_boolq_roberta_mnli.tar.gz",
-		"subdir": "{MODELS_PATH}"
-	}
-    ]
   }
 }
