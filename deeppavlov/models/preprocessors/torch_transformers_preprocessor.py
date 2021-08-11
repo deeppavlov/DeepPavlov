@@ -468,35 +468,6 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
         return input_features
 
 
-@register("torch_record_postprocessor")
-class TorchRecordPostprocessor:
-
-    def __init__(self, is_binary: bool = False, *args, **kwargs):
-        self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
-        self.total_examples: Optional[int, None] = None
-        self.is_binary: bool = is_binary
-
-    def __call__(self, idx, y, y_pred_probas, entities, num_examples, *args, **kwargs):
-        if not self.is_binary:
-            # if we have outputs for both classes `0` and `1`
-            y_pred_probas = y_pred_probas[:, 1]
-        if self.total_examples != num_examples[0]:
-            # start over if num_examples is different
-            # implying that a different split is being evaluated
-            self.reset_accumulator()
-            self.total_examples = num_examples[0]
-        for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
-            self.record_example_accumulator.add_flat_example(index, label, probability, entity)
-            self.record_example_accumulator.collect_nested_example(index)
-            if self.record_example_accumulator.examples_processed >= self.total_examples:
-                # start over if all examples were processed
-                self.reset_accumulator()
-        return self.record_example_accumulator.return_examples()
-
-    def reset_accumulator(self):
-        self.record_example_accumulator = RecordExampleAccumulator()
-
-
 @dataclass
 class RecordFlatExample:
     """Dataclass to store a flattened ReCoRD example. Contains `probability` for
@@ -518,17 +489,62 @@ class RecordNestedExample:
     answers: List[str]
 
 
+@register("torch_record_postprocessor")
+class TorchRecordPostprocessor:
+    """Combines flat classification examples into nested examples. When called returns nested examples
+    that weren't previously returned during current iteration over examples.
+
+    Args:
+        is_binary: signifies whether the classifier uses binary classification head
+    Attributes:
+        record_example_accumulator: underling accumulator that transforms flat examples
+        total_examples: overall number of flat examples that must be processed during current iteration
+    """
+
+    def __init__(self, is_binary: bool = False, *args, **kwargs):
+        self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
+        self.total_examples: Optional[int, None] = None
+        self.is_binary: bool = is_binary
+
+    def __call__(self,
+                 idx: str,
+                 y: List[int],
+                 y_pred_probas: np.ndarray,
+                 entities: List[str],
+                 num_examples: List[int],
+                 *args,
+                 **kwargs) -> List[RecordNestedExample]:
+        if not self.is_binary:
+            # if we have outputs for both classes `0` and `1`
+            y_pred_probas = y_pred_probas[:, 1]
+        if self.total_examples != num_examples[0]:
+            # start over if num_examples is different
+            # implying that a different split is being evaluated
+            self.reset_accumulator()
+            self.total_examples = num_examples[0]
+        for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
+            self.record_example_accumulator.add_flat_example(index, label, probability, entity)
+            self.record_example_accumulator.collect_nested_example(index)
+            if self.record_example_accumulator.examples_processed >= self.total_examples:
+                # start over if all examples were processed
+                self.reset_accumulator()
+        return self.record_example_accumulator.return_examples()
+
+    def reset_accumulator(self):
+        self.record_example_accumulator = RecordExampleAccumulator()
+
+
 class RecordExampleAccumulator:
     """ReCoRD example accumulator
 
     Attributes:
-        examples_processed:
-        record_counter:
-        nested_len:
-        flat_examples:
-        nested_examples:
-        collected_indices:
-        returned_indices:
+        examples_processed: total number of examples processed so far
+        record_counter: number of examples processed for each index
+        nested_len: expected number of flat examples for a given index
+        flat_examples: stores flat examples
+        nested_examples: stores nested examples
+        collected_indices: indices of collected nested examples
+        returned_indices: indices that have been returned
     """
 
     def __init__(self):
