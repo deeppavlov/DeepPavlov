@@ -50,13 +50,13 @@ class MultiTaskPalBert(TorchModel):
         return_probas: set true to return prediction probas,
         in_distribution: in_distribution: The distribution of variables listed
         in the ``"in"`` config parameter between tasks.
-            ``in_distribution`` can be ``None`` if only 1 task is called.
-            In that case all variableslisted in ``"in"`` are arguments of 1 task.
-            ``in_distribution`` can be a dictionary of ``int``. If that is the
-            case, then keys of ``in_distribution`` are task names and values are
-            numbers of variables from ``"in"`` parameter of config which are inputs
-            of corresponding task. The variables in ``"in"`` parameter have to be
-            in the same order the tasks are listed in ``in_distribution``.
+        ``in_distribution`` can be ``None`` if only 1 task is called.
+        In that case all variableslisted in ``"in"`` are arguments of 1 task.
+        ``in_distribution`` can be a dictionary of ``int``. If that is the
+        case, then keys of ``in_distribution`` are task names and values are
+        numbers of variables from ``"in"`` parameter of config which are inputs
+        of corresponding task. The variables in ``"in"`` parameter have to be
+        in the same order the tasks are listed in ``in_distribution``.
         in_y_distribution: Same as ``in_distribution`` for ``"in_y"`` config parameter.,
     """
 

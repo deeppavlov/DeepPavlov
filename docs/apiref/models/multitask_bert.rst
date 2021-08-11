@@ -53,6 +53,6 @@ deeppavlov.models.multitask_bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.multitask_bert.multitask_bert.InputSplitter
+.. autoclass:: deeppavlov.models.preprocessors.input_splitter.InputSplitter
 
     .. automethod:: __call__

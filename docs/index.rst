@@ -29,6 +29,7 @@ Welcome to DeepPavlov's documentation!
    
    BERT-based models <features/models/bert>
    Multitask BERT <features/models/multitask_bert>
+   Multitask Pal-BERT <features/models/multitask_pal_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
    Entity Linking <features/models/entity_linking>
