@@ -26,8 +26,9 @@
     "seed": "{SEED}",
     "downsample_ratio": [
       1.8,
-      2
-    ]
+      1.8
+    ],
+    "do_index_correction": false
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",

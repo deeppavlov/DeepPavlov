@@ -58,7 +58,8 @@ class HuggingFaceDatasetReader(DatasetReader):
         # pop elements not relevant to BuilderConfig
         downsample_ratio: Union[List[float], float] = kwargs.pop("downsample_ratio", 1.)
         seed = kwargs.pop("seed", 42)
-        percentage = kwargs.get("dev_percentage", 50)
+        percentage = kwargs.pop("dev_percentage", 50)
+        do_index_correction = kwargs.pop("do_index_correction", True)
 
         split_mapping = {'train': train, 'valid': valid, 'test': test}
         # filter unused splits
@@ -92,7 +93,8 @@ class HuggingFaceDatasetReader(DatasetReader):
                     ),
                     ratio=ratio,
                     seed=seed,
-                    label_column=label_column
+                    label_column=label_column,
+                    do_correction=do_index_correction
                 ).map(add_num_examples, batched=True, batch_size=None)
                 for dataset_split, ratio
                 in zip(dataset, downsample_ratio)
@@ -277,7 +279,10 @@ def binary_downsample(dataset: Dataset,
         ratio: negative to positive examples ratio to maintain
         seed: a seed for shuffling
         label_column: the name of `label` column such as 'label' or 'labels'
-        do_correction: correct resampled indices
+        do_correction: correct resampled indices. If indices aren't corrected then examples with mismatched
+        indices will not be accounted for be ReCoRD metrics. This is not necessarily undesirable because
+        examples with such indices will have less negative examples (or even none), which makes them easier
+        for the model, thus inflating the resulting metrics.
     Returns:
         Dataset: a downsampled dataset
     """
