@@ -169,23 +169,25 @@ class MultiTaskPalBert(TorchModel):
 
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
-        model_parameters = [
-            {
-                "params": [
+        get_non_decay_params = lambda model: [
                     p
-                    for n, p in self.model.named_parameters()
+                    for n, p in model.named_parameters()
                     if not any(nd in n for nd in no_decay)
                     and not any(nd in n for nd in base)
-                ],
+                ]
+        get_decay_params = lambda model: [
+                    p
+                    for n, p in model.named_parameters()
+                    if any(nd in n for nd in no_decay)
+                    and not any(nd in n for nd in base)
+                ]
+        model_parameters = [
+            {
+                "params": get_non_decay_params(self.model),
                 "weight_decay": 0.01,
             },
             {
-                "params": [
-                    p
-                    for n, p in self.model.named_parameters()
-                    if any(nd in n for nd in no_decay)
-                    and not any(nd in n for nd in base)
-                ],
+                "params": get_decay_params(self.model),
                 "weight_decay": 0.0,
             },
         ]
@@ -276,14 +278,8 @@ class MultiTaskPalBert(TorchModel):
                 _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
 
             with torch.no_grad():
-                tokenized = {
-                    key: value
-                    for (key, value) in _input.items()
-                    if key in self.model.forward.__code__.co_varnames
-                }
-
                 logits = self.model(
-                    task_id=task_id, name=self.tasks_type[task_id], **tokenized
+                    task_id=task_id, name=self.tasks_type[task_id], **_input
                 )
 
             if self.return_probas:
@@ -336,14 +332,9 @@ class MultiTaskPalBert(TorchModel):
             _input["labels"] = torch.from_numpy(np.array(task_labels[0])).to(
                 self.device
             )
-        tokenized = {
-            key: value
-            for (key, value) in _input.items()
-            if key in self.model.forward.__code__.co_varnames
-        }
 
         loss, logits = self.model(
-            task_id=task_id, name=self.tasks_type[task_id], **tokenized
+            task_id=task_id, name=self.tasks_type[task_id], **_input
         )
 
         loss = loss / self.gradient_accumulation_steps
@@ -444,7 +435,6 @@ class MultiTaskPalBert(TorchModel):
                     f"{what_to_distribute}_distribution = {distribution}")
             values_taken = 0
             for task_name in task_names:
-                args_by_task[task_name] = {}
                 n_args = distribution[task_name]
                 args_by_task[task_name] = [values[i]
                                            for i in range(values_taken, values_taken + n_args)]
@@ -455,7 +445,6 @@ class MultiTaskPalBert(TorchModel):
             arg_names_used = []
             for task_name in task_names:
                 in_distr = distribution[task_name]
-                args_by_task[task_name] = {}
                 args_by_task[task_name] = [kwargs[arg_name]
                                            for arg_name in in_distr]
                 arg_names_used += in_distr

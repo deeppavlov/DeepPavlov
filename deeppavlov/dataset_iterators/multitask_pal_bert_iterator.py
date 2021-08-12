@@ -76,6 +76,10 @@ class MultiTaskPalBertIterator:
                 self._extract_data_type("test"),
             ),
         }
+        self.max_task_data_len = {}
+        for data_type in self.data.keys():
+            self.max_task_data_len[data_type] = max(
+                [len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
         self.sample_x_instances = None
         self.sample_y_instances = None
 
@@ -146,8 +150,7 @@ class MultiTaskPalBertIterator:
             elements are x values of merged tasks in the ordertasks are present in
             `tasks` argument of `__init__` method.
         """
-        max_task_data_len = max([len(iter_.data[data_type])
-                                 for iter_ in self.task_iterators.values()])
+        max_task_data_len = self.max_task_data_len[data_type]
         size_of_last_batch = max_task_data_len % batch_size
         if size_of_last_batch == 0:
             size_of_last_batch = batch_size
@@ -186,19 +189,19 @@ class MultiTaskPalBertIterator:
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
         else:
-            for task_batches in zip(
-                *[
-                    RepeatBatchGenerator(
-                        iter_,
-                        batch_size,
-                        data_type,
-                        shuffle,
-                        n_batches,
-                        size_of_last_batch,
-                    )
-                    for iter_ in self.task_iterators.values()
-                ]
-            ):
+            repeat_batch_generators = []
+            for iter_ in self.task_iterators.values():
+                generator = RepeatBatchGenerator(
+                    iter_,
+                    batch_size,
+                    data_type,
+                    shuffle,
+                    n_batches,
+                    size_of_last_batch,
+                )
+                repeat_batch_generators.append(generator)
+
+            for task_batches in zip(*repeat_batch_generators):
                 x_instances, y_instances = [], []
                 for task_batch in task_batches:
                     x_instances.append(task_batch[0])

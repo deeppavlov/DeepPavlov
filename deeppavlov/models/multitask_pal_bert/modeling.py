@@ -197,8 +197,8 @@ class BERTSelfAttention(nn.Module):
         if config.hidden_size % config.num_attention_heads != 0:
             raise ValueError(
                 "The hidden size (%d) is not a multiple of the number of attention "
-                "heads (%d)" % (config.hidden_size, config.num_attention_heads)
-            )
+                "heads (%d)" %
+                (config.hidden_size, config.num_attention_heads))
         if multi_params is not None:
             self.num_attention_heads = multi_params
             self.attention_head_size = int(
@@ -237,12 +237,14 @@ class BERTSelfAttention(nn.Module):
         key_layer = self.transpose_for_scores(mixed_key_layer)
         value_layer = self.transpose_for_scores(mixed_value_layer)
 
-        # Take the dot product between "query" and "key" to get the raw attention scores.
+        # Take the dot product between "query" and "key" to get the raw
+        # attention scores.
         attention_scores = torch.matmul(
             query_layer, key_layer.transpose(-1, -2))
         attention_scores = attention_scores / \
             math.sqrt(self.attention_head_size)
-        # Apply the attention mask is (precomputed for all layers in BertModel forward() function)
+        # Apply the attention mask is (precomputed for all layers in BertModel
+        # forward() function)
         attention_scores = attention_scores + attention_mask
 
         # Normalize the attention scores to probabilities.
@@ -325,9 +327,9 @@ class BERTPals(nn.Module):
         self.hidden_act_fn = gelu
 
     def forward(self, hidden_states, attention_mask=None):
-        hidden_states_aug = self.aug_dense(hidden_states)
-        hidden_states_aug = self.attn(hidden_states_aug, attention_mask)
-        hidden_states = self.aug_dense2(hidden_states_aug)
+        hidden_states = self.aug_dense(hidden_states)
+        hidden_states = self.attn(hidden_states, attention_mask)
+        hidden_states = self.aug_dense2(hidden_states)
         hidden_states = self.hidden_act_fn(hidden_states)
         return hidden_states
 
@@ -337,20 +339,20 @@ class BERTLowRank(nn.Module):
         super(BERTLowRank, self).__init__()
         # Encoder and decoder matrices project down to the smaller dimension
         if config.extra_dim:
-            self.aug_dense = nn.Linear(config.hidden_size, config.extra_dim)
-            self.aug_dense2 = nn.Linear(config.extra_dim, config.hidden_size)
+            hidden_size_aug = config.extra_dim
         else:
-            self.aug_dense = nn.Linear(
-                config.hidden_size, config.hidden_size_aug)
-            self.aug_dense2 = nn.Linear(
-                config.hidden_size_aug, config.hidden_size)
+            hidden_size_aug = config.hidden_size_aug
+        self.aug_dense = nn.Linear(
+            config.hidden_size, hidden_size_aug)
+        self.aug_dense2 = nn.Linear(
+            hidden_size_aug, config.hidden_size)
         self.config = config
         self.hidden_act_fn = gelu
 
     def forward(self, hidden_states, attention_mask=None):
-        hidden_states_aug = self.aug_dense(hidden_states)
-        hidden_states_aug = self.hidden_act_fn(hidden_states_aug)
-        hidden_states = self.aug_dense2(hidden_states_aug)
+        hidden_states = self.aug_dense(hidden_states)
+        hidden_states = self.hidden_act_fn(hidden_states)
+        hidden_states = self.aug_dense2(hidden_states)
         return hidden_states
 
 
@@ -453,18 +455,20 @@ class BERTEncoder(nn.Module):
         super(BERTEncoder, self).__init__()
         self.config = config
         if config.houlsby:
-            # Adjust line below to add PALs etc. to different layers. True means add a PAL.
+            # Adjust line below to add PALs etc. to different layers. True
+            # means add a PAL.
             self.multis = [
-                True if i < 999 else False for i in range(config.num_hidden_layers)
-            ]
+                True if i < 999 else False for i in range(
+                    config.num_hidden_layers)]
             self.layer = nn.ModuleList(
                 [BERTLayer(config, houlsby=mult) for mult in self.multis]
             )
         elif config.mult:
-            # Adjust line below to add PALs etc. to different layers. True means add a PAL.
+            # Adjust line below to add PALs etc. to different layers. True
+            # means add a PAL.
             self.multis = [
-                True if i < 999 else False for i in range(config.num_hidden_layers)
-            ]
+                True if i < 999 else False for i in range(
+                    config.num_hidden_layers)]
             self.layer = nn.ModuleList(
                 [BERTLayer(config, mult=mult) for mult in self.multis]
             )
@@ -608,7 +612,12 @@ class BertModel(nn.Module):
         self.encoder = BERTEncoder(config)
         self.pooler = BERTPooler(config)
 
-    def forward(self, input_ids, token_type_ids=None, attention_mask=None, i=0):
+    def forward(
+            self,
+            input_ids,
+            token_type_ids=None,
+            attention_mask=None,
+            i=0):
         if attention_mask is None:
             attention_mask = torch.ones_like(input_ids)
         if token_type_ids is None:
@@ -618,7 +627,8 @@ class BertModel(nn.Module):
         # Sizes are [batch_size, 1, 1, from_seq_length]
         # So we can broadcast to [batch_size, num_heads, to_seq_length, from_seq_length]
         # this attention mask is more simple than the triangular masking of causal attention
-        # used in OpenAI GPT, we just need to prepare the broadcast dimension here.
+        # used in OpenAI GPT, we just need to prepare the broadcast dimension
+        # here.
         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
