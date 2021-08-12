@@ -507,13 +507,24 @@ class TorchRecordPostprocessor:
         self.is_binary: bool = is_binary
 
     def __call__(self,
-                 idx: str,
+                 idx: List[str],
                  y: List[int],
                  y_pred_probas: np.ndarray,
                  entities: List[str],
                  num_examples: List[int],
                  *args,
                  **kwargs) -> List[RecordNestedExample]:
+        """Postprocessor call
+
+        Args:
+            idx: list of string indices
+            y: list of integer labels
+            y_pred_probas: array of predicted probabilities
+            num_examples: list of duplicated total numbers of examples
+
+        Returns:
+            List[RecordNestedExample]: processed but not previously returned examples (may be empty in some cases)
+        """
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
             y_pred_probas = y_pred_probas[:, 1]
@@ -531,6 +542,8 @@ class TorchRecordPostprocessor:
         return self.record_example_accumulator.return_examples()
 
     def reset_accumulator(self):
+        """Reinitialize the underlying accumulator from scratch
+        """
         self.record_example_accumulator = RecordExampleAccumulator()
 
 
@@ -557,6 +570,14 @@ class RecordExampleAccumulator:
         self.returned_indices: Set[str] = set()
 
     def add_flat_example(self, index: str, label: int, probability: float, entity: str):
+        """Add a single flat example to the accumulator
+
+        Args:
+            index: example index
+            label: example label (`-1` means that label is not available)
+            probability: predicted probability
+            entity: candidate entity
+        """
         self.flat_examples[index].append(RecordFlatExample(index, label, probability, entity))
         if index not in self.nested_len:
             self.nested_len[index] = self.get_expected_len(index)

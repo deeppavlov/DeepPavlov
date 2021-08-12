@@ -11,6 +11,14 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 @register_metric("record_f1_score")
 def record_f1_score(record_examples: List[RecordNestedExample]):
+    """Calculate F1 score for given nested ReCoRD examples
+
+    Args:
+        record_examples: processed ReCoRD examples
+
+    Returns:
+        float: F1 score
+    """
     if not record_examples:
         return 0.
     f1_scores = []
@@ -24,6 +32,14 @@ def record_f1_score(record_examples: List[RecordNestedExample]):
 
 @register_metric("record_em_score")
 def record_em_score(record_examples: List[RecordNestedExample]):
+    """Calculate Exact Match score for given nested ReCoRD examples
+
+    Args:
+        record_examples: processed ReCoRD examples
+
+    Returns:
+        float: Exact Match score
+    """
     if not record_examples:
         return 0.
     em_scores = []
