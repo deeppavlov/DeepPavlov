@@ -66,7 +66,7 @@ class HuggingFaceDatasetReader(DatasetReader):
         split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
 
         if isinstance(downsample_ratio, float):
-            downsample_ratio = downsample_ratio * len(split_mapping)
+            downsample_ratio = [downsample_ratio] * len(split_mapping)
         elif isinstance(downsample_ratio, list) and len(downsample_ratio) != len(split_mapping):
             raise ValueError("The number of downsample ratios must be the same as the number of splits")
 
