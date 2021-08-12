@@ -194,7 +194,7 @@ class IntentCatcher(NNModel):
         Returns:
             list of labels.
         """
-        if sentences and isinstance(x[0], tuple):
+        if sentences and isinstance(sentences[0], tuple):
             sentences = [sent for _re, sent in sentences]
 
         labels = [None for i in range(len(sentences))]
