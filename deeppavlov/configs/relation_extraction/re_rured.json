@@ -7,11 +7,11 @@
     "class_name": "basic_classification_iterator"
   },
   "chainer": {
-    "in": ["input_x"],
+    "in": ["tokens", "entity_info"],
     "in_y": ["y_ids"],
     "pipe": [
       {
-        "in": ["input_x"],
+        "in": ["tokens", "entity_info"],
         "out": ["input_x_bert"],
         "class_name": "torch_transformers_re_preprocessor",
         "ner_tags": ["WORK_OF_ART", "NORP", "GROUP", "LAW", "NATIONALITY", "EVENT", "DATE", "CURRENCY", "GPE",
@@ -37,7 +37,6 @@
         "class_name": "re_postprocessor",
         "rel2id_path": "{DOWNLOADS_PATH}/rured/rel2id.json",
         "rel2label_path": "{DOWNLOADS_PATH}/rured/rel2label.json",
-        "return_rel_labels": true,
         "in": ["model_output"],
         "out": ["predictions"]
       }

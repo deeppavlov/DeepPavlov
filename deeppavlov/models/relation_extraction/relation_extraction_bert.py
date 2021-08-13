@@ -1,10 +1,9 @@
 from logging import getLogger
 from typing import List, Optional, Dict, Tuple, Union
 
-import torch
-import torch.nn as nn
 import numpy as np
-from torch import Tensor
+import torch
+from torch import nn, Tensor
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
