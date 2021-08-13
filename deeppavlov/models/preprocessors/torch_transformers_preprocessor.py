@@ -337,10 +337,7 @@ class TorchTransformersREPreprocessor(Component):
         else:
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, input_info: List[Tuple[List, List]]) -> List[Dict]:
-
-        tokens, entity_info = zip(*input_info)
-
+    def __call__(self, tokens: List[List[str]], entity_info: List[List]) -> List[Dict]:
         """
         Tokenize and create masks; recalculate the entity positions reagrding the document boarders.
         Args:
