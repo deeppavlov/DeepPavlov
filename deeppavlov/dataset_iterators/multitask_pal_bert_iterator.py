@@ -70,12 +70,9 @@ class MultiTaskPalBertIterator:
             "train": self._extract_data_type("train"),
             "valid": self._extract_data_type("valid"),
             "test": self._extract_data_type("test"),
-            "all": self._unite_dataset_parts(
-                self._extract_data_type("train"),
-                self._extract_data_type("valid"),
-                self._extract_data_type("test"),
-            ),
         }
+        self.data["all"] = self._unite_dataset_parts(
+            self.data["train"], self.data["valid"], self.data["test"])
         self.max_task_data_len = {}
         for data_type in self.data.keys():
             self.max_task_data_len[data_type] = max(
@@ -179,12 +176,12 @@ class MultiTaskPalBertIterator:
                 y_instances = self.sample_y_instances.copy()
                 x_instances[self.task_id] = batch[0]
                 y_instances[self.task_id] = batch[1]
-                b = (
+                batchs = (
                     self.add_task_id(self.task_id, x_instances),
                     tuple(zip(*y_instances)),
                 )
                 self.steps_taken += 1
-                yield b
+                yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
@@ -206,8 +203,9 @@ class MultiTaskPalBertIterator:
                 for task_batch in task_batches:
                     x_instances.append(task_batch[0])
                     y_instances.append(task_batch[1])
-                b = (self.add_task_id(-1, x_instances), tuple(zip(*y_instances)))
-                yield b
+                batchs = (self.add_task_id(-1, x_instances),
+                          tuple(zip(*y_instances)))
+                yield batchs
 
     def add_task_id(self, task_id, x_instances):
         x_in = []
