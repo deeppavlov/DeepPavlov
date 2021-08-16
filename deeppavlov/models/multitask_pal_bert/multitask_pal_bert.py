@@ -270,12 +270,11 @@ class MultiTaskPalBert(TorchModel):
         )
 
         for task_id in range(len(self.task_names)):
-            task_features = in_by_tasks[self.task_names[task_id]]
+            task_features = in_by_tasks[self.task_names[task_id]][0]
 
             _input = {}
             for elem in ["input_ids", "attention_mask", "token_type_ids"]:
-                _input[elem] = [getattr(f, elem) for f in task_features[0]]
-                _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+                _input[elem] = task_features[elem].to(self.device)
 
             with torch.no_grad():
                 logits = self.model(
@@ -316,13 +315,12 @@ class MultiTaskPalBert(TorchModel):
             args_in_y, {}, self.task_names, "in_y"
         )
 
-        task_features = in_by_tasks[self.task_names[task_id]]
+        task_features = in_by_tasks[self.task_names[task_id]][0]
         task_labels = in_y_by_tasks[self.task_names[task_id]]
 
         _input = {}
         for elem in ["input_ids", "attention_mask", "token_type_ids"]:
-            _input[elem] = [getattr(f, elem) for f in task_features[0]]
-            _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
+            _input[elem] = task_features[elem].to(self.device)
 
         if self.tasks_type[task_id] == "regression":
             _input["labels"] = torch.tensor(

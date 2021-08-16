@@ -169,7 +169,7 @@ class MultiTaskPalBertIterator:
             for step in range(self.steps_per_epoch):
                 if (
                     self.steps_taken + 1
-                ) % self.gradient_accumulation_steps or self.task_id:
+                ) % self.gradient_accumulation_steps == 0 or self.task_id is None:
                     self.task_id = np.random.choice(self.n_tasks, p=probs)
                 batch = generators[self.task_id].__next__()
                 x_instances = self.sample_x_instances.copy()
