@@ -194,7 +194,8 @@ class TorchTransformersNerPreprocessor(Component):
 
         if tags is not None:
             if self.provide_subword_tags:
-                return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers, subword_tags
+                return tokens, subword_tokens, subword_tok_ids, \
+                    attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -207,7 +208,8 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return tokens, subword_tokens, subword_tok_ids, attention_mask, startofword_markers, nonmasked_tags
+                return tokens, subword_tokens, subword_tok_ids, \
+                    attention_mask, startofword_markers, nonmasked_tags
         return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
     @staticmethod
