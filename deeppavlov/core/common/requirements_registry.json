@@ -89,7 +89,8 @@
     "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
   ],
   "go_bot": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
   ],
   "hybrid_ner_model": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
