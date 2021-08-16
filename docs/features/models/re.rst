@@ -1,7 +1,7 @@
 Relation Extraction (RE)
 ==============================
 
-Relation extraction is the task of detecting and classifying the relationship between to entities in text.
+Relation extraction is the task of detecting and classifying the relationship between two entities in text.
 DeepPavlov provides the document-level relation extraction meaning that the relation can be detected between the entities that are not in one sentence.
 Currently, RE is available only for English language.
 
