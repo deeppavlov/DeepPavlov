@@ -65,8 +65,9 @@ class TorchTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
-            List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+    def __call__(
+            self, texts_a: List[str], texts_b: Optional[List[str]] = None
+    ) -> Union[List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
