@@ -55,7 +55,10 @@ class REBertModel(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
-    def train_on_batch(self, features: List[Dict], labels: List) -> float:
+    # def train_on_batch(self, features: List[Dict], labels: List) -> float:
+    def train_on_batch(
+            self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List, labels: List
+    ) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
         Args:
@@ -65,14 +68,22 @@ class REBertModel(TorchModel):
             dict with loss and learning rate values.
         """
 
-        _input = {'labels': labels}
-        for elem in ['input_ids', 'attention_mask']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        for elem in ['entity_pos', 'ner_tags']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = inp_elem
-        _input["labels"] = labels
+        _input = {
+            'input_ids': torch.LongTensor(input_ids).to(self.device),
+            'attention_mask': torch.LongTensor(attention_mask).to(self.device),
+            'entity_pos': entity_pos,
+            'ner_tags': entity_tags,
+            'labels': labels
+        }
+
+        # _input = {'labels': labels}
+        # for elem in ['input_ids', 'attention_mask']:
+        #     inp_elem = [f[elem] for f in features]
+        #     _input[elem] = torch.LongTensor(inp_elem).to(self.device)
+        # for elem in ['entity_pos', 'ner_tags']:
+        #     inp_elem = [f[elem] for f in features]
+        #     _input[elem] = inp_elem
+        # _input["labels"] = labels
 
         self.model.train()
         self.model.zero_grad()
@@ -92,7 +103,9 @@ class REBertModel(TorchModel):
 
         return loss.item()
 
-    def __call__(self, features: List[Dict]) -> Union[List[int], List[np.ndarray]]:
+    def __call__(
+            self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List
+    ) -> Union[List[int], List[np.ndarray]]:
         """
         Get model predictions using features as input.
         Args:
@@ -103,13 +116,20 @@ class REBertModel(TorchModel):
 
         self.model.eval()
 
-        _input = {}
-        for elem in ['input_ids', 'attention_mask']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        for elem in ['entity_pos', 'ner_tags']:
-            inp_elem = [f[elem] for f in features]
-            _input[elem] = inp_elem
+        _input = {
+            'input_ids': torch.LongTensor(input_ids).to(self.device),
+            'attention_mask': torch.LongTensor(attention_mask).to(self.device),
+            'entity_pos': entity_pos,
+            'ner_tags': entity_tags
+        }
+
+        # _input = {}
+        # for elem in ['input_ids', 'attention_mask']:
+        #     inp_elem = [f[elem] for f in features]
+        #     _input[elem] = torch.LongTensor(inp_elem).to(self.device)
+        # for elem in ['entity_pos', 'ner_tags']:
+        #     inp_elem = [f[elem] for f in features]
+        #     _input[elem] = inp_elem
 
         with torch.no_grad():
             indices, probas = self.model(**_input)

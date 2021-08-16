@@ -9,18 +9,18 @@
     "class_name": "basic_classification_iterator"
   },
   "chainer": {
-    "in": ["tokens", "entity_info"],
+    "in": ["tokens", "entity_pos", "entity_tags"],
     "in_y": ["y_ids"],
     "pipe": [
       {
-        "in": ["tokens", "entity_info"],
-        "out": ["input_x_bert"],
-        "class_name": "torch_transformers_re_preprocessor",
+        "in": ["tokens", "entity_pos", "entity_tags"],
+        "out": ["input_ids", "attention_mask", "entity_pos", "entity_tags"],
+        "class_name": "re_preprocessor",
         "vocab_file": "bert-base-uncased"
       },
       {
         "class_name": "re_torch_transformers_classifier",
-        "in": ["input_x_bert"],
+        "in": ["input_ids", "attention_mask", "entity_pos", "entity_tags"],
         "in_y": ["y_ids"],
         "out": ["model_output"],
         "save_path": "{MODEL_PATH}/model",
@@ -36,10 +36,10 @@
         "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
         "rel2label_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
         "in": ["model_output"],
-        "out": ["predictions"]
+        "out": ["wikidata_relation_id", "relation_name"]
       }
     ],
-    "out": ["predictions"]
+    "out": ["wikidata_relation_id", "relation_name"]
   },
   "train": {
     "epochs": 50,
