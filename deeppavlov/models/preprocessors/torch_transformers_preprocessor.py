@@ -17,9 +17,9 @@ import random
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union, Dict
+from typing import Tuple, List, Optional, Union
 
-from transformers import AutoTokenizer, BertTokenizer
+from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
@@ -65,9 +65,8 @@ class TorchTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(
-            self, texts_a: List[str], texts_b: Optional[List[str]] = None
-    ) -> Union[List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[
+            List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a and texts_b are separated by [SEP] token
@@ -160,10 +159,8 @@ class TorchTransformersNerPreprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
-
         if isinstance(tokens[0], str):
             tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
-
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
         for i in range(len(tokens)):
             toks = tokens[i]
