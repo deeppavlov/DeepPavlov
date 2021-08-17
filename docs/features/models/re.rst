@@ -3,22 +3,20 @@ Relation Extraction (RE)
 
 Relation extraction is the task of detecting and classifying the relationship between two entities in text.
 DeepPavlov provides the document-level relation extraction meaning that the relation can be detected between the entities that are not in one sentence.
-Currently, RE is available only for English language.
+Currently, RE is available for English and Russian languages.
 
-Train the model
------------------------
+- RE model for English language trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus based on Wikipedia. For more details pelase refer to the *DocRED corpus* section.
+- RE model for Russian language trained on `RuRed <http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf>`__ corpus based on the Lenta.ru news corpus. For more details pelase refer to the *RuRED corpus* section.
 
-The RE model can be trained using the following command:
+English RE model
+----------------------------
+
+The English RE model can be trained using the following command:
 
 .. code:: bash
 
     python3.6 -m deeppavlov train re_docred
-
-Use the trained RE model
------------------------
-
-Currently, we provide RE model trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus. For more details pelase refer to Training corpus section. 
-
+    
 The trained model weights can be loaded with the following command:
 
 .. code:: bash
@@ -32,30 +30,15 @@ The trained model can be used for inference with the following code:
     from deeppavlov import configs, build_model
     re = build_model(configs.relation_extraction.re_docred, download=False)
 
-    sentence_tokens = ["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", "," "born", "Michelle", "Robinson", "."]
-    entity_info = [[(0, 2)], [(5, 7), (9, 11)], "PER", "PER"]
-    re([[sentence_tokens, entity_info]])
-    >> [[('P26', 'spouse')]]
+    sentence_tokens = [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle", "Robinson", "."]]
+    entity_pos = [[[(0, 2)], [(5, 7), (9, 11)]]]
+    entity_tags = [["PER", "PER"]]
+    pred = re_model(sentence_tokens, entity_pos, entity_tags)
+    >> [['P26'], ['spouse']]
 
-The output is a relation found between the given entities: relation id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P26') and relation name ('spouse').
+**Model Input**:
 
-RE model
------------------------
-We based our model on the `Adaptive Thresholding and Localized Context Pooling <https://arxiv.org/pdf/2010.11304.pdf>`__ model and used NER entity tags as additional input. Two core ideas of this model are:
-
-- Adaptive Threshold
-
-The usual global threshold for converting the RE classifier output probability to relation label is replaced with a learnable one. A new threshold class that learns an entities-dependent threshold value is introduced and learnt as all other classes. During prediction the positive classes (= relations that are hold in the sample indeed) are claimed to be the classes with higher logins that the TH class, while all others are negative ones.
-    
-- Localised Context Pooling
-
-The embedding of each entity pair is enhanced with an additional local context embedding related to both entities. Such representation, which is attended to the relevant context in the document, is useful to decide the relation for exactly this entity pair. For incorporating the context information the attention heads are directly used.
-
-
-Input
------------------------
-
-- text document as a list ok tokens
+- text document as a list of tokens
 - list of entity information
 
   - positions of all mentions of the first entity
@@ -69,7 +52,6 @@ As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inher
 
    <details>
    <summary><a>The whole list of 6 English NER tags</a></summary>
-
 
 +-------+------------------------------------------------------------------------------------------------+
 |PER    | People, including fictional                                                                    |
@@ -91,84 +73,9 @@ As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inher
 .. raw:: html
 
    </details>
-   
-.. raw:: html
 
-   <details>
-   <summary><a>The whole list of 29 Russian NER tags</a></summary>
 
-+-------------+------------------------+------------------------------------------------------------------------+
-| NER tag     | Description                                                                                     |
-+-------------+------------------------+------------------------------------------------------------------------+
-| WORK_OF_ART | name of work of art                                                                             |
-+-------------+------------------------+------------------------------------------------------------------------+
-| NORP        | affiliation                                                                                     |
-+-------------+------------------------+------------------------------------------------------------------------+
-| GROUP       | unnamed groups of people and companies                                                          |
-+-------------+------------------------+------------------------------------------------------------------------+
-| LAW         | law name                                                                                        |
-+-------------+------------------------+------------------------------------------------------------------------+
-| NATIONALITY | names of nationalities                                                                          |
-+-------------+------------------------+------------------------------------------------------------------------+
-| EVENT       | event name                                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| DATE        | date value                                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| CURRENCY    | names of currencies                                                                             |
-+-------------+------------------------+------------------------------------------------------------------------+
-| GPE         | geo-political entity                                                                            |
-+-------------+------------------------+------------------------------------------------------------------------+
-| QUANTITY    | quantity value                                                                                  |
-+-------------+------------------------+------------------------------------------------------------------------+
-| FAMILY      | families as a whole                                                                             |
-+-------------+------------------------+------------------------------------------------------------------------+
-| ORDINAL     | ordinal value                                                                                   |
-+-------------+------------------------+------------------------------------------------------------------------+
-| RELIGION    | names of religions                                                                              |
-+-------------+------------------------+------------------------------------------------------------------------+
-| CITY        | Names of cities, towns, and villages                                                            |
-+-------------+------------------------+------------------------------------------------------------------------+
-| MONEY       | money name                                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| AGE         | people's and object's ages                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| LOCATION    | location name                                                                                   |
-+-------------+------------------------+------------------------------------------------------------------------+
-| PERCENT     | percent value                                                                                   |
-+-------------+------------------------+------------------------------------------------------------------------+
-| BOROUGH     | Names of sub-city entities                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| PERSON      | person name                                                                                     |
-+-------------+------------------------+------------------------------------------------------------------------+
-| REGION      |   Names of sub-country entities                                                                 |
-+-------------+------------------------+------------------------------------------------------------------------+
-| COUNTRY     | Names of countries                                                                              |
-+-------------+------------------------+------------------------------------------------------------------------+
-| PROFESSION  | Professions and people of these professions.                                                    |
-+-------------+------------------------+------------------------------------------------------------------------+
-| ORGANIZATION| organization name                                                                               |
-+-------------+------------------------+------------------------------------------------------------------------+
-| FAC         | building name                                                                                   |
-+-------------+------------------------+------------------------------------------------------------------------+
-| CARDINAL    | cardinal value                                                                                  |
-+-------------+------------------------+------------------------------------------------------------------------+
-| PRODUCT     | product name                                                                                    |
-+-------------+------------------------+------------------------------------------------------------------------+
-| TIME        | time value                                                                                      |
-+-------------+------------------------+------------------------------------------------------------------------+
-| STREET      | street name                                                                                     |
-+-------------+------------------------+------------------------------------------------------------------------+
- 
-.. raw:: html
-
-   </details>
-
-Output
------------------------
-
-English model: one or several of the 97 relations with their id in Wikidata.
-Russian model: one or several of the 30 relations with their id in Wikidata (if applicable).
-
+**Model Output**: one or several of the 97 relations found between the given entities; relation id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P26') and relation name ('spouse').
 
 .. raw:: html
 
@@ -374,6 +281,156 @@ Russian model: one or several of the 30 relations with their id in Wikidata (if 
 .. raw:: html
 
    </details>
+
+
+.. raw:: html
+
+   <details>
+   <summary><a>Some details on DocRED corpus English RE model was trained on</a></summary>
+
+The model was trained on DocRed English corpus for document-level relation extracton task. It was constructed from Wikipedia and Wikidata and is now the largest human-annotated dataset for document-level RE from plain text.
+
+As the original DocRED test dataset containes only unlabeled data, while we want to have labeled one in order to perform evaluation, we decided to: 
+1. merge train and dev data (= labeled data)
+2. split them into new train, dev and test dataset
+
+Currently, there are two types of possible splittings provided:
+
+- user can set the relative size of dev and test data (e.g. 1/7)
+- user can set the absolute size of dev and test data (e.g. 2000 samples)
+
+In our experiment, we set the absolute size of dev and test data == 150 initial documents. It resulted in approximately 3500 samples. 
+
+We additionally generate negative samples if it was necessary to have the following proportions:
+- for train set: negative samples are twice as many as positive ones
+- for dev & test set: negative samples are the same amount as positive ones
+
++----------------+----------------+----------------+
+| Train          | Dev            | Test           |
++----------------+----------------+----------------+
+| 130650         | 3406           |3545            |
++----------------+----------------+----------------+
+
++----------------+----------------+----------------+----------------+----------------+----------------+
+| Train Positive | Train Negative | Dev Positive   | Dev Negative   | Test Positive  | Test Negative  |
++----------------+----------------+----------------+----------------+----------------+----------------+
+| 44823          | 89214          | 1239           | 1229           | 1043           | 1036           |
++----------------+----------------+----------------+----------------+----------------+----------------+
+
+.. raw:: html
+
+   </details>
+    
+Russian RE model
+----------------------------
+
+The Russian RE model can be trained using the following command:
+
+.. code:: bash
+
+    python3.6 -m deeppavlov train re_rured
+    
+The trained model weights can be loaded with the following command:
+
+.. code:: bash
+
+    python3.6 -m deeppavlov download re_rured
+
+The trained model can be used for inference with the following code:
+
+.. code:: python
+
+    from deeppavlov import configs, build_model
+    re = build_model(configs.relation_extraction.re_rured, download=False)
+
+    sentence_tokens = [["Илон", "Маск", "живет", "в", "Сиэттле", "."]]
+    entity_pos = [[[(0, 2)], [(4, 6)]]]
+    entity_tags = [["PERSON", "CITY"]]
+    pred = re_model(sentence_tokens, entity_pos, entity_tags)
+    >> [['P551'], ['место жительства']]
+
+**Model Input**: 
+
+- text document as a list of tokens
+- list of entity information
+
+  - positions of all mentions of the first entity
+  - positions of all mentions of the second entity
+  - NER tag of the first entity
+  - NER tag of the second entity
+  
+.. raw:: html
+
+   <details>
+   <summary><a>The whole list of 29 Russian NER tags</a></summary>
+
++-------------+------------------------+------------------------------------------------------------------------+
+| NER tag     | Description                                                                                     |
++-------------+------------------------+------------------------------------------------------------------------+
+| WORK_OF_ART | name of work of art                                                                             |
++-------------+------------------------+------------------------------------------------------------------------+
+| NORP        | affiliation                                                                                     |
++-------------+------------------------+------------------------------------------------------------------------+
+| GROUP       | unnamed groups of people and companies                                                          |
++-------------+------------------------+------------------------------------------------------------------------+
+| LAW         | law name                                                                                        |
++-------------+------------------------+------------------------------------------------------------------------+
+| NATIONALITY | names of nationalities                                                                          |
++-------------+------------------------+------------------------------------------------------------------------+
+| EVENT       | event name                                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| DATE        | date value                                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| CURRENCY    | names of currencies                                                                             |
++-------------+------------------------+------------------------------------------------------------------------+
+| GPE         | geo-political entity                                                                            |
++-------------+------------------------+------------------------------------------------------------------------+
+| QUANTITY    | quantity value                                                                                  |
++-------------+------------------------+------------------------------------------------------------------------+
+| FAMILY      | families as a whole                                                                             |
++-------------+------------------------+------------------------------------------------------------------------+
+| ORDINAL     | ordinal value                                                                                   |
++-------------+------------------------+------------------------------------------------------------------------+
+| RELIGION    | names of religions                                                                              |
++-------------+------------------------+------------------------------------------------------------------------+
+| CITY        | Names of cities, towns, and villages                                                            |
++-------------+------------------------+------------------------------------------------------------------------+
+| MONEY       | money name                                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| AGE         | people's and object's ages                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| LOCATION    | location name                                                                                   |
++-------------+------------------------+------------------------------------------------------------------------+
+| PERCENT     | percent value                                                                                   |
++-------------+------------------------+------------------------------------------------------------------------+
+| BOROUGH     | Names of sub-city entities                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| PERSON      | person name                                                                                     |
++-------------+------------------------+------------------------------------------------------------------------+
+| REGION      |   Names of sub-country entities                                                                 |
++-------------+------------------------+------------------------------------------------------------------------+
+| COUNTRY     | Names of countries                                                                              |
++-------------+------------------------+------------------------------------------------------------------------+
+| PROFESSION  | Professions and people of these professions.                                                    |
++-------------+------------------------+------------------------------------------------------------------------+
+| ORGANIZATION| organization name                                                                               |
++-------------+------------------------+------------------------------------------------------------------------+
+| FAC         | building name                                                                                   |
++-------------+------------------------+------------------------------------------------------------------------+
+| CARDINAL    | cardinal value                                                                                  |
++-------------+------------------------+------------------------------------------------------------------------+
+| PRODUCT     | product name                                                                                    |
++-------------+------------------------+------------------------------------------------------------------------+
+| TIME        | time value                                                                                      |
++-------------+------------------------+------------------------------------------------------------------------+
+| STREET      | street name                                                                                     |
++-------------+------------------------+------------------------------------------------------------------------+
+ 
+.. raw:: html
+
+   </details>
+   
+**Model Output**: one or several of the 30 relations found between the given entities; relation name (e.g. 'MEMBER'), and, if applicable, its id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P710') and russian relation name (e.g. "участник").
    
 .. raw:: html
 
@@ -445,45 +502,44 @@ Russian model: one or several of the 30 relations with their id in Wikidata (if 
 .. raw:: html
 
    </details>
-   
-Some details about DocRED corpus
------------------------  
 
 .. raw:: html
 
    <details>
-   <summary><a>Click here to expand</a></summary>
+   <summary><a>Some details on RuRED corpus Russian RE model was trained on</a></summary>
 
-The model was trained on DocRed English corpus for document-level relation extracton task. It was constructed from Wikipedia and Wikidata and is now the largest human-annotated dataset for document-level RE from plain text.
+In case of RuRED we used the train, dev and test sets from the original RuRED setting. We additionally generate negative samples if it was necessary to have the following proportions:
 
-As the original DocRED test dataset containes only unlabeled data, while we want to have labeled one in order to perform evaluation, we decided to: 
-1. merge train and dev data (= labeled data)
-2. split them into new train, dev and test dataset
-
-Currently, there are two types of possible splittings provided:
-
-- user can set the relative size of dev and test data (e.g. 1/7)
-- user can set the absolute size of dev and test data (e.g. 2000 samples)
-
-In our experiment, we set the absolute size of dev and test data == 150 initial documents. It resulted in approximately 3500 samples. 
-
-We additionally generate negative samples if it was necessary to have the following proportions:
 - for train set: negative samples are twice as many as positive ones
 - for dev & test set: negative samples are the same amount as positive ones
 
-+----------------+----------------+----------------+
-| Train          | Dev            | Test           |
-+----------------+----------------+----------------+
-| 130650         | 3406           |3545            |
-+----------------+----------------+----------------+
++---------------+---------------+----------------+
+| Train         | Dev           | Test           |
++---------------+---------------+----------------+
+| 12855         | 1076           |1072           |
++---------------+---------------+----------------+
 
-+----------------+----------------+----------------+----------------+----------------+----------------+
-| Train Positive | Train Negative | Dev Positive   | Dev Negative   | Test Positive  | Test Negative  |
-+----------------+----------------+----------------+----------------+----------------+----------------+
-| 44823          | 89214          | 1239           | 1229           | 1043           | 1036           |
-+----------------+----------------+----------------+----------------+----------------+----------------+
++---------------+----------------+----------------+----------------+----------------+----------------+
+| Train Positive| Train Negative | Dev Positive   | Dev Negative   | Test Positive  | Test Negative  |
++---------------+----------------+----------------+----------------+----------------+----------------+
+| 4285          | 8570           | 538            | 538            | 536            | 536            |
++---------------+----------------+----------------+----------------+----------------+----------------+
+
 
 .. raw:: html
 
    </details>
    
+   
+RE Model Architecture 
+-----------------------
+We based our model on the `Adaptive Thresholding and Localized Context Pooling <https://arxiv.org/pdf/2010.11304.pdf>`__ model and used NER entity tags as additional input. Two core ideas of this model are:
+
+- Adaptive Threshold
+
+The usual global threshold for converting the RE classifier output probability to relation label is replaced with a learnable one. A new threshold class that learns an entities-dependent threshold value is introduced and learnt as all other classes. During prediction the positive classes (= relations that are hold in the sample indeed) are claimed to be the classes with higher logins that the TH class, while all others are negative ones.
+    
+- Localised Context Pooling
+
+The embedding of each entity pair is enhanced with an additional local context embedding related to both entities. Such representation, which is attended to the relevant context in the document, is useful to decide the relation for exactly this entity pair. For incorporating the context information the attention heads are directly used.
+
