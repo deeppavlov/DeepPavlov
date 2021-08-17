@@ -8,12 +8,12 @@ from torch import nn, Tensor
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.models.classifiers.torch_re_bert import BertWithAdaThresholdLocContextPooling
+from deeppavlov.models.classifiers.re_bert import BertWithAdaThresholdLocContextPooling
 
 log = getLogger(__name__)
 
 
-@register('re_torch_transformers_classifier')
+@register('re_classifier')
 class REBertModel(TorchModel):
 
     def __init__(
@@ -55,15 +55,11 @@ class REBertModel(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
-    # def train_on_batch(self, features: List[Dict], labels: List) -> float:
     def train_on_batch(
             self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List, labels: List
     ) -> float:
         """
         Trains the relation extraction BERT model on the given batch.
-        Args:
-            features: batch of dictionaries containing information about input_ids, attention_mask, entity pos & ner tag
-            labels: gold labels
         Returns:
             dict with loss and learning rate values.
         """
@@ -106,13 +102,7 @@ class REBertModel(TorchModel):
     def __call__(
             self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List
     ) -> Union[List[int], List[np.ndarray]]:
-        """
-        Get model predictions using features as input.
-        Args:
-            features: batch of dictionaries containing information about input_ids, attention_mask, entity pos & ner tag
-        Returns:
-            predictions:
-        """
+        """ Get model predictions using features as input """
 
         self.model.eval()
 
@@ -123,13 +113,16 @@ class REBertModel(TorchModel):
             'ner_tags': entity_tags
         }
 
-        # _input = {}
-        # for elem in ['input_ids', 'attention_mask']:
-        #     inp_elem = [f[elem] for f in features]
-        #     _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        # for elem in ['entity_pos', 'ner_tags']:
-        #     inp_elem = [f[elem] for f in features]
-        #     _input[elem] = inp_elem
+        f = open("bugfix.txt", 'a+')
+        f.write(str(input_ids))
+        f.write("\n")
+        f.write(str(attention_mask))
+        f.write("\n")
+        f.write(str(entity_pos))
+        f.write("\n")
+        f.write(str(entity_tags))
+        f.write("\n")
+        f.close()
 
         with torch.no_grad():
             indices, probas = self.model(**_input)
@@ -162,7 +155,6 @@ class REBertModel(TorchModel):
             pretrained_bert=self.pretrained_bert,
             bert_tokenizer_config_file=self.pretrained_bert,
             num_ner_tags=self.num_ner_tags,
-            device=self.device,
             threshold=self.threshold
         )
 
