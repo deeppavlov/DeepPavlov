@@ -299,6 +299,16 @@ PARAMS = {
     },
     "nemo": {
         ("nemo/tts2asr_test.json", "nemo", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "relation_extraction": {
+        ("relation_extraction/re_docred.json", "relation_extraction", ('IP', )):
+            [
+
+            ],
+        ("relation_extraction/re_rured.json", "relation_extraction", ('IP', )):
+            [
+
+            ]
     }
 }
 
