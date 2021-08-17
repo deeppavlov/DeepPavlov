@@ -72,15 +72,6 @@ class REBertModel(TorchModel):
             'labels': labels
         }
 
-        # _input = {'labels': labels}
-        # for elem in ['input_ids', 'attention_mask']:
-        #     inp_elem = [f[elem] for f in features]
-        #     _input[elem] = torch.LongTensor(inp_elem).to(self.device)
-        # for elem in ['entity_pos', 'ner_tags']:
-        #     inp_elem = [f[elem] for f in features]
-        #     _input[elem] = inp_elem
-        # _input["labels"] = labels
-
         self.model.train()
         self.model.zero_grad()
         self.optimizer.zero_grad()      # zero the parameter gradients

@@ -115,13 +115,6 @@ class RuREDDatasetReader(DatasetReader):
                         sample["token"],
                         [[(sample["subj_start"], sample["subj_end"])], [(sample["obj_start"], sample["obj_end"])]],
                         [sample["subj_type"], sample["obj_type"]]
-
-                        # [
-                        #     [(sample["subj_start"], sample["subj_end"])],
-                        #     [(sample["obj_start"], sample["obj_end"])],
-                        #     sample["subj_type"],
-                        #     sample["obj_type"]
-                        # ]
                     ],
                     self.label_to_one_hot(self.rel2id[sample["relation"]])
                 )

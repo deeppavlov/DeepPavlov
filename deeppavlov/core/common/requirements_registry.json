@@ -341,11 +341,11 @@
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
   ],
-  "torch_transformers_re_preprocessor": [
+  "re_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
-  "re_torch_transformers_classifier": [
+  "re_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/opt_einsum.txt"
   ]
 }
