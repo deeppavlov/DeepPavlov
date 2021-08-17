@@ -25,7 +25,6 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             bert_config_file: str = None,
             emb_size: int = 768,
             block_size: int = 8,       # 64
-            device: str = "gpu",
             num_ner_tags: int = 6,        # number of ner tags
             threshold: float = None
     ):
@@ -33,13 +32,13 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.n_classes = n_classes
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
-        self.device = device
         self.num_ner_tags = num_ner_tags
         self.emb_size = emb_size
         self.block_size = block_size
         self.threshold = threshold
 
         self.loss_fnt = ATLoss()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # initialize parameters that would be filled later
         self.model, self.config, self.bert_config = None, None, None
@@ -107,6 +106,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         for i in range(len(entity_pos)):            # for each training sample (= doc)
             entity_embs, entity_atts = [], []
             for e in entity_pos[i]:             # for each entity (= list of entity mentions)
+                if len(e) == 0:
+                    continue
                 if len(e) > 1:
                     e_emb, e_att = [], []
                     for start, end in e:        # for start and end position of each mention

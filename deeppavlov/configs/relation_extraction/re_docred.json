@@ -1,9 +1,10 @@
 {
   "dataset_reader": {
     "class_name": "docred_reader",
-    "valid_test_data_size": 150,
     "data_path": "{DOWNLOADS_PATH}/docred/",
-    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json"
+    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
+    "rel_info_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
+    "valid_test_data_size": 150
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator"
@@ -14,13 +15,13 @@
     "pipe": [
       {
         "in": ["tokens", "entity_pos", "entity_tags"],
-        "out": ["input_ids", "attention_mask", "entity_pos", "entity_tags"],
+        "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags"],
         "class_name": "re_preprocessor",
-        "vocab_file": "bert-base-uncased"
+        "vocab_file": "bert-base-cased"
       },
       {
-        "class_name": "re_torch_transformers_classifier",
-        "in": ["input_ids", "attention_mask", "entity_pos", "entity_tags"],
+        "class_name": "re_classifier",
+        "in": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags"],
         "in_y": ["y_ids"],
         "out": ["model_output"],
         "save_path": "{MODEL_PATH}/model",

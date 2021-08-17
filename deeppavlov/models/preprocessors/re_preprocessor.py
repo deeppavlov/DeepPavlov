@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 import numpy as np
 from transformers import BertTokenizer
@@ -74,9 +74,9 @@ class REPreprocessor(Component):
             input_ids: List[List[int]],
             attention_mask: List[List[int]],
             entity_poss: List[
-                            Tuple[
-                                List[(entity1_mention1_start_id, entity1_mention1_end_id), ...]),
-                                List[(entity2_mention1_start_id, entity2_mention1_end_id), ...])
+                            List[
+                                List[(entity1_mention1_start_id, entity1_mention1_end_id), ...],
+                                List[(entity2_mention1_start_id, entity2_mention1_end_id), ...]
                             ]
                         ]
             entity_tags: List[List[int]]
@@ -84,22 +84,24 @@ class REPreprocessor(Component):
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
 
-        input_ids, attention_mask, upd_entity_poss, upd_entity_tags = [], [], [], []
-        doc_wordpiece_tokens_batch, entity_pos_batch, entity_tag_batch = [], [], []
+        input_ids, attention_mask, upd_entity_pos, upd_entity_tags = [], [], [], []
 
         for doc, ent_pos, ent_tags in zip(tokens, entity_pos, entity_tags):
             count = 0
             doc_wordpiece_tokens = []
+
             entity1_pos_start = list(zip(*ent_pos[0]))[0]  # first entity mentions' start positions
             entity1_pos_end = list(zip(*ent_pos[0]))[1]  # first entity mentions' end positions
             entity2_pos_start = list(zip(*ent_pos[1]))[0]  # second entity mentions' start positions
             entity2_pos_end = list(zip(*ent_pos[1]))[1]  # second entity mentions' end positions
+
             upd_entity1_pos_start, upd_entity2_pos_start, upd_entity1_pos_end, upd_entity2_pos_end = [], [], [], []
             for n, token in enumerate(doc):
                 if n in entity1_pos_start:
                     doc_wordpiece_tokens.append(self.special_token)
                     upd_entity1_pos_start.append(count)
                     count += 1
+
                 if n in entity1_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
@@ -109,6 +111,7 @@ class REPreprocessor(Component):
                     doc_wordpiece_tokens.append(self.special_token)
                     upd_entity2_pos_start.append(count)
                     count += 1
+
                 if n in entity2_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
@@ -152,31 +155,10 @@ class REPreprocessor(Component):
             input_ids.append(encoding['input_ids'])
             attention_mask.append(encoding['attention_mask'])
 
-            upd_entity_poss.append((upd_entity_1_pos, upd_entity_2_pos))
+            upd_entity_pos.append([upd_entity_1_pos, upd_entity_2_pos])
             upd_entity_tags.append(enc_entity_tags)
 
-            # doc_wordpiece_tokens_batch.append(doc_wordpiece_tokens[:self.max_seq_length])
-            # entity_pos_batch.append((upd_entity_1_pos, upd_entity_2_pos))
-            # entity_tag_batch.append(enc_entity_tags)
-
-        # for entity_pos, entity_tag, doc_wordpiece_tokens in zip(
-        #         entity_pos_batch, entity_tag_batch, doc_wordpiece_tokens_batch
-        # ):
-        #     encoding = self.tokenizer.encode_plus(
-        #         doc_wordpiece_tokens,
-        #         add_special_tokens=True,
-        #         truncation=True,
-        #         max_length=self.max_seq_length,
-        #         pad_to_max_length=True,
-        #         return_attention_mask=True
-        #     )
-
-            # input_ids.append(encoding['input_ids'])
-            # attention_mask.append(encoding['attention_mask'])
-            # upd_entity_poss.append(entity_pos)
-            # upd_entity_tags.append(entity_tag)
-
-        return input_ids, attention_mask, upd_entity_poss, upd_entity_tags
+        return input_ids, attention_mask, upd_entity_pos, upd_entity_tags
 
     def encode_ner_tag(self, ner_tags: List) -> List:
         """ Encode NER tags with one hot encodings """
@@ -220,22 +202,3 @@ class REPostprocessor:
                     relation_name.append("-")
 
         return wikidata_relation_id, relation_name
-
-
-# todo: wil be deleted
-if __name__ == "__main__":
-    from joblib import load
-    from deeppavlov.dataset_iterators.basic_classification_iterator import BasicClassificationDatasetIterator
-
-    data = load(
-        "/Users/asedova/PycharmProjects/05_deeppavlov_fork/docred/out_dataset_reader_without_neg/all_data"
-    )
-    data_iter_out = BasicClassificationDatasetIterator(data)
-    entity_info = [data[0] for data in data_iter_out.test[:50]]
-    labels = [data[1] for data in data_iter_out.test[:50]]
-
-    tokens = [ent_tokens[0] for ent_tokens in entity_info]
-    ent_pos = [[ent_tokens[1][0], ent_tokens[1][1]] for ent_tokens in entity_info]
-    ent_tag = [[ent_tokens[1][2], ent_tokens[1][3]] for ent_tokens in entity_info]
-
-    REPreprocessor("bert-base-cased").__call__(tokens, ent_pos, ent_tag)
