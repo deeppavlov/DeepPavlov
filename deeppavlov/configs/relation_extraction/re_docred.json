@@ -59,7 +59,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/re_docred"
+      "MODEL_PATH": "{MODELS_PATH}/re_docred_old_setting"
       },
     "download": [
       {
