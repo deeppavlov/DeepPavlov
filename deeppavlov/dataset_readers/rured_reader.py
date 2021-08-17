@@ -19,6 +19,30 @@ class RuREDDatasetReader(DatasetReader):
 
     @overrides
     def read(self, data_path: str, rel2id: Dict = None) -> Dict[str, List[Tuple]]:
+        """
+        This class processes the RuRED relation extraction dataset
+        (http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf).
+        Args:
+            data_path: a path to a folder with dataset files.
+            rel2id: a path to a file where information about relation to relation id corresponding is stored.
+        Returns:
+            RuRED output dictionary in the following format:
+            DocRED output dictionary in the following format:
+            {"data_type":
+                List[
+                    Tuple(
+                        List[
+                            List[all tokens of the document],
+                            List[
+                                List[Tuple(start pos of mention 1 of ent 1, end pos of mention 1 of ent 1), ...],
+                                List[Tuple(start position of entity 2, end position of entity 2), ...],
+                                List[str(NER tag of entity 1), str(NER tag of entity 2)]
+                            ],
+                        List(int(one-hot encoded relation label))
+                    )
+                ]
+            }
+        """
 
         data_path = Path(data_path).resolve()
 
@@ -87,15 +111,18 @@ class RuREDDatasetReader(DatasetReader):
 
             processed_samples.append(
                 (
-                    (
+                    [
                         sample["token"],
-                        [
-                            [(sample["subj_start"], sample["subj_end"])],
-                            [(sample["obj_start"], sample["obj_end"])],
-                            sample["subj_type"],
-                            sample["obj_type"]
-                        ]
-                    ),
+                        [[(sample["subj_start"], sample["subj_end"])], [(sample["obj_start"], sample["obj_end"])]],
+                        [sample["subj_type"], sample["obj_type"]]
+
+                        # [
+                        #     [(sample["subj_start"], sample["subj_end"])],
+                        #     [(sample["obj_start"], sample["obj_end"])],
+                        #     sample["subj_type"],
+                        #     sample["obj_type"]
+                        # ]
+                    ],
                     self.label_to_one_hot(self.rel2id[sample["relation"]])
                 )
             )

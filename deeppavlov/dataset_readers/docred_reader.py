@@ -18,7 +18,7 @@ import os
 import random
 from logging import getLogger
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
@@ -63,27 +63,17 @@ class DocREDDatasetReader(DatasetReader):
             {"data_type":
                 List[
                     Tuple(
-                        Tuple(
+                        List[
                             List[all tokens of the document],
                             List[
-                                List[
-                                    # Tuples with information about text mentions of entity 1.
-                                    # E.g., if entity 1 was mentioned two times in the document:
-                                    Tuple(start position of mention 1 of ent 1, end position of mention 1 of ent 1),
-                                    Tuple(start position of mention 2 of ent 1, end position of mention 2 of ent 1)
-                                    ],
-                                List[
-                                    # Tuples with information about text mentions of entity 2
-                                    # E.g., if entity 2 was mentioned once in the document:
-                                    Tuple(start position of entity 2, end position of entity 2),
-                                    ],
-                                str(NER tag of entity 1),
-                                str(NER tag of entity 2)
-                                ]
-                            ),
+                                List[Tuple(start pos of mention 1 of ent 1, end pos of mention 1 of ent 1), ...],
+                                List[Tuple(start position of entity 2, end position of entity 2), ...],
+                                List[str(NER tag of entity 1), str(NER tag of entity 2)]
+                            ],
                         List(int(one-hot encoded relation label))
-                        )
-                    ]
+                    )
+                ]
+            }
         """
 
         with open(str(expand_path(rel2id_path))) as file:
@@ -115,16 +105,15 @@ class DocREDDatasetReader(DatasetReader):
 
         with open(os.path.join(data_path, "train_annotated.json")) as file_ann:
             train_data = json.load(file_ann)
-        # with open(os.path.join(data_path, "train_distant.json"), encoding="UTF-8") as file_ds:
-        #     train_data += json.load(file_ds)
 
         with open(os.path.join(data_path, "dev.json")) as file:
             valid_data = json.load(file)
 
-        with open(os.path.join(data_path, "test.json")) as file:
-            test_data = json.load(file)
-            # process test data without labels (maybe use later as negatives...)
-            test_processed = self.process_docred_file(test_data, neg_samples=None)
+        # if you want to use test data from the original docred without labels (e.g. as negatives...),
+        # uncomment lines below
+        # with open(os.path.join(data_path, "test.json")) as file:
+        #     test_data = json.load(file)
+        #     test_processed = self.process_docred_file(test_data, neg_samples=None)
 
         # merge valid and train data and split them again into train, valid & test
         if self.train_valid_test_proportion:
@@ -355,15 +344,16 @@ class DocREDDatasetReader(DatasetReader):
     @staticmethod
     def generate_data_sample(
             doc: List, ent1: int, ent2: int, label: List, ent_id2ent: Dict, ent_id2ent_tag: Dict
-    ) -> Tuple[Tuple[List, List], List]:
+    ) -> Tuple[List[Union[List, List]], List]:
         """ Creates an entry of processed docred corpus """
         return (
-            (
-                doc,
-                [ent_id2ent[ent1], ent_id2ent[ent2], ent_id2ent_tag[ent1], ent_id2ent_tag[ent2]]
-            ),
-            label
-        )
+                    [
+                        doc,
+                        [ent_id2ent[ent1], ent_id2ent[ent2]],
+                        [ent_id2ent_tag[ent1], ent_id2ent_tag[ent2]]
+                    ],
+                    label
+                )
 
     def generate_additional_neg_samples(self, doc: List, forbidden_entities: List, num_neg_samples: int):
         """
