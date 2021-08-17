@@ -16,7 +16,7 @@ The English RE model can be trained using the following command:
 .. code:: bash
 
     python3.6 -m deeppavlov train re_docred
-    
+
 The trained model weights can be loaded with the following command:
 
 .. code:: bash
@@ -46,7 +46,7 @@ The trained model can be used for inference with the following code:
   - NER tag of the first entity
   - NER tag of the second entity
 
-As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inherited from `Tjong Kim Sang and De Meulder(2003) <https://aclanthology.org/W03-0419/>`__ 
+As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inherited from `Tjong Kim Sang and De Meulder(2003) <https://aclanthology.org/W03-0419/>`__
 
 .. raw:: html
 
@@ -290,7 +290,7 @@ As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inher
 
 The model was trained on DocRed English corpus for document-level relation extracton task. It was constructed from Wikipedia and Wikidata and is now the largest human-annotated dataset for document-level RE from plain text.
 
-As the original DocRED test dataset containes only unlabeled data, while we want to have labeled one in order to perform evaluation, we decided to: 
+As the original DocRED test dataset containes only unlabeled data, while we want to have labeled one in order to perform evaluation, we decided to:
 1. merge train and dev data (= labeled data)
 2. split them into new train, dev and test dataset
 
@@ -299,7 +299,7 @@ Currently, there are two types of possible splittings provided:
 - user can set the relative size of dev and test data (e.g. 1/7)
 - user can set the absolute size of dev and test data (e.g. 2000 samples)
 
-In our experiment, we set the absolute size of dev and test data == 150 initial documents. It resulted in approximately 3500 samples. 
+In our experiment, we set the absolute size of dev and test data == 150 initial documents. It resulted in approximately 3500 samples.
 
 We additionally generate negative samples if it was necessary to have the following proportions:
 - for train set: negative samples are twice as many as positive ones
@@ -320,7 +320,7 @@ We additionally generate negative samples if it was necessary to have the follow
 .. raw:: html
 
    </details>
-    
+
 Russian RE model
 ----------------------------
 
@@ -329,7 +329,7 @@ The Russian RE model can be trained using the following command:
 .. code:: bash
 
     python3.6 -m deeppavlov train re_rured
-    
+
 The trained model weights can be loaded with the following command:
 
 .. code:: bash
@@ -349,7 +349,7 @@ The trained model can be used for inference with the following code:
     pred = re_model(sentence_tokens, entity_pos, entity_tags)
     >> [['P551'], ['место жительства']]
 
-**Model Input**: 
+**Model Input**:
 
 - text document as a list of tokens
 - list of entity information
@@ -358,7 +358,7 @@ The trained model can be used for inference with the following code:
   - positions of all mentions of the second entity
   - NER tag of the first entity
   - NER tag of the second entity
-  
+
 .. raw:: html
 
    <details>
@@ -425,13 +425,13 @@ The trained model can be used for inference with the following code:
 +-------------+------------------------+------------------------------------------------------------------------+
 | STREET      | street name                                                                                     |
 +-------------+------------------------+------------------------------------------------------------------------+
- 
+
 .. raw:: html
 
    </details>
-   
-**Model Output**: one or several of the 30 relations found between the given entities; relation name (e.g. 'MEMBER'), and, if applicable, its id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P710') and russian relation name (e.g. "участник").
-   
+
+**Model Output**: one or several of the 30 relations found between the given entities; Russian relation name (e.g. "участник") or English one, if Russian is unavailable, and, if applicable, its id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P710').
+
 .. raw:: html
 
    <details>
@@ -529,16 +529,16 @@ In case of RuRED we used the train, dev and test sets from the original RuRED se
 .. raw:: html
 
    </details>
-   
-   
-RE Model Architecture 
+
+
+RE Model Architecture
 -----------------------
 We based our model on the `Adaptive Thresholding and Localized Context Pooling <https://arxiv.org/pdf/2010.11304.pdf>`__ model and used NER entity tags as additional input. Two core ideas of this model are:
 
 - Adaptive Threshold
 
 The usual global threshold for converting the RE classifier output probability to relation label is replaced with a learnable one. A new threshold class that learns an entities-dependent threshold value is introduced and learnt as all other classes. During prediction the positive classes (= relations that are hold in the sample indeed) are claimed to be the classes with higher logins that the TH class, while all others are negative ones.
-    
+
 - Localised Context Pooling
 
 The embedding of each entity pair is enhanced with an additional local context embedding related to both entities. Such representation, which is attended to the relevant context in the document, is useful to decide the relation for exactly this entity pair. For incorporating the context information the attention heads are directly used.
