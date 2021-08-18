@@ -38,7 +38,6 @@ class RASADict(dict):
 @register('md_yaml_dialogs_iterator')
 class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
     """
-
     """
 
     def __init__(self,
