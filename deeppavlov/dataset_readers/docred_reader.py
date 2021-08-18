@@ -412,4 +412,5 @@ class DocREDDatasetReader(DatasetReader):
         """ Print out the relation statistics as a markdown table """
         df = pd.DataFrame([self.rel2relid, train_stat, valid_stat, test_stat]).T
         df.columns = ['d{}'.format(i) for i, col in enumerate(df, 1)]
-        logger.info(df.to_markdown())
+        logger.info("\n")
+        logger.info(df)
