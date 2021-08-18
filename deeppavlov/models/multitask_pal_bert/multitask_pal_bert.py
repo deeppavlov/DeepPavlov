@@ -449,7 +449,12 @@ class MultiTaskPalBert(TorchModel):
             set_used = set(arg_names_used)
             set_all = set(kwargs.keys())
             if set_used != set_all:
-                raise ConfigError(
-                    f"There are unused '{what_to_distribute}' parameters {set_all - set_used}"
-                )
+                if len(set_all) > len(set_used):
+                    raise ConfigError(
+                        f"There are unused '{what_to_distribute}' parameters {set_all - set_used}"
+                    )
+                else:
+                    raise ConfigError(
+                        f"Some parameters exist in {set_used} but not in {set_all}"
+                    )
         return args_by_task
