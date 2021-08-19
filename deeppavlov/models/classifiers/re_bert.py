@@ -159,7 +159,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             self.config = AutoConfig.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes, output_attentions=True, output_hidden_states=True
             )
-            self.model = BertModel.from_pretrained(self.pretrained_bert, config=self.config, strict=False)
+            self.model = BertModel.from_pretrained(self.pretrained_bert, config=self.config)
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
