@@ -54,273 +54,252 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
-    "relation_extraction": {
-        ("relation_extraction/re_docred.json", "relation_extraction", ('IP',)):
+    "faq": {
+        ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/tfidf_logreg_autofaq.json", "faq_tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/fasttext_avg_autofaq.json", "faq_fasttext_avg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/fasttext_tfidf_autofaq.json", "faq_fasttext_tfidf", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "spelling_correction": {
+        ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
             [
-                (
-                    [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
-                      "Robinson", "."]],
-                    [[[(0, 2)], [(5, 7), (9, 11)]]],
-                    [["PER", "PER"]]
-                ),
-                (['P26'], ['spouse'])
+                ("helllo", ("hello",)),
+                ("datha", ("data",))
             ],
-        ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
+        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
             [
-                (
-                    [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
-                    [[[(0, 2)], [(4, 6)]]],
-                    [["PERSON", "CITY"]]
-                ),
-                (['P551'], ['место жительства'])
+                ("преведствую", ("приветствую",)),
+                ("я джва года дду эту игру", ("я два года жду эту игру",))
+            ],
+        ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
+            [
+                ("преветствую", ("приветствую",)),
+                ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
             ]
     },
-    # "faq": {
-    #     ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("faq/tfidf_logreg_autofaq.json", "faq_tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("faq/fasttext_avg_autofaq.json", "faq_fasttext_avg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("faq/fasttext_tfidf_autofaq.json", "faq_fasttext_tfidf", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "spelling_correction": {
-    #     ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
-    #         [
-    #             ("helllo", ("hello",)),
-    #             ("datha", ("data",))
-    #         ],
-    #     ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
-    #         [
-    #             ("преведствую", ("приветствую",)),
-    #             ("я джва года дду эту игру", ("я два года жду эту игру",))
-    #         ],
-    #     ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
-    #         [
-    #             ("преветствую", ("приветствую",)),
-    #             ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
-    #         ]
-    # },
-    # "go_bot": {
-    #     ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)],
-    #     ("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
-    # },
-    # "classifiers": {
-    #     ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/insults_kaggle_conv_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_dstc2_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_twitter_bert_emb.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
-    #         [
-    #             ("Ну и сука же она", (True,)),
-    #             ("я два года жду эту игру", (False,))
-    #         ],
-    #     ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
-    # },
-    # "snips": {
-    #     ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bigru.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)):
-    #         [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)):
-    #         [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "sample": {
-    #     ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "entity_linking": {
-    #     ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
-    #         [
-    #             ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
-    #              (['москва', 'россии', 'центрального федерального округа', 'московской области'],
-    #               [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
-    #             ("абв", ([], [], []))
-    #         ],
-    #     ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
-    #         [
-    #             ("The city stands on the River Thames in the south-east of England, " + \
-    #              "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
-    #              (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
-    #               ['Q19686', 'Q1693', 'Q21'])),
-    #             ("abc", ([], [], []))
-    #         ],
-    #     ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
-    #         [
-    #             (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
-    #              ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
-    #             (["  "], "", "", ([[]], [[]]))
-    #         ]
-    # },
-    # "ner": {
-    #     ("ner/ner_ontonotes_m1.json", "ner_ontonotes_m1", ('IP', 'TI')): [
-    #         (["Peter", "Blackburn"], None)],
-    #     ("ner/ner_collection3_m1.json", "ner_collection3_m1", ('IP', 'TI')): [
-    #         (["Валентин", "Москва"], None)],
-    #     ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
-    #         (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
-    #     ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
-    #         (["Hương", "tự_tin"], ["NNP", "V"], ["B-NP", "B-VP"], None)],
-    #     ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_rus_bert.json", "ner_rus_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
-    #         [
-    #             ("chinese food", ({'food': 'chinese'},)),
-    #             ("in the west part", ({'area': 'west'},)),
-    #             ("moderate price range", ({'pricerange': 'moderate'},))
-    #         ],
-    #     ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
-    #         ("i see 1 cat", ({"number": '1'},))],
-    #     ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "sentence_segmentation": {
-    #     ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
-    #         (["hey", "alexa", "how", "are", "you"], None)]
-    # },
-    # "kbqa": {
-    #     ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
-    #         [
-    #             ("What is the currency of Sweden?", ("Swedish krona",)),
-    #             ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-    #             ("When did the Korean War end?", ("27 July 1953",)),
-    #             ("   ", ("Not Found",))
-    #         ],
-    #     ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
-    #         [
-    #             ("What is the currency of Sweden?", ("Swedish krona",)),
-    #             ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
-    #             ("When did the Korean War end?", ("27 July 1953",)),
-    #             ("   ", ("Not Found",))
-    #         ],
-    #     ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
-    #         [
-    #             ("What is the currency of Sweden?", ("Swedish krona",)),
-    #             ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-    #             ("When did the Korean War end?", ("27 July 1953",)),
-    #             ("   ", ("Not Found",))
-    #         ],
-    #     ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
-    #         [
-    #             ("What is the currency of Sweden?", ("Swedish krona",)),
-    #             ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-    #             ("When did the Korean War end?", ("1953-07-27",)),
-    #             ("   ", ("Not Found",))
-    #         ],
-    #     ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
-    #         [
-    #             ("What is the currency of Sweden?", ("Swedish krona",)),
-    #             ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-    #             ("When did the Korean War end?", ("27 July 1953",)),
-    #             ("   ", ("Not Found",))
-    #         ],
-    #     ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
-    #         [
-    #             ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
-    #             ("Чем питаются коалы?", ("Эвкалипт",)),
-    #             ("абв", ("Not Found",))
-    #         ]
-    # },
-    # "elmo_embedder": {
-    #     ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    # },
-    # "elmo_model": {
-    #     ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    # },
-    # "ranking": {
-    #     ("ranking/ranking_ubuntu_v2_mt.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_mt_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/paraphrase_ident_paraphraser.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/paraphrase_ident_paraphraser_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
-    #         [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
-    #           '& look with fdisk -l & hello there & fdisk is all you need',
-    #           None)],
-    #     ("ranking/ranking_ubuntu_v2_torch_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "doc_retrieval": {
-    #     ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
-    #         ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "squad": {
-    #     ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_ru_rubert.json", "squad_ru_rubert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-    #     ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-    # },
-    # "odqa": {
-    #     ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "morpho_tagger": {
-    #     ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
-    #         [ONE_ARGUMENT_INFER_CHECK],
-    #     ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
-    #         [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "syntax_tagger": {
-    #     ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-    #     ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    # },
-    # "nemo": {
-    #     ("nemo/tts2asr_test.json", "nemo", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    # }
+    "go_bot": {
+        ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)],
+        ("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
+    },
+    "classifiers": {
+        ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle_conv_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter_bert_emb.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
+            [
+                ("Ну и сука же она", (True,)),
+                ("я два года жду эту игру", (False,))
+            ],
+        ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
+    },
+    "snips": {
+        ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bigru.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "sample": {
+        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "entity_linking": {
+        ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
+            [
+                ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
+                 (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                  [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
+                ("абв", ([], [], []))
+            ],
+        ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
+            [
+                ("The city stands on the River Thames in the south-east of England, " + \
+                 "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
+                 (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
+                  ['Q19686', 'Q1693', 'Q21'])),
+                ("abc", ([], [], []))
+            ],
+        ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
+            [
+                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
+                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
+                (["  "], "", "", ([[]], [[]]))
+            ]
+    },
+    "ner": {
+        ("ner/ner_ontonotes_m1.json", "ner_ontonotes_m1", ('IP', 'TI')): [
+            (["Peter", "Blackburn"], None)],
+        ("ner/ner_collection3_m1.json", "ner_collection3_m1", ('IP', 'TI')): [
+            (["Валентин", "Москва"], None)],
+        ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
+            (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
+        ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
+            (["Hương", "tự_tin"], ["NNP", "V"], ["B-NP", "B-VP"], None)],
+        ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_bert.json", "ner_rus_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
+            [
+                ("chinese food", ({'food': 'chinese'},)),
+                ("in the west part", ({'area': 'west'},)),
+                ("moderate price range", ({'pricerange': 'moderate'},))
+            ],
+        ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
+            ("i see 1 cat", ({"number": '1'},))],
+        ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "sentence_segmentation": {
+        ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
+            (["hey", "alexa", "how", "are", "you"], None)]
+    },
+    "kbqa": {
+        ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("1953-07-27",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
+            [
+                ("What is the currency of Sweden?", ("Swedish krona",)),
+                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
+                ("When did the Korean War end?", ("27 July 1953",)),
+                ("   ", ("Not Found",))
+            ],
+        ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
+            [
+                ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
+                ("Чем питаются коалы?", ("Эвкалипт",)),
+                ("абв", ("Not Found",))
+            ]
+    },
+    "elmo_embedder": {
+        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
+    "elmo_model": {
+        ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+    },
+    "ranking": {
+        ("ranking/ranking_ubuntu_v2_mt.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/paraphrase_ident_paraphraser_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
+            [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
+              '& look with fdisk -l & hello there & fdisk is all you need',
+              None)],
+        ("ranking/ranking_ubuntu_v2_torch_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "doc_retrieval": {
+        ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
+            ONE_ARGUMENT_INFER_CHECK]
+    },
+    "squad": {
+        ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert.json", "squad_ru_rubert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+    },
+    "odqa": {
+        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "morpho_tagger": {
+        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
+            [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
+            [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "nemo": {
+        ("nemo/tts2asr_test.json", "nemo", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
