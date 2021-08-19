@@ -55,7 +55,7 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "relation_extraction": {
-        ("relation_extraction/re_docred.json", "relation_extraction", ('IP', )):
+        ("relation_extraction/re_docred.json", "relation_extraction", ('IP',)):
             [
                 (
                     [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
@@ -65,7 +65,7 @@ PARAMS = {
                 ),
                 (['P26'], ['spouse'])
             ],
-        ("relation_extraction/re_rured.json", "relation_extraction", ('IP', )):
+        ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
             [
                 (
                     [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
