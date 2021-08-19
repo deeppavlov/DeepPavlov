@@ -70,6 +70,7 @@ class TorchModel(NNModel):
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
                  min_learning_rate: float = 0.,
+                 log_model_summary: bool = True,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
@@ -95,7 +96,10 @@ class TorchModel(NNModel):
         # we need to switch to eval mode here because by default it's in `train` mode.
         # But in case of `interact/build_model` usage, we need to have model in eval mode.
         self.model.eval()
-        log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
+        if log_model_summary:
+            log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
+        else:
+            log.info(f"Model was successfully initialized!, log model summary is set to false")
 
     def init_from_opt(self, model_func: str) -> None:
         """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class

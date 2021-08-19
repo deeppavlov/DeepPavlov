@@ -153,6 +153,7 @@
                 "learning_rate_drop_patience": 2,
                 "learning_rate_drop_div": 2.0,
                 "return_probas": true,
+                "log_model_summary": false,
                 "save_path": "{MODELS_PATH}/model",
                 "load_path": "{MODELS_PATH}/model",
                 "tasks": {

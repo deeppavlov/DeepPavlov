@@ -18,6 +18,9 @@ If multi-task BERT has :math:`T` heads, one training iteration consists of
 When one of the BERT heads is being trained, other heads' parameters do not change. On each training step, both BERT head
 and body parameters are modified.
 
+You can also follow this tutorial in which we train a model on MRPC and RTE datasets on colab: `mt_pal_bert_mrpc_rte_tutorial 
+<https://colab.research.google.com/github/deepmipt/DeepPavlov/blob/master/examples/mt_pal_bert_tutorial_mrpc_rte.ipynb>`_
+
 On this page, multi-task PAL BERT usage is explained on a toy configuration file of a model that detects
 insults(for the demonstration, we will use the same data for both the tasks).
 
