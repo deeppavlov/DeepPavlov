@@ -104,17 +104,6 @@ class REBertModel(TorchModel):
             'ner_tags': entity_tags
         }
 
-        f = open("bugfix.txt", 'a+')
-        f.write(str(input_ids))
-        f.write("\n")
-        f.write(str(attention_mask))
-        f.write("\n")
-        f.write(str(entity_pos))
-        f.write("\n")
-        f.write(str(entity_tags))
-        f.write("\n")
-        f.close()
-
         with torch.no_grad():
             indices, probas = self.model(**_input)
 
