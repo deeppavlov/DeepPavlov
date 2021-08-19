@@ -38,13 +38,9 @@ The trained model can be used for inference with the following code:
 
 **Model Input**:
 
-- text document as a list of tokens
-- list of entity information
-
-  - positions of all mentions of the first entity
-  - positions of all mentions of the second entity
-  - NER tag of the first entity
-  - NER tag of the second entity
+- list of tokens of a text document
+- list of entities positions (i.e. all start and end positions of both entities' mentions)
+- list of NER tags of both entities.
 
 As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inherited from `Tjong Kim Sang and De Meulder(2003) <https://aclanthology.org/W03-0419/>`__
 
@@ -351,13 +347,9 @@ The trained model can be used for inference with the following code:
 
 **Model Input**:
 
-- text document as a list of tokens
-- list of entity information
-
-  - positions of all mentions of the first entity
-  - positions of all mentions of the second entity
-  - NER tag of the first entity
-  - NER tag of the second entity
+- list of tokens of a text document
+- list of entities positions (i.e. all start and end positions of both entities' mentions)
+- list of NER tags of both entities.
 
 .. raw:: html
 
