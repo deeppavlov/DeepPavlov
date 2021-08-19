@@ -5,8 +5,8 @@ Relation extraction is the task of detecting and classifying the relationship be
 DeepPavlov provides the document-level relation extraction meaning that the relation can be detected between the entities that are not in one sentence.
 Currently, RE is available for English and Russian languages.
 
-- RE model for English language trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus based on Wikipedia. For more details pelase refer to the *DocRED corpus* section.
-- RE model for Russian language trained on `RuRed <http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf>`__ corpus based on the Lenta.ru news corpus. For more details pelase refer to the *RuRED corpus* section.
+- RE model for English language trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus based on Wikipedia.
+- RE model for Russian language trained on `RuRED <http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf>`__ corpus based on the Lenta.ru news corpus.
 
 English RE model
 ----------------------------
@@ -284,7 +284,7 @@ As NER tags, we adapted the used in the DocRED corpus, which are, in turn, inher
    <details>
    <summary><a>Some details on DocRED corpus English RE model was trained on</a></summary>
 
-The model was trained on DocRed English corpus for document-level relation extracton task. It was constructed from Wikipedia and Wikidata and is now the largest human-annotated dataset for document-level RE from plain text.
+The English RE model was trained on DocRED English corpus. It was constructed from Wikipedia and Wikidata and is now the largest human-annotated dataset for document-level RE from plain text.
 
 As the original DocRED test dataset containes only unlabeled data, while we want to have labeled one in order to perform evaluation, we decided to:
 1. merge train and dev data (= labeled data)
@@ -354,7 +354,7 @@ The trained model can be used for inference with the following code:
 .. raw:: html
 
    <details>
-   <summary><a>The whole list of 29 Russian NER tags</a></summary>
+   <summary><a>Full list of 29 Russian NER tags</a></summary>
 
 +-------------+------------------------+------------------------------------------------------------------------+
 | NER tag     | Description                                                                                     |
@@ -399,7 +399,7 @@ The trained model can be used for inference with the following code:
 +-------------+------------------------+------------------------------------------------------------------------+
 | PERSON      | person name                                                                                     |
 +-------------+------------------------+------------------------------------------------------------------------+
-| REGION      |   Names of sub-country entities                                                                 |
+| REGION      |  Names of sub-country entities                                                                  |
 +-------------+------------------------+------------------------------------------------------------------------+
 | COUNTRY     | Names of countries                                                                              |
 +-------------+------------------------+------------------------------------------------------------------------+
@@ -422,12 +422,12 @@ The trained model can be used for inference with the following code:
 
    </details>
 
-**Model Output**: one or several of the 30 relations found between the given entities; Russian relation name (e.g. "участник") or English one, if Russian is unavailable, and, if applicable, its id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P710').
+**Model Output**: one or several of the 30 relations found between the given entities; a Russian relation name (e.g. "участник") or an English one, if Russian one is unavailable, and, if applicable, its id in `Wikidata <https://www.wikidata.org/wiki/Wikidata:Main_Page>`__ (e.g. 'P710').
 
 .. raw:: html
 
    <details>
-   <summary><a>The whole list of Russian relation</a></summary>
+   <summary><a>Full list of Russian relation</a></summary>
 
 +----------------------------+-------------------+---------------------------------+
 | Relation                   | Relation id       | Russian relation                |
