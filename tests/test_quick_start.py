@@ -58,10 +58,10 @@ PARAMS = {
         ("relation_extraction/re_docred.json", "relation_extraction", ('IP',)):
             [
                 (
-                    [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
-                      "Robinson", "."]],
-                    [[[(0, 2)], [(5, 7), (9, 11)]]],
-                    [["PER", "PER"]]
+                    ["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
+                      "Robinson", "."],
+                    [[(0, 2)], [(5, 7), (9, 11)]],
+                    ["PER", "PER"]
                 ),
                 (['P26'], ['spouse'])
             ],
