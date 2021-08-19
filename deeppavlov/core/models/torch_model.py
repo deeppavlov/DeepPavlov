@@ -159,7 +159,7 @@ class TorchModel(NNModel):
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
                 self.model.load_state_dict(checkpoint["model_state_dict"], strict=False)
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"], strict=False)
+                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
