@@ -87,11 +87,11 @@ class REPreprocessor(Component):
 
         input_ids, attention_mask, upd_entity_pos, upd_entity_tags = [], [], [], []
 
-        # if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
-        #     tokens = [ast.literal_eval(sample) for sample in tokens[0]]
-        #     entity_pos = ast.literal_eval(entity_pos[0])
-        #     entity_tags = ast.literal_eval(entity_tags[0])
-        #
+        if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
+            tokens = tokens[0]
+            entity_pos = entity_pos[0]
+            entity_tags = entity_tags[0]
+
         log.info(str(tokens))
         log.info("\n")
         log.info(type(tokens))
@@ -234,3 +234,51 @@ class REPostprocessor:
                     relation_name.append("-")
 
         return wikidata_relation_id, relation_name
+
+
+"""
+        log.info(str(tokens))
+        log.info("\n")
+        log.info(type(tokens))
+        log.info("\n")
+        log.info(str(entity_pos))
+        log.info("\n")
+        log.info(type(entity_pos))
+        log.info("\n")
+        log.info(str(entity_tags))
+        log.info("\n")
+        log.info(type(entity_tags))
+        
+        log.info(f"doc: {str(doc)}")
+        log.info("\n")
+        log.info(f"doc type: {type(doc)}")
+        log.info("\n")
+        log.info(f"ent_pos: {str(ent_pos)}")
+        log.info("\n")
+        log.info(f"ent_pos type: {type(ent_pos)}")
+        log.info("\n")
+        log.info(f"ent_tags: {str(ent_tags)}")
+        log.info("\n")
+        log.info(f"ent_tags type: {type(ent_tags)}")
+        log.info("\n")
+        
+line 95: ([['Barack', 'Obama', 'is', 'married', 'to', 'Michelle', 'Obama', ',', 'born', 'Michelle', 'Robinson', '.']],)
+line 97: <class 'tuple'>
+
+line 99: ([[[(0, 2)], [(5, 7), (9, 11)]]],)
+line 101: <class 'tuple'>
+
+line 103: ([['PER', 'PER']],)
+line 105: <class 'tuple'>
+
+line 112: doc: [['Barack', 'Obama', 'is', 'married', 'to', 'Michelle', 'Obama', ',', 'born', 'Michelle', 'Robinson', '.']]
+line 114: doc type: <class 'list'>
+
+line 116: ent_pos: [[[(0, 2)], [(5, 7), (9, 11)]]]
+line 118: ent_pos type: <class 'list'>
+
+line 120: ent_tags: [['PER', 'PER']]
+line 122: ent_tags type: <class 'list'>
+
+
+"""
