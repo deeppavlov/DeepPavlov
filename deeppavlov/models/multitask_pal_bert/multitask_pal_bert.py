@@ -280,18 +280,17 @@ class MultiTaskPalBert(TorchModel):
                 logits = self.model(
                     task_id=task_id, name=self.tasks_type[task_id], **_input
                 )
-
-            if self.return_probas:
+            if self.tasks_type[task_id] == "regression":  # regression
+                pred = logits.squeeze(-1).detach().cpu().tolist()
+            elif self.return_probas:
                 if not self.multilabel:
                     pred = torch.nn.functional.softmax(logits, dim=-1)
                 else:
                     pred = torch.nn.functional.sigmoid(logits)
                 pred = pred.detach().cpu().numpy()
-            elif self.tasks_num_classes[task_id] > 1:
+            else:
                 logits = logits.detach().cpu().numpy()
                 pred = np.argmax(logits, axis=1)
-            else:  # regression
-                pred = logits.squeeze(-1).detach().cpu().numpy()
             self.validation_predictions.append(pred)
         return self.validation_predictions
 
@@ -316,7 +315,7 @@ class MultiTaskPalBert(TorchModel):
         )
 
         task_features = in_by_tasks[self.task_names[task_id]][0]
-        task_labels = in_y_by_tasks[self.task_names[task_id]]
+        task_labels = in_y_by_tasks[self.task_names[task_id]][0]
 
         _input = {}
         for elem in ["input_ids", "attention_mask", "token_type_ids"]:
@@ -324,10 +323,10 @@ class MultiTaskPalBert(TorchModel):
 
         if self.tasks_type[task_id] == "regression":
             _input["labels"] = torch.tensor(
-                np.array(task_labels[0], dtype=float), dtype=torch.float32
+                task_labels, dtype=torch.float32
             ).to(self.device)
         else:
-            _input["labels"] = torch.from_numpy(np.array(task_labels[0])).to(
+            _input["labels"] = torch.from_numpy(np.array(task_labels)).to(
                 self.device
             )
 
