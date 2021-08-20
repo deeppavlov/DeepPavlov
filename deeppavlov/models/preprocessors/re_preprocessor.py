@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import ast
 from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Union
@@ -91,36 +90,11 @@ class REPreprocessor(Component):
             tokens = tokens[0]
             entity_pos = entity_pos[0]
             entity_tags = entity_tags[0]
-        #
-        # log.info(str(tokens))
-        # log.info("\n")
-        # log.info(type(tokens))
-        # log.info("\n")
-        # log.info(str(entity_pos))
-        # log.info("\n")
-        # log.info(type(entity_pos))
-        # log.info("\n")
-        # log.info(str(entity_tags))
-        # log.info("\n")
-        # log.info(type(entity_tags))
 
         for doc, ent_pos, ent_tags in zip(tokens, entity_pos, entity_tags):
 
             count = 0
             doc_wordpiece_tokens = []
-            #
-            log.info(f"doc: {str(doc)}")
-            log.info("\n")
-            log.info(f"doc type: {type(doc)}")
-            log.info("\n")
-            log.info(f"ent_pos: {str(ent_pos)}")
-            log.info("\n")
-            log.info(f"ent_pos type: {type(ent_pos)}")
-            log.info("\n")
-            log.info(f"ent_tags: {str(ent_tags)}")
-            log.info("\n")
-            log.info(f"ent_tags type: {type(ent_tags)}")
-            log.info("\n")
 
             entity1_pos_start = list(zip(*ent_pos[0]))[0]  # first entity mentions' start positions
             entity1_pos_end = list(zip(*ent_pos[0]))[1]  # first entity mentions' end positions
@@ -237,51 +211,3 @@ class REPostprocessor:
         log.info(str(wikidata_relation_id))
         log.info(str(relation_name))
         return wikidata_relation_id, relation_name
-
-
-"""
-        log.info(str(tokens))
-        log.info("\n")
-        log.info(type(tokens))
-        log.info("\n")
-        log.info(str(entity_pos))
-        log.info("\n")
-        log.info(type(entity_pos))
-        log.info("\n")
-        log.info(str(entity_tags))
-        log.info("\n")
-        log.info(type(entity_tags))
-        
-        log.info(f"doc: {str(doc)}")
-        log.info("\n")
-        log.info(f"doc type: {type(doc)}")
-        log.info("\n")
-        log.info(f"ent_pos: {str(ent_pos)}")
-        log.info("\n")
-        log.info(f"ent_pos type: {type(ent_pos)}")
-        log.info("\n")
-        log.info(f"ent_tags: {str(ent_tags)}")
-        log.info("\n")
-        log.info(f"ent_tags type: {type(ent_tags)}")
-        log.info("\n")
-        
-line 95: ([['Barack', 'Obama', 'is', 'married', 'to', 'Michelle', 'Obama', ',', 'born', 'Michelle', 'Robinson', '.']],)
-line 97: <class 'tuple'>
-
-line 99: ([[[(0, 2)], [(5, 7), (9, 11)]]],)
-line 101: <class 'tuple'>
-
-line 103: ([['PER', 'PER']],)
-line 105: <class 'tuple'>
-
-line 112: doc: [['Barack', 'Obama', 'is', 'married', 'to', 'Michelle', 'Obama', ',', 'born', 'Michelle', 'Robinson', '.']]
-line 114: doc type: <class 'list'>
-
-line 116: ent_pos: [[[(0, 2)], [(5, 7), (9, 11)]]]
-line 118: ent_pos type: <class 'list'>
-
-line 120: ent_tags: [['PER', 'PER']]
-line 122: ent_tags type: <class 'list'>
-
-
-"""
