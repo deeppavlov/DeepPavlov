@@ -87,14 +87,22 @@ class REPreprocessor(Component):
 
         input_ids, attention_mask, upd_entity_pos, upd_entity_tags = [], [], [], []
 
+        log.info(str(tokens))
+        log.info("\n")
+        log.info(str(entity_pos))
+        log.info("\n")
+        log.info(str(entity_tags))
+        log.info("\n")
+        log.info(type(tokens))
+        log.info("\n")
+        log.info(type(entity_tags))
+        log.info("\n")
+        log.info(type(entity_tags))
+
         if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
             tokens = ast.literal_eval(tokens[0])
             entity_pos = ast.literal_eval(entity_pos[0])
             entity_tags = ast.literal_eval(entity_tags[0])
-
-        entity_pos = list(entity_pos)
-        tokens = list(tokens)
-        entity_tags = list(entity_tags)
 
         for doc, ent_pos, ent_tags in zip(tokens, entity_pos, entity_tags):
 
