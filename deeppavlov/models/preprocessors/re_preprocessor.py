@@ -109,18 +109,18 @@ class REPreprocessor(Component):
             count = 0
             doc_wordpiece_tokens = []
             #
-            # log.info(f"doc: {str(doc)}")
-            # log.info("\n")
-            # log.info(f"doc type: {type(doc)}")
-            # log.info("\n")
-            # log.info(f"ent_pos: {str(ent_pos)}")
-            # log.info("\n")
-            # log.info(f"ent_pos type: {type(ent_pos)}")
-            # log.info("\n")
-            # log.info(f"ent_tags: {str(ent_tags)}")
-            # log.info("\n")
-            # log.info(f"ent_tags type: {type(ent_tags)}")
-            # log.info("\n")
+            log.info(f"doc: {str(doc)}")
+            log.info("\n")
+            log.info(f"doc type: {type(doc)}")
+            log.info("\n")
+            log.info(f"ent_pos: {str(ent_pos)}")
+            log.info("\n")
+            log.info(f"ent_pos type: {type(ent_pos)}")
+            log.info("\n")
+            log.info(f"ent_tags: {str(ent_tags)}")
+            log.info("\n")
+            log.info(f"ent_tags type: {type(ent_tags)}")
+            log.info("\n")
 
             entity1_pos_start = list(zip(*ent_pos[0]))[0]  # first entity mentions' start positions
             entity1_pos_end = list(zip(*ent_pos[0]))[1]  # first entity mentions' end positions
