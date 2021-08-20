@@ -59,24 +59,27 @@ PARAMS = {
             [
                 (
                     [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
-                          "Robinson", "."]],
+                      "Robinson", "."]],
                     [[[(0, 2)], [(5, 7), (9, 11)]]],
                     [["PER", "PER"]],
                     (
-                        ['P26'],
-                        ['spouse']
+                        'P26',
+                        'spouse'
                     )
                 )
             ],
-        # ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
-        #     [
-        #         (
-        #             [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
-        #             [[[(0, 2)], [(4, 6)]]],
-        #             [["PERSON", "CITY"]]
-        #         ),
-        #         (['P551'], ['место жительства'])
-        #     ]
+        ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
+            [
+                (
+                    [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
+                    [[[(0, 2)], [(4, 6)]]],
+                    [["PERSON", "CITY"]],
+                    (
+                        'P551',
+                        'место жительства'
+                    )
+                ),
+            ]
     },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
