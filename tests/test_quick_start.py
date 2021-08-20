@@ -58,12 +58,10 @@ PARAMS = {
         ("relation_extraction/re_docred.json", "relation_extraction", ('IP',)):
             [
                 (
-                    (
-                        [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
+                    [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
                           "Robinson", "."]],
-                        [[[(0, 2)], [(5, 7), (9, 11)]]],
-                        [["PER", "PER"]]
-                    ),
+                    [[[(0, 2)], [(5, 7), (9, 11)]]],
+                    [["PER", "PER"]],
                     (
                         ['P26'],
                         ['spouse']
@@ -186,16 +184,27 @@ PARAMS = {
             ],
         ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
             [
-                ("The city stands on the River Thames in the south-east of England, " + \
+                (
+                    "The city stands on the River Thames in the south-east of England, " + \
                  "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
-                 (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
-                  ['Q19686', 'Q1693', 'Q21'])),
+                 (
+                     ['the river thames', 'the north sea', 'england'],
+                     [[4, 5, 6], [30, 31, 32], [13]],
+                     ['Q19686', 'Q1693', 'Q21'])
+                ),
                 ("abc", ([], [], []))
             ],
         ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
             [
-                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
-                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
+                (
+                    ["River Thames", "England"],
+                    "",
+                    "The city stands on the River Thames in the south-east of England.",
+                    (
+                        [['Q19686', 'Q2880751'], ['Q21', 'Q179876']],
+                        [[0.02, 0.02], [0.01, 0.01]]
+                    )
+                ),
                 (["  "], "", "", ([[]], [[]]))
             ]
     },
