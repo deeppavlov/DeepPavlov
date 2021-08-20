@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import ast
 from logging import getLogger
 from pathlib import Path
-from typing import Tuple, List
+from typing import Tuple, List, Union
 
 import numpy as np
 from transformers import BertTokenizer
@@ -62,7 +62,8 @@ class REPreprocessor(Component):
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(
-            self, tokens: List[List[str]], entity_pos: List[Tuple], entity_tags: List[str],
+            self, tokens: Union[Tuple, List[List[str]]], entity_pos: Union[Tuple, List[Tuple]],
+            entity_tags: Union[Tuple, List[str]],
     ) -> Tuple[List, List, List, List]:
         """
         Tokenize and create masks; recalculate the entity positions regarding the document boarders.
@@ -86,7 +87,17 @@ class REPreprocessor(Component):
 
         input_ids, attention_mask, upd_entity_pos, upd_entity_tags = [], [], [], []
 
+        if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
+            tokens = ast.literal_eval(tokens[0])
+            entity_pos = ast.literal_eval(entity_pos[0])
+            entity_tags = ast.literal_eval(entity_tags[0])
+
+        entity_pos = list(entity_pos)
+        tokens = list(tokens)
+        entity_tags = list(entity_tags)
+
         for doc, ent_pos, ent_tags in zip(tokens, entity_pos, entity_tags):
+
             count = 0
             doc_wordpiece_tokens = []
 
