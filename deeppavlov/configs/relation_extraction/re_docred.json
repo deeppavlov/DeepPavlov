@@ -17,7 +17,8 @@
         "in": ["tokens", "entity_pos", "entity_tags"],
         "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags", "nf_samples"],
         "class_name": "re_preprocessor",
-        "vocab_file": "bert-base-uncased"
+        "vocab_file": "bert-base-uncased",
+        "default_tag": "PER"
       },
       {
         "class_name": "re_classifier",
