@@ -35,6 +35,7 @@ class REPreprocessor(Component):
             ner_tags=None,
             max_seq_length: int = 512,
             do_lower_case: bool = False,
+            default_tag: str = None,
             **kwargs
     ):
         """
@@ -48,6 +49,7 @@ class REPreprocessor(Component):
 
         self.special_token = special_token
         self.special_tokens_dict = {'additional_special_tokens': [self.special_token]}
+        self.default_tag = default_tag
 
         if ner_tags is None:
             ner_tags = ['ORG', 'TIME', 'MISC', 'LOC', 'PER', 'NUM']
@@ -160,7 +162,6 @@ class REPreprocessor(Component):
                     return_attention_mask=True
                 )
                 upd_entity_pos.append([upd_entity_1_pos, upd_entity_2_pos])
-                upd_entity_tags.append(enc_entity_tags)
                 nf_samples.append(0)
 
             # api test scenario
@@ -175,11 +176,12 @@ class REPreprocessor(Component):
                     return_attention_mask=True
                 )
                 upd_entity_pos.append([[(0, 1)], [(0, 1)]])
-                upd_entity_tags.append([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]])
+                enc_entity_tags = self.encode_ner_tag([self.default_tag] * 2)
                 nf_samples.append(1)
 
             input_ids.append(encoding['input_ids'])
             attention_mask.append(encoding['attention_mask'])
+            upd_entity_tags.append(enc_entity_tags)
 
         return input_ids, attention_mask, upd_entity_pos, upd_entity_tags, nf_samples
 
