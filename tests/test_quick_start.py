@@ -67,6 +67,18 @@ PARAMS = {
                         'spouse'
                     )
                 )
+            ],
+        ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
+            [
+                (
+                    [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
+                    [[[(0, 2)], [(4, 6)]]],
+                    [["PERSON", "CITY"]],
+                    (
+                        'P551',
+                        'место жительства'
+                    )
+                ),
             ]
     },
     "faq": {
