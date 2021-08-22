@@ -93,6 +93,7 @@ class REPreprocessor(Component):
 
         for n_sample, (doc, ent_pos, ent_tags) in enumerate(zip(tokens, entity_pos, entity_tags)):
 
+            # valid scenario
             if isinstance(ent_pos, list) and len(ent_pos) == 2:
                 count = 0
                 doc_wordpiece_tokens = []
@@ -162,7 +163,9 @@ class REPreprocessor(Component):
                 upd_entity_tags.append(enc_entity_tags)
                 nf_samples.append(0)
 
+            # api test scenario
             else:
+                # for api test: dump values of entity tags and entity pos
                 encoding = self.tokenizer.encode_plus(
                     doc,
                     add_special_tokens=True,
