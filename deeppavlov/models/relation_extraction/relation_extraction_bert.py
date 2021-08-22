@@ -31,6 +31,7 @@ class REBertModel(TorchModel):
             hidden_keep_prob: Optional[float] = None,
             clip_norm: Optional[float] = None,
             threshold: Optional[float] = None,
+            device: str = "cpu",
             **kwargs
     ):
         self.n_classes = n_classes
@@ -42,6 +43,7 @@ class REBertModel(TorchModel):
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
         self.threshold = threshold
+        self.device = device
 
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
@@ -53,6 +55,7 @@ class REBertModel(TorchModel):
             criterion=criterion,
             optimizer_parameters=optimizer_parameters,
             return_probas=return_probas,
+            device=self.device,
             **kwargs)
 
     def train_on_batch(
@@ -135,7 +138,8 @@ class REBertModel(TorchModel):
             pretrained_bert=self.pretrained_bert,
             bert_tokenizer_config_file=self.pretrained_bert,
             num_ner_tags=self.num_ner_tags,
-            threshold=self.threshold
+            threshold=self.threshold,
+            device=self.device
         )
 
     def collate_fn(self, batch: List[Dict]) -> Tuple[Tensor, Tensor, List, List, List]:

@@ -26,7 +26,8 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
             emb_size: int = 768,
             block_size: int = 8,       # 64
             num_ner_tags: int = 6,        # number of ner tags
-            threshold: float = None
+            threshold: float = None,
+            device: str = "gpu"
     ):
         super().__init__()
         self.n_classes = n_classes
@@ -38,7 +39,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
         self.threshold = threshold
 
         self.loss_fnt = ATLoss()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
 
         # initialize parameters that would be filled later
         self.model, self.config, self.bert_config = None, None, None
