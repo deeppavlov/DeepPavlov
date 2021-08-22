@@ -19,7 +19,8 @@
                      "BOROUGH", "STREET", "PERSON", "REGION", "COUNTRY", "PROFESSION", "ORGANIZATION", "FAC",
                      "CARDINAL", "PRODUCT", "TIME"],
         "max_seq_length": 512,
-        "vocab_file": "{TRANSFORMER}"
+        "vocab_file": "{TRANSFORMER}",
+        "default_tag": "PERSON"
       },
       {
         "class_name": "re_classifier",
