@@ -5,8 +5,8 @@ Relation extraction is the task of detecting and classifying the relationship be
 DeepPavlov provides the document-level relation extraction meaning that the relation can be detected between the entities that are not in one sentence.
 Currently, RE is available for English and Russian languages.
 
-- RE model for English language trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus based on Wikipedia.
-- RE model for Russian language trained on `RuRED <http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf>`__ corpus based on the Lenta.ru news corpus.
+- :config:`RE model <relation_extraction/re_docred.json>` for English language trained on `DocRED <https://www.aclweb.org/anthology/|P19-1074/>`__ corpus based on Wikipedia.
+- :config:`RE model <relation_extraction/re_rured.json>` for Russian language trained on `RuRED <http://www.dialog-21.ru/media/5093/gordeevdiplusetal-031.pdf>`__ corpus based on the Lenta.ru news corpus.
 
 English RE model
 ----------------------------
@@ -15,13 +15,13 @@ The English RE model can be trained using the following command:
 
 .. code:: bash
 
-    python3.6 -m deeppavlov train re_docred
+    python -m deeppavlov train re_docred
 
 The trained model weights can be loaded with the following command:
 
 .. code:: bash
 
-    python3.6 -m deeppavlov download re_docred
+    python -m deeppavlov download re_docred
 
 The trained model can be used for inference with the following code:
 
