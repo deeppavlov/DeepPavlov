@@ -84,87 +84,101 @@ class REPreprocessor(Component):
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
 
-        input_ids, attention_mask, upd_entity_pos, upd_entity_tags = [], [], [], []
+        input_ids, attention_mask, upd_entity_pos, upd_entity_tags, nf_samples = [], [], [], [], []
 
         if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
             tokens = tokens[0]
             entity_pos = entity_pos[0]
             entity_tags = entity_tags[0]
 
-        for doc, ent_pos, ent_tags in zip(tokens, entity_pos, entity_tags):
+        for n_sample, (doc, ent_pos, ent_tags) in enumerate(zip(tokens, entity_pos, entity_tags)):
 
-            count = 0
-            doc_wordpiece_tokens = []
+            if isinstance(ent_pos, list) and len(ent_pos) == 2:
+                count = 0
+                doc_wordpiece_tokens = []
 
-            entity1_pos_start = list(zip(*ent_pos[0]))[0]  # first entity mentions' start positions
-            entity1_pos_end = list(zip(*ent_pos[0]))[1]  # first entity mentions' end positions
-            entity2_pos_start = list(zip(*ent_pos[1]))[0]  # second entity mentions' start positions
-            entity2_pos_end = list(zip(*ent_pos[1]))[1]  # second entity mentions' end positions
+                entity1_pos_start = list(zip(*ent_pos[0]))[0]  # first entity mentions' start positions
+                entity1_pos_end = list(zip(*ent_pos[0]))[1]  # first entity mentions' end positions
+                entity2_pos_start = list(zip(*ent_pos[1]))[0]  # second entity mentions' start positions
+                entity2_pos_end = list(zip(*ent_pos[1]))[1]  # second entity mentions' end positions
 
-            upd_entity1_pos_start, upd_entity2_pos_start, upd_entity1_pos_end, upd_entity2_pos_end = [], [], [], []
-            for n, token in enumerate(doc):
-                if n in entity1_pos_start:
-                    doc_wordpiece_tokens.append(self.special_token)
-                    upd_entity1_pos_start.append(count)
-                    count += 1
+                upd_entity1_pos_start, upd_entity2_pos_start, upd_entity1_pos_end, upd_entity2_pos_end = [], [], [], []
+                for n, token in enumerate(doc):
+                    if n in entity1_pos_start:
+                        doc_wordpiece_tokens.append(self.special_token)
+                        upd_entity1_pos_start.append(count)
+                        count += 1
 
-                if n in entity1_pos_end:
+                    if n in entity1_pos_end:
+                        doc_wordpiece_tokens.append(self.special_token)
+                        count += 1
+                        upd_entity1_pos_end.append(count)
+
+                    if n in entity2_pos_start:
+                        doc_wordpiece_tokens.append(self.special_token)
+                        upd_entity2_pos_start.append(count)
+                        count += 1
+
+                    if n in entity2_pos_end:
+                        doc_wordpiece_tokens.append(self.special_token)
+                        count += 1
+                        upd_entity2_pos_end.append(count)
+
+                    word_tokens = self.tokenizer.tokenize(token)
+                    doc_wordpiece_tokens += word_tokens
+                    count += len(word_tokens)
+
+                # special case when the entity is the last in the doc
+                if len(doc) in entity1_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
                     upd_entity1_pos_end.append(count)
-
-                if n in entity2_pos_start:
-                    doc_wordpiece_tokens.append(self.special_token)
-                    upd_entity2_pos_start.append(count)
-                    count += 1
-
-                if n in entity2_pos_end:
+                if len(doc) in entity2_pos_end:
                     doc_wordpiece_tokens.append(self.special_token)
                     count += 1
                     upd_entity2_pos_end.append(count)
+                    word_tokens = self.tokenizer.tokenize(token)
+                    doc_wordpiece_tokens += word_tokens
+                    count += len(word_tokens)
 
-                word_tokens = self.tokenizer.tokenize(token)
-                doc_wordpiece_tokens += word_tokens
-                count += len(word_tokens)
+                upd_entity_1_pos = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
+                upd_entity_2_pos = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
 
-            # special case when the entity is the last in the doc
-            if len(doc) in entity1_pos_end:
-                doc_wordpiece_tokens.append(self.special_token)
-                count += 1
-                upd_entity1_pos_end.append(count)
-            if len(doc) in entity2_pos_end:
-                doc_wordpiece_tokens.append(self.special_token)
-                count += 1
-                upd_entity2_pos_end.append(count)
-                word_tokens = self.tokenizer.tokenize(token)
-                doc_wordpiece_tokens += word_tokens
-                count += len(word_tokens)
+                # text entities for self check
+                upd_entity1_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity_1_pos]
+                upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity_2_pos]
 
-            upd_entity_1_pos = list(zip(upd_entity1_pos_start, upd_entity1_pos_end))
-            upd_entity_2_pos = list(zip(upd_entity2_pos_start, upd_entity2_pos_end))
+                enc_entity_tags = self.encode_ner_tag(ent_tags)
 
-            # text entities for self check
-            upd_entity1_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity_1_pos]
-            upd_entity2_text = [doc_wordpiece_tokens[ent_m[0]:ent_m[1]] for ent_m in upd_entity_2_pos]
+                encoding = self.tokenizer.encode_plus(
+                    doc_wordpiece_tokens[:self.max_seq_length],     # truncate tokens
+                    add_special_tokens=True,
+                    truncation=True,
+                    max_length=self.max_seq_length,
+                    pad_to_max_length=True,
+                    return_attention_mask=True
+                )
+                upd_entity_pos.append([upd_entity_1_pos, upd_entity_2_pos])
+                upd_entity_tags.append(enc_entity_tags)
+                nf_samples.append(0)
 
-            enc_entity_tags = self.encode_ner_tag(ent_tags)
-
-            encoding = self.tokenizer.encode_plus(
-                doc_wordpiece_tokens[:self.max_seq_length],     # truncate tokens
-                add_special_tokens=True,
-                truncation=True,
-                max_length=self.max_seq_length,
-                pad_to_max_length=True,
-                return_attention_mask=True
-            )
+            else:
+                encoding = self.tokenizer.encode_plus(
+                    doc,
+                    add_special_tokens=True,
+                    truncation=True,
+                    max_length=self.max_seq_length,
+                    pad_to_max_length=True,
+                    return_attention_mask=True
+                )
+                upd_entity_pos.append([[(0, 1)], [(0, 1)]])
+                upd_entity_tags.append([[0, 0, 0, 0, 1, 0], [0, 0, 0, 0, 1, 0]])
+                nf_samples.append(1)
 
             input_ids.append(encoding['input_ids'])
             attention_mask.append(encoding['attention_mask'])
 
-            upd_entity_pos.append([upd_entity_1_pos, upd_entity_2_pos])
-            upd_entity_tags.append(enc_entity_tags)
-
-        return input_ids, attention_mask, upd_entity_pos, upd_entity_tags
+        return input_ids, attention_mask, upd_entity_pos, upd_entity_tags, nf_samples
 
     def encode_ner_tag(self, ner_tags: List) -> List:
         """ Encode NER tags with one hot encodings """
@@ -186,27 +200,31 @@ class REPostprocessor:
         self.id2rel = {rel_id: rel for rel, rel_id in self.rel2id.items()}
         self.rel2label = read_json(str(expand_path(self.rel2label_path)))
 
-    def __call__(self, model_output: List) -> Tuple[List[str], List[str]]:
+    def __call__(self, model_output: List, nf_samples: List) -> Tuple[List[str], List[str]]:
 
         log.info(str(model_output))
         wikidata_relation_id, relation_name = [], []
 
-        for predictions in model_output:
-            rel_indices = np.nonzero(predictions)[0]
+        for predictions, nf_sample in zip(model_output, nf_samples):
+            if nf_sample:
+                wikidata_relation_id.append("-")
+                relation_name.append("-")
+            else:
+                rel_indices = np.nonzero(predictions)[0]
 
-            for index in rel_indices:
-                if index == 0:
-                    wikidata_relation_id.append("-")
-                    relation_name.append("no relation")
-                    continue
+                for index in rel_indices:
+                    if index == 0:
+                        wikidata_relation_id.append("-")
+                        relation_name.append("no relation")
+                        continue
 
-                rel_p = self.id2rel[index]
-                wikidata_relation_id.append(rel_p)
+                    rel_p = self.id2rel[index]
+                    wikidata_relation_id.append(rel_p)
 
-                if rel_p in self.rel2label:
-                    relation_name.append(self.rel2label[rel_p])
-                else:
-                    relation_name.append("-")
+                    if rel_p in self.rel2label:
+                        relation_name.append(self.rel2label[rel_p])
+                    else:
+                        relation_name.append("-")
 
         log.info(str(wikidata_relation_id))
         log.info(str(relation_name))
