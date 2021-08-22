@@ -98,11 +98,6 @@ class REBertModel(TorchModel):
     ) -> Union[List[int], List[np.ndarray]]:
         """ Get model predictions using features as input """
 
-        log.info(f"input_ids: {input_ids}")
-        log.info(f"attention_mask: {attention_mask}")
-        log.info(f"entity_pos: {entity_pos}")
-        log.info(f"entity_tags: {entity_tags}")
-
         self.model.eval()
 
         _input = {

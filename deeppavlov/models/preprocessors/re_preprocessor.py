@@ -43,6 +43,7 @@ class REPreprocessor(Component):
             vocab_file: path to vocabulary / name of vocabulary for tokenizer initialization
             special_token: an additional token that will be used for marking the entities in the document
             do_lower_case: set True if lowercasing is needed
+            default_tag: used for test purposes to create a valid input
         Return:
             list of feature batches with input_ids, attention_mask, entity_pos, ner_tags
         """
@@ -63,9 +64,9 @@ class REPreprocessor(Component):
             self.tokenizer = BertTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(
-            self, tokens: Union[Tuple, List[List[str]]], entity_pos: Union[Tuple, List[Tuple]],
-            entity_tags: Union[Tuple, List[str]],
-    ) -> Tuple[List, List, List, List]:
+            self, tokens: Union[Tuple, List[List[str]]], entity_pos: Union[Tuple, List[List[Tuple]]],
+            entity_tags: Union[Tuple, List[List[str]]],
+    ) -> Tuple[List, List, List, List, List]:
         """
         Tokenize and create masks; recalculate the entity positions regarding the document boarders.
         Args:
@@ -82,12 +83,17 @@ class REPreprocessor(Component):
                             ]
                         ]
             entity_tags: List[List[int]]
+            nf_samples: List[int] - contains the information about whether the corresponding sample is real sample or
+                fake (for testing): 0 means the sample is real, 1 - it is fake.
         """
 
         _ = self.tokenizer.add_special_tokens(self.special_tokens_dict)
 
         input_ids, attention_mask, upd_entity_pos, upd_entity_tags, nf_samples = [], [], [], [], []
 
+        # this workaround is for proper testing: for an unknown reason during test in test_quick_start.py
+        # each input list is transformed into a tuple, e.g., tokens -> tuple(tokens, ).
+        # todo: refactoring
         if type(tokens) == tuple and type(entity_pos) == tuple and type(entity_tags) == tuple:
             tokens = tokens[0]
             entity_pos = entity_pos[0]
@@ -206,6 +212,16 @@ class REPostprocessor:
         self.rel2label = read_json(str(expand_path(self.rel2label_path)))
 
     def __call__(self, model_output: List, nf_samples: List) -> Tuple[List[str], List[str]]:
+        """
+        The model output is transformed to the relation id and relation name
+        Args:
+            model_output: List of probability vectors
+            nf_samples: contains the information about true and fake samples (0 - true sample and should be included
+                to the output, 1 - fake sample)
+        Return:
+            wikidata_relation_id: List of wiki ids of found relations
+            relation_name: List of names of found relations
+        """
 
         log.info(str(model_output))
         wikidata_relation_id, relation_name = [], []
@@ -230,7 +246,4 @@ class REPostprocessor:
                         relation_name.append(self.rel2label[rel_p])
                     else:
                         relation_name.append("-")
-
-        log.info(str(wikidata_relation_id))
-        log.info(str(relation_name))
         return wikidata_relation_id, relation_name
