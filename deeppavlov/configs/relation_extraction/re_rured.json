@@ -12,7 +12,7 @@
     "pipe": [
       {
         "in": ["tokens", "entity_pos", "entity_tags"],
-        "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags"],
+        "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags", "nf_samples"],
         "class_name": "re_preprocessor",
         "ner_tags": ["WORK_OF_ART", "NORP", "GROUP", "LAW", "NATIONALITY", "EVENT", "DATE", "CURRENCY", "GPE",
                      "QUANTITY", "FAMILY", "ORDINAL", "RELIGION", "CITY", "MONEY", "AGE", "LOCATION", "PERCENT",
@@ -37,7 +37,7 @@
         "class_name": "re_postprocessor",
         "rel2id_path": "{DOWNLOADS_PATH}/rured/rel2id.json",
         "rel2label_path": "{DOWNLOADS_PATH}/rured/rel2label.json",
-        "in": ["model_output"],
+        "in": ["model_output", "nf_samples"],
         "out": ["wikidata_relation_id", "relation_name"]
       }
     ],
