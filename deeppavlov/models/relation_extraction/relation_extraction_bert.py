@@ -65,9 +65,7 @@ class REBertModel(TorchModel):
             raise ConfigError("Please provide a valid number of classes.")
 
         if optimizer_parameters is None:
-            self.optimizer_parameters = {"lr": 5e-5, "weight_decay": 0.01, "eps": 1e-6}
-        else:
-            self.optimizer_parameters = optimizer_parameters
+            optimizer_parameters = {"lr": 5e-5, "weight_decay": 0.01, "eps": 1e-6}
 
         super().__init__(
             n_classes=n_classes,
