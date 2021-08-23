@@ -82,7 +82,7 @@ PARAMS = {
         ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)],
-        #("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
+        ("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
     },
     "classifiers": {
         ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
