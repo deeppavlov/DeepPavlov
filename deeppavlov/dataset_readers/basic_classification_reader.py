@@ -49,6 +49,8 @@ class BasicClassificationDatasetReader(DatasetReader):
             format: extension of files. Set of Values: ``"csv", "json"``
             class_sep: string separator of labels in column with labels
             sep (str): delimeter for ``"csv"`` files. Default: None -> only one class per sample
+            float_labels (boolean): if True and class_sep is not None, we treat all classes as float
+            quotechar (str): what char we consider as quote in the dataset
             header (int): row number to use as the column names
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
@@ -81,7 +83,7 @@ class BasicClassificationDatasetReader(DatasetReader):
             file = Path(data_path).joinpath(file_name)
             if file.exists():
                 if format == 'csv':
-                    keys = ('sep', 'header', 'names')
+                    keys = ('sep', 'header', 'names', 'quotechar')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_csv(file, **options)
                 elif format == 'json':
