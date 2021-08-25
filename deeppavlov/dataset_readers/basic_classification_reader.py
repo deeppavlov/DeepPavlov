@@ -105,7 +105,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                      if class_sep:
                          label = str(row[y]).split(class_sep)
                      if float_labels:
-                         label = [float(k) for k in labels]
+                         label = [float(k) for k in label]
                      data[data_type].append((sample, label))
             else:
                 log.warning("Cannot find {} file".format(file))
