@@ -35,6 +35,7 @@ class BasicClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
+             float_labels: bool = False,
              *args, **kwargs) -> dict:
         """
         Read dataset from data_path directory.
@@ -92,22 +93,18 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                if isinstance(x, list):
-                    if class_sep is None:
-                        # each sample is a tuple ("text", "label")
-                        data[data_type] = [([row[x_] for x_ in x], str(row[y]))
-                                           for _, row in df.iterrows()]
-                    else:
-                        # each sample is a tuple ("text", ["label", "label", ...])
-                        data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep))
-                                           for _, row in df.iterrows()]
-                else:
-                    if class_sep is None:
-                        # each sample is a tuple ("text", "label")
-                        data[data_type] = [(row[x], str(row[y])) for _, row in df.iterrows()]
-                    else:
-                        # each sample is a tuple ("text", ["label", "label", ...])
-                        data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
+                data[data_type] = []
+                for _, row in df.iterrows():
+                     if isinstance(x, list):
+                         sample = [row[x_] for x_ in x]
+                     else:
+                         sample = row[x]
+                     label = str(row[y])
+                     if class_sep:
+                         label = str(row[y]).split(class_sep)
+                     if float_labels:
+                         label = [float(k) for k in labels]
+                     data[data_type].append((sample, label))
             else:
                 log.warning("Cannot find {} file".format(file))
 
