@@ -17,6 +17,7 @@ from logging import getLogger
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -96,6 +97,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
                 data[data_type] = []
+                i = 0
                 for _, row in df.iterrows():
                      if isinstance(x, list):
                          sample = [row[x_] for x_ in x]
@@ -106,7 +108,11 @@ class BasicClassificationDatasetReader(DatasetReader):
                          label = str(row[y]).split(class_sep)
                      if float_labels:
                          label = [float(k) for k in label]
-                     data[data_type].append((sample, label))
+                     if not np.isnan(sample) and not np.isnan(label):
+                         data[data_type].append((sample, label))
+                     else:
+                         log.warning(f'Skipping NAN received in file {file} at {i} row')
+                     i += 1
             else:
                 log.warning("Cannot find {} file".format(file))
 
