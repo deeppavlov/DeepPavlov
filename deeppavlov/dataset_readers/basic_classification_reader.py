@@ -108,7 +108,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                          label = str(row[y]).split(class_sep)
                      if float_labels:
                          label = [float(k) for k in label]
-                     if not np.isnan(sample) and not np.isnan(label):
+                     if sample == sample and label == label:
                          data[data_type].append((sample, label))
                      else:
                          log.warning(f'Skipping NAN received in file {file} at {i} row')
