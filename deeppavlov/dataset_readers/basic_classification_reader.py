@@ -17,7 +17,6 @@ from logging import getLogger
 from pathlib import Path
 
 import pandas as pd
-import numpy as np
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -108,7 +107,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                          label = str(row[y]).split(class_sep)
                      if float_labels:
                          label = [float(k) for k in label]
-                     if sample == sample and label == label:
+                     if sample == sample and label == label:  # not NAN
                          data[data_type].append((sample, label))
                      else:
                          log.warning(f'Skipping NAN received in file {file} at {i} row')
