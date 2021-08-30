@@ -188,7 +188,7 @@ def round_accuracy(y_true, y_predicted):
     """
     try:
         if isinstance(y_predicted, np.ndarray):
-            predictions = [np.round(x) for x in y_predicted]
+            predictions = y_predicted.round()
         else:
             predictions = [round(x) for x in y_predicted]
     except TypeError:
