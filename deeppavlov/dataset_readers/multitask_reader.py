@@ -28,7 +28,7 @@ log = getLogger(__name__)
 
 @register('multitask_reader')
 class MultiTaskReader(DatasetReader):
-    """Class to read several datasets simultaneuosly"""
+    """Class to read several datasets simultaneously"""
 
     def read(self, data_path, tasks: Dict[str, Dict[str, str]]):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
@@ -60,5 +60,6 @@ class MultiTaskReader(DatasetReader):
             del reader_params['reader_class_name']
             reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
             data[task_name] = tasks[task_name].read(**reader_params)
+            log.info(f"Task: {task_name} data_path: {reader_params['data_path']}")
         return data
 

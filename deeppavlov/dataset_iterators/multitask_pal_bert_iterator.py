@@ -45,8 +45,8 @@ class MultiTaskPalBertIterator:
         self,
         data: dict,
         num_train_epochs: int,
-        steps_per_epoch: int,
         tasks: dict,
+        steps_per_epoch: Optional[int] = None,
         gradient_accumulation_steps: Optional[int] = 1,
     ):
         self.task_iterators = {}
@@ -77,15 +77,11 @@ class MultiTaskPalBertIterator:
         for data_type in self.data.keys():
             self.max_task_data_len[data_type] = max(
                 [len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
+        self.generators = None
         self.sample_x_instances = None
         self.sample_y_instances = None
 
     def _get_data_size(self, data: Dict[str, List]):
-        """
-        By the way the formula for the sample
-        prob - in the best method - is N^(1-0.8*((epoch - 1)/(NUM_EPOCHS - 1)))
-        so the sample prob is proportional to the number of train examples N
-        """
         return [len(data[key]) for key in data.keys()]
 
     def _get_probs(self, data_type):
@@ -155,10 +151,17 @@ class MultiTaskPalBertIterator:
         n_batches = math.ceil(max_task_data_len / batch_size)
 
         if data_type == "train":
-            generators = [
-                RepeatBatchGenerator(iter_, batch_size, data_type, shuffle)
-                for iter_ in self.task_iterators.values()
-            ]
+            if not self.steps_per_epoch:
+                train_sizes = self._get_data_size(self._get_data("train"))
+                self.steps_per_epoch = sum(train_sizes) // batch_size
+                log.info(f"Steps per epoch set to {self.steps_per_epoch}")
+
+            if not self.generators:
+                self.generators = [
+                    RepeatBatchGenerator(iter_, batch_size, data_type, shuffle)
+                    for iter_ in self.task_iterators.values()
+                ]
+                log.info(f"Batch Generators for each task initialized")
 
             # one sample batch of batch_size 1 for each task
             if not self.sample_x_instances or not self.sample_y_instances:
@@ -171,7 +174,7 @@ class MultiTaskPalBertIterator:
                     self.steps_taken + 1
                 ) % self.gradient_accumulation_steps == 0 or self.task_id is None:
                     self.task_id = np.random.choice(self.n_tasks, p=probs)
-                batch = generators[self.task_id].__next__()
+                batch = self.generators[self.task_id].__next__()
                 x_instances = self.sample_x_instances.copy()
                 y_instances = self.sample_y_instances.copy()
                 x_instances[self.task_id] = batch[0]

@@ -21,12 +21,11 @@ from overrides import overrides
 import torch
 import os
 
-from .modeling import BertForMultiTask, BertConfig
-
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.models.multitask_pal_bert.modeling import BertForMultiTask, BertConfig
 
 log = getLogger(__name__)
 
@@ -323,19 +322,21 @@ class MultiTaskPalBert(TorchModel):
 
         if self.tasks_type[task_id] == "regression":
             _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.float32
-            ).to(self.device)
+                task_labels, dtype=torch.float32).to(self.device)
         else:
-            _input["labels"] = torch.from_numpy(np.array(task_labels)).to(
-                self.device
-            )
-
+            _input["labels"] = torch.tensor(
+                task_labels, dtype=torch.long).to(self.device)
         loss, logits = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
         )
 
         loss = loss / self.gradient_accumulation_steps
-        loss.backward()
+        try:
+            loss.backward()
+        except RuntimeError:
+            raise ValueError(
+                f"More different classes found in task {self.task_names[task_id]} "
+                f"than {self.tasks_num_classes[task_id]}")
 
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
