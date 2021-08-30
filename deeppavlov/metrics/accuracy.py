@@ -187,7 +187,10 @@ def round_accuracy(y_true, y_predicted):
         portion of absolutely coincidental samples
     """
     try:
-        predictions = [np.round(x) for x in y_predicted]
+        if isinstance(y_predicted[0], np.ndarray):
+            predictions = [np.round(x) for x in y_predicted]
+        else:
+            predictions = [round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
     examples_len = len(y_true)
