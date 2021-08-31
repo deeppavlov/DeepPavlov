@@ -63,7 +63,6 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
         dialogs = False
         ignore_slots = False
-        # print(stories)
         story_iterator = StoriesGenerator(stories,
                                           intents,
                                           domain_knowledge,
@@ -72,16 +71,6 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
         for batch in story_iterator.generate():
             stories_parsed = batch
-
-            # tmp_f = tempfile.NamedTemporaryFile(delete=False, mode='w',
-            #                                     encoding="utf-8")
-            # for story_id, story in stories_parsed.items():
-            #     for replics in story:
-            #         print(json.dumps(replics), file=tmp_f)
-            #     print(file=tmp_f)
-            # tmp_f.close()
-            # noinspection PyProtectedMember
-            # print(batch)
             gobot_formatted_stories = DSTC2DatasetReader._read_from_batch(
                 list(itertools.chain(*[v + [{}] for v in batch.values()])),
                 dialogs=dialogs)
@@ -141,15 +130,8 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
         tmp = self.gen_batches(batch_size=-1,
                                data_type=data_type,
                                shuffle=False)
-        # print("a")
         res = tuple(e for el in tmp
                     for e in el)
-        # print("b")
-        # print(a)
-        # print("c")
-        # res = tuple(map(concat,zip(*tmp)))
-
-        # print(res)
         return res
 
 
@@ -248,8 +230,6 @@ class TurnIterator:
         if slots_li is None:
             slots_li = tuple()
         res = self.intents.intent2slots2text[user_action][slots_li]
-        # print(res)
-        # print(self.intents.intent2slots2text)
         return res
 
     def process_user_turn(self):
@@ -262,7 +242,6 @@ class TurnIterator:
         random.shuffle(possible_user_response_infos)
         # possible_user_utters = []
         for user_response_info in possible_user_response_infos[:2]:
-            # print(user_response_info)
             user_utter = {"speaker": self._USER_SPEAKER_ID,
                           "text": user_response_info["text"],
                           "dialog_acts": [{"act": user_action,

@@ -426,7 +426,6 @@ def load_trie(infile):
             setattr(trie, attr, flags[i])
         read_data = flags[-1]
         final = [False] * nodes_number
-        # print(len(alphabet), nodes_number)
         if trie.dict_storage:
             graph = [defaultdict(lambda: -1) for _ in range(nodes_number)]
         elif trie.is_numpied:

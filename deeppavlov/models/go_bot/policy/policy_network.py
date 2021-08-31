@@ -17,8 +17,8 @@ from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
 from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
 
-# todo
-from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, MemorizingGoBotParams
+from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, \
+    MemorizingGoBotParams
 from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
 from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
 from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
@@ -454,7 +454,10 @@ class PolicyNetwork(LRScheduledTFModel):
         if self.debug:
             log.debug(f"AFTER {self.__class__.__name__} _save_nn_params()")
 
+
 class MemorizingPolicy(PolicyNetwork):
+    """the policy network which memorizes all the training dialogues in
+    transducer-like manner"""
     def __init__(self, network_params_passed: PolicyNetworkParams,
                  tokens_dims: TokensVectorRepresentationParams,
                  features_params: MemorizingGoBotParams,

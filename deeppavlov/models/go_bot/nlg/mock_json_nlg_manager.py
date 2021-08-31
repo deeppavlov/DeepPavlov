@@ -1,21 +1,22 @@
 import json
+import random
 import re
 from collections import defaultdict
-from itertools import combinations
 from pathlib import Path
 from typing import Union, Dict, List, Tuple
 
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register, get_model
-from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
 from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
 from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures
-from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse, VerboseJSONNLGResponse
+from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse, \
+    VerboseJSONNLGResponse
 from deeppavlov.models.go_bot.nlg.nlg_manager import log
-from deeppavlov.models.go_bot.nlg.nlg_manager_interface import NLGManagerInterface
-from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
-import random
+from deeppavlov.models.go_bot.nlg.nlg_manager_interface import \
+    NLGManagerInterface
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import \
+    PolicyPrediction
+
 
 @register("gobot_json_nlg_manager")
 class MockJSONNLGManager(NLGManagerInterface):
@@ -197,6 +198,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         response = JSONNLGResponse(slots_values, actions_tuple)
         verbose_response = VerboseJSONNLGResponse.from_json_nlg_response(response)
         verbose_response.policy_prediction = policy_prediction
+        # noinspection PyProtectedMember
         verbose_response._nlu_responses = utterance_batch_features._nlu_responses
         response_text = self.generate_template(verbose_response)
         verbose_response.text = response_text

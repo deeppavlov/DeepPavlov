@@ -222,6 +222,7 @@ class DialogueStateTracker(FeaturizedTracker):
 
 
 class MemorizingDialogueStateTracker(DialogueStateTracker):
+    """the dialogue state tracker to be used with the Memorizing Policy"""
     def get_current_knowledge(self) -> DSTKnowledge:
         res = super().get_current_knowledge()
         res.stories = self.stories

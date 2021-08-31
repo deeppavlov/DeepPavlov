@@ -23,7 +23,10 @@ class SharedGoBotParams:
                                  nlu_manager.num_of_known_intents(),
                                  tracker.num_features)
 
+
 class MemorizingGoBotParams(SharedGoBotParams):
+    """the DTO-like class to store the params which should be persistent
+    across model reloads"""
     intent_ids2intents: dict
     intents2intent_ids: dict
 

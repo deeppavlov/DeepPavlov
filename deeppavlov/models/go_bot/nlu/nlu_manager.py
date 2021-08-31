@@ -42,6 +42,7 @@ class NLUManager(NLUManagerInterface):
                     or isinstance(component, MemClassificationModel):
                 intent2labeltools = [el[-1] for el in self.intent_classifier.pipe if isinstance(el[-1], SimpleVocabulary)]
                 if intent2labeltools:
+                    # noinspection PyProtectedMember
                     self.intents = intent2labeltools[-1]._i2t
             else:
                 self.intents = component.classes

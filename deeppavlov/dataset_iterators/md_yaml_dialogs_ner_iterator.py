@@ -139,7 +139,6 @@ class MD_YAML_DialogsDatasetIntentsIterator(MD_YAML_DialogsDatasetIterator):
                 for user, sys in zip(users, syss):
                     reply = user
                     curr_intents = []
-                    # print(turn)
                     if reply['intents']:
                         for intent in reply['intents']:
                             for slot in intent['slots']:

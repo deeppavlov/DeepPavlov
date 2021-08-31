@@ -176,7 +176,6 @@ class RASA_SlotFillingComponent(SlotFillingComponent):
         """reads the slotfilling info from RASA-styled dataset"""
         domain_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.DOMAIN_FNAME)
         nlu_path = Path(self.load_path, MD_YAML_DialogsDatasetReader.NLU_FNAME)
-        # domain_knowledge = DomainKnowledge(read_yaml(domain_path))
         # todo: rewrite MD_YAML_DialogsDatasetReader so that public methods are enough
         data = MD_YAML_DialogsDatasetReader.read(self.load_path)
         nlu_lines_trn = dict()
@@ -230,7 +229,6 @@ class RASA_MemorizingSlotFillingComponent(SlotFillingComponent):
             for i, text in zip(m, batch):
                 # tokens are['is', 'there', 'anything', 'else']
                 slots_values_lists = self._predict_slots(text)
-                # print(slots_values_lists)
                 if self.return_all:
                     slots[i] = dict(slots_values_lists)
                 else:
