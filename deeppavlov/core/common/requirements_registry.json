@@ -225,9 +225,21 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
-  "torch_bert_ranker": [
+  "torch_squad_transformers_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_multiplechoice_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_multiplechoice": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_bert_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
   ],
   "torch_transformers_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -250,7 +262,7 @@
   ],
   "torch_bert_ranker_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
   ],
   "transformers_bert_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
@@ -274,7 +286,7 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt",
     "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
   ],
   "spelling_error_model": [

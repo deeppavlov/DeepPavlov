@@ -1,7 +1,9 @@
 {
   "dataset_reader": {
     "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
+    "dataset": "SberSQuADClean",
+    "url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/squad_ru_clean/"
   },
   "dataset_iterator": {
     "class_name": "squad_iterator",
@@ -12,16 +14,17 @@
     "in": ["context_raw", "question_raw"],
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
-      {
+        {
         "class_name": "torch_transformers_squad_infer",
-        "batch_size": 10,
-        "squad_model_config": "{CONFIGS_PATH}/squad/squad_torch_bert.json",
-        "vocab_file": "bert-base-cased",
-        "do_lower_case": false,
-        "max_seq_length": 384,
+        "lang": "ru", 
+        "batch_size": 128,
+        "squad_model_config": "{CONFIGS_PATH}/squad/squad_ru_convers_distilrubert_6L.json",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{lowercase}",
+        "max_seq_length": 256,
         "in": ["context_raw", "question_raw"],
         "out": ["ans_predicted", "ans_start_predicted", "logits"]
-      }
+        }
     ],
     "out": ["ans_predicted", "ans_start_predicted", "logits"]
   },
@@ -33,17 +36,8 @@
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
-    "pytest_max_batches": 2,
     "validation_patience": 10,
     "metrics": [
-      {
-        "name": "squad_v1_f1",
-        "inputs": ["ans_raw", "ans_predicted"]
-      },
-      {
-        "name": "squad_v1_em",
-        "inputs": ["ans_raw", "ans_predicted"]
-      },
       {
         "name": "squad_v2_f1",
         "inputs": ["ans_raw", "ans_predicted"]
@@ -51,19 +45,32 @@
       {
         "name": "squad_v2_em",
         "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["ans_raw", "ans_predicted"]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": ["ans_raw", "ans_predicted"]
       }
     ]
   },
   "metadata": {
     "variables": {
+      "lowercase": false, 
       "ROOT_PATH": "~/.deeppavlov",
-      "TRANSFORMER": "bert-base-cased",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert/{TRANSFORMER}",
+      "TRANSFORMER": "DeepPavlov/distilrubert-base-cased-conversational",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/squad_ru_convers_distilrubert_6L",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_ru_convers_distilrubert_6L.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }
-

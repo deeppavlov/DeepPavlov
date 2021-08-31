@@ -52,6 +52,8 @@ ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
 FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_text', None)
 
+LIST_ARGUMENTS_INFER_CHECK = (['Dummy text', 'Dummy text'], ['Dummy text', 'Dummy text'], None)
+
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "relation_extraction": {
@@ -143,7 +145,11 @@ PARAMS = {
         ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -164,6 +170,18 @@ PARAMS = {
     "sample": {
         ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "distil": {
+        ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/rusentiment_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_2L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_6L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
     },
     "entity_linking": {
         ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
@@ -216,7 +234,9 @@ PARAMS = {
         ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
             ("i see 1 cat", ({"number": '1'},))],
         ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_torch.json", "ner_ontonotes_bert_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_ontonotes_bert_mult_torch.json", "ner_ontonotes_bert_mult_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
         ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
@@ -307,6 +327,7 @@ PARAMS = {
         ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_torch_bert.json", "squad_ru_torch_bert", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "odqa": {
         ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],

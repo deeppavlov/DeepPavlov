@@ -1,0 +1,93 @@
+ {
+  "dataset_reader": {
+    "class_name": "paraphraser_reader",
+    "data_path": "{DOWNLOADS_PATH}/paraphraser_data",
+    "do_lower_case": false
+  },
+  "dataset_iterator": {
+    "class_name": "siamese_iterator",
+    "seed": 243,
+    "len_valid": 500
+  },
+  "chainer": {
+    "in": ["text_a", "text_b"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false,
+        "max_seq_length": 64,
+        "in": ["text_a", "text_b"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "torch_transformers_classifier",
+        "n_classes": 2,
+        "return_probas": false,
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "attention_probs_keep_prob": 0.11,
+        "hidden_keep_prob": 1.0, 
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 1.89e-05
+        },
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 1.5,
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "predictions"
+        ]
+      }
+    ],
+    "out": ["predictions"]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 64,
+    "metrics": [
+        "f1",
+        "accuracy"
+    ],
+    "validation_patience": 7,
+    "val_every_n_batches": 50,
+    "log_every_n_batches": 50,
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/paraphraser_convers_distilrubert_2L"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/paraphraser_convers_distilrubert_2L.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser.zip",
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/paraphraser_gold.zip",
+        "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
+      }
+    ]
+  }
+}
