@@ -20,7 +20,8 @@ from deeppavlov.models.go_bot.policy.dto.policy_prediction import \
 
 @register("gobot_json_nlg_manager")
 class MockJSONNLGManager(NLGManagerInterface):
-
+    """this class allows for GO-bot to output metainfo along with the response
+    text"""
     # todo inheritance
     # todo force a2id, id2a mapping to be persistent for same configs
 

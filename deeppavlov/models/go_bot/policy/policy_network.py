@@ -1,28 +1,29 @@
 import json
-from typing import Tuple, Optional
 from logging import getLogger
+from typing import Tuple, Optional
 
 import numpy as np
 import tensorflow as tf
-
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
-
 # noinspection PyUnresolvedReferences
 from tensorflow.contrib.layers import xavier_initializer as xav
 
+from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.layers import tf_attention_mechanisms as am, tf_layers
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
-from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
-
-from deeppavlov.models.go_bot.nlu.tokens_vectorizer import TokensVectorRepresentationParams
-from deeppavlov.models.go_bot.dto.dataset_features import BatchDialoguesFeatures, BatchDialoguesTargets
-
+from deeppavlov.models.go_bot.dto.dataset_features import \
+    BatchDialoguesFeatures, BatchDialoguesTargets
 from deeppavlov.models.go_bot.dto.shared_gobot_params import SharedGoBotParams, \
     MemorizingGoBotParams
+from deeppavlov.models.go_bot.nlu.dto.nlu_response import NLUResponse
+from deeppavlov.models.go_bot.nlu.tokens_vectorizer import \
+    TokensVectorRepresentationParams
 from deeppavlov.models.go_bot.policy.dto.attn_params import GobotAttnParams
-from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import DigitizedPolicyFeatures
-from deeppavlov.models.go_bot.policy.dto.policy_network_params import PolicyNetworkParams
-from deeppavlov.models.go_bot.policy.dto.policy_prediction import PolicyPrediction
+from deeppavlov.models.go_bot.policy.dto.digitized_policy_features import \
+    DigitizedPolicyFeatures
+from deeppavlov.models.go_bot.policy.dto.policy_network_params import \
+    PolicyNetworkParams
+from deeppavlov.models.go_bot.policy.dto.policy_prediction import \
+    PolicyPrediction
 from deeppavlov.models.go_bot.tracker.dto.dst_knowledge import DSTKnowledge
 
 log = getLogger(__name__)

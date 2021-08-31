@@ -29,6 +29,8 @@ log = logging.getLogger(__name__)
 
 @register('mem_classification_model')
 class MemClassificationModel(NNModel):
+    """this classifier memorizes the labels of training data entries.
+    useful for testing multicomponent models"""
 
     def __init__(self, n_classes: int, save_path: Optional[Union[str, Path]],
                  return_probas: bool = True, *args, **kwargs):
@@ -45,8 +47,9 @@ class MemClassificationModel(NNModel):
         self.is_trained = False
         self.load()
 
-    def __call__(self: "MemClassificationModel", texts: List[str], *args) -> Union[
-        List[List[float]], List[int]]:
+    def __call__(self: "MemClassificationModel", texts: List[str], *args) -> \
+            Union[
+                List[List[float]], List[int]]:
         """Infer on the given data.
 
         Args:

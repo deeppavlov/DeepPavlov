@@ -28,6 +28,7 @@ log = getLogger(__name__)
 
 
 class DialogueStateTracker(FeaturizedTracker):
+    """a mechanism which stores all the knowledge used by the GO-bot"""
     def get_current_knowledge(self) -> DSTKnowledge:
         state_features = self.get_features()
         context_features = self.calc_context_features()
@@ -308,9 +309,9 @@ class MemorizingDialogueStateTracker(DialogueStateTracker):
                 self.stories_ptrs[ix] += 1
 
 
-
-
 class MultipleUserStateTrackersPool(object):
+    """the mechanism which allows for multiple users dialogues states to be
+    tracked simultaneously"""
     def __init__(self, base_tracker: DialogueStateTracker):
         self._ids_to_trackers = {}
         self.base_tracker = base_tracker

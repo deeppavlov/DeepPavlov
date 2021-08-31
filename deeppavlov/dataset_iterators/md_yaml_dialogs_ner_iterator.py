@@ -11,39 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import itertools
-import json
-import os
-import re
-import tempfile
 from logging import getLogger
 from typing import Dict, List, Tuple, Any, Iterator
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.dataset_iterators.md_yaml_dialogs_iterator import \
     MD_YAML_DialogsDatasetIterator
-from deeppavlov.dataset_readers.dstc2_reader import DSTC2DatasetReader
-from deeppavlov.dataset_readers.dto.rasa.domain_knowledge import DomainKnowledge
-from deeppavlov.dataset_readers.dto.rasa.stories import Story, Turn, Stories
-from deeppavlov.dataset_readers.dto.rasa.nlu import Intents
 
 log = getLogger(__name__)
 
 
 class RASADict(dict):
+    """the DTO-like class allowing for dicts to be summed"""
     def __add__(self, oth):
         return RASADict()
 
 
-
-
-from typing import Dict, List, Tuple, Any, Iterator
-
-
 @register('md_yaml_dialogs_ner_iterator')
 class MD_YAML_DialogsDatasetNERIterator(MD_YAML_DialogsDatasetIterator):
-
+    """this class handles the slotfilling information defined in RASA configs"""
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
                  seed: int = None,
@@ -118,7 +104,7 @@ class MD_YAML_DialogsDatasetNERIterator(MD_YAML_DialogsDatasetIterator):
 
 @register("md_yaml_dialogs_intents_iterator")
 class MD_YAML_DialogsDatasetIntentsIterator(MD_YAML_DialogsDatasetIterator):
-
+    """this class handles the intents classification info in RASA configs"""
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
                  seed: int = None,

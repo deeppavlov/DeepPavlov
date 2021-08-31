@@ -37,9 +37,7 @@ class RASADict(dict):
 
 @register('md_yaml_dialogs_iterator')
 class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
-    """
-
-    """
+    """this class handles the dialogues provided in form of RASA-like configs"""
 
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
@@ -136,6 +134,7 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
 
 
 class TurnIterator:
+    """this class handles the stories turns in RASA"""
     _USER_SPEAKER_ID = 1
     _SYSTEM_SPEAKER_ID = 2
 
@@ -294,49 +293,7 @@ class TurnIterator:
         Yields: all the possible dstc2 versions of the passed story line
         TODO: SUPPORT FORMS
         """
-        # nonlocal intent2slots2text, domain_knowledge, curr_story_utters_batch, nonlocal_curr_story_bad
         system_action = self.parse_system_turn()
-        # system_action_name = system_action.get("dialog_acts")[0].get("act")
-        #
-        # for curr_story_utters in curr_story_utters_batch:
-        #     if cls.last_turn_is_systems_turn(curr_story_utters):
-        #         # deal with consecutive system actions by inserting the last user replics in between
-        #         curr_story_utters.append(
-        #             cls.get_last_users_turn(curr_story_utters))
-        #
-        # def parse_form_name(story_line: str) -> str:
-        #     """
-        #     if the line (in stories.md utterance format) contains a form name, return it
-        #     Args:
-        #         story_line: line to extract form name from
-        #     Returns:
-        #         the extracted form name or None if no form name found
-        #     """
-        #     form_name = None
-        #     if story_line.startswith("form"):
-        #         form_di = json.loads(story_line[len("form"):])
-        #         form_name = form_di["name"]
-        #     return form_name
-        #
-        # if system_action_name.startswith("form"):
-        #     form_name = parse_form_name(system_action_name)
-        #     augmented_utters = cls.augment_form(form_name, domain_knowledge,
-        #                                         intent2slots2text)
-        #
-        #     utters_to_append_batch = [[]]
-        #     for user_utter in augmented_utters:
-        #         new_curr_story_utters_batch = []
-        #         for curr_story_utters in utters_to_append_batch:
-        #             possible_extensions = process_story_line(user_utter)
-        #             for possible_extension in possible_extensions:
-        #                 new_curr_story_utters = curr_story_utters.copy()
-        #                 new_curr_story_utters.extend(possible_extension)
-        #                 new_curr_story_utters_batch.append(
-        #                     new_curr_story_utters)
-        #         utters_to_append_batch = new_curr_story_utters_batch
-        # else:
-        #     utters_to_append_batch = [[system_action]]
-
         yield system_action
 
     def __call__(self):
@@ -377,6 +334,7 @@ class StoryGenerator:
 
 
 class StoriesGenerator:
+    """this class handles stories defined in RASA configs"""
     def __init__(self, stories: Stories, intents: Intents,
                  domain_knowledge: DomainKnowledge, ignore_slots: False,
                  batch_size=1):
@@ -398,62 +356,3 @@ class StoriesGenerator:
                     yield batch
                     batch = dict()
         yield batch
-
-# _USER_SPEAKER_ID = 1
-# _SYSTEM_SPEAKER_ID = 2
-#
-# VALID_DATATYPES = ('trn', 'val', 'tst')
-#
-# NLU_FNAME = "nlu.md"
-# DOMAIN_FNAME = "domain.yml"
-#
-# @classmethod
-# def _data_fname(cls, datatype: str) -> str:
-#     assert datatype in cls.VALID_DATATYPES, f"wrong datatype name: {datatype}"
-#     return f"stories-{datatype}.md"
-#
-# @classmethod
-# @overrides
-# def read(cls, data_path: str, fmt = "md") -> Dict[str, Dict]:
-#     """
-#     Parameters:
-#         data_path: path to read dataset from
-#
-#     Returns:
-#         dictionary tha(t contains
-#         ``'train'`` field with dialogs from ``'stories-trn.md'``,
-#         ``'valid'`` field with dialogs from ``'stories-val.md'`` and
-#         ``'test'`` field with dialogs from ``'stories-tst.md'``.
-#         Each field is a list of tuples ``(x_i, y_i)``.
-#     """
-#     domain_fname = cls.DOMAIN_FNAME
-#     nlu_fname = cls.NLU_FNAME if fmt in ("md", "markdown") else cls.NLU_FNAME.replace('.md', f'.{fmt}')
-#     stories_fnames = tuple(cls._data_fname(dt) for dt in cls.VALID_DATATYPES)
-#     required_fnames = stories_fnames + (nlu_fname, domain_fname)
-#     for required_fname in required_fnames:
-#         required_path = Path(data_path, required_fname)
-#         if not required_path.exists():
-#             log.error(f"INSIDE MLU_MD_DialogsDatasetReader.read(): "
-#                       f"{required_fname} not found with path {required_path}")
-#
-#     domain_path = Path(data_path, domain_fname)
-#     domain_knowledge = DomainKnowledge.from_yaml(domain_path)
-#     nlu_fpath = Path(data_path, nlu_fname)
-#     intents = Intents.from_file(nlu_fpath)
-#
-#     short2long_subsample_name = {"trn": "train",
-#                                  "val": "valid",
-#                                  "tst": "test"}
-#
-#     data = RASADict()
-#     for subsample_name_short in cls.VALID_DATATYPES:
-#         story_fpath = Path(data_path, cls._data_fname(subsample_name_short))
-#         with open(story_fpath) as f:
-#             story_lines = f.read().splitlines()
-#         stories = Stories.from_stories_lines_md(story_lines)
-#         dat = RASADict({"story_lines": stories,
-#                         "domain": domain_knowledge,
-#                         "nlu_lines": intents})
-#         data[short2long_subsample_name[subsample_name_short]] = dat
-#     data = RASADict(data)
-#     return data
