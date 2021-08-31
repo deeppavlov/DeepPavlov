@@ -324,25 +324,25 @@ The Russian RE model can be trained using the following command:
 
 .. code:: bash
 
-    python3.6 -m deeppavlov train re_rured
+    python -m deeppavlov train re_rured
 
 The trained model weights can be loaded with the following command:
 
 .. code:: bash
 
-    python3.6 -m deeppavlov download re_rured
+    python -m deeppavlov download re_rured
 
 The trained model can be used for inference with the following code:
 
 .. code:: python
 
     from deeppavlov import configs, build_model
-    re = build_model(configs.relation_extraction.re_rured, download=False)
+    model = build_model(configs.relation_extraction.re_rured)
 
     sentence_tokens = [["Илон", "Маск", "живет", "в", "Сиэттле", "."]]
     entity_pos = [[[(0, 2)], [(4, 6)]]]
     entity_tags = [["PERSON", "CITY"]]
-    pred = re_model(sentence_tokens, entity_pos, entity_tags)
+    pred = model(sentence_tokens, entity_pos, entity_tags)
     >> [['P551'], ['место жительства']]
 
 **Model Input**:
