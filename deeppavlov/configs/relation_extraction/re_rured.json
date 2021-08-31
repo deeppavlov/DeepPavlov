@@ -1,0 +1,78 @@
+{
+  "dataset_reader": {
+    "class_name": "rured_reader",
+    "data_path": "{DOWNLOADS_PATH}/rured/"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator"
+  },
+  "chainer": {
+    "in": ["tokens", "entity_pos", "entity_tags"],
+    "in_y": ["y_ids"],
+    "pipe": [
+      {
+        "in": ["tokens", "entity_pos", "entity_tags"],
+        "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags", "nf_samples"],
+        "class_name": "re_preprocessor",
+        "ner_tags": ["WORK_OF_ART", "NORP", "GROUP", "LAW", "NATIONALITY", "EVENT", "DATE", "CURRENCY", "GPE",
+                     "QUANTITY", "FAMILY", "ORDINAL", "RELIGION", "CITY", "MONEY", "AGE", "LOCATION", "PERCENT",
+                     "BOROUGH", "STREET", "PERSON", "REGION", "COUNTRY", "PROFESSION", "ORGANIZATION", "FAC",
+                     "CARDINAL", "PRODUCT", "TIME"],
+        "max_seq_length": 512,
+        "vocab_file": "{TRANSFORMER}",
+        "default_tag": "PERSON"
+      },
+      {
+        "class_name": "re_classifier",
+        "in": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags"],
+        "in_y": ["y_ids"],
+        "out": ["model_output"],
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "model_name": "re_model",
+        "n_classes": 30,
+        "num_ner_tags": 29,
+        "pretrained_bert": "{TRANSFORMER}"
+      },
+      {
+        "class_name": "re_postprocessor",
+        "rel2id_path": "{DOWNLOADS_PATH}/rured/rel2id.json",
+        "rel2label_path": "{DOWNLOADS_PATH}/rured/rel2label.json",
+        "in": ["model_output", "nf_samples"],
+        "out": ["wikidata_relation_id", "relation_name"]
+      }
+    ],
+    "out": ["wikidata_relation_id", "relation_name"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 16,
+    "train_metrics": ["acc"],
+    "metrics": ["acc"],
+    "validation_patience": 50,
+    "val_every_n_batches": 100,
+    "log_every_n_batches": 100,
+    "evaluation_targets": ["valid", "train"],
+    "show_examples": false,
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/re_rured"
+      },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/rured.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rured"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_rured_model.tar.gz",
+        "subdir": "{MODELS_PATH}/re_rured"
+      }
+    ]
+  }
+}

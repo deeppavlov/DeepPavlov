@@ -55,7 +55,7 @@ class NerChunker(Component):
     def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
         """
         This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
- 
+
         Args:
             docs_batch: batch of documents
 
