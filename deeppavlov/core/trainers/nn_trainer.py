@@ -18,8 +18,9 @@ import time
 from itertools import islice
 from logging import getLogger
 from pathlib import Path
-from tqdm import tqdm
 from typing import List, Tuple, Union, Optional, Iterable
+
+from tqdm import tqdm
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -280,7 +281,7 @@ class NNTrainer(FitTrainer):
         while True:
             impatient = False
             self._send_event(event_name='before_train')
-            log.info('Started the model training')
+            log.info('The model training started')
             for x, y_true in tqdm(iterator.gen_batches(self.batch_size, data_type='train')):
                 self.last_result = self._chainer.train_on_batch(x, y_true)
                 if self.last_result is None:
