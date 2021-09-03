@@ -43,6 +43,7 @@ Welcome to DeepPavlov's documentation!
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
    Intent Catcher <features/models/intent_catcher>
+   Relation Extraction <features/models/re>
 
 
 .. toctree::
@@ -81,6 +82,14 @@ Welcome to DeepPavlov's documentation!
 
    Contribution guide <devguides/contribution_guide>
    Register your model <devguides/registry>
+
+
+.. toctree::
+   :glob:
+   :maxdepth: 3
+   :caption: Internships
+
+   Internships <internships/internships>
 
 
 .. toctree::

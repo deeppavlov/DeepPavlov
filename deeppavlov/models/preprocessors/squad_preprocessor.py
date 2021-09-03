@@ -19,7 +19,7 @@ import unicodedata
 from collections import Counter
 from logging import getLogger
 from pathlib import Path
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Dict
 
 import numpy as np
 from nltk import word_tokenize
@@ -393,9 +393,11 @@ class SquadBertMappingPreprocessor(Component):
         self.do_lower_case = do_lower_case
 
     def __call__(self, contexts, bert_features, *args, **kwargs):
-        subtok2chars = []
-        char2subtoks = []
+        subtok2chars: List[Dict[int, int]] = []
+        char2subtoks: List[Dict[int, int]] = []
+
         for batch_counter, (context, features) in enumerate(zip(contexts, bert_features)):
+            subtokens: List[str]
             if self.do_lower_case:
                 context = context.lower()
             if len(args) > 0:
@@ -404,8 +406,8 @@ class SquadBertMappingPreprocessor(Component):
                 subtokens = features.tokens
             context_start = subtokens.index('[SEP]') + 1
             idx = 0
-            subtok2char = {}
-            char2subtok = {}
+            subtok2char: Dict[int, int] = {}
+            char2subtok: Dict[int, int] = {}
             for i, subtok in list(enumerate(subtokens))[context_start:-1]:
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
                 subtok_pos = context[idx:].find(subtok)
@@ -421,7 +423,6 @@ class SquadBertMappingPreprocessor(Component):
                     idx += len(subtok)
             subtok2chars.append(subtok2char)
             char2subtoks.append(char2subtok)
-
         return subtok2chars, char2subtoks
 
 

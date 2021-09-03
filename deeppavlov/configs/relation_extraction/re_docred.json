@@ -1,0 +1,80 @@
+{
+  "dataset_reader": {
+    "class_name": "docred_reader",
+    "data_path": "{DOWNLOADS_PATH}/docred/",
+    "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
+    "rel_info_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
+    "valid_test_data_size": 150
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator"
+  },
+  "chainer": {
+    "in": ["tokens", "entity_pos", "entity_tags"],
+    "in_y": ["y_ids"],
+    "pipe": [
+      {
+        "in": ["tokens", "entity_pos", "entity_tags"],
+        "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags", "nf_samples"],
+        "class_name": "re_preprocessor",
+        "vocab_file": "bert-base-uncased",
+        "default_tag": "PER"
+      },
+      {
+        "class_name": "re_classifier",
+        "in": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags"],
+        "in_y": ["y_ids"],
+        "out": ["model_output"],
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "model_name": "re_model",
+        "n_classes": 97,
+        "num_ner_tags": 6,
+        "pretrained_bert": "bert-base-uncased",
+        "return_probas": true
+      },
+      {
+        "class_name": "re_postprocessor",
+        "rel2id_path": "{DOWNLOADS_PATH}/docred/meta/rel2id.json",
+        "rel2label_path": "{DOWNLOADS_PATH}/docred/rel_info.json",
+        "in": ["model_output", "nf_samples"],
+        "out": ["wikidata_relation_id", "relation_name"]
+      }
+    ],
+    "out": ["wikidata_relation_id", "relation_name"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 16,
+    "log_every_n_batches": 100,
+    "train_metrics": ["f1_weighted", "acc"],
+    "evaluation_targets": ["valid", "train"],
+    "metrics": ["f1_weighted", "acc"],
+    "validation_patience": 50,
+    "val_every_n_batches": 100,
+    "show_examples": false,
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/re_docred"
+      },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/docred.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/docred"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_docred_model.tar.gz",
+        "subdir": "{MODELS_PATH}/re_docred"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/rel2label.json",
+        "subdir": "{DOWNLOADS_PATH}/docred"
+      }
+    ]
+  }
+}
