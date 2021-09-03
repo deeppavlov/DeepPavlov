@@ -72,7 +72,7 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
             gobot_formatted_stories = DSTC2DatasetReader._read_from_batch(
                 list(itertools.chain(*[v + [{}] for v in batch.values()])),
                 dialogs=dialogs)
-            # os.remove(tmp_f.name)
+
             ds = []
             prev_resp_act = None
             for x, y in gobot_formatted_stories:
@@ -85,42 +85,6 @@ class MD_YAML_DialogsDatasetIterator(DataLearningIterator):
                 ds[-1][0].append(x)
                 ds[-1][1].append(y)
             yield zip(*ds)
-
-    # def read_story(self, stories: Stories, dialogs,
-    #                domain_knowledge: DomainKnowledge, nlu_knowledge: Intents,
-    #                ignore_slots):
-    #     log.debug(f"BEFORE MLU_MD_DialogsDatasetReader._read_story(): "
-    #               f"story_fpath={story_fpath}, "
-    #               f"dialogs={dialogs}, "
-    #               f"domain_knowledge={domain_knowledge}, "
-    #               f"intent2slots2text={intent2slots2text}, "
-    #               f"slot_name2text2value={slot_name2text2value}")
-    #
-    #
-    #
-    #
-    #     log.debug(f"AFTER MLU_MD_DialogsDatasetReader._read_story(): "
-    #                           f"story_fpath={story_fpath}, "
-    #                           f"dialogs={dialogs}, "
-    #                           f"domain_knowledge={domain_knowledge}, "
-    #                           f"intent2slots2text={intent2slots2text}, "
-    #                           f"slot_name2text2value={slot_name2text2value}")
-    #
-    #     return gobot_formatted_stories
-
-    # if len(generated_sentences) == batch_size:
-    #     # tuple(zip) below does [r1, r2, ..], [s1, s2, ..] -> ((r1, s1), (r2, s2), ..)
-    #     yield tuple(zip(regexps, generated_sentences)), generated_labels
-    #     generated_cnt += len(generated_sentences)
-    #     regexps, generated_sentences, generated_labels = [], [], []
-    #
-    # if generated_sentences:
-    #     yield tuple(zip(regexps, generated_sentences)), generated_labels
-    #     generated_cnt += len(generated_sentences)
-    #     regexps, generated_sentences, generated_labels = [], [], []
-    #
-    # log.info(f"Original number of samples: {len(sentences)}"
-    #          f", generated samples: {generated_cnt}")
 
     def get_instances(self, data_type: str = 'train') -> Tuple[
         tuple, tuple]:
@@ -239,7 +203,7 @@ class TurnIterator:
         possible_user_response_infos = self.user_action2text(action_for_text,
                                                              slots_used_values)
         random.shuffle(possible_user_response_infos)
-        # possible_user_utters = []
+
         for user_response_info in possible_user_response_infos[:2]:
             user_utter = {"speaker": self._USER_SPEAKER_ID,
                           "text": user_response_info["text"],
@@ -277,7 +241,7 @@ class TurnIterator:
                 Returns:
                     the dstc2-formatted passed turn
                 """
-        # system actions are started in dataset with -
+
         system_action_name = self.turn.turn_description.strip('-').strip()
         curr_action_text = self.system_action2text(system_action_name)
         system_action = {"speaker": self._SYSTEM_SPEAKER_ID,
