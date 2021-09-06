@@ -276,7 +276,8 @@ class TorchSquadTransformersPreprocessor(Component):
 
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):
-    """Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
+    """
+    Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
     Creates a mask of subtokens (one for the first subtoken, zero for the others).
 
     If tags are provided, calculates tags for subtokens.
@@ -426,7 +427,7 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
         """Tokenize and create masks.
 
         Args:
-            batch: list of elemenents where the first element represents the batch with contexts
+            batch: list of elements where the first element represents the batch with contexts
                 and the rest of elements represent response candidates batches
 
         Returns:
