@@ -19,7 +19,7 @@ ruamel.yaml==0.15.100
 rusenttokenize==0.0.5
 scikit-learn==0.21.2
 scipy==1.4.1
-tqdm==4.41.1
+tqdm==4.62.0
 click==7.1.2
 uvicorn==0.11.7
 sacremoses==0.0.35

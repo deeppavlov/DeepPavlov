@@ -63,9 +63,9 @@ class TorchModel(NNModel):
 
     def __init__(self, device: str = "gpu",
                  optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 0.01},
+                 optimizer_parameters: Optional[dict] = None,
                  lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: dict = {},
+                 lr_scheduler_parameters: Optional[dict] = None,
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
@@ -79,6 +79,10 @@ class TorchModel(NNModel):
         self.criterion = None
         self.epochs_done = 0
 
+        if optimizer_parameters is None:
+            optimizer_parameters = {"lr": 0.01}
+        if lr_scheduler_parameters is None:
+            lr_scheduler_parameters = dict()
         self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler

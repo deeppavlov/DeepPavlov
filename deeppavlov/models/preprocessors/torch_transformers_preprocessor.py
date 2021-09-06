@@ -14,11 +14,14 @@
 
 import re
 import random
+from collections import defaultdict
+from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
 import torch
-from typing import Tuple, List, Optional, Union, Dict
+from typing import Tuple, List, Optional, Union, Dict, Set
 
+import numpy as np
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
@@ -201,8 +204,8 @@ class TorchSquadTransformersPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False, 
-                 add_token_type_ids: bool = False, 
+                 return_tokens: bool = False,
+                 add_token_type_ids: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
@@ -234,15 +237,15 @@ class TorchSquadTransformersPreprocessor(Component):
             texts_b = [None] * len(texts_a)
 
         input_features = []
-        tokens = [] 
+        tokens = []
         for text_a, text_b in zip(texts_a, texts_b):
             encoded_dict = self.tokenizer.encode_plus(
-                text=text_a, text_pair=text_b, 
-                add_special_tokens=True, 
+                text=text_a, text_pair=text_b,
+                add_special_tokens=True,
                 max_length=self.max_seq_length,
                 truncation=True,
                 padding='max_length',
-                return_attention_mask=True, 
+                return_attention_mask=True,
                 return_tensors='pt')
 
             if 'token_type_ids' not in encoded_dict:
@@ -252,7 +255,7 @@ class TorchSquadTransformersPreprocessor(Component):
                     sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
                     len_a = min(sep + 1, seq_len)
                     len_b = seq_len - len_a
-                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int), 
+                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int),
                                                                 torch.ones(1, len_b, dtype=int)), dim=1)
                 else:
                     encoded_dict['token_type_ids'] = torch.tensor([0])
@@ -464,3 +467,180 @@ class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
             input_features.append(sub_list_features)
 
         return input_features
+
+
+@dataclass
+class RecordFlatExample:
+    """Dataclass to store a flattened ReCoRD example. Contains `probability` for
+    a given `entity` candidate, as well as its label.
+    """
+    index: str
+    label: int
+    probability: float
+    entity: str
+
+
+@dataclass
+class RecordNestedExample:
+    """Dataclass to store a nested ReCoRD example. Contains a single predicted entity, as well as
+    a list of correct answers.
+    """
+    index: str
+    prediction: str
+    answers: List[str]
+
+
+@register("torch_record_postprocessor")
+class TorchRecordPostprocessor:
+    """Combines flat classification examples into nested examples. When called returns nested examples
+    that weren't previously returned during current iteration over examples.
+
+    Args:
+        is_binary: signifies whether the classifier uses binary classification head
+    Attributes:
+        record_example_accumulator: underling accumulator that transforms flat examples
+        total_examples: overall number of flat examples that must be processed during current iteration
+    """
+
+    def __init__(self, is_binary: bool = False, *args, **kwargs):
+        self.record_example_accumulator: RecordExampleAccumulator = RecordExampleAccumulator()
+        self.total_examples: Optional[int, None] = None
+        self.is_binary: bool = is_binary
+
+    def __call__(self,
+                 idx: List[str],
+                 y: List[int],
+                 y_pred_probas: np.ndarray,
+                 entities: List[str],
+                 num_examples: List[int],
+                 *args,
+                 **kwargs) -> List[RecordNestedExample]:
+        """Postprocessor call
+
+        Args:
+            idx: list of string indices
+            y: list of integer labels
+            y_pred_probas: array of predicted probabilities
+            num_examples: list of duplicated total numbers of examples
+
+        Returns:
+            List[RecordNestedExample]: processed but not previously returned examples (may be empty in some cases)
+        """
+        if not self.is_binary:
+            # if we have outputs for both classes `0` and `1`
+            y_pred_probas = y_pred_probas[:, 1]
+        if self.total_examples != num_examples[0]:
+            # start over if num_examples is different
+            # implying that a different split is being evaluated
+            self.reset_accumulator()
+            self.total_examples = num_examples[0]
+        for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
+            self.record_example_accumulator.add_flat_example(index, label, probability, entity)
+            self.record_example_accumulator.collect_nested_example(index)
+            if self.record_example_accumulator.examples_processed >= self.total_examples:
+                # start over if all examples were processed
+                self.reset_accumulator()
+        return self.record_example_accumulator.return_examples()
+
+    def reset_accumulator(self):
+        """Reinitialize the underlying accumulator from scratch
+        """
+        self.record_example_accumulator = RecordExampleAccumulator()
+
+
+class RecordExampleAccumulator:
+    """ReCoRD example accumulator
+
+    Attributes:
+        examples_processed: total number of examples processed so far
+        record_counter: number of examples processed for each index
+        nested_len: expected number of flat examples for a given index
+        flat_examples: stores flat examples
+        nested_examples: stores nested examples
+        collected_indices: indices of collected nested examples
+        returned_indices: indices that have been returned
+    """
+
+    def __init__(self):
+        self.examples_processed: int = 0
+        self.record_counter: Dict[str, int] = defaultdict(lambda: 0)
+        self.nested_len: Dict[str, int] = dict()
+        self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
+        self.nested_examples: Dict[str, RecordNestedExample] = dict()
+        self.collected_indices: Set[str] = set()
+        self.returned_indices: Set[str] = set()
+
+    def add_flat_example(self, index: str, label: int, probability: float, entity: str):
+        """Add a single flat example to the accumulator
+
+        Args:
+            index: example index
+            label: example label (`-1` means that label is not available)
+            probability: predicted probability
+            entity: candidate entity
+        """
+        self.flat_examples[index].append(RecordFlatExample(index, label, probability, entity))
+        if index not in self.nested_len:
+            self.nested_len[index] = self.get_expected_len(index)
+        self.record_counter[index] += 1
+        self.examples_processed += 1
+
+    def ready_to_nest(self, index: str) -> bool:
+        """Checks whether all the flat examples for a given index were collected at this point.
+        Args:
+            index: the index of the candidate nested example
+        Returns:
+            bool: indicates whether the collected flat examples can be combined into a nested example
+        """
+        return self.record_counter[index] == self.nested_len[index]
+
+    def collect_nested_example(self, index: str):
+        """Combines a list of flat examples denoted by the given index into a single nested example
+        provided that all the necessary flat example have been collected by this time.
+        Args:
+            index: the index of the candidate nested example
+        """
+        if self.ready_to_nest(index):
+            example_list: List[RecordFlatExample] = self.flat_examples[index]
+            entities: List[str] = []
+            labels: List[int] = []
+            probabilities: List[float] = []
+            answers: List[str] = []
+
+            for example in example_list:
+                entities.append(example.entity)
+                labels.append(example.label)
+                probabilities.append(example.probability)
+                if example.label == 1:
+                    answers.append(example.entity)
+
+            prediction_index = np.argmax(probabilities)
+            prediction = entities[prediction_index]
+
+            self.nested_examples[index] = RecordNestedExample(index, prediction, answers)
+            self.collected_indices.add(index)
+
+    def return_examples(self) -> List[RecordNestedExample]:
+        """Determines which nested example were not yet returned during the current evaluation
+        cycle and returns them. May return an empty list if there are no new nested examples
+        to return yet.
+        Returns:
+            List[RecordNestedExample]: zero or more nested examples
+        """
+        indices_to_return: Set[str] = self.collected_indices.difference(self.returned_indices)
+        examples_to_return: List[RecordNestedExample] = []
+        for index in indices_to_return:
+            examples_to_return.append(self.nested_examples[index])
+        self.returned_indices.update(indices_to_return)
+        return examples_to_return
+
+    @staticmethod
+    def get_expected_len(index: str) -> int:
+        """
+        Calculates the total number of flat examples denoted by the give index
+        Args:
+            index: the index to calculate the number of examples for
+        Returns:
+            int: the expected number of examples for this index
+        """
+        return int(index.split("-")[-1])

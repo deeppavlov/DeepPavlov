@@ -22,14 +22,15 @@ from deeppavlov.core.common.metrics_registry import register_metric
 @register_metric('mean_squared_error')
 def mse(y_true: Union[np.array, list],
         y_predicted: Union[np.array, list],
-        *args, **kwargs):
+        *args,
+        **kwargs) -> float:
     """
     Calculates mean squared error.
     Args:
-        y_true: list of true probs
-        y_predicted: list of predicted peobs
+        y_true: list of true values
+        y_predicted: list of predicted values
     Returns:
-        Mean squared error
+        float: Mean squared error
     """
     for value in [y_true, y_predicted]:
         assert (np.isfinite(value).all())
