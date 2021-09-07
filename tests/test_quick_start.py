@@ -54,8 +54,37 @@ FOUR_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', 'Dummy text', 'Dummy_t
 
 LIST_ARGUMENTS_INFER_CHECK = (['Dummy text', 'Dummy text'], ['Dummy text', 'Dummy text'], None)
 
+RECORD_ARGUMENTS_INFER_CHECK = ("Index", "Dummy query text", "Dummy passage text", "Dummy entity", 1, None)
+
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
+    "relation_extraction": {
+        ("relation_extraction/re_docred.json", "relation_extraction", ('IP',)):
+            [
+                (
+                    [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle",
+                      "Robinson", "."]],
+                    [[[(0, 2)], [(5, 7), (9, 11)]]],
+                    [["PER", "PER"]],
+                    (
+                        'P26',
+                        'spouse'
+                    )
+                )
+            ],
+        ("relation_extraction/re_rured.json", "relation_extraction", ('IP',)):
+            [
+                (
+                    [["Илон", "Маск", "живет", "в", "Сиэттле", "."]],
+                    [[[(0, 2)], [(4, 6)]]],
+                    [["PERSON", "CITY"]],
+                    (
+                        'P551',
+                        'место жительства'
+                    )
+                ),
+            ]
+    },
     "faq": {
         ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
@@ -122,7 +151,8 @@ PARAMS = {
         ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
     "snips": {
         ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
