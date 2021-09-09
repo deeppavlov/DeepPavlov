@@ -5,7 +5,7 @@
       {
         "class_name": "torch_bert_entity_ranker",
         "id": "entity_descr_ranking",
-        "pretrained_bert": "DeepPavlov/rubert-base-cased",
+        "pretrained_bert": "{DOWNLOADS_PATH}/torch_bert_models/rubert_base_cased",
         "context_weights_path": "{DOWNLOADS_PATH}/siamese_bert_el_ranking/text_encoder.pth.tar",
         "bilinear_weights_path": "{DOWNLOADS_PATH}/siamese_bert_el_ranking/bilinear.pth.tar",
         "q_to_descr_emb_path": "{DOWNLOADS_PATH}/wikidata_rus/q_to_descr_emb_trained.pickle",
@@ -94,6 +94,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/siamese_el_ranking/siamese_el_ranking.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/siamese_bert_el_ranking"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/rubert_base_cased.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/torch_bert_models/rubert_base_cased"
       }
     ]
   }
