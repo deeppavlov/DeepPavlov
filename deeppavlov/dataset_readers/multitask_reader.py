@@ -59,7 +59,7 @@ class MultiTaskReader(DatasetReader):
             tasks[task_name] = from_params({"class_name": reader_params['reader_class_name']})
             del reader_params['reader_class_name']
             reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
-            data[task_name] = tasks[task_name].read(**reader_params)
             log.info(f"Task: {task_name} data_path: {reader_params['data_path']}")
+            data[task_name] = tasks[task_name].read(**reader_params)
         return data
 
