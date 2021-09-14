@@ -97,6 +97,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                 y = kwargs.get('y', 'labels')
                 data[data_type] = []
                 i = 0
+                prev_n_classes = 0  # to capture samples with different n_classes
                 for _, row in df.iterrows():
                      if isinstance(x, list):
                          sample = [row[x_] for x_ in x]
@@ -105,8 +106,11 @@ class BasicClassificationDatasetReader(DatasetReader):
                      label = str(row[y])
                      if class_sep:
                          label = str(row[y]).split(class_sep)
+                         if prev_n_classes == 0:
+                             prev_n_classes = len(label)
+                         assert len(label) == prev_n_classes, f"Wrong class number at {i} row"
                      if float_labels:
-                         label = [float(k) for k in label]
+                         label = [float(k) for k in label]                      
                      if sample == sample and label == label:  # not NAN
                          data[data_type].append((sample, label))
                      else:
