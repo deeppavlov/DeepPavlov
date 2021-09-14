@@ -85,7 +85,6 @@ class MultiTaskPalBert(TorchModel):
             current_directory, "configs/pals_config.json")
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
-        self.multilabel = multilabel
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.tasks_num_classes = [tasks[task]["n_classes"] for task in tasks]
@@ -106,15 +105,8 @@ class MultiTaskPalBert(TorchModel):
         self.in_y_distribution = in_y_distribution
         self.steps_taken = 0
 
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError(
-                "Use one-hot encoded labels for multilabel classification!"
-            )
-
-        if self.multilabel and not self.return_probas:
-            raise RuntimeError(
-                "Set return_probas to True for multilabel classification!"
-            )
+        if multilabel:
+            log.warning('Multilabel classification is not supported')
 
         if self.gradient_accumulation_steps > 1 and not self.steps_per_epoch:
             raise RuntimeError(
@@ -282,10 +274,7 @@ class MultiTaskPalBert(TorchModel):
             if self.tasks_type[task_id] == "regression":  # regression
                 pred = logits.squeeze(-1).detach().cpu().tolist()
             elif self.return_probas:
-                if not self.multilabel:
-                    pred = torch.nn.functional.softmax(logits, dim=-1)
-                else:
-                    pred = torch.nn.functional.sigmoid(logits)
+                pred = torch.nn.functional.softmax(logits, dim=-1)
                 pred = pred.detach().cpu().numpy()
             else:
                 logits = logits.detach().cpu().numpy()
