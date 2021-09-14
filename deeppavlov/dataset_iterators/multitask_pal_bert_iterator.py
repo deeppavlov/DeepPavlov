@@ -46,8 +46,7 @@ class MultiTaskPalBertIterator:
         data: dict,
         num_train_epochs: int,
         tasks: dict,
-        steps_per_epoch: Optional[int] = None,
-        gradient_accumulation_steps: Optional[int] = 1,
+        steps_per_epoch: Optional[int] = None
     ):
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
@@ -62,7 +61,6 @@ class MultiTaskPalBertIterator:
         self.n_tasks = len(tasks.keys())
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
-        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.epochs_done = 0
         self.steps_taken = 0
         self.task_id = None
@@ -153,7 +151,6 @@ class MultiTaskPalBertIterator:
         if data_type == "train":
             if not self.steps_per_epoch:
                 train_sizes = self._get_data_size(self._get_data("train"))
-                batch_size = batch_size * self.gradient_accumulation_steps
                 self.steps_per_epoch = sum(train_sizes) // batch_size
                 log.info(f"Steps per epoch set to {self.steps_per_epoch}")
 
