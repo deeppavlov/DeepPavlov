@@ -153,6 +153,7 @@ class MultiTaskPalBertIterator:
         if data_type == "train":
             if not self.steps_per_epoch:
                 train_sizes = self._get_data_size(self._get_data("train"))
+                batch_size = batch_size * self.gradient_accumulation_steps
                 self.steps_per_epoch = sum(train_sizes) // batch_size
                 log.info(f"Steps per epoch set to {self.steps_per_epoch}")
 
