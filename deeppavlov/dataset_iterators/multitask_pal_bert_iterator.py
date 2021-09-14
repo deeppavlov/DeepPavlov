@@ -46,7 +46,8 @@ class MultiTaskPalBertIterator:
         data: dict,
         num_train_epochs: int,
         tasks: dict,
-        steps_per_epoch: Optional[int] = None
+        steps_per_epoch: Optional[int] = None,
+        gradient_accumulation_steps: Optional[int] = 1,
     ):
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
@@ -78,6 +79,7 @@ class MultiTaskPalBertIterator:
         self.generators = None
         self.sample_x_instances = None
         self.sample_y_instances = None
+        self.gradient_accumulation_steps = gradient_accumulation_steps
 
     def _get_data_size(self, data: Dict[str, List]):
         return [len(data[key]) for key in data.keys()]
