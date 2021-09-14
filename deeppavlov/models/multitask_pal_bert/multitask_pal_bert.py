@@ -45,6 +45,7 @@ class MultiTaskPalBert(TorchModel):
         steps_per_epoch: number of steps taken per epoch
         clip_norm: normalization: value for gradient clipping,
         one_hot_labels: set to true if using one hot labels,
+        multilabel: set true for multilabel class,
         return_probas: set true to return prediction probas,
         in_distribution: in_distribution: The distribution of variables listed
         in the ``"in"`` config parameter between tasks.
@@ -67,8 +68,11 @@ class MultiTaskPalBert(TorchModel):
         optimizer_parameters: dict = {"lr": 2e-5},
         lr_scheduler: Optional[str] = None,
         lr_scheduler_parameters: dict = {},
+        gradient_accumulation_steps: Optional[int] = 1,
+        steps_per_epoch: Optional[int] = None,
         clip_norm: Optional[float] = None,
         one_hot_labels: bool = False,
+        multilabel: bool = False,
         return_probas: bool = False,
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
@@ -81,6 +85,7 @@ class MultiTaskPalBert(TorchModel):
             current_directory, "configs/pals_config.json")
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
+        self.multilabel = multilabel
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.tasks_num_classes = [tasks[task]["n_classes"] for task in tasks]
@@ -100,6 +105,21 @@ class MultiTaskPalBert(TorchModel):
         self.in_distribution = in_distribution
         self.in_y_distribution = in_y_distribution
         self.steps_taken = 0
+
+        if self.multilabel and not self.one_hot_labels:
+            raise RuntimeError(
+                "Use one-hot encoded labels for multilabel classification!"
+            )
+
+        if self.multilabel and not self.return_probas:
+            raise RuntimeError(
+                "Set return_probas to True for multilabel classification!"
+            )
+
+        if self.gradient_accumulation_steps > 1 and not self.steps_per_epoch:
+            raise RuntimeError(
+                "Provide steps per epoch when using gradient accumulation"
+            )
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -262,7 +282,10 @@ class MultiTaskPalBert(TorchModel):
             if self.tasks_type[task_id] == "regression":  # regression
                 pred = logits.squeeze(-1).detach().cpu().tolist()
             elif self.return_probas:
-                pred = torch.nn.functional.softmax(logits, dim=-1)
+                if not self.multilabel:
+                    pred = torch.nn.functional.softmax(logits, dim=-1)
+                else:
+                    pred = torch.nn.functional.sigmoid(logits)
                 pred = pred.detach().cpu().numpy()
             else:
                 logits = logits.detach().cpu().numpy()
