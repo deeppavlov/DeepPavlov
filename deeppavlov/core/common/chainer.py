@@ -151,8 +151,9 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            assert self.train_map.issuperset(in_x + in_y), ('Arguments {} are expected but only {} are set'
-                                                            .format(in_x + in_y, self.train_map))
+            missing_names = set(self.train_map) - set(in_x) - set(in_y)
+            assert not missing_names, ('Arguments {} are expected but only {} are set'
+                                                            .format(missing_names, self.train_map))
             preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
@@ -180,7 +181,8 @@ class Chainer(Component):
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
         else:
-            raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
+            missing_names = set(train_map) - set(in_x)
+            raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
 
     def compute(self, x, y=None, targets=None):
         if targets is None:
