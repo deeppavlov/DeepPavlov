@@ -842,7 +842,28 @@ class EntityLinkerSep(Component, Serializable):
                     tm_descr_end = time.time()
                     log.debug(f"description time {tm_descr_end - tm_descr_st}")
                 except:
-                    entity_ids_list = ["ERROR" for _ in entity_substr_list]
+                    if self.num_entities_to_return == 1:
+                        entity_ids_list = ["ERROR" for _ in entity_substr_list]
+                        conf_list = [(0.0, 0, 0.0) for _ in entity_substr_list]
+                    else:
+                        entity_ids_list = [["ERROR"] for _ in entity_substr_list]
+                        conf_list = [[(0.0, 0, 0.0)] for _ in entity_substr_list]
+                if entity_substr_list and entity_ids_list[0] == []:
+                    entity_ids_list = [["Not Found"] for _ in entity_substr_list]
+                    conf_list = [[(0.0, 0, 0.0)] for _ in entity_substr_list]
+                
+                corr_entity_ids_list = []
+                corr_conf_list = []
+                for entity_ids, conf in zip(entity_ids_list, conf_list):
+                    if entity_ids == []:
+                        corr_entity_ids_list.append(["Not Found"])
+                        corr_conf_list.append([(0.0, 0, 0.0)])
+                    else:
+                        corr_entity_ids_list.append(entity_ids)
+                        corr_conf_list.append(conf)
+                entity_ids_list = corr_entity_ids_list
+                conf_list = corr_conf_list
+
             entity_ids_batch.append(entity_ids_list)
             conf_batch.append(conf_list)
 
