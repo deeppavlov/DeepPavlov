@@ -500,10 +500,8 @@ class EntityLinkerSep(Component, Serializable):
             nf_entity_substr_list, nf_tags_list, nf_probas_list, nf_entity_offsets_list = [], [], [], []
             nf_entity_ids_list, nf_conf_list = [], []
             fnd_entity_substr_list, fnd_tags_list, fnd_probas_list, fnd_entity_offsets_list = [], [], [], []
-            log.info(f"entity_substr_list {entity_substr_list}"+'\n')
-            log.info(f"tags_list {tags_list}"+'\n')
-            log.info(f"entity_offsets_list {entity_offsets_list}"+'\n')
-            log.info(f"probas_list {probas_list}"+'\n')
+            if probas_list is None:
+                probas_list = []
             for entity_substr, tag, proba, entity_offsets in zip(entity_substr_list, tags_list, probas_list,
                                                                  entity_offsets_list):
                 nf = False
