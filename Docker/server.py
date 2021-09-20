@@ -30,7 +30,7 @@ porter = Porter()
 async def model(request: Request):
     async with aiohttp.ClientSession() as session:
         async with session.post(f"http://{next(porter.active_hosts)}:8000/model", json=await request.json()) as resp:
-            return await resp.json()
+            return await resp.json(content_type=None)
 
 
 @app.get('/update/containers')
