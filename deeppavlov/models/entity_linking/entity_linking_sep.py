@@ -651,12 +651,20 @@ class EntityLinkerSep(Component, Serializable):
             entity_ids_batch[i] = entity_ids_list
             tags_batch[i] = tags_list
             entity_labels_batch[i] = entity_labels_list
+            
+        status_batch = []
+        for entity_ids_list in entity_ids_batch:
+            if entity_ids_list and entity_ids_list[0] \
+                    and (entity_ids_list[0][0] == "ERROR" or entity_ids_list[0][0] == ["ERROR"]):
+                status_batch.append("error")
+            else:
+                status_batch.append("ok")
 
         if self.return_confidences:
             return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, \
-                   entity_labels_batch
+                   entity_labels_batch, status_batch
         else:
-            return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch
+            return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch, status_batch
 
     def link_entities(self, entity_substr_batch: List[List[str]],
                       tags_batch: List[List[str]],

@@ -16,7 +16,7 @@
       {
         "class_name": "entity_linker_sep",
         "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"],
-        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"],
+        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels", "status"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "word_to_idlist_filename": "word_to_idlist_vx.pickle",
@@ -55,7 +55,7 @@
         "lang": "ru"
       }
     ],
-    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels"]
+    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels", "status"]
   },
   "metadata": {
     "variables": {
