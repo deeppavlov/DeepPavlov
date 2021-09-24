@@ -66,11 +66,11 @@
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "attention_probs_keep_prob": 0.78,
-        "hidden_keep_prob": 0.89, 
+        "attention_probs_keep_prob": 0.33,
+        "hidden_keep_prob": 0.67, 
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 7.22e-05
+          "lr": 3.67e-05
         },
         "learning_rate_drop_patience": 5,
         "learning_rate_drop_div": 1.5,

@@ -58,14 +58,14 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.11,
-        "hidden_keep_prob": 0.11, 
+        "hidden_keep_prob": 0.67, 
         "return_probas": false,
         "encoder_layer_ids": [
           -1
         ],
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 5.45e-05,
+          "lr": 8.11e-05,
           "weight_decay": 1e-06,
           "betas": [
             0.9,
