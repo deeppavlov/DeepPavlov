@@ -136,10 +136,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/topic_ag_news_v3"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ag_news_data.tar.gz",

@@ -117,10 +117,6 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODEL_PATH": "{ROOT_PATH}/models/ontonotes"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/gensim.txt",
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_ontonotes_m1.tar.gz",

@@ -8,7 +8,7 @@ deeppavlov.models.torch_bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertNerPreprocessor
+.. autoclass:: deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersNerPreprocessor
 
     .. automethod:: __call__
 
@@ -21,19 +21,17 @@ deeppavlov.models.torch_bert
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autofunction:: deeppavlov.models.torch_bert.torch_bert_sequence_tagger.token_from_subtoken
-
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_sequence_tagger.TorchTransformersSequenceTagger
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_squad.TorchTransformersSquad
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
 
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADInferModel
+.. autoclass:: deeppavlov.models.torch_bert.torch_transformers_squad.TorchTransformersSquadInfer
 
     .. automethod:: __call__
 
@@ -41,8 +39,3 @@ deeppavlov.models.torch_bert
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
-
-.. autoclass:: deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer
-
-    .. automethod:: __call__
-    .. automethod:: _get_nsp_predictions

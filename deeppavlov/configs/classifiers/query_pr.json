@@ -95,10 +95,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "labels": {
       "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"

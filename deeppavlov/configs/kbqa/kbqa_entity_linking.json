@@ -37,14 +37,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-      "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-      "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-      "{DEEPPAVLOV_PATH}/requirements/spelling.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pyinflect.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_entity_linking_eng.tar.gz",

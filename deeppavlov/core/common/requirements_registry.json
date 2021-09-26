@@ -1,0 +1,363 @@
+{
+  "UD_pymorphy_lemmatizer": [
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "aiml_skill": [
+    "{DEEPPAVLOV_PATH}/requirements/aiml_skill.txt"
+  ],
+  "bert_classifier": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_ner_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bert_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bert_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_ranker_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bert_sep_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_sep_ranker_predictor": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_sep_ranker_predictor_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bert_sep_ranker_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bert_sequence_network": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_sequence_tagger": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "bert_syntax_parser": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "chu_liu_edmonds_transformer": [
+    "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
+  ],
+  "dam_nn_use_transformer": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+  ],
+  "dependency_output_prettifier": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "dictionary_vectorizer": [
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "dstc_slotfilling": [
+    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
+  ],
+  "elmo_embedder": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+  ],
+  "elmo_model": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
+  ],
+  "fasttext": [
+    "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+  ],
+  "glove": [
+    "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
+  ],
+  "go_bot": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "hybrid_ner_model": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
+    "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
+  ],
+  "input_splitter": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "jieba_tokenizer": [
+    "{DEEPPAVLOV_PATH}/requirements/jieba.txt"
+  ],
+  "joint_tagger_parser": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "kenlm_elector": [
+    "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
+  ],
+  "keras_classification_model": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "lemmatized_output_prettifier": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "morpho_tagger": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "mpm_nn": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "mt_bert": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "mt_bert_classification_task": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "mt_bert_reuser": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "mt_bert_seq_tagging_task": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "ner": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "pymorphy_vectorizer": [
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "rasa_skill": [
+    "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "rel_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "rel_ranking_infer": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "siamese_predictor": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "smn_nn": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "squad_bert_infer": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "squad_bert_model": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
+  ],
+  "squad_model": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "stream_spacy_tokenizer": [
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+  ],
+  "tag_output_prettifier": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "two_sentences_emb": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "bilstm_gru_nn": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "wiki_parser": [
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
+  ],
+  "bilstm_nn": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+  ],
+  "typos_wikipedia_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "static_dictionary": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "base64_decode_bytesIO": [
+    "{DEEPPAVLOV_PATH}/requirements/nemo.txt"
+  ],
+  "wikitionary_100K_vocab": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "huggingface_dataset_iterator": [
+    "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
+  ],
+  "bytesIO_encode_base64": [
+    "{DEEPPAVLOV_PATH}/requirements/nemo.txt"
+  ],
+  "typos_custom_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "torch_text_classification_model": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt"
+  ],
+  "huggingface_dataset_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
+  ],
+  "tree_to_sparql": [
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+  ],
+  "torch_squad_bert_model": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_squad_transformers_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_multiplechoice_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_multiplechoice": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_bert_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
+  ],
+  "torch_transformers_classifier": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_sequence_tagger": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "ru_adj_to_noun": [
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+  ],
+  "transformers_bert_embedder": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_ner_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_bert_ranker_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
+  ],
+  "transformers_bert_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "spelling_levenshtein": [
+    "{DEEPPAVLOV_PATH}/requirements/sortedcontainers.txt"
+  ],
+  "typos_kartaslov_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "torch_squad_bert_infer": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "nemo_asr": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
+    "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
+    "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
+  ],
+  "nemo_tts": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
+    "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
+    "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt",
+    "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
+  ],
+  "spelling_error_model": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "torchtext_classification_data_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/torchtext.txt"
+  ],
+  "russian_words_vocab": [
+    "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "query_generator": [
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/whapi.txt",
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
+  ],
+  "kbqa_entity_linker": [
+    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/sortedcontainers.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+  ],
+  "rel_ranking_bert_infer": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+  ],
+  "query_generator_online": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/whapi.txt",
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
+  ],
+  "ner_chunker": [
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+  ],
+  "intent_catcher": [
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
+    "{DEEPPAVLOV_PATH}/requirements/xeger.txt"
+  ],
+  "entity_linker": [
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
+    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+  ],
+  "re_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "re_classifier": [
+    "{DEEPPAVLOV_PATH}/requirements/opt_einsum.txt"
+  ]
+}

@@ -72,9 +72,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa_test.tar.gz",

@@ -16,10 +16,6 @@
     "variables": {
       "NEMO_PATH": "~/.deeppavlov/models/nemo"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/nemo-pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/nemo/quartznet15x5.tar.gz",

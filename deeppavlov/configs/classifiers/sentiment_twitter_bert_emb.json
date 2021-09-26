@@ -130,11 +130,6 @@
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_twitter_bert_emb",
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_pt"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",

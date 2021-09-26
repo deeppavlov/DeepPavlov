@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "roberta-large",
+      "TASK": "record",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/superglue_record_{BASE_MODEL}",
+      "BINARY_CLASSIFICATION": false,
+      "SEED": 42
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/0.17/classifiers/superglue/superglue_record_roberta.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  },
+  "dataset_reader": {
+    "class_name": "huggingface_dataset_reader",
+    "path": "super_glue",
+    "name": "{TASK}",
+    "train": "train",
+    "valid": "validation",
+    "seed": "{SEED}",
+    "downsample_ratio": [
+      1.8,
+      1.8
+    ],
+    "do_index_correction": false
+  },
+  "dataset_iterator": {
+    "class_name": "huggingface_dataset_iterator",
+    "features": [
+      "idx",
+      "query",
+      "passage",
+      "entities",
+      "num_examples"
+    ],
+    "label": "label",
+    "seed": "{SEED}",
+    "use_label_name": false
+  },
+  "chainer": {
+    "in": [
+      "idx",
+      "query",
+      "passage",
+      "entities",
+      "num_examples"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": false,
+        "max_seq_length": 320,
+        "in": [
+          "query",
+          "passage"
+        ],
+        "out": [
+          "bert_features"
+        ]
+      },
+      {
+        "class_name": "torch_transformers_classifier",
+        "n_classes": 2,
+        "return_probas": true,
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05,
+          "weight_decay": 0.1
+        },
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "y"
+        ],
+        "out": [
+          "y_pred_probas"
+        ]
+      },
+      {
+        "class_name": "proba2labels",
+        "in": [
+          "y_pred_probas"
+        ],
+        "out": [
+          "y_pred_ids"
+        ],
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "max_proba": true
+      },
+      {
+        "class_name": "torch_record_postprocessor",
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "in": [
+          "idx",
+          "y",
+          "y_pred_probas",
+          "entities",
+          "num_examples"
+        ],
+        "out": [
+          "record_examples"
+        ]
+      }
+    ],
+    "out": [
+      "y_pred_probas"
+    ]
+  },
+  "train": {
+    "batch_size": 24,
+    "train_metrics": [
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "y_pred_ids"
+        ]
+      }
+    ],
+    "metrics": [
+      {
+        "name": "record_em_score",
+        "inputs": [
+          "record_examples"
+        ]
+      },
+      {
+        "name": "record_f1_score",
+        "inputs": [
+          "record_examples"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "y_pred_ids"
+        ]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "class_name": "torch_trainer",
+    "evaluation_targets": [
+      "valid"
+    ],
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 2
+  }
+}

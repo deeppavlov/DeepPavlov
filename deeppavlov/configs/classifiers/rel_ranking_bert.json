@@ -59,10 +59,6 @@
       "BERT_PATH": "{DOWNLOADS_PATH}/bert_models_kbqa/cased_L-12_H-768_A-12",
       "MODEL_PATH": "{MODELS_PATH}/rel_ranking_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking_bert.tar.gz",

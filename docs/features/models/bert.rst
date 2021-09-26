@@ -29,6 +29,8 @@ We have trained BERT-base model for other languages and domains:
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  Conversational RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__,
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
+-  Conversational DistilRuBERT, Russian, cased, 6-layer, 768-hidden, 12-heads, 135.4M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-6_H-768_A-12_pt.tar.gz>`__
+-  Conversational DistilRuBERT-tiny, Russian, cased, 2-layer, 768-hidden, 12-heads, 107M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-2_H-768_A-12_pt.tar.gz>`__
 -  Sentence Multilingual BERT, 101 languages, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,
    `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
 -  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,
@@ -49,6 +51,13 @@ English cased version of BERT-base as initialization for English Conversational 
 
 Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [8]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
+
+Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [13]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
+
+1. Masked language modeling loss (between student output logits for tokens and its true labels)
+2. Kullback-Leibler divergence (between student and teacher output logits)
+3. Cosine embedding loss (between averaged hidden states of the teacher and hidden states of the student)
+4. Mean squared error loss (between averaged attention maps of the teacher and attention maps of the student)
 
 Sentence Multilingual BERT is a representation-based sentence encoder for 101 languages of Multilingual BERT.
 It is initialized with Multilingual BERT and then fine-tuned on english MultiNLI [9]_ and on dev set of multilingual XNLI [10]_.
@@ -117,9 +126,11 @@ BERT for Named Entity Recognition (Sequence Tagging)
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
 can be found :doc:`here </features/models/ner>`. The modules used for tagging
 are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_bert_sequence_tagger.TorchBertSequenceTagger` on PyTorch.
+:class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
 The tags are obtained by applying a dense layer to the representation of
 the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
+In the PyTorch implementation you can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
+The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
@@ -146,7 +157,7 @@ BERT for Context Question Answering (SQuAD)
 Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_bert_squad.TorchBertSQuADModel` on PyTorch use two linear
+:class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad` on PyTorch use two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </features/models/squad>`.
 
@@ -168,20 +179,6 @@ and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` (on Tens
 where the task for ranking is to retrieve the best possible response from some provided response base with the help of
 the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
 Statistics are available :doc:`here </features/overview>`.
-
-BERT for Extractive Summarization
----------------------------------
-The BERT model was trained on Masked Language Modeling (MLM) and Next Sentence Prediction (NSP) tasks.
-NSP head was trained to detect in ``[CLS] text_a [SEP] text_b [SEP]`` if text_b follows text_a in original document.
-This NSP head can be used to stack sentences from a long document, based on a initial sentence. The first sentence in
-a document can be used as initial one. :class:`~deeppavlov.models.bert.bert_as_summarizer.BertAsSummarizer` on TensorFlow
-and :class:`~deeppavlov.models.torch_bert.torch_bert_as_summarizer.TorchBertAsSummarizer` on PyTorch rely on
-pretrained BERT models and does not require training on summarization dataset. 
-We have three configuration files:
-
-- :config:`BertAsSummarizer <summarization/bert_as_summarizer.json>` in Russian takes first sentence in document as initialization.
-- :config:`BertAsSummarizer with init <summarization/bert_as_summarizer_with_init.json>` in Russian uses provided initial sentence.
-- :config:`TorchBertAsSummarizer <summarization/torch_bert_as_en_summarizer.json>` in English takes first sentence in document as initialization.
 
 Using custom BERT in DeepPavlov
 -------------------------------
@@ -208,3 +205,4 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [10] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
 .. [11] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
 .. [12] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
+.. [13] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.

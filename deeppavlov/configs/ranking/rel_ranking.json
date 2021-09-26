@@ -70,10 +70,6 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/rel_ranking"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking.tar.gz",
