@@ -19,6 +19,7 @@ from ._meta import __author__, __description__, __email__, __keywords__, __licen
 from .configs import configs
 from .core.commands.infer import build_model
 from .core.commands.train import train_evaluate_model_from_config
+from .core.common.base import Element, Model
 from .core.common.chainer import Chainer
 from .core.common.log import init_logger
 from .download import deep_download
