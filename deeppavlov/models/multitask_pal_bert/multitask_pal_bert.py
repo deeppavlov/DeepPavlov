@@ -313,6 +313,39 @@ class MultiTaskPalBert(TorchModel):
                     seq_lengths = torch.sum(y_mask, dim=1).int()
                     pred = [p[:l] for l, p in zip(seq_lengths, pred)]
                 assert isinstance(pred,list)
+            elif self.task_type[task_id] == 'question_answering':
+                logits_start, logits_end = logits[0], logits[1]
+                bs = b_input_ids.size()[0]
+                seq_len = b_input_ids.size()[-1]
+                mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
+                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
+                logit_mask = b_input_type_ids + mask
+                logits_st = softmax_mask(logits_st, logit_mask)
+                logits_end = softmax_mask(logits_end, logit_mask)
+
+                start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
+                end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
+                scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+
+                outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
+                                     end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
+                outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
+                    logits_end.size()[0], 1, logits_end.size()[1]))
+
+                context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
+
+                max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
+
+                outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
+                outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
+                    outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
+
+                start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
+                end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
+                logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
+                start_pred = start_pred.detach().cpu().numpy()
+                end_pred = end_pred.detach().cpu().numpy()
+                pred = [start_pred, end_pred]
             elif self.tasks_type[task_id] in ["classification", "regression"]:
                 if self.tasks_type[task_id] == "regression":  # regression
                     pred = logits.squeeze(-1).detach().cpu().tolist()
