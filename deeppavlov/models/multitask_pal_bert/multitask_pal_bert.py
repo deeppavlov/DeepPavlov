@@ -390,20 +390,24 @@ class MultiTaskPalBert(TorchModel):
         
         self.optimizer.zero_grad()
         
-        if self.tasks_type[task_id] == "regression":
-            _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.float32).to(self.device)
-        else:
-            _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.long).to(self.device)
+
         if self.tasks_type[task_id] == "sequence_labeling":
             subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
                            for y_el, y_mask, input_mask in zip(_input['labels'].detach().cpu().numpy(),
                                                                _input['token_type_ids'].detach().cpu().numpy(),
                                                                _input['attention_mask'].detach().cpu().numpy())]
             _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
+        elif self.tasks_type[task_id] == "question_answering":
+            # start and end logits
+            _input["labels"] = [torch.tensor(label, dtype=torch.float32).to(self.device) for label in task_labels]
+        elif self.tasks_type[task_id] == "regression":
+            _input["labels"] = torch.tensor(
+                task_labels, dtype=torch.float32).to(self.device)
+        else:
+            _input["labels"] = torch.tensor(
+                task_labels, dtype=torch.long).to(self.device)
         self.optimizer.zero_grad()
-        loss, logits = self.model(
+        loss, _ = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
         )
 
