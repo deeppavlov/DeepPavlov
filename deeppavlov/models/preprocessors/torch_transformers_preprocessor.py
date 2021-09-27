@@ -20,6 +20,7 @@ from logging import getLogger
 from pathlib import Path
 import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
+import numpy as np
 
 from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
@@ -358,9 +359,9 @@ class TorchTransformersNerPreprocessor(Component):
                                         token_masking_prob=self.token_masking_prob)
             if self.max_seq_length is not None:
                 if len(sw_toks) > self.max_seq_length:
-                    raise RuntimeError(f"input sequence after bert tokenization"
-                                       f" shouldn't exceed {self.max_seq_length} tokens."
-                                       f"It is {len(sw_toks} tokens.")
+                     raise RuntimeError(
+                     f'input sequence after bert tokenization should not exceed {self.max_seq_length}'
+                     f'tokens but is {len(sw_toks)}')
             subword_tokens.append(sw_toks)
             subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
             startofword_markers.append(sw_marker)

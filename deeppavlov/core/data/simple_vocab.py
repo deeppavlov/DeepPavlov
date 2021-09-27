@@ -18,6 +18,7 @@ from logging import getLogger
 from typing import Optional, Tuple, List
 
 import numpy as np
+import torch
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
