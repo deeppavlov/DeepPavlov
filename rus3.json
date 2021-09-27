@@ -42,27 +42,73 @@
     },
     "chainer": {
         "in": [
-            "x_squad_with_id",
+            "context_raw_squad_with_id",
+            "question_raw_squad_with_id",
             "x_relations_with_id",
             "x_ner_with_id"
         ],
         "in_y": [
+            "ans_raw_squad",
+            "ans_raw_start_squad",
             "y_relations",
-            "y_ner"
+            "y_ner",
+            
         ],
         "pipe": [
             {
                 "class_name": "multitask_pal_bert_preprocessor",
                 "in": [
+                    "context_raw_squad_with_id",
+                    "question_raw_squad_with_id",
                     "x_relations_with_id",
                     "x_ner_with_id"
                 ],
                 "out": [
                     "task_id",
+                    ["context_raw_squad", "question_raw_squad"],
                     "x_relations",
                     "x_ner"
                 ]
             },
+            {
+        "class_name": "torch_squad_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{LOWERCASE}",
+        "max_seq_length": 384,
+        "return_tokens": true,
+        "in": ["context_raw_squad", "question_raw_squad"],
+        "out": [
+          "bert_features_squad",
+          "subtokens_squad"
+        ]
+          },
+          {
+            "class_name": "squad_bert_mapping",
+            "do_lower_case": "{LOWERCASE}",
+            "in": [
+              "context_raw_squad",
+              "bert_features_squad",
+              "subtokens_squad"
+            ],
+            "out": [
+              "subtok2chars_squad",
+              "char2subtoks_squad"
+            ]
+          },
+          {
+            "class_name": "squad_bert_ans_preprocessor",
+            "do_lower_case": "{LOWERCASE}",
+            "in": [
+              "ans_raw_squad",
+              "ans_raw_start_squad",
+              "char2subtoks_squad"
+            ],
+            "out": [
+              "ans_squad",
+              "ans_start_squad",
+              "ans_end_squad"
+            ]
+          },
             {
                 "class_name": "input_splitter",
                 "keys_to_extract": [
@@ -159,6 +205,9 @@
                 "save_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
                 "load_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
                 "tasks": {
+                    "squad":
+                    {
+                        
                     "relations": {
                         "n_classes": "#vocab_relations.len"
                     },
