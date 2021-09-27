@@ -223,6 +223,15 @@
                 ]
             },
             {
+                "name": "average_ner_relation_f1",
+                "inputs": [            
+                        "y_ner",
+                        "y_ner_pred_labels",
+                        "y_relations",
+                        "y_relations_pred_labels"
+                ]
+            },
+            {
                 "name": "f1_macro",
                 "inputs": [
                     "y_relations",
@@ -255,6 +264,9 @@
             "USE_SUBWORDS":true,
             "GRADIENT_ACC_STEPS": 1
         },
+        "imports": [
+            "combined_metric"
+        ],
         "download": [
             {
                 "url": "https://huggingface.co/bert-base-multilingual-uncased/resolve/main/pytorch_model.bin",
