@@ -29,12 +29,12 @@ class Element:
         """
         Args:
             component: Pipeline component object.
-            x: Names of the component's inference inputs. Other pipeline elements output with such names will be fed to
+            x: Names of the component inference inputs. Output from other pipeline elements with such names will be fed to
                 the input of this component.
-            out: Names of the component's inference outputs. Component outputs could be fed to other pipeline elements
+            out: Names of the component inference outputs. Component outputs can be fed to other pipeline elements
                 using this names.
             y: Names of additional inputs (targets) for component training and evaluation.
-            main: Is this component the main. Main component is trained during model training process.
+            main: Set True if this is the main component. Main component is trained during model training process.
         """
         self.component = component
         self.x = x
@@ -51,8 +51,8 @@ class Model(Chainer):
                  pipe: Optional[List[Element]] = None) -> None:
         """
         Args:
-            x: Names of pipeline's inference inputs.
-            out: Names of pipeline's inference outputs.
+            x: Names of pipeline inference inputs.
+            out: Names of pipeline inference outputs.
             y: Names of additional inputs (targets) for pipeline training and evaluation.
             pipe: List of pipeline elements.
 
