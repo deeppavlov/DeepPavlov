@@ -101,8 +101,12 @@ class MultiTaskPalBert(TorchModel):
             assert 'n_choices' in tasks[task] or 'n_classes' in tasks[task], 'Provide n_classes or n_choices'
             n_classes = tasks[task].get("n_classes", 0)
             n_choices = tasks[task].get("n_choices", 0)
-            if n_choices > 0:
-                assert isinstance(n_choices, int)
+            is_question_answering = tasks[task].get("question_answering", False)
+            if is_question_answering:
+                self.tasks_type.append('question_answering')
+                self.tasks_num_classes.append(2)                
+            elif n_choices > 0:
+                assert isinstance(n_choices, int) and n_choices > 0
                 self.tasks_type.append('sequence_labeling')
                 self.tasks_num_classes.append(n_choices)
             elif n_classes == 1:
