@@ -505,6 +505,8 @@ class BertForMultiTask(nn.Module):
         self.classifier = nn.ModuleList(
             [
                 nn.Linear(config.hidden_size, num_labels)
+                if task != 'question_answering'
+                else nn.Linear(config.hidden_size, 2)
                 for task, num_labels in zip(tasks_type, tasks)
             ]
         )
@@ -551,6 +553,30 @@ class BertForMultiTask(nn.Module):
                 return loss, logits     
             else:
                 return logits
+        elif name == 'question_answering':
+            all_encoder_layers, _ = self.bert(input_ids, token_type_ids, attention_mask, task_id)
+            sequence_output = all_encoder_layers[-1]
+            logits = self.qa_outputs(sequence_output)
+            start_logits, end_logits = logits.split(1, dim=-1)
+            start_logits = start_logits.squeeze(-1)
+            end_logits = end_logits.squeeze(-1)
+
+            if start_positions is not None and end_positions is not None:
+            # If we are on multi-GPU, split add a dimension - if not this is a no-op
+                start_positions = start_positions.squeeze(-1)
+                end_positions = end_positions.squeeze(-1)
+            # sometimes the start/end positions are outside our model inputs, we ignore these terms
+                ignored_index = start_logits.size(1)
+                start_positions.clamp_(0, ignored_index)
+                end_positions.clamp_(0, ignored_index)
+
+                loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+                start_loss = loss_fct(start_logits, start_positions)
+                end_loss = loss_fct(end_logits, end_positions)
+                total_loss = (start_loss + end_loss) / 2
+                return total_loss
+            else:
+                return start_logits, end_logits
             
         else:
             _, pooled_output = self.bert(
