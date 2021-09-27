@@ -206,8 +206,7 @@
                 "load_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
                 "tasks": {
                     "squad":
-                    {
-                        
+                    {"question_answering":True},
                     "relations": {
                         "n_classes": "#vocab_relations.len"
                     },
@@ -216,26 +215,47 @@
                     }
                 },
                 "in_distribution": {
+                    "squad":1,
                     "relations": 1,
                     "ner": 1
                 },
                 "in": [
                     "task_id",
+                    "bert_features_squad",
                     "bert_features_relations",
                     "bert_features_ner"
                 ],
                 "in_y_distribution": {
+                    "squad": 1,
                     "relations": 1,
                     "ner": 1
                 },
-                "in_y": [
+                "in_y":
+                    ["ans_start_squad","ans_end_squad"],
                     "y_ids_relations",
                     "y_ids_ner"
                 ],
                 "out": [
+                    ["ans_start_squad_predicted","ans_end_squad_predicted"],
                     "y_relations_pred_ids",
                     "y_ner_pred_ids"
                 ]
+            },
+            {
+        "class_name": "squad_bert_ans_postprocessor",
+        "in": [
+          "ans_start_squad_predicted",
+          "ans_end_squad_predicted",
+          "context_raw_squad",
+          "bert_features_squad",
+          "subtok2chars_squad",
+          "subtokens_squad"
+        ],
+        "out": [
+          "ans_squad_predicted",
+          "ans_start_squad_predicted",
+          "ans_end_squad_predicted"
+             ]
             },
             {
                 "in": [
@@ -257,6 +277,9 @@
             }
         ],
         "out": [
+                      "ans_squad_predicted",
+          "ans_start_squad_predicted",
+          "ans_end_squad_predicted",
             "y_relations_pred_labels",
             "y_ner_pred_labels"
         ]
@@ -265,6 +288,34 @@
         "epochs": "{NUM_TRAIN_EPOCHS}",
         "batch_size": 4,
         "metrics": [
+                  {
+        "name": "squad_v1_f1",
+        "inputs": [
+          "ans_squad",
+          "ans_squad_predicted"
+        ]
+      },
+      {
+        "name": "squad_v1_em",
+        "inputs": [
+          "ans_squad",
+          "ans_squad_predicted"
+        ]
+      },
+      {
+        "name": "squad_v2_f1",
+        "inputs": [
+          "ans_squad",
+          "ans_squad_predicted"
+        ]
+      },
+      {
+        "name": "squad_v2_em",
+        "inputs": [
+          "ans_squad",
+          "ans_squad_predicted"
+        ]
+      }
             {
                 "name": "ner_f1",
                 "inputs": [
