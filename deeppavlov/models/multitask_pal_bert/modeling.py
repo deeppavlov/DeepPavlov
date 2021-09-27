@@ -559,8 +559,9 @@ class BertForMultiTask(nn.Module):
             start_logits = start_logits.squeeze(-1)
             end_logits = end_logits.squeeze(-1)
 
-            if start_positions is not None and end_positions is not None:
+            if labels is not None:
             # If we are on multi-GPU, split add a dimension - if not this is a no-op
+                start_positions, end_positions = labels
                 start_positions = start_positions.squeeze(-1)
                 end_positions = end_positions.squeeze(-1)
             # sometimes the start/end positions are outside our model inputs, we ignore these terms
