@@ -1,0 +1,266 @@
+{
+  "dataset_reader": {
+    "class_name": "multitask_reader",
+    "data_path": "null",
+    "tasks": {
+      "rte": {
+        "reader_class_name": "basic_classification_reader",
+        "x": [
+          "sentence1",
+          "sentence2"
+        ],
+        "y": "label",
+        "data_path": "{GLUE_CSV}/Data/RTE",
+        "train": "train.tsv",
+        "test": "dev.tsv",
+        "valid": "dev.tsv",
+        "sep": "\t"
+      },
+      "conll": {
+        "reader_class_name": "conll2003_reader",
+        "data_path": "{GLUE_CSV}/CONLL2003/",
+        "dataset_name": "conll2003",
+        "provide_pos": false
+      }
+    }
+  },
+    "dataset_iterator": {
+      "class_name": "multitask_pal_bert_iterator",
+      "num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+      "steps_per_epoch": "{STEPS_PER_EPOCH}",
+      "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+      "tasks": {
+        "rte": {
+          "iterator_class_name": "basic_classification_iterator",
+          "seed": 12
+        },
+        "conll": {
+          "iterator_class_name": "basic_classification_iterator",
+          "seed": 12
+        }
+      }
+    },
+    "chainer": {
+      "in": [
+        "x_rte_with_id",
+        "x_conll_with_id"
+      ],
+      "in_y": [
+        "y_rte",
+        "y_conll"
+      ],
+      "pipe": [
+        {
+          "class_name": "multitask_pal_bert_preprocessor",
+          "in": [
+            "x_rte_with_id",
+            "x_conll_with_id"
+          ],
+          "out": [
+            "task_id",
+            "x_rte",
+            "x_conll"
+          ]
+        },
+        {
+          "class_name": "input_splitter",
+          "keys_to_extract": [
+            0,
+            1
+          ],
+          "in": [
+            "x_rte"
+          ],
+          "out": [
+            "x_rte1",
+            "x_rte2"
+          ]
+        },
+        {
+          "class_name": "torch_transformers_preprocessor",
+          "vocab_file": "bert-base-uncased",
+          "max_seq_length": 128,
+          "in": [
+            "x_rte1",
+            "x_rte2"
+          ],
+          "out": [
+            "bert_features_rte"
+          ]
+        },
+        {
+          "class_name": "torch_transformers_ner_preprocessor",
+          "vocab_file": "bert-base-uncased",
+          "return_features":true,
+          "do_lower_case": false,
+          "max_seq_length": 200,
+          "split_on_subwords":"{USE_SUBWORDS}",
+          "max_subword_length": 15,
+          "token_masking_prob": 0.0,
+          "in": [
+            "x_conll"
+          ],
+          "out": [
+            "bert_features_conll"
+          ]
+        },
+        {
+          "id": "vocab_conll",
+          "class_name": "simple_vocab",
+          "unk_token": [
+            "O"
+          ],
+          "pad_with_zeros": true,
+          "save_path": "{MODELS_PATH}/tagss.dict",
+          "load_path": "{MODELS_PATH}/tagss.dict",
+          "fit_on": [
+            "y_conll"
+          ],
+          "in": [
+            "y_conll"
+          ],
+          "out": [
+            "y_ids_conll"
+          ]
+        },
+        {
+          "id": "vocab_rte",
+          "class_name": "simple_vocab",
+          "fit_on": [
+            "y_rte"
+          ],
+          "save_path": "{MODELS_PATH}/rte.dict",
+          "load_path": "{MODELS_PATH}/rte.dict",
+          "in": [
+            "y_rte"
+          ],
+          "out": [
+            "y_ids_rte"
+          ]
+        },
+        {
+          "id": "multitask_pal_bert",
+          "class_name": "multitask_pal_bert",
+          "pretrained_bert": "{PRETRAINED_BERT}/pytorch_model.bin",
+          "optimizer_parameters": {
+            "lr": 5e-5
+          },
+          "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
+          "steps_per_epoch": "{STEPS_PER_EPOCH}",
+          "learning_rate_drop_patience": 10,
+          "learning_rate_drop_div": 1.5,
+          "use_ner_subwords":"{USE_SUBWORDS}",
+          "return_probas": false,
+          "log_model_summary": false,
+          "save_path": "{MODELS_PATH}/modelabs1sub2",
+          "load_path": "{MODELS_PATH}/modelabs1sub2",
+          "tasks": {
+            "rte": {
+              "n_classes": "#vocab_rte.len"
+            },
+            "conll": {
+              "n_choices": "#vocab_conll.len"
+            }
+          },
+          "in_distribution": {
+            "rte": 1,
+            "conll": 1
+          },
+          "in": [
+            "task_id",
+            "bert_features_rte",
+            "bert_features_conll"
+          ],
+          "in_y_distribution": {
+            "rte": 1,
+            "conll": 1
+          },
+          "in_y": [
+            "y_ids_rte",
+            "y_ids_conll"
+          ],
+          "out": [
+            "y_rte_pred_ids",
+            "y_conll_pred_ids"
+          ]
+        },
+        {
+          "in": [
+            "y_rte_pred_ids"
+          ],
+          "out": [
+            "y_rte_pred_labels"
+          ],
+          "ref": "vocab_rte"
+        },
+        {
+          "in": [
+            "y_conll_pred_ids"
+          ],
+          "out": [
+            "y_conll_pred_labels"
+          ],
+          "ref": "vocab_conll"
+        }
+      ],
+      "out": [
+        "y_rte_pred_labels",
+        "y_conll_pred_labels"
+      ]
+    },
+    "train": {
+      "epochs": "{NUM_TRAIN_EPOCHS}",
+      "batch_size": 16,
+      "metrics": [
+
+        {
+          "name": "ner_f1",
+          "inputs": [
+            "y_conll",
+            "y_conll_pred_labels"
+          ]
+        },
+        {
+          "name": "ner_token_f1",
+          "inputs": [
+            "y_conll",
+            "y_conll_pred_labels"
+          ]
+        },
+        {
+          "name": "accuracy",
+          "inputs": [
+            "y_ids_rte",
+            "y_rte_pred_ids"
+          ]
+        }
+      ],
+      "validation_patience": 100,
+      "val_every_n_epochs": 1,
+      "log_every_n_epochs": 1,
+      "show_examples": false,
+      "evaluation_targets": [
+        "valid","test"
+      ],
+      "class_name": "torch_trainer"
+    },
+    "metadata": {
+      "variables": {
+        "ROOT_PATH": "/cephfs/home/karpov.d",
+        "DOWNLOADS_PATH": "{ROOT_PATH}/.deeppavlov/downloads",
+        "PRETRAINED_BERT": "{ROOT_PATH}/.deeppavlov/pretrained_bert",
+        "MODELS_PATH": "{ROOT_PATH}/.deeppavlov/modelss",
+        "GLUE_CSV": "{ROOT_PATH}/GLUE",
+        "NUM_TRAIN_EPOCHS": 100,
+        "STEPS_PER_EPOCH": 500,
+        "USE_SUBWORDS":true,
+        "GRADIENT_ACC_STEPS": 1
+      },
+      "download": [
+        {
+          "url": "https://huggingface.co/bert-base-uncased/resolve/main/pytorch_model.bin",
+          "subdir": "{PRETRAINED_BERT}"
+        }
+      ]
+    }
+  }

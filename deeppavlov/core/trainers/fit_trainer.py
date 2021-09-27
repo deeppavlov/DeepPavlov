@@ -15,6 +15,7 @@
 import datetime
 import json
 import time
+from tqdm import tqdm
 from itertools import islice
 from logging import getLogger
 from pathlib import Path
@@ -112,7 +113,7 @@ class FitTrainer:
                 if self.batch_size > 0 and callable(getattr(component, 'partial_fit', None)):
                     writer = None
 
-                    for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
+                    for i, (x, y) in tqdm(enumerate(iterator.gen_batches(self.batch_size, shuffle=False))):
                         preprocessed = self._chainer.compute(x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
@@ -202,7 +203,7 @@ class FitTrainer:
 
         data = islice(data, self.max_test_batches)
 
-        for x, y_true in data:
+        for x, y_true in tqdm(data):
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:

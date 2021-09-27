@@ -66,6 +66,8 @@ class SimpleVocabulary(Estimator):
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
         self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
+        if len(self.freqs) == 1:
+            raise Exception("Only one class in labels. Check the code")
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -89,6 +91,8 @@ class SimpleVocabulary(Estimator):
 
     def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
+            if isinstance(batch,torch.Tensor) and not batch.shape:
+                return self[int(batch)]
             looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]

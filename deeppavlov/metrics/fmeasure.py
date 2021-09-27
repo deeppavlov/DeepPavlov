@@ -27,8 +27,15 @@ log = getLogger(__name__)
 
 @register_metric('ner_f1')
 def ner_f1(y_true, y_predicted):
+    assert isinstance(y_true[0],list) and isinstance(y_predicted[0],list)
+    assert len(y_true) ==len (y_predicted), (len(y_true),
+                                            len(y_predicted),
+                                            y_true[:5],y_predicted[:5])
     y_true = list(chain(*y_true))
-    y_predicted = list(chain(*y_predicted))
+    y_predicted = list(chain(*y_predicted)) 
+    assert len(y_true) == len(y_predicted), (len(y_true),
+                                            len(y_predicted),
+                                            y_true[:5],y_predicted[:5])
     results = precision_recall_f1(y_true,
                                   y_predicted,
                                   print_results=True)
@@ -38,10 +45,17 @@ def ner_f1(y_true, y_predicted):
 
 @register_metric('ner_token_f1')
 def ner_token_f1(y_true, y_pred, print_results=False):
+    assert len(y_true) ==len (y_pred), (len(y_true),
+                                        len(y_pred),
+                                        y_true[:5],y_pred[:5])
     y_true = list(chain(*y_true))
     y_pred = list(chain(*y_pred))
 
+    assert len(y_true) == len (y_pred), (len(y_true),len(y_pred),
+                                         y_true[:5],
+                                         y_pred[:5])
     # Drop BIO or BIOES markup
+    
     assert all(len(tag.split('-')) <= 2 for tag in y_true)
 
     y_true = [tag.split('-')[-1] for tag in y_true]
@@ -211,6 +225,10 @@ def round_f1_macro(y_true, y_predicted):
     Returns:
         F1 score
     """
+    if isinstance(y_true[0],int) and isinstance(y_predicted[0],str):
+        y_predicted = [int(k) for k in y_predicted]
+    elif isinstance(y_predicted[0],int) and isinstance(y_true[0],str):
+        y_true = [int(k) for k in y_true]
     try:
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:

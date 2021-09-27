@@ -21,9 +21,9 @@ from pathlib import Path
 import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
 
-import numpy as np
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
+from transformers.tokenization_utils_base import BatchEncoding
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -32,6 +32,7 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.models.preprocessors.mask import Mask
 
 log = getLogger(__name__)
+
 
 
 @register('torch_transformers_multiplechoice_preprocessor')
@@ -145,7 +146,7 @@ class TorchTransformersPreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+            self.tokenizer = BertTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -292,6 +293,7 @@ class TorchTransformersNerPreprocessor(Component):
         provide_subword_tags: output tags for subwords or for words
         subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
             (default="first")
+        return_features: return answer in BatchEncoding format
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -307,6 +309,7 @@ class TorchTransformersNerPreprocessor(Component):
                  token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  subword_mask_mode: str = "first",
+                 return_features: bool=False,
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -316,24 +319,35 @@ class TorchTransformersNerPreprocessor(Component):
         self.subword_mask_mode = subword_mask_mode
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
+            self.tokenizer = BertTokenizer(vocab_file,do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
+        self.return_features = return_features
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        if tags and len(tokens) != len(tags):
+            token_list = []
+            i=0
+            for tag in tags:
+                token_list.append(tokens[i:i+len(tag)])
+                i+= len(tag)
+            tokens = token_list
+            assert len(tokens) == len(tags), (len(tokens), len(tags))
         if isinstance(tokens[0], str):
             tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
         for i in range(len(tokens)):
+            if tags:
+                assert len(tags[i]) == len(tokens[i]), (i,tags[i],tokens[i])
             toks = tokens[i]
             ys = ['O'] * len(toks) if tags is None else tags[i]
             assert len(toks) == len(ys), \
                 f"toks({len(toks)}) should have the same length as ys({len(ys)})"
+                
             sw_toks, sw_marker, sw_ys = \
                 self._ner_bert_tokenize(toks,
                                         ys,
@@ -345,7 +359,8 @@ class TorchTransformersNerPreprocessor(Component):
             if self.max_seq_length is not None:
                 if len(sw_toks) > self.max_seq_length:
                     raise RuntimeError(f"input sequence after bert tokenization"
-                                       f" shouldn't exceed {self.max_seq_length} tokens.")
+                                       f" shouldn't exceed {self.max_seq_length} tokens."
+                                       f"It is {len(sw_toks} tokens.")
             subword_tokens.append(sw_toks)
             subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
             startofword_markers.append(sw_marker)
@@ -360,23 +375,32 @@ class TorchTransformersNerPreprocessor(Component):
         attention_mask = Mask()(subword_tokens)
 
         if tags is not None:
-            if self.provide_subword_tags:
-                return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, subword_tags
-            else:
-                nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
+            if not self.provide_subword_tags:
+                subword_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
                                                  subword_tok_ids,
                                                  startofword_markers,
-                                                 nonmasked_tags):
+                                                 subword_tags):
                     if (len(swids) != len(swms)) or (len(ts) != sum(swms)):
                         log.warning('Not matching lengths of the tokenization!')
                         log.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
-                return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, nonmasked_tags
+            if self.return_features:
+                feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+                                              'attention_mask': torch.Tensor(attention_mask),
+                                'token_type_ids': torch.Tensor(startofword_markers),
+                                'labels': torch.Tensor(subword_tags)})
+                return feature_list
+            return tokens, subword_tokens, subword_tok_ids, \
+                       attention_mask, startofword_markers, subword_tags
+        if self.return_features:
+            feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+                                          'attention_mask': torch.Tensor(attention_mask),
+                                          'token_type_ids': torch.Tensor(startofword_markers)
+                                         })
+            return feature_list
         return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
     @staticmethod

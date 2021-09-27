@@ -26,6 +26,7 @@ from deeppavlov.core.models.serializable import Serializable
 log = getLogger(__name__)
 
 
+
 class Chainer(Component):
     """
     Builds a component pipeline from heterogeneous components (Rule-based/ML/DL). It allows to train
@@ -151,8 +152,9 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            assert self.train_map.issuperset(in_x + in_y), ('Arguments {} are expected but only {} are set'
-                                                            .format(in_x + in_y, self.train_map))
+            missing_names = set((in_x+in_y)) - set(self.train_map)            
+            assert not missing_names, ('Arguments {} are expected but only {} are set'
+                                                            .format(missing_names, self.train_map))
             preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
@@ -180,7 +182,8 @@ class Chainer(Component):
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
         else:
-            raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
+            missing_names = set(train_map) - set(in_x)
+            raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
 
     def compute(self, x, y=None, targets=None):
         if targets is None:
@@ -216,7 +219,8 @@ class Chainer(Component):
                 final_pipe.append(((in_keys, in_params), out_params, component))
         final_pipe.reverse()
         if not expected.issubset(param_names):
-            raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
+            missing_names = expected - set(param_names)
+            raise RuntimeError(f'{missing_names} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
 
         mem = dict(zip(param_names, args))
