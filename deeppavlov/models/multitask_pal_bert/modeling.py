@@ -505,8 +505,6 @@ class BertForMultiTask(nn.Module):
         self.classifier = nn.ModuleList(
             [
                 nn.Linear(config.hidden_size, num_labels)
-                if task in ['classification', 'regression']
-                else nn.Linear(config.hidden_size, num_labels)
                 for task, num_labels in zip(tasks_type, tasks)
             ]
         )
