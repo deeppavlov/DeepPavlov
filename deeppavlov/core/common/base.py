@@ -29,8 +29,8 @@ class Element:
         """
         Args:
             component: Pipeline component object.
-            x: Names of the component inference inputs. Output from other pipeline elements with such names will be fed to
-                the input of this component.
+            x: Names of the component inference inputs. Output from other pipeline elements with such names will be fed
+                to the input of this component.
             out: Names of the component inference outputs. Component outputs can be fed to other pipeline elements
                 using this names.
             y: Names of additional inputs (targets) for component training and evaluation.
