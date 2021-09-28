@@ -177,12 +177,11 @@ class Chainer(Component):
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
             self.forward_map = self.forward_map.union(out_params)
-
-        if self.train_map.issuperset(in_x):
+        missing_names = set(self.train_map) - set(in_x)
+        if not missing_names:
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
-        else:
-            missing_names = set(train_map) - set(in_x)
+        else:            
             raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
 
     def compute(self, x, y=None, targets=None):
