@@ -177,7 +177,8 @@ class Chainer(Component):
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
             self.forward_map = self.forward_map.union(out_params)
-        missing_names = set(self.train_map) - set(in_x)
+        #breakpoint()
+        missing_names = set(in_x) - set(self.train_map)
         if not missing_names:
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             self.train_map = self.train_map.union(out_params)
