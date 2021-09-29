@@ -48,19 +48,19 @@
 	},
 	"chainer": {
 		"in": [
-			["context_raw_squad_with_id","question_raw_squad_with_id"],
+			"x_squad_with_id",
 			"x_relations_with_id",
 			"x_ner_with_id"
 		],
 		"in_y": [
-			["ans_raw_squad","ans_raw_start_squad"],
+			"y_squad",
 			"y_relations",
 			"y_ner"
 		],
 		"pipe": [{
 				"class_name": "multitask_pal_bert_preprocessor",
 				"in": [
-					["context_raw_squad_with_id","question_raw_squad_with_id"],
+					"x_squad_with_id",
 					"x_relations_with_id",
 					"x_ner_with_id"
 				],
@@ -76,6 +76,7 @@
 				"in": ["context_and_question_raw_squad"],
 				"out":["context_raw_squad","question_raw_squad"]
 			},
+			{"class_name":"tuple_splitter","in":["y_squad"],"out":["ans_raw_squad","ans_raw_start_squad"]},
 			{
 				"class_name": "torch_squad_transformers_preprocessor",
 				"vocab_file": "{VOCAB}",
