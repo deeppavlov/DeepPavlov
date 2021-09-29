@@ -440,6 +440,7 @@ class SquadBertAnsPreprocessor(Component):
 
     def __call__(self, answers_raw, answers_start, char2subtoks, **kwargs):
         answers, starts, ends = [], [], []
+        breakpoint()
         for answers_raw, answers_start, c2sub in zip(answers_raw, answers_start, char2subtoks):
             answers.append([])
             starts.append([])
