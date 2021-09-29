@@ -38,7 +38,9 @@ class DataLearningIterator:
 
     def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
         """ Transform the data for a specific data type (e.g. ``'train'``). """
-        print('Return preprocessed '+str(data))
+        if data:
+            print('Return preprocessed '+str(data[0]))
+        #breakpoint()
         return data
 
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, shuffle: bool = True,

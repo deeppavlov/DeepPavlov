@@ -3,6 +3,14 @@
 		"class_name": "multitask_reader",
 		"data_path": "null",
 		"tasks": {
+			"squad": {
+				"reader_class_name": "squad_dataset_reader",
+				"dataset": "SberSQuADClean",
+				"url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+                                "data_path":"{DATA}/squad",
+                                "dir_path":"{DATA}/squad",
+                                "return_list":true
+			},
 			"relations": {
 				"reader_class_name": "paraphraser_reader",
 				"data_path": "{DATA}/relation_ranking_rus",
@@ -13,14 +21,6 @@
 				"data_path": "{DATA}/total_rus_lowercase/",
 				"dataset_name": "collection_rus",
 				"provide_pos": false
-			},
-			"squad": {
-				"reader_class_name": "squad_dataset_reader",
-				"dataset": "SberSQuADClean",
-				"url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
-                                "data_path":"{DATA}/squad",
-                                "dir_path":"{DATA}/squad",
-                                "return_list":true
 			}
 		}
 	},
@@ -30,6 +30,11 @@
 		"steps_per_epoch": "{STEPS_PER_EPOCH}",
 		"gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
 		"tasks": {
+			"squad": {
+				"iterator_class_name": "squad_iterator",
+				"seed": 1337,
+				"shuffle": true
+			},
 			"relations": {
 				"iterator_class_name": "siamese_iterator",
 				"seed": 243,
@@ -38,11 +43,6 @@
 			"ner": {
 				"iterator_class_name": "basic_classification_iterator",
 				"seed": 12
-			},
-			"squad": {
-				"iterator_class_name": "squad_iterator",
-				"seed": 1337,
-				"shuffle": true
 			}
 		}
 	},
@@ -66,17 +66,18 @@
 				],
 				"out": [
 					"task_id",
-					"context_and_question_raw_squad",
+					"x_squad",
 					"x_relations",
 					"x_ner"
 				]
 			},
 			{
 				"class_name":"tuple_splitter",
-				"in": ["context_and_question_raw_squad"],
+				"in": ["x_squad"],
 				"out":["context_raw_squad","question_raw_squad"]
 			},
-			{"class_name":"tuple_splitter","in":["y_squad"],"out":["ans_raw_squad","ans_raw_start_squad"]},
+			{"class_name":"tuple_splitter","is_y":true,"in":["y_squad"],
+                        "out":["ans_raw_squad","ans_raw_start_squad"]},
 			{
 				"class_name": "torch_squad_transformers_preprocessor",
 				"vocab_file": "{VOCAB}",
@@ -144,6 +145,21 @@
 				]
 			},
 			{
+				"id": "vocab_relations",
+				"class_name": "simple_vocab",
+				"fit_on": [
+					"y_relations"
+				],
+				"save_path": "{MODELS_PATH}/relations.dict",
+				"load_path": "{MODELS_PATH}/relations.dict",
+				"in": [
+					"y_relations"
+				],
+				"out": [
+					"y_ids_relations"
+				]
+			},
+			{
 				"class_name": "torch_transformers_ner_preprocessor",
 				"vocab_file": "{VOCAB}",
 				"return_features": true,
@@ -175,21 +191,6 @@
 				],
 				"out": [
 					"y_ids_ner"
-				]
-			},
-			{
-				"id": "vocab_relations",
-				"class_name": "simple_vocab",
-				"fit_on": [
-					"y_relations"
-				],
-				"save_path": "{MODELS_PATH}/relations.dict",
-				"load_path": "{MODELS_PATH}/relations.dict",
-				"in": [
-					"y_relations"
-				],
-				"out": [
-					"y_ids_relations"
 				]
 			},
 			{
@@ -290,8 +291,6 @@
 		],
 		"out": [
 			"ans_squad_predicted",
-			"ans_start_squad_predicted",
-			"ans_end_squad_predicted",
 			"y_relations_pred_labels",
 			"y_ner_pred_labels"
 		]
@@ -365,7 +364,7 @@
 			"DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
 			"PRETRAINED_BERT": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/pytorch_model.bin",
 			"VOCAB": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/vocab.txt",
-			"MODELS_PATH": "{ROOT_PATH}/.deeppavlov/model3",
+			"MODELS_PATH": "{ROOT_PATH}/.deeppavlov/modedfl3",
 			"DATA": "{ROOT_PATH}/Data",
 			"NUM_TRAIN_EPOCHS": 1000,
 			"STEPS_PER_EPOCH": 9000,

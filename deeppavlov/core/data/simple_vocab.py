@@ -66,9 +66,14 @@ class SimpleVocabulary(Estimator):
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
-        self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
+        
+        filtered_tokens = [token for token in flatten_str_batch(tokens) if token is not None]
+        self.freqs = Counter(filtered_tokens)
+        # Must be this way as filter(None,[1,0]) == [1]), thus we can occasionally filter all 0 otherwise
         if len(self.freqs) == 1:
-            raise Exception("Only one class in labels. Check the code")
+            breakpoint()
+            print(self.freqs)
+            raise Exception(f"Only one class in labels: {self.freqs}. Check the code")
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)

@@ -27,12 +27,22 @@ log = getLogger(__name__)
 
 @register('tuple_splitter')
 class TupleSplitter:
-    def __call__(self, *args,**kwargs):
+    def __call__(self, is_y=False,*args,**kwargs):
+        if not is_y:
+            print('not y')
+        else:
+            print('y')
         print('Args '+str(args))
         print('KWARGS '+str(kwargs))
+        assert args or kwargs
         x=args[0]
+        if len(x) == 1:
+            x=x[0]
+        elif isinstance(x[0],int):
+            x=x[1]
         assert len(args)==1,args
         assert len(x) == 2, x
+        print(f'Answer from tuple splitter{(x[0],x[1])}')
         return x[0], x[1]
     def __init__(self, *args, **kwargs):
         pass
@@ -196,6 +206,8 @@ class MultiTaskPalBertIterator:
                     tuple(zip(*y_instances)),
                 )
                 self.steps_taken += 1
+                print('Iterator returns '+str(batchs))
+                breakpoint()
                 yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
@@ -219,6 +231,8 @@ class MultiTaskPalBertIterator:
                     y_instances.append(task_batch[1])
                 batchs = (self.add_task_id(-1, x_instances),
                           tuple(zip(*y_instances)))
+                print('Iterator returns '+str(batchs))
+                breakpoint()
                 yield batchs
 
     def add_task_id(self, task_id, x_instances):

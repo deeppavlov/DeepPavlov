@@ -205,6 +205,8 @@ class Chainer(Component):
             raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
 
     def compute(self, x, y=None, targets=None):
+        print('COMPUTING')
+        breakpoint()
         if targets is None:
             targets = self.out_params
         in_params = list(self.in_x)
@@ -226,11 +228,16 @@ class Chainer(Component):
         return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets)
 
     def __call__(self, *args):
+        print('CALLING')
+        breakpoint()
         return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params)
 
     @staticmethod
     def _compute(*args, param_names, pipe, targets):
-        print('Computing  names '+str(param_names)+' pipe '+str(pipe)+' targets '+str(targets))
+        print('Computing  names '+str(param_names)+' targets '+str(targets))
+        #print(f'Args {[str(k)[:1000] for k in args]}')
+        aa = args
+        #breakpoint()
         expected = set(lists_to_tuples(targets))
         final_pipe = []
         for (in_keys, in_params), out_params, component in reversed(pipe):
@@ -246,16 +253,33 @@ class Chainer(Component):
         assert len(param_names) == len(args), f'For params {param_names} only {len(args)} args provided'
         if 'subtok2chars_squad' in str(param_names):
             mm=args
-            breakpoint()
+        mem={}
+        for param_name, arg in zip(param_names, args):
+            if isinstance(param_name, list):
+                assert len(param_name) == len(arg)
+                for param_name_part, arg_part in zip(param_name,arg):
+                    mem[param_name_part] = arg_part
+            else:
+                mem[param_name] = arg
         param_names = lists_to_tuples(param_names)
-        args = lists_to_tuples(args)
-        mem = dict(zip(flatten(param_names), flatten(args)))
+        breakpoint()
         print(param_names)
         print('mem keys')
         print(mem.keys())
+        #if 'y_relations' in mem:
+            #print(str(mem['y_relations'])[:1000])
+            #breakpoint()
+        if 'y_squad' in mem:
+            assert mem['y_squad']
+            print(str(mem['y_squad'])[:1000])
+            if not isinstance(mem['y_squad'][1][1][0], int):
+                print('Assertion error')
+                breakpoint()
         del args
+        # print('Targets '+str(targets))
+        breakpoint()
         for (in_keys, in_params), out_params, component in pipe:
-            # print('in keys '+str(in_keys)+' in params '+str(in_params)+' out params '+str(out_params)+' component '+str(component))
+            print('in keys '+str(in_keys)+' in params '+str(in_params)+' out params '+str(out_params)+' component '+str(component))
             x = [mem[k] for k in flatten(in_params)]
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
@@ -268,8 +292,11 @@ class Chainer(Component):
         res = [mem[k] for k in targets]
         if len(res) == 1:
             res = res[0]
-        print('res ')
-        print(res)
+        #print('res ')
+        #print(res)
+        print('Yielding '+str(targets) + 'as '+str(res)[:1000])
+        if 'y_squad' in targets:
+            breakpoint()
         return res
 
     def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:

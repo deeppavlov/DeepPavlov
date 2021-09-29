@@ -440,12 +440,20 @@ class SquadBertAnsPreprocessor(Component):
 
     def __call__(self, answers_raw, answers_start, char2subtoks, **kwargs):
         answers, starts, ends = [], [], []
-        breakpoint()
-        for answers_raw, answers_start, c2sub in zip(answers_raw, answers_start, char2subtoks):
+        # breakpoint()
+        # print(type(answers_raw))
+        # print(str(answers_raw))
+        # print(str(answers_start))
+        #print(f'raw {answers_raw} starts {answers_start} subtoks {char2subtoks}')
+        if not isinstance(answers_raw, list) and not isinstance(answers_start, list):
+            answers_raw=[answers_raw]
+            answers_start = [answers_start]
+        for answer_raw, answer_start, c2sub in zip(answers_raw, answers_start, char2subtoks):
             answers.append([])
             starts.append([])
             ends.append([])
-            for ans, ans_st in zip(answers_raw, answers_start):
+            for ans, ans_st in zip(answer_raw, answer_start):
+                assert isinstance(ans_st, int), answers_start
                 if self.do_lower_case:
                     ans = ans.lower()
                 try:
