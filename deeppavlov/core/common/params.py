@@ -42,16 +42,20 @@ def _resolve(val):
     return val
 
 
-def _init_param(param, mode):
+def _init_param(param, mode, **kwargs):
+    #print('Init_param '+str(param)+' mode '+str(mode))
     if isinstance(param, str):
         param = _resolve(param)
     elif isinstance(param, (list, tuple)):
         param = [_init_param(p, mode) for p in param]
     elif isinstance(param, dict):
         if {'ref', 'class_name', 'config_path'}.intersection(param.keys()):
+            intersection = {'ref', 'class_name', 'config_path'}.intersection(param.keys())
+            log.warning(f'Recursive calling  from_params as found {intersection}')
             param = from_params(param, mode=mode)
         else:
             param = {k: _init_param(v, mode) for k, v in param.items()}
+    #print('Answer '+str(param))
     return param
 
 
@@ -97,13 +101,14 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
     if inspect.isclass(obj):
         # find the submodels params recursively
         config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
-
+        print('config params')
+        print(config_params)
         try:
             spec = inspect.getfullargspec(obj)
             if 'mode' in spec.args + spec.kwonlyargs or spec.varkw is not None:
                 kwargs['mode'] = mode
-
             component = obj(**dict(config_params, **kwargs))
+            print('Made '+str(obj))
             try:
                 _refs[config_params['id']] = component
             except KeyError:

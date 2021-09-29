@@ -55,12 +55,17 @@ def read_data_by_config(config: dict):
     else:
         data_path = expand_path(data_path)
 
-    return reader.read(data_path, **reader_config)
+    answer = reader.read(data_path, **reader_config)
+    print('Answer is '+str(answer.keys()) + ' '+str([len(s) for s in answer.keys()]) )
+    return answer
 
 
 def get_iterator_from_config(config: dict, data: dict):
     """Create iterator (from config) for specified data."""
     iterator_config = config['dataset_iterator']
+    print('Config '+str(iterator_config))
+    print('Data '+str(data)[:1000])
+    #print('Squad '+str(data['squad'])[:1000])
     iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
                                                                              data=data)
     return iterator
@@ -90,6 +95,7 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     if iterator is None:
         try:
             data = read_data_by_config(config)
+            print('Data were read '+str(data.keys())+' '+str([len(s) for s in data.keys()]) )
         except ConfigError as e:
             to_train = False
             log.warning(f'Skipping training. {e.message}')

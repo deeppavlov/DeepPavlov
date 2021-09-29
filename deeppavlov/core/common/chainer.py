@@ -16,7 +16,7 @@ import pickle
 from itertools import islice
 from logging import getLogger
 from types import FunctionType
-from typing import Union, Tuple, List, Optional, Hashable, Reversible
+from typing import Union, Tuple, List, Optional, Hashable, Reversible,  Iterable
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -25,6 +25,21 @@ from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
 
+def lists_to_tuples(a: list):
+    ans = ([tuple(x) if isinstance(x, list) else x for x in a])
+    if isinstance(a, set): # set to set
+        ans = set(ans)
+    return ans
+
+
+def flatten(a: Iterable):
+    ans = []
+    for subj in a:
+        if isinstance(subj, tuple) or isinstance(subj, list) or isinstance(subj, set):
+            ans += list(subj)
+        else:
+            ans.append(subj)
+    return ans
 
 
 class Chainer(Component):
@@ -62,7 +77,8 @@ class Chainer(Component):
         self.in_y = in_y or ['y']
         self.out_params = out_params or self.in_x
 
-        self.forward_map = set(self.in_x)
+        self.forward_map = set(lists_to_tuples(self.in_x))
+        self.in_y = lists_to_tuples(self.in_y)
         self.train_map = self.forward_map.union(self.in_y)
 
         self._components_dict = {}
@@ -152,7 +168,8 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            missing_names = set((in_x+in_y)) - set(self.train_map)            
+            in_y = lists_to_tuples(in_y)
+            missing_names = set(flatten(in_x+in_y)) - set(flatten(self.train_map))          
             assert not missing_names, ('Arguments {} are expected but only {} are set'
                                                             .format(missing_names, self.train_map))
             preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
@@ -174,15 +191,17 @@ class Chainer(Component):
             self.process_event = component.process_event
         if main:
             self.main = component
+        in_x = lists_to_tuples(in_x)
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
+            out_params = lists_to_tuples(out_params)
             self.forward_map = self.forward_map.union(out_params)
-
-        if self.train_map.issuperset(in_x):
+        missing_names = set(flatten(self.train_map)) - set(flatten(in_x))
+        if missing_names:
             self.train_pipe.append(((x_keys, in_x), out_params, component))
+            out_params = lists_to_tuples(out_params)
             self.train_map = self.train_map.union(out_params)
         else:
-            missing_names = set(train_map) - set(in_x)
             raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
 
     def compute(self, x, y=None, targets=None):
@@ -211,23 +230,33 @@ class Chainer(Component):
 
     @staticmethod
     def _compute(*args, param_names, pipe, targets):
-        expected = set(targets)
+        print('Computing  names '+str(param_names)+' pipe '+str(pipe)+' targets '+str(targets))
+        expected = set(lists_to_tuples(targets))
         final_pipe = []
         for (in_keys, in_params), out_params, component in reversed(pipe):
+            out_params = lists_to_tuples(out_params)
             if expected.intersection(out_params):
                 expected = expected - set(out_params) | set(in_params)
                 final_pipe.append(((in_keys, in_params), out_params, component))
         final_pipe.reverse()
-        if not expected.issubset(param_names):
-            missing_names = expected - set(param_names)
+        missing_names = set(flatten(expected)) - set(flatten(lists_to_tuples(param_names)))
+        if missing_names:
             raise RuntimeError(f'{missing_names} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
-
-        mem = dict(zip(param_names, args))
+        assert len(param_names) == len(args), f'For params {param_names} only {len(args)} args provided'
+        if 'subtok2chars_squad' in str(param_names):
+            mm=args
+            breakpoint()
+        param_names = lists_to_tuples(param_names)
+        args = lists_to_tuples(args)
+        mem = dict(zip(flatten(param_names), flatten(args)))
+        print(param_names)
+        print('mem keys')
+        print(mem.keys())
         del args
-
         for (in_keys, in_params), out_params, component in pipe:
-            x = [mem[k] for k in in_params]
+            # print('in keys '+str(in_keys)+' in params '+str(in_params)+' out params '+str(out_params)+' component '+str(component))
+            x = [mem[k] for k in flatten(in_params)]
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:
@@ -236,10 +265,11 @@ class Chainer(Component):
                 mem[out_params[0]] = res
             else:
                 mem.update(zip(out_params, res))
-
         res = [mem[k] for k in targets]
         if len(res) == 1:
             res = res[0]
+        print('res ')
+        print(res)
         return res
 
     def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:

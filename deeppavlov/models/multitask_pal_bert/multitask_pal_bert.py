@@ -29,6 +29,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.multitask_pal_bert.modeling import BertForMultiTask, BertConfig
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken, token_labels_to_subtoken_labels
+from deeppavlov.models.torch_bert.torch_transformers_squad import softmax_mask
 
 log = getLogger(__name__)
 
@@ -78,7 +79,6 @@ class MultiTaskPalBert(TorchModel):
         clip_norm: Optional[float] = None,
         one_hot_labels: bool = False,
         multilabel: bool = False,
-        use_ner_subwords: bool=False,
         return_probas: bool = False,
         config_name: str =  "configs/pals_config.json",
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
@@ -97,11 +97,11 @@ class MultiTaskPalBert(TorchModel):
         self.tasks_num_classes = []
         self.tasks_type = []
         for task in tasks:
-            #print(tasks[task])
-            assert 'n_choices' in tasks[task] or 'n_classes' in tasks[task], 'Provide n_classes or n_choices'
+            if 'question_answering' not in tasks[task]:
+                assert 'n_choices' in tasks[task] or 'n_classes' in tasks[task], 'Provide n_classes or n_choices'
             n_classes = tasks[task].get("n_classes", 0)
             n_choices = tasks[task].get("n_choices", 0)
-            is_question_answering = tasks[task].get("question_answering", False)
+            is_question_answering = 'question_answering' in tasks[task] and n_classes == 0 and n_choices == 0
             if is_question_answering:
                 self.tasks_type.append('question_answering')
                 self.tasks_num_classes.append(2)                
@@ -163,7 +163,9 @@ class MultiTaskPalBert(TorchModel):
 
         if self.pretrained_bert:
             partial = torch.load(self.pretrained_bert, map_location="cpu")
+            # print(partial.keys())
             model_dict = self.model.bert.state_dict()
+            # print(model_dict.keys())
             update = {}
             for n, p in model_dict.items():
                 if "aug" in n or "mult" in n:
@@ -313,13 +315,12 @@ class MultiTaskPalBert(TorchModel):
                     seq_lengths = torch.sum(y_mask, dim=1).int()
                     pred = [p[:l] for l, p in zip(seq_lengths, pred)]
                 assert isinstance(pred,list)
-            elif self.task_type[task_id] == 'question_answering':
+            elif self.tasks_type[task_id] == 'question_answering':
                 logits_start, logits_end = logits[0], logits[1]
-                bs = b_input_ids.size()[0]
-                seq_len = b_input_ids.size()[-1]
+                bs, seq_len = _input['token_type_ids'].size()
                 mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
                               torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
-                logit_mask = b_input_type_ids + mask
+                logit_mask = _input['input_type_ids'] + mask
                 logits_st = softmax_mask(logits_st, logit_mask)
                 logits_end = softmax_mask(logits_end, logit_mask)
 
@@ -332,7 +333,7 @@ class MultiTaskPalBert(TorchModel):
                 outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
                     logits_end.size()[0], 1, logits_end.size()[1]))
 
-                context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
+                context_max_len = torch.max(torch.sum(_input['input_type_ids'], dim=1)).to(torch.int64)
 
                 max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
 

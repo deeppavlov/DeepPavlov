@@ -38,6 +38,7 @@ class DataLearningIterator:
 
     def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
         """ Transform the data for a specific data type (e.g. ``'train'``). """
+        print('Return preprocessed '+str(data))
         return data
 
     def __init__(self, data: Dict[str, List[Tuple[Any, Any]]], seed: int = None, shuffle: bool = True,
@@ -86,7 +87,9 @@ class DataLearningIterator:
             batch_size = data_len
 
         for i in range((data_len - 1) // batch_size + 1):
-            yield tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
+            to_yield = tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
+            print('Yielding '+str(to_yield)[:1000])
+            yield to_yield
 
     def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:
         """Get all data for a selected data type

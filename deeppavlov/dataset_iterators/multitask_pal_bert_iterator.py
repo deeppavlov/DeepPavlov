@@ -25,6 +25,17 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 log = getLogger(__name__)
 
 
+@register('tuple_splitter')
+class TupleSplitter:
+    def __call__(self, *args,**kwargs):
+        print('Args '+str(args))
+        print('KWARGS '+str(kwargs))
+        x=args[0]
+        assert len(args)==1,args
+        assert len(x) == 2, x
+        return x[0], x[1]
+    def __init__(self, *args, **kwargs):
+        pass
 @register('multitask_pal_bert_iterator')
 class MultiTaskPalBertIterator:
     """
@@ -56,6 +67,7 @@ class MultiTaskPalBertIterator:
                 "iterator_class_name"
             ]
             del task_iterator_params["iterator_class_name"]
+            print(f"Making iterator for {task_name}")
             self.task_iterators[task_name] = from_params(
                 task_iterator_params, data=data[task_name]
             )

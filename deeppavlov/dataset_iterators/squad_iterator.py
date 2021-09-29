@@ -62,6 +62,8 @@ class SquadIterator(DataLearningIterator):
                             ans_text.append(answer['text'])
                             ans_start.append(answer['answer_start'])
                         cqas.append(((context, q), (ans_text, ans_start)))
+        print('squad preprocessing done')
+        print(cqas[0])
         return cqas
 
 

@@ -1,0 +1,281 @@
+{
+    "dataset_reader": {
+        "class_name": "multitask_reader",
+        "data_path": "null",
+        "tasks": {
+            "relations": {
+                "reader_class_name": "paraphraser_reader",
+                "data_path": "{DATA}/relation_ranking_rus",
+                "do_lower_case": false
+            },
+            "ner": {
+                "reader_class_name": "conll2003_reader",
+                "data_path": "{DATA}/total_rus_lowercase/",
+                "dataset_name": "collection_rus",
+                "provide_pos": false
+            }
+        }
+    },
+    "dataset_iterator": {
+        "class_name": "multitask_pal_bert_iterator",
+        "num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+        "steps_per_epoch": "{STEPS_PER_EPOCH}",
+        "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+        "tasks": {
+            "relations": {
+                "iterator_class_name": "siamese_iterator",
+                "seed": 243,
+                "len_valid": 500
+            },
+            "ner": {
+                "iterator_class_name": "basic_classification_iterator",
+                "seed": 12
+            }
+        }
+    },
+    "chainer": {
+        "in": [
+            "x_relations_with_id",
+            "x_ner_with_id"
+        ],
+        "in_y": [
+            "y_relations",
+            "y_ner"
+        ],
+        "pipe": [
+            {
+                "class_name": "multitask_pal_bert_preprocessor",
+                "in": [
+                    "x_relations_with_id",
+                    "x_ner_with_id"
+                ],
+                "out": [
+                    "task_id",
+                    "x_relations",
+                    "x_ner"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_relations"
+                ],
+                "out": [
+                    "x_relations1",
+                    "x_relations2"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{VOCAB}",
+                "max_seq_length": 128,
+                "in": [
+                    "x_relations1",
+                    "x_relations2"
+                ],
+                "out": [
+                    "bert_features_relations"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_ner_preprocessor",
+                "vocab_file": "{VOCAB}",
+                "return_features": true,
+                "do_lower_case": false,
+                "max_seq_length": 512,
+                "split_on_subwords": "{USE_SUBWORDS}",
+                "max_subword_length": 15,
+                "token_masking_prob": 0.0,
+                "in": [
+                    "x_ner"
+                ],
+                "out": [
+                    "bert_features_ner"
+                ]
+            },
+            {
+                "id": "vocab_ner",
+                "class_name": "simple_vocab",
+                "unk_token": [
+                    "O"
+                ],
+                "pad_with_zeros": true,
+                "save_path": "{MODELS_PATH}/tag.dict",
+                "load_path": "{MODELS_PATH}/tag.dict",
+                "fit_on": [
+                    "y_ner"
+                ],
+                "in": [
+                    "y_ner"
+                ],
+                "out": [
+                    "y_ids_ner"
+                ]
+            },
+            {
+                "id": "vocab_relations",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_relations"
+                ],
+                "save_path": "{MODELS_PATH}/relations.dict",
+                "load_path": "{MODELS_PATH}/relations.dict",
+                "in": [
+                    "y_relations"
+                ],
+                "out": [
+                    "y_ids_relations"
+                ]
+            },
+            {
+                "id": "multitask_pal_bert",
+                "class_name": "multitask_pal_bert",
+                "pretrained_bert": "{PRETRAINED_BERT}",
+                "config_name":"configs/pals_multilin_config.json",
+                "optimizer_parameters": {
+                    "lr": 5e-6,
+                    "betas":[0.9,0.99],
+                    "eps":1e-6
+                },
+                "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+                "steps_per_epoch": "{STEPS_PER_EPOCH}",
+                "learning_rate_drop_patience": 5,
+                "learning_rate_drop_div": 2.5,
+                "return_probas": false,
+                "use_ner_subwords":"{USE_SUBWORDS}",
+                "log_model_summary": false,
+                "save_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
+                "load_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
+                "tasks": {
+                    "relations": {
+                        "n_classes": "#vocab_relations.len"
+                    },
+                    "ner": {
+                        "n_choices": "#vocab_ner.len"
+                    }
+                },
+                "in_distribution": {
+                    "relations": 1,
+                    "ner": 1
+                },
+                "in": [
+                    "task_id",
+                    "bert_features_relations",
+                    "bert_features_ner"
+                ],
+                "in_y_distribution": {
+                    "relations": 1,
+                    "ner": 1
+                },
+                "in_y": [
+                    "y_ids_relations",
+                    "y_ids_ner"
+                ],
+                "out": [
+                    "y_relations_pred_ids",
+                    "y_ner_pred_ids"
+                ]
+            },
+            {
+                "in": [
+                    "y_relations_pred_ids"
+                ],
+                "out": [
+                    "y_relations_pred_labels"
+                ],
+                "ref": "vocab_relations"
+            },
+            {
+                "in": [
+                    "y_ner_pred_ids"
+                ],
+                "out": [
+                    "y_ner_pred_labels"
+                ],
+                "ref": "vocab_ner"
+            }
+        ],
+        "out": [
+            "y_relations_pred_labels",
+            "y_ner_pred_labels"
+        ]
+    },
+    "train": {
+        "epochs": "{NUM_TRAIN_EPOCHS}",
+        "batch_size": 4,
+        "metrics": [
+            {
+                "name": "ner_f1",
+                "inputs": [
+                    "y_ner",
+                    "y_ner_pred_labels"
+                ]
+            },
+            {
+                "name": "ner_token_f1",
+                "inputs": [
+                    "y_ner",
+                    "y_ner_pred_labels"
+                ]
+            },
+            {
+                "name": "f1_macro",
+                "inputs": [
+                    "y_relations",
+                    "y_relations_pred_labels"
+                ]
+            }
+        ],
+        "validation_patience": 5,
+        "val_every_n_epochs": 1,
+        "log_every_n_epochs": 1,
+        "show_examples": true,
+        "evaluation_targets": [
+
+            "valid","train","test"
+        ],
+        "class_name": "torch_trainer"
+    },
+
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "/cephfs/home/karpov.d",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "PRETRAINED_BERT": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/pytorch_model.bin",
+            "VOCAB": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/vocab.txt",
+
+            "MODELS_PATH": "{ROOT_PATH}/.deeppavlov/modReHlhddsvag2",
+            "DATA": "{ROOT_PATH}/Data",
+            "NUM_TRAIN_EPOCHS": 1000,
+            "STEPS_PER_EPOCH": 9000,
+            "USE_SUBWORDS":true,
+            "GRADIENT_ACC_STEPS": 1
+        },
+        "download": [
+            {
+                "url": "https://huggingface.co/bert-base-multilingual-uncased/resolve/main/pytorch_model.bin",
+                "subdir": "{PRETRAINED_BERT}"
+            },
+            {
+                "url": "http://files.deeppavlov.ai/0.16/ner/ner_rus_bert_torch.tar.gz",
+                "subdir": "{MODELS_PATH}"
+            },
+            {
+                "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/multi_cased_L-12_H-768_A-12.zip",
+                "subdir": "{DOWNLOADS_PATH}/bert_models"
+              },
+              {
+                "url": "http://files.deeppavlov.ai/kbqa/datasets/rel_ranking_bert_rus.tar.gz",
+                "subdir": "{DOWNLOADS_PATH}/rel_ranking_rus"
+              },
+              {
+                "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_rus.tar.gz",
+                "subdir": "{MODELS_PATH}/rel_ranking_bert_rus"
+              }
+        ]
+    }
+}
