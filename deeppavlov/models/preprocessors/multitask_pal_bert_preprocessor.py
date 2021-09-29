@@ -40,11 +40,12 @@ class MultitaskPalBertPreprocessor(Component):
             for values in examples:
                 if isinstance(values, Iterable):
                     print(values)
-                    if isinstance(values[0], int):
-                        task_data.extend([*values[1:]])
-                    else:
-                        task_data.extend([*values])                        
-                    task_id = task_no
+                    task_id =values[0]
+                    assert isinstance(task_id, int), (examples, task_no)
+                    task_data.extend([*values[1:]])
+                    
+                else:
+                    assert False, (examples, task_no)
             if task_data:
                 out.append(tuple(task_data))
         ans = [-1, *out]
