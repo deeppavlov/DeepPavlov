@@ -79,6 +79,7 @@ class Chainer(Component):
 
         self.forward_map = set(lists_to_tuples(self.in_x))
         self.in_y = lists_to_tuples(self.in_y)
+        print(self.in_y)
         self.train_map = self.forward_map.union(self.in_y)
 
         self._components_dict = {}
@@ -196,8 +197,8 @@ class Chainer(Component):
             self.pipe.append(((x_keys, in_x), out_params, component))
             out_params = lists_to_tuples(out_params)
             self.forward_map = self.forward_map.union(out_params)
-        missing_names = set(flatten(self.train_map)) - set(flatten(in_x))
-        if missing_names:
+        missing_names = set(flatten(in_x)) - set(flatten(self.train_map))
+        if not missing_names:
             self.train_pipe.append(((x_keys, in_x), out_params, component))
             out_params = lists_to_tuples(out_params)
             self.train_map = self.train_map.union(out_params)
@@ -206,7 +207,7 @@ class Chainer(Component):
 
     def compute(self, x, y=None, targets=None):
         print('COMPUTING')
-        breakpoint()
+        #breakpoint()
         if targets is None:
             targets = self.out_params
         in_params = list(self.in_x)
@@ -229,7 +230,7 @@ class Chainer(Component):
 
     def __call__(self, *args):
         print('CALLING')
-        breakpoint()
+        #breakpoint()
         return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params)
 
     @staticmethod
@@ -262,7 +263,7 @@ class Chainer(Component):
             else:
                 mem[param_name] = arg
         param_names = lists_to_tuples(param_names)
-        breakpoint()
+        #breakpoint()
         print(param_names)
         print('mem keys')
         print(mem.keys())
@@ -277,10 +278,17 @@ class Chainer(Component):
                 breakpoint()
         del args
         # print('Targets '+str(targets))
-        breakpoint()
+        #breakpoint()
         for (in_keys, in_params), out_params, component in pipe:
             print('in keys '+str(in_keys)+' in params '+str(in_params)+' out params '+str(out_params)+' component '+str(component))
             x = [mem[k] for k in flatten(in_params)]
+            if ('y_squad' in in_params or 'x_squad' in in_params) and len(in_params) == 1:
+                def f(*args):
+                    print(args)
+                    return [k[0] for k in args[0]],[k[1] for k in args[0]]
+                print(f(*x))
+                #breakpoint()
+
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:
@@ -317,7 +325,7 @@ class Chainer(Component):
             batch = [list(islice(arg, batch_size)) for arg in args]
             if not any(batch):  # empty batch, reached the end
                 break
-
+            print(f'Batch {str(batch)}')
             curr_answer = self.__call__(*batch)
             if len(self.out_params) == 1:
                 curr_answer = [curr_answer]

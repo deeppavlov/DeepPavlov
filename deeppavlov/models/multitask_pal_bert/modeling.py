@@ -554,7 +554,7 @@ class BertForMultiTask(nn.Module):
         elif name == 'question_answering':
             all_encoder_layers, _ = self.bert(input_ids, token_type_ids, attention_mask, task_id)
             sequence_output = all_encoder_layers[-1]
-            logits = self.qa_outputs(sequence_output)
+            logits = self.classifier[task_id](sequence_output)
             start_logits, end_logits = logits.split(1, dim=-1)
             start_logits = start_logits.squeeze(-1)
             end_logits = end_logits.squeeze(-1)

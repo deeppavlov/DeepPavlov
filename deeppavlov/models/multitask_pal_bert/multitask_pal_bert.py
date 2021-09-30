@@ -294,6 +294,7 @@ class MultiTaskPalBert(TorchModel):
         for task_id in range(len(self.task_names)):
             task_features = in_by_tasks[self.task_names[task_id]][0]
             _input = {}
+            breakpoint()
             for elem in task_features.keys():
                 _input[elem] = task_features[elem].to(self.device)
 
@@ -303,7 +304,7 @@ class MultiTaskPalBert(TorchModel):
                     **_input
                 )
             if self.tasks_type[task_id] == "sequence_labeling":
-                attn_mask = _input['attention_mask']
+                # attn_mask = _input['attention_mask']
                 logits = logits.cpu()
                 y_mask = _input['token_type_ids'].cpu()
                 logits = token_from_subtoken(logits,y_mask)
@@ -321,12 +322,12 @@ class MultiTaskPalBert(TorchModel):
                 mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
                               torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
                 logit_mask = _input['input_type_ids'] + mask
-                logits_st = softmax_mask(logits_st, logit_mask)
+                logits_st = softmax_mask(logits_start, logit_mask)
                 logits_end = softmax_mask(logits_end, logit_mask)
 
                 start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
                 end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
-                scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+                # scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
 
                 outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
                                      end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
@@ -346,7 +347,7 @@ class MultiTaskPalBert(TorchModel):
                 logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
                 start_pred = start_pred.detach().cpu().numpy()
                 end_pred = end_pred.detach().cpu().numpy()
-                pred = [start_pred, end_pred]
+                pred = [(pred1, pred2) for pred1, pred2 in zip(start_pred, end_pred)]
             elif self.tasks_type[task_id] in ["classification", "regression"]:
                 if self.tasks_type[task_id] == "regression":  # regression
                     pred = logits.squeeze(-1).detach().cpu().tolist()
@@ -495,6 +496,7 @@ class MultiTaskPalBert(TorchModel):
         task_names = flattened
 
         if args:
+            print(f'Distributing {args}')
             if not ints:
                 distribution = {
                     task_name: len(in_distr) for task_name,
@@ -510,6 +512,7 @@ class MultiTaskPalBert(TorchModel):
             values_taken = 0
             for task_name in task_names:
                 n_args = distribution[task_name]
+                #breakpoint()
                 args_by_task[task_name] = [args[i]
                                            for i in range(values_taken, values_taken + n_args)]
                 values_taken += n_args

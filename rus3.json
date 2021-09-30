@@ -57,7 +57,8 @@
 			"y_relations",
 			"y_ner"
 		],
-		"pipe": [{
+		"pipe": [
+			{
 				"class_name": "multitask_pal_bert_preprocessor",
 				"in": [
 					"x_squad_with_id",
@@ -77,13 +78,17 @@
 				"out":["context_raw_squad","question_raw_squad"]
 			},
 			{"class_name":"tuple_splitter","is_y":true,"in":["y_squad"],
-                        "out":["ans_raw_squad","ans_raw_start_squad"]},
+				"out":["ans_raw_squad","ans_raw_start_squad"]},
+			{"class_name":"checker","in":[					"x_squad_with_id",
+				"x_relations_with_id",
+				"x_ner_with_id","y_squad","y_relations","y_ner"],"out":["dummy"]},
 			{
 				"class_name": "torch_squad_transformers_preprocessor",
 				"vocab_file": "{VOCAB}",
 				"do_lower_case": "{LOWERCASE}",
 				"max_seq_length": 384,
 				"return_tokens": true,
+				"return_dict": true,
 				"in": ["context_raw_squad","question_raw_squad"],
 				"out": [
 					"bert_features_squad",
@@ -116,6 +121,13 @@
 					"ans_start_squad",
 					"ans_end_squad"
 				]
+			},
+			{
+				"class_name": "squad_bert_label_preparer",
+				"in": [
+					"ans_start_squad",
+					"ans_end_squad"
+				], "out": ["ans_startend_squad"]
 			},
 			{
 				"class_name": "input_splitter",
@@ -239,7 +251,7 @@
 					"ner": 1
 				},
 				"in_y": [
-					["ans_start_squad","ans_end_squad"],
+					"ans_startend_squad",
 					"y_ids_relations",
 					"y_ids_ner"
 				],

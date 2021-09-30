@@ -208,10 +208,12 @@ class TorchSquadTransformersPreprocessor(Component):
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
                  add_token_type_ids: bool = False,
+                 return_dict: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
         self.add_token_type_ids = add_token_type_ids
+        self.return_dict= return_dict
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = BertTokenizer(vocab_file,
@@ -261,15 +263,23 @@ class TorchSquadTransformersPreprocessor(Component):
                                                                 torch.ones(1, len_b, dtype=int)), dim=1)
                 else:
                     encoded_dict['token_type_ids'] = torch.tensor([0])
-
-            curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
-                                          attention_mask=encoded_dict['attention_mask'],
-                                          token_type_ids=encoded_dict['token_type_ids'],
-                                          label=None)
-            input_features.append(curr_features)
+            if self.return_dict:
+                if not input_features:
+                    input_features = encoded_dict
+                elif input_features:
+                    for key in encoded_dict:
+                        input_features[key] = torch.cat((input_features[key], encoded_dict[key]), dim=0)
+            else:
+                curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
+                                            attention_mask=encoded_dict['attention_mask'],
+                                            token_type_ids=encoded_dict['token_type_ids'],
+                                            label=None)
+                input_features.append(curr_features)
             if self.return_tokens:
                 tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
-
+        if self.return_dict:
+            #assert False
+            assert input_features.keys()
         if self.return_tokens:
             return input_features, tokens
         else:
