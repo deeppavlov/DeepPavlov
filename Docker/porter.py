@@ -24,33 +24,36 @@ class Porter:
             self.start_worker(name, env_vars)
         self.active_hosts = cycle(self.workers)
 
-    async def update_containers(self):
-        for name, env_vars in self.params.items():
-            try:
-                self.workers.remove(name)
-                self.active_hosts = cycle(self.workers)
-            except KeyError:
-                pass
-            while True:
-                requests_in_process = await self.requests_in_process(name)
-                if requests_in_process > 0:
-                    await asyncio.sleep(1)
-                else:
-                    break
-            container = self.__client.containers.get(name)
-            loop = asyncio.get_event_loop()
-            await loop.run_in_executor(None, container.restart)
-            for i in range(30):
-                try:
-                    async with aiohttp.ClientSession() as session:
-                        async with session.post(f"http://{name}:8000/probe", json={}) as resp:
-                            break
-                except client_exceptions.ClientConnectorError:
-                    await asyncio.sleep(10)
-            else:
-                raise TimeoutError(f"can't restart a container {name}")
-            self.workers.add(name)
+    async def update_container(self, name):
+        try:
+            self.workers.remove(name)
             self.active_hosts = cycle(self.workers)
+        except KeyError:
+            pass
+        while True:
+            requests_in_process = await self.requests_in_process(name)
+            if requests_in_process > 0:
+                await asyncio.sleep(1)
+            else:
+                break
+        container = self.__client.containers.get(name)
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, container.restart)
+        for i in range(30):
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(f"http://{name}:8000/probe", json={}) as resp:
+                        break
+            except client_exceptions.ClientConnectorError:
+                await asyncio.sleep(10)
+        else:
+            raise TimeoutError(f"can't restart a container {name}")
+        self.workers.add(name)
+        self.active_hosts = cycle(self.workers)
+
+    async def update_containers(self):
+        for name in self.params.keys():
+            await self.update_container(name)
 
     @staticmethod
     async def requests_in_process(name):

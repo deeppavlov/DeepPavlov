@@ -1,5 +1,6 @@
 import asyncio
 from typing import Dict, List
+from logging import getLogger
 
 import aiohttp
 import uvicorn
@@ -11,6 +12,7 @@ from starlette.responses import HTMLResponse
 from aliases import Aliases
 from porter import Porter
 
+logger = getLogger(__file__)
 app = FastAPI()
 
 
@@ -28,9 +30,19 @@ porter = Porter()
 
 @app.post("/model")
 async def model(request: Request):
-    async with aiohttp.ClientSession() as session:
-        async with session.post(f"http://{next(porter.active_hosts)}:8000/model", json=await request.json()) as resp:
-            return await resp.json(content_type=None)
+    while True:
+        try:
+            host = next(porter.active_hosts)
+        except StopIteration:
+            raise HTTPException(status_code=500, detail='No active workers')
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"http://{host}:8000/model", json=await request.json()) as resp:
+                    return await resp.json(content_type=None)
+        except aiohttp.client_exceptions.ClientConnectorError:
+            logger.warning(f'{host} is unavailable, restarting worker container')
+            loop = asyncio.get_event_loop()
+            loop.create_task(porter.update_container(host))
 
 
 @app.get('/update/containers')
