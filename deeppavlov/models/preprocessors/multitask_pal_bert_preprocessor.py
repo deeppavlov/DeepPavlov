@@ -31,15 +31,15 @@ class MultitaskPalBertPreprocessor(Component):
 
     def __call__(self, *args):
         out = []
-        print('Preproc input')
-        print(str(args))
+        #print('Preproc input')
+        #print(str(args))
         for task_no in range(self.n_task):
             examples = args[task_no]
             # print(examples[:5])
             task_data = []
             for values in examples:
                 if isinstance(values, Iterable):
-                    print(values)
+                    #print(values)
                     task_id = task_no
                     if isinstance(task_id, int):
                         task_data.extend([*values[1:]])
@@ -48,10 +48,9 @@ class MultitaskPalBertPreprocessor(Component):
                 else:
                     pass
             if task_data:
-                assert '-1,' not in str(task_data), (examples, task_data)
                 out.append(tuple(task_data))
         ans = [task_id, *out]
-        print('Preproc output')
-        print(ans)
+        #print('Preproc output')
+        #print(ans)
         # breakpoint()
         return ans

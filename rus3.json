@@ -88,8 +88,8 @@
 				"do_lower_case": "{LOWERCASE}",
 				"max_seq_length": 384,
 				"return_tokens": true,
-				"return_dict": true,
-				"in": ["context_raw_squad","question_raw_squad"],
+				"return_dict": false,
+				"in": ["question_raw_squad", "context_raw_squad"],
 				"out": [
 					"bert_features_squad",
 					"subtokens_squad"
@@ -309,7 +309,7 @@
 	},
 	"train": {
 		"epochs": "{NUM_TRAIN_EPOCHS}",
-		"batch_size": 4,
+		"batch_size": 8,
 		"metrics": [{
 				"name": "squad_v1_f1",
 				"inputs": [
@@ -374,12 +374,13 @@
 		"variables": {
 			"ROOT_PATH": "/cephfs/home/karpov.d",
 			"DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+			"TRANSFORMER": "DeepPavlov/rubert-base-cased",
 			"PRETRAINED_BERT": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/pytorch_model.bin",
 			"VOCAB": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/vocab.txt",
 			"MODELS_PATH": "{ROOT_PATH}/.deeppavlov/modedfl3",
 			"DATA": "{ROOT_PATH}/Data",
 			"NUM_TRAIN_EPOCHS": 1000,
-			"STEPS_PER_EPOCH": 9000,
+			"STEPS_PER_EPOCH": 11000,
                         "LOWERCASE":false,
 			"GRADIENT_ACC_STEPS": 1
 		}

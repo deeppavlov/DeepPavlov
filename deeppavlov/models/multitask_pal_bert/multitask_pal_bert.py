@@ -35,6 +35,17 @@ log = getLogger(__name__)
 
 VERY_LOW_VALUE = -99999
 
+def transform(list_of_features):
+    ans = {}
+    for feature in list_of_features:
+        for key in feature.__dict__:
+            if feature.__dict__[key] is not None:
+                if key not in ans:
+                    ans[key] = feature.__dict__[key]
+                else:
+                    ans[key] = torch.cat((ans[key],feature.__dict__[key]),0)
+    return ans
+
 @register('multitask_pal_bert')
 class MultiTaskPalBert(TorchModel):
     """Multi-Task Bert Based Model
@@ -294,7 +305,8 @@ class MultiTaskPalBert(TorchModel):
         for task_id in range(len(self.task_names)):
             task_features = in_by_tasks[self.task_names[task_id]][0]
             _input = {}
-            breakpoint()
+            if isinstance(task_features, list):
+                task_features = transform(task_features)
             for elem in task_features.keys():
                 _input[elem] = task_features[elem].to(self.device)
 
@@ -321,7 +333,7 @@ class MultiTaskPalBert(TorchModel):
                 bs, seq_len = _input['token_type_ids'].size()
                 mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
                               torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
-                logit_mask = _input['input_type_ids'] + mask
+                logit_mask = _input['token_type_ids'] + mask
                 logits_st = softmax_mask(logits_start, logit_mask)
                 logits_end = softmax_mask(logits_end, logit_mask)
 
@@ -334,7 +346,7 @@ class MultiTaskPalBert(TorchModel):
                 outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
                     logits_end.size()[0], 1, logits_end.size()[1]))
 
-                context_max_len = torch.max(torch.sum(_input['input_type_ids'], dim=1)).to(torch.int64)
+                context_max_len = torch.max(torch.sum(_input['token_type_ids'], dim=1)).to(torch.int64)
 
                 max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
 
@@ -384,30 +396,34 @@ class MultiTaskPalBert(TorchModel):
 
         task_features = in_by_tasks[self.task_names[task_id]][0]
         task_labels = in_y_by_tasks[self.task_names[task_id]][0]
-
+        if isinstance(task_features, list):
+            task_features = transform(task_features)
         _input = {}
+        #print(task_features.keys())
+        #breakpoint()
         for elem in ["input_ids", "attention_mask", "token_type_ids"]:
             if elem in task_features:
                 _input[elem] = task_features[elem].to(self.device)
         
         self.optimizer.zero_grad()
-        
+        if self.tasks_type[task_id] == "regression":
+            _input["labels"] = torch.tensor(
+                task_labels, dtype=torch.float32).to(self.device)
+        elif self.tasks_type[task_id] == "question_answering":
+                # start and end logits
+            _input["labels"] = [torch.tensor(label, dtype=torch.float32).to(self.device) for label in task_labels]
+        else:
+            _input["labels"] = torch.tensor(
+                task_labels, dtype=torch.long).to(self.device)        
 
         if self.tasks_type[task_id] == "sequence_labeling":
+            #token to subtoken
             subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
                            for y_el, y_mask, input_mask in zip(_input['labels'].detach().cpu().numpy(),
                                                                _input['token_type_ids'].detach().cpu().numpy(),
                                                                _input['attention_mask'].detach().cpu().numpy())]
             _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
-        elif self.tasks_type[task_id] == "question_answering":
-            # start and end logits
-            _input["labels"] = [torch.tensor(label, dtype=torch.float32).to(self.device) for label in task_labels]
-        elif self.tasks_type[task_id] == "regression":
-            _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.float32).to(self.device)
-        else:
-            _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.long).to(self.device)
+
         self.optimizer.zero_grad()
         loss, _ = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
@@ -496,7 +512,7 @@ class MultiTaskPalBert(TorchModel):
         task_names = flattened
 
         if args:
-            print(f'Distributing {args}')
+            #print(f'Distributing {args}')
             if not ints:
                 distribution = {
                     task_name: len(in_distr) for task_name,

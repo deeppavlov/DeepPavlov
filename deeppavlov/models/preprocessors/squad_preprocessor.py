@@ -421,8 +421,10 @@ class SquadBertMappingPreprocessor(Component):
                     for j in range(len(subtok)):
                         char2subtok[idx + j] = i
                     idx += len(subtok)
+            assert subtok2char or char2subtok, f"subtok2char or char2subtok are empty on {context} {subtokens}"
             subtok2chars.append(subtok2char)
             char2subtoks.append(char2subtok)
+        assert len(subtok2chars) == len(bert_features)
         return subtok2chars, char2subtoks
 
 
@@ -453,9 +455,11 @@ class SquadBertAnsPreprocessor(Component):
             starts.append([])
             ends.append([])
             for ans, ans_st in zip(answer_raw, answer_start):
-                assert isinstance(ans_st, int), answers_start
+                # assert isinstance(ans_st, int), answers_start
                 if self.do_lower_case:
                     ans = ans.lower()
+                if isinstance(ans_st, list):
+                    ans_st = ans_st[0]
                 try:
                     indices = {c2sub[i] for i in range(ans_st, ans_st + len(ans)) if i in c2sub}
                     st = min(indices)
@@ -489,8 +493,13 @@ class SquadBertAnsPostprocessor(Component):
                 starts += [-1]
                 ends += [-1]
             else:
-                st = self.get_char_position(sub2c, answer_st)
-                end = self.get_char_position(sub2c, answer_end)
+                #breakpoint()
+                try:
+                    st = self.get_char_position(sub2c, answer_st)
+                    end = self.get_char_position(sub2c, answer_end)
+                except Exception as e:
+                    print(e)
+                    breakpoint()
                 if len(args) > 0:
                     subtok = args[0][batch_counter][answer_end]
                 else:

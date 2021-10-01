@@ -38,8 +38,8 @@ class DataLearningIterator:
 
     def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
         """ Transform the data for a specific data type (e.g. ``'train'``). """
-        if data:
-            print('Return preprocessed '+str(data[0]))
+        #if data:
+        #    print('Return preprocessed '+str(data[0]))
         #breakpoint()
         return data
 
@@ -90,7 +90,7 @@ class DataLearningIterator:
 
         for i in range((data_len - 1) // batch_size + 1):
             to_yield = tuple(zip(*[data[o] for o in order[i * batch_size:(i + 1) * batch_size]]))
-            print('Yielding '+str(to_yield)[:1000])
+            #print('Yielding '+str(to_yield)[:1000])
             yield to_yield
 
     def get_instances(self, data_type: str = 'train') -> Tuple[tuple, tuple]:

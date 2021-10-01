@@ -38,8 +38,8 @@ class TupleSplitter:
     Split the tuple
     '''
     def __call__(self, *args,**kwargs):
-        print('Args to joiner'+str(args))
-        print('KWARGS to joiner '+str(kwargs))
+        #print('Args to joiner'+str(args))
+        #print('KWARGS to joiner '+str(kwargs))
         assert args or kwargs
         return [k[0] for k in args[0]],[k[1] for k in args[0]]
     def __init__(self, *args, **kwargs):
@@ -50,9 +50,9 @@ class TupleJoiner:
     Prepare the tuple of squad args to dict format needed for multitask pal-BERT
     '''
     def __call__(self, *args,**kwargs):
-        print('Args to joiner '+str(args))
-        print('KWARGS to joiner '+str(kwargs))
-        assert args and len(args) == 1
+        #print('Args to joiner '+str(args))
+        #print('KWARGS to joiner '+str(kwargs))
+        assert args and len(args) == 2, args
         return {'ans_start_squad': args[0], 'ans_end_squad': args[1]}
     def __init__(self, *args, **kwargs):
         pass
@@ -87,7 +87,7 @@ class MultiTaskPalBertIterator:
                 "iterator_class_name"
             ]
             del task_iterator_params["iterator_class_name"]
-            print(f"Making iterator for {task_name}")
+            #print(f"Making iterator for {task_name}")
             self.task_iterators[task_name] = from_params(
                 task_iterator_params, data=data[task_name]
             )
@@ -102,6 +102,8 @@ class MultiTaskPalBertIterator:
             "valid": self._extract_data_type("valid"),
             "test": self._extract_data_type("test"),
         }
+        print(f'Len {len(self.data["train"])}')
+        #breakpoint()
         self.data["all"] = self._unite_dataset_parts(
             self.data["train"], self.data["valid"], self.data["test"])
         self.max_task_data_len = {}
@@ -216,8 +218,8 @@ class MultiTaskPalBertIterator:
                     tuple(zip(*y_instances)),
                 )
                 self.steps_taken += 1
-                print('Iterator returns '+str(batchs))
-                breakpoint()
+                #print('Iterator returns '+str(batchs))
+                #breakpoint()
                 yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
@@ -241,7 +243,7 @@ class MultiTaskPalBertIterator:
                     y_instances.append(task_batch[1])
                 batchs = (self.add_task_id(-1, x_instances),
                           tuple(zip(*y_instances)))
-                print('Iterator returns '+str(batchs))
+                #print('Iterator returns '+str(batchs))
                 #breakpoint()
                 yield batchs
 
