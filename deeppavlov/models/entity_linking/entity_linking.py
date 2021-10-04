@@ -87,6 +87,7 @@ class NerChunker(Component):
         text = ""
         cur_len = 0
         cur_chunk_len = 0
+        
         for n, doc in enumerate(docs_batch):
             start = 0
             text = ""
@@ -127,14 +128,15 @@ class NerChunker(Component):
                         sentences_list = [sentence]
                         start = end + 1
                     else:
+                        text = ""
                         if "," in sentence:
                             sentence_chunks = sentence.split(", ")
                             for chunk in sentence_chunks:
                                 chunk_tokens = re.findall(self.re_tokenizer, chunk)
                                 chunk_len = sum([len(self.tokenizer.tokenize(token)) for token in chunk_tokens])
-                                if cur_chunk_len + chunk_len < self.max_seq_len:
+                                if cur_len + chunk_len < self.max_seq_len:
                                     text += f"{chunk}, "
-                                    cur_chunk_len += chunk_len + 1
+                                    cur_len += chunk_len + 1
                                     end = start + len(chunk) + 1
                                     sentences_offsets_list.append((start, end))
                                     sentences_list.append(chunk)
@@ -149,7 +151,7 @@ class NerChunker(Component):
                                         
                                     chunk = " ".join(chunk.split()[:self.max_chunk_len])
                                     text = f"{chunk}, "
-                                    cur_chunk_len = chunk_len
+                                    cur_len = chunk_len
                                     start = 0
                                     end = start + len(chunk)
                                     sentences_offsets_list = [(start, end)]
