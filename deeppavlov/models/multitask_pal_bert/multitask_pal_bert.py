@@ -313,7 +313,7 @@ class MultiTaskPalBert(TorchModel):
                 if self.tasks_type[task_id] == "regression":  # regression
                     pred = logits.squeeze(-1).detach().cpu().tolist()
                 if self.return_probas:
-                    pred = torch.nn.functional.sigmoid(logits, dim=-1)
+                    pred = torch.nn.functional.softmax(logits, dim=-1)
                     pred = pred.detach().cpu().numpy()
                 else:
                     logits = logits.detach().cpu().numpy()
