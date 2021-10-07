@@ -25,6 +25,7 @@
         "class_name": "ner_chunk_model",
         "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert.json"},
         "ner_parser": "#edp",
+        "lemmatize": true,
         "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"]
       }

@@ -35,6 +35,7 @@ from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.models.kbqa.entity_detection_parser import EntityDetectionParser
+from deeppavlov.models.tokenizers.utils import detokenize
 
 log = getLogger(__name__)
 
@@ -47,6 +48,7 @@ class NerChunkModel(Component):
 
     def __init__(self, ner: Chainer,
                  ner_parser: EntityDetectionParser,
+                 lemmatize: bool = False,
                  **kwargs) -> None:
         """
 
@@ -57,6 +59,8 @@ class NerChunkModel(Component):
         """
         self.ner = ner
         self.ner_parser = ner_parser
+        self.morph = pymorphy2.MorphAnalyzer()
+        self.lemmatize = lemmatize
 
     def __call__(self, text_batch_list: List[List[str]],
                  nums_batch_list: List[List[int]],
@@ -203,6 +207,10 @@ class NerChunkModel(Component):
             new_entity_substr_list = []
             for entity_substr in entity_substr_list:
                 entity_substr = entity_substr.replace(" ' ", ' "').replace(" '", '"').replace("' ", '"')
+                if self.lemmatize:
+                    entity_substr_tokens = entity_substr.split()
+                    entity_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_tokens]
+                    entity_substr = detokenize(entity_substr_tokens)
                 new_entity_substr_list.append(entity_substr)
             new_entity_substr_batch.append(new_entity_substr_list)
         return new_entity_substr_batch
