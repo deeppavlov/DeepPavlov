@@ -723,7 +723,10 @@ class EntityLinkerSep(Component, Serializable):
                         for word in entity_substr:
                             candidate_entities = {}
                             entities_set = set()
-                            morph_parsed_word = self.morph_parse(word)
+                            if self.lemmatize:
+                                morph_parsed_word = self.morph_parse(word)
+                            else:
+                                morph_parsed_word = word
                             if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
                                 entities_set = self.word_to_idlist.get(word, set())
                                 if tag == "ORG":
