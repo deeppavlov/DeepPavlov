@@ -1,0 +1,759 @@
+{
+    "dataset_reader": {
+        "class_name": "multitask_reader",
+        "data_path": "null",
+        "tasks": {
+            "cola": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "cola",
+                "train": "train",
+                "valid": "validation"
+            },
+            "sst2": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "sst2",
+                "train": "train",
+                "valid": "validation"
+            },
+            "qqp": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "qqp",
+                "train": "train",
+                "valid": "validation"
+            },
+            "mrpc": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "mrpc",
+                "train": "train",
+                "valid": "validation"
+            },
+            "rte": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "rte",
+                "train": "train",
+                "valid": "validation"
+            },
+            "mnli": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "mnli",
+                "train": "train",
+                "valid": "validation_matched"
+            },
+            "qnli": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "qnli",
+                "train": "train",
+                "valid": "validation"
+            },
+            "stsb": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "path": "glue",
+                "data_path": "glue",
+                "name": "stsb",
+                "train": "train",
+                "valid": "validation"
+            }
+        }
+    },
+    "dataset_iterator": {
+        "class_name": "multitask_pal_bert_iterator",
+        "num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+        "steps_per_epoch": "{STEPS_PER_EPOCH}",
+        "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+        "tasks": {
+            "cola": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": "sentence",
+                "label": "label",
+                "use_label_name": false,
+                "seed": 42
+            },
+            "sst2": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": "sentence",
+                "label": "label",
+                "use_label_name": false,
+                "seed": 42
+            },
+            "qqp": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "question1",
+                    "question2"
+                ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": 42
+            },
+            "mrpc": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "sentence1",
+                    "sentence2"
+                ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": 42
+            },
+            "rte": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "sentence1",
+                    "sentence2"
+                ],
+                "label": "label",
+                "seed": 42
+            },
+            "mnli": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "hypothesis",
+                    "premise"
+                ],
+                "label": "label",
+                "seed": 42
+            },
+            "qnli": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "question",
+                    "sentence"
+                ],
+                "label": "label",
+                "seed": 42
+            },
+            "stsb": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features": [
+                    "sentence1",
+                    "sentence2"
+                ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": 42
+            }
+        }
+    },
+    "chainer": {
+        "in": [
+            "x_cola_with_id",
+            "x_sst2_with_id",
+            "x_qqp_with_id",
+            "x_mrpc_with_id",
+            "x_rte_with_id",
+            "x_mnli_with_id",
+            "x_qnli_with_id",
+            "x_stsb_with_id"
+        ],
+        "in_y": [
+            "y_cola",
+            "y_sst2",
+            "y_qqp",
+            "y_mrpc",
+            "y_rte",
+            "y_mnli",
+            "y_qnli",
+            "y_stsb"
+        ],
+        "pipe": [
+            {
+                "class_name": "multitask_pal_bert_preprocessor",
+                "in": [
+                    "x_cola_with_id",
+                    "x_sst2_with_id",
+                    "x_qqp_with_id",
+                    "x_mrpc_with_id",
+                    "x_rte_with_id",
+                    "x_mnli_with_id",
+                    "x_qnli_with_id",
+                    "x_stsb_with_id"
+                ],
+                "out": [
+                    "task_id",
+                    "x_cola",
+                    "x_sst2",
+                    "x_qqp",
+                    "x_mrpc",
+                    "x_rte",
+                    "x_mnli",
+                    "x_qnli",
+                    "x_stsb"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_cola"
+                ],
+                "out": [
+                    "bert_features_cola"
+                ]
+            },
+                        {
+                "id": "vocab_cola",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_cola"
+                ],
+                "save_path": "{MODELS_PATH}/cola.dict",
+                "load_path": "{MODELS_PATH}/cola.dict",
+                "in": [
+                    "y_cola"
+                ],
+                "out": [
+                    "y_ids_cola"
+                ]
+            },            
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_sst2"
+                ],
+                "out": [
+                    "bert_features_sst2"
+                ]
+            },
+                        {
+                "id": "vocab_sst",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_sst2"
+                ],
+                "save_path": "{MODELS_PATH}/sst.dict",
+                "load_path": "{MODELS_PATH}/sst.dict",
+                "in": [
+                    "y_sst2"
+                ],
+                "out": [
+                    "y_ids_sst2"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_qqp"
+                ],
+                "out": [
+                    "x_qqp1",
+                    "x_qqp2"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_qqp1",
+                    "x_qqp2"
+                ],
+                "out": [
+                    "bert_features_qqp"
+                ]
+            },
+            {
+                "id": "vocab_qqp",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_qqp"
+                ],
+                "save_path": "{MODELS_PATH}/qqp.dict",
+                "load_path": "{MODELS_PATH}/qqp.dict",
+                "in": [
+                    "y_qqp"
+                ],
+                "out": [
+                    "y_ids_qqp"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_mrpc"
+                ],
+                "out": [
+                    "x_mrpc1",
+                    "x_mrpc2"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_mrpc1",
+                    "x_mrpc2"
+                ],
+                "out": [
+                    "bert_features_mrpc"
+                ]
+            },
+            {
+                "id": "vocab_mrpc",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_mrpc"
+                ],
+                "save_path": "{MODELS_PATH}/mrpc.dict",
+                "load_path": "{MODELS_PATH}/mrpc.dict",
+                "in": [
+                    "y_mrpc"
+                ],
+                "out": [
+                    "y_ids_mrpc"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_rte"
+                ],
+                "out": [
+                    "x_rte1",
+                    "x_rte2"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_rte1",
+                    "x_rte2"
+                ],
+                "out": [
+                    "bert_features_rte"
+                ]
+            },
+            
+            {
+                "id": "vocab_rte",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_rte"
+                ],
+                "save_path": "{MODELS_PATH}/rte.dict",
+                "load_path": "{MODELS_PATH}/rte.dict",
+                "in": [
+                    "y_rte"
+                ],
+                "out": [
+                    "y_ids_rte"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_mnli"
+                ],
+                "out": [
+                    "x_mnli1",
+                    "x_mnli2"
+                ]
+            },  
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_mnli1",
+                    "x_mnli2"
+                ],
+                "out": [
+                    "bert_features_mnli"
+                ]
+            },   
+            {
+                "id": "vocab_mnli",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_mnli"
+                ],
+                "save_path": "{MODELS_PATH}/mnli.dict",
+                "load_path": "{MODELS_PATH}/mnli.dict",
+                "in": [
+                    "y_mnli"
+                ],
+                "out": [
+                    "y_ids_mnli"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_qnli"
+                ],
+                "out": [
+                    "x_qnli1",
+                    "x_qnli2"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_qnli1",
+                    "x_qnli2"
+                ],
+                "out": [
+                    "bert_features_qnli"
+                ]
+            },
+            {
+                "id": "vocab_qnli",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_qnli"
+                ],
+                "save_path": "{MODELS_PATH}/qnli.dict",
+                "load_path": "{MODELS_PATH}/qnli.dict",
+                "in": [
+                    "y_qnli"
+                ],
+                "out": [
+                    "y_ids_qnli"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_stsb"
+                ],
+                "out": [
+                    "x_stsb1",
+                    "x_stsb2"
+                ]
+            },
+                        {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "bert-base-uncased",
+                "max_seq_length": 128,
+                "in": [
+                    "x_stsb1",
+                    "x_stsb2"
+                ],
+                "out": [
+                    "bert_features_stsb"
+                ]
+            },
+            {
+                "id": "multitask_pal_bert",
+                "class_name": "multitask_pal_bert",
+                "pretrained_bert": "{PRETRAINED_BERT}/pytorch_model.bin",
+		"config_name": "configs/pals_config.json",
+                "optimizer_parameters": {
+                    "lr": 1e-6,
+                    "betas":[0.9,0.099],
+                    "eps":1e-8
+                },
+                "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+                "steps_per_epoch": "{STEPS_PER_EPOCH}",
+                "learning_rate_drop_patience": 2,
+                "learning_rate_drop_div": 2.0,
+                "log_model_summary": false,
+                "return_probas": true,
+                "save_path": "{MODELS_PATH}/modelbafse",
+                "load_path": "{MODELS_PATH}/modelbafse",
+                "tasks": {
+                    "cola": {
+                        "n_classes": "#vocab_cola.len"
+                    },
+                    "sst2": {
+                        "n_classes": "#vocab_qnli.len"
+                    },
+                    "qqp": {
+                        "n_classes": "#vocab_qqp.len"
+                    },
+                    "mrpc": {
+                        "n_classes":"#vocab_mrpc.len"
+                    },
+                    "rte": {
+                        "n_classes": "#vocab_rte.len"
+                    },
+                    "mnli": {
+                        "n_classes": "#vocab_mnli.len"
+                    },
+                    "qnli": {
+                        "n_classes": "#vocab_qnli.len"
+                    },
+                    "stsb": {
+                        "n_classes": 1
+                    }
+                },
+                "in_distribution": {
+                    "cola": 1,
+                    "sst2": 1,
+                    "qqp": 1,
+                    "mrpc": 1,
+                    "rte": 1,
+                    "mnli": 1,
+                    "qnli": 1,
+                    "stsb": 1
+                },
+                "in": [
+                    "task_id",
+                    "bert_features_cola",
+                    "bert_features_sst2",
+                    "bert_features_qqp",
+                    "bert_features_mrpc",
+                    "bert_features_rte",
+                    "bert_features_mnli",
+                    "bert_features_qnli",
+                    "bert_features_stsb"
+                ],
+                "in_y_distribution": {
+                    "cola": 1,
+                    "sst2": 1,
+                    "qqp": 1,
+                    "mrpc": 1,
+                    "rte": 1,
+                    "mnli": 1,
+                    "qnli": 1,
+                    "stsb": 1
+                },
+                "in_y": [
+                    "y_cola",
+                    "y_ids_sst2",
+                    "y_ids_qqp",
+                    "y_ids_mrpc",
+                    "y_ids_rte",
+                    "y_ids_mnli",
+                    "y_ids_qnli",
+                    "y_stsb"
+                ],
+                "out": [
+                    "y_cola_pred_probas",
+                    "y_sst2_pred_probas",
+                    "y_qqp_pred_probas",
+                    "y_mrpc_pred_probas",
+                    "y_rte_pred_probas",
+                    "y_mnli_pred_probas",
+                    "y_qnli_pred_probas",
+                    "y_stsb_pred_probas"
+                ]
+            },
+            {
+                "in": [
+                    "y_cola_pred_probas"
+                ],
+                "out": [
+                    "y_cola_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_sst2_pred_probas"
+                ],
+                "out": [
+                    "y_sst2_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_qqp_pred_probas"
+                ],
+                "out": [
+                    "y_qqp_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_mrpc_pred_probas"
+                ],
+                "out": [
+                    "y_mrpc_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_rte_pred_probas"
+                ],
+                "out": [
+                    "y_rte_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_mnli_pred_probas"
+                ],
+                "out": [
+                    "y_mnli_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_qnli_pred_probas"
+                ],
+                "out": [
+                    "y_qnli_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_rte_pred_ids"
+                ],
+                "out": [
+                    "y_rte_pred_labels"
+                ],
+                "ref": "vocab_rte"
+            },
+            {
+                "in": [
+                    "y_mnli_pred_ids"
+                ],
+                "out": [
+                    "y_mnli_pred_labels"
+                ],
+                "ref": "vocab_mnli"
+            },
+            {
+                "in": [
+                    "y_qnli_pred_ids"
+                ],
+                "out": [
+                    "y_qnli_pred_labels"
+                ],
+                "ref": "vocab_qnli"
+            }
+        ],
+        "out": [
+            "y_cola_pred_ids",
+            "y_sst2_pred_ids",
+            "y_qqp_pred_ids",
+            "y_mrpc_pred_ids",
+            "y_rte_pred_labels",
+            "y_mnli_pred_labels",
+            "y_qnli_pred_labels",
+            "y_stsb_pred_probas"
+        ]
+    },
+    "train": {
+        "epochs": "{NUM_TRAIN_EPOCHS}",
+        "batch_size": 8,
+        "metrics": [
+            {
+                "name": "multitask_accuracy",
+                "inputs": [
+                    "y_ids_rte",
+                    "y_ids_mnli",
+                    "y_ids_qnli",
+                    "y_ids_mrpc",
+                    "y_ids_cola",
+                    "y_ids_sst2",
+                    "y_ids_qqp",
+                    "y_rte_pred_ids",
+                    "y_mnli_pred_ids",
+                    "y_qnli_pred_ids",
+                    "y_mrpc_pred_ids",
+                    "y_cola_pred_ids",
+                    "y_sst2_pred_ids",
+                    "y_qqp_pred_ids"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "inputs": [
+                    "y_mrpc",
+                    "y_mrpc_pred_ids"
+                ]
+            },
+            {
+                "name": "spearman_correlation",
+                "inputs": [
+                    "y_stsb",
+                    "y_stsb_pred_probas"
+                ]
+            },
+            {
+                "name": "f1",
+                "inputs": [
+                    "y_ids_rte",
+                    "y_rte_pred_ids"
+                ]
+            }
+        ],
+        "validation_patience": 100,
+        "val_every_n_epochs": 1,
+        "log_every_n_epochs": 1,
+        "max_test_batches": 300,
+        "show_examples": true,
+        "evaluation_targets": [
+            "train"
+        ],
+        "class_name": "torch_trainer"
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "/cephfs/home/karpov.d/.deeppavlov",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "PRETRAINED_BERT": "{ROOT_PATH}/pretrained_bert_base",
+            "MODELS_PATH": "{ROOT_PATH}/models/fast1",
+            "GLUE_CSV": "{ROOT_PATH}/glue_csv/",
+            "NUM_TRAIN_EPOCHS": 500,
+            "STEPS_PER_EPOCH": 2400,
+            "GRADIENT_ACC_STEPS": 1
+        },
+        "download": [
+            {
+                "url": "https://huggingface.co/bert-base-uncased/resolve/main/pytorch_model.bin",
+                "subdir": "{PRETRAINED_BERT}"
+            }
+        ]
+    }
+}
