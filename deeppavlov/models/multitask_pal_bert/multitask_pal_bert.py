@@ -181,7 +181,7 @@ class MultiTaskPalBert(TorchModel):
             self.model.bert.load_state_dict(update)
             log.info("Bert Model Weights Loaded.")
         else:
-            raise ConfigError("No pre-trained BERT model is given.")
+            log.warning("No pre-trained BERT model is given.")
 
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
