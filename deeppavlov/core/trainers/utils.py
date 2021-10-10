@@ -53,9 +53,14 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
         prettified_metrics[key] = value
     return prettified_metrics
 
-
-class NumpyArrayEncoder(JSONEncoder):
+class NumpyArrayEncoder(json.JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, numpy.ndarray):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
             return obj.tolist()
-        return JSONEncoder.default(self, obj)
+        else:
+            return super(NumpyArrayEncoder, self).default(obj)
+
