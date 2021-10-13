@@ -4,7 +4,7 @@
     "data_path": "{DATA_PATH}"
   },
   "dataset_iterator": {
-    "class_name": "dialog_iterator"
+    "class_name": "md_yaml_dialogs_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -104,7 +104,7 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/gobot_md_yaml_minimal.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/gobot_md_yaml_minimal_2.tar.gz",
         "subdir": "{DATA_PATH}"
       }
     ]

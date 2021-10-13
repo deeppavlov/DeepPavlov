@@ -98,6 +98,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         actions_combinations = set()
         for dataset_split, domain_i in split2domain.items():
             actions_combinations.update({(ac,) for ac in domain_i.known_actions})
+            actions_combinations.update({(ac,) for ac in domain_i.response_templates})
         return actions_combinations
 
     def _extract_templates(self, split2domain: Dict[str, DomainKnowledge]):
@@ -210,6 +211,7 @@ class MockJSONNLGManager(NLGManagerInterface):
         Returns:
             the number of actions known to the NLG module
         """
+        raise Exception(str(len(self.action_tuples2ids.keys())))
         return len(self.action_tuples2ids.keys())
 
     def known_actions(self) -> List:
