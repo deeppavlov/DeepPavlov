@@ -29,10 +29,22 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.multitask_pal_bert.modeling import BertForMultiTask, BertConfig
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken, token_labels_to_subtoken_labels
+from deeppavlov.models.torch_bert.torch_transformers_squad import softmax_mask
 
 log = getLogger(__name__)
 
 VERY_LOW_VALUE = -99999
+
+def transform(list_of_features):
+    ans = {}
+    for feature in list_of_features:
+        for key in feature.__dict__:
+            if feature.__dict__[key] is not None:
+                if key not in ans:
+                    ans[key] = feature.__dict__[key]
+                else:
+                    ans[key] = torch.cat((ans[key],feature.__dict__[key]),0)
+    return ans
 
 @register('multitask_pal_bert')
 class MultiTaskPalBert(TorchModel):
@@ -78,7 +90,6 @@ class MultiTaskPalBert(TorchModel):
         clip_norm: Optional[float] = None,
         one_hot_labels: bool = False,
         multilabel: bool = False,
-        use_ner_subwords: bool=False,
         return_probas: bool = False,
         config_name: str =  "configs/pals_config.json",
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
@@ -97,12 +108,16 @@ class MultiTaskPalBert(TorchModel):
         self.tasks_num_classes = []
         self.tasks_type = []
         for task in tasks:
-            #print(tasks[task])
-            assert 'n_choices' in tasks[task] or 'n_classes' in tasks[task], 'Provide n_classes or n_choices'
+            if 'question_answering' not in tasks[task]:
+                assert 'n_choices' in tasks[task] or 'n_classes' in tasks[task], 'Provide n_classes or n_choices'
             n_classes = tasks[task].get("n_classes", 0)
             n_choices = tasks[task].get("n_choices", 0)
-            if n_choices > 0:
-                assert isinstance(n_choices, int)
+            is_question_answering = 'question_answering' in tasks[task] and n_classes == 0 and n_choices == 0
+            if is_question_answering:
+                self.tasks_type.append('question_answering')
+                self.tasks_num_classes.append(2)                
+            elif n_choices > 0:
+                assert isinstance(n_choices, int) and n_choices > 0
                 self.tasks_type.append('sequence_labeling')
                 self.tasks_num_classes.append(n_choices)
             elif n_classes == 1:
@@ -159,7 +174,9 @@ class MultiTaskPalBert(TorchModel):
 
         if self.pretrained_bert:
             partial = torch.load(self.pretrained_bert, map_location="cpu")
+            # print(partial.keys())
             model_dict = self.model.bert.state_dict()
+            # print(model_dict.keys())
             update = {}
             for n, p in model_dict.items():
                 if "aug" in n or "mult" in n:
@@ -288,6 +305,8 @@ class MultiTaskPalBert(TorchModel):
         for task_id in range(len(self.task_names)):
             task_features = in_by_tasks[self.task_names[task_id]][0]
             _input = {}
+            if isinstance(task_features, list):
+                task_features = transform(task_features)
             for elem in task_features.keys():
                 _input[elem] = task_features[elem].to(self.device)
 
@@ -297,7 +316,7 @@ class MultiTaskPalBert(TorchModel):
                     **_input
                 )
             if self.tasks_type[task_id] == "sequence_labeling":
-                #attn_mask = _input['attention_mask']
+                # attn_mask = _input['attention_mask']
                 logits = logits.cpu()
                 y_mask = _input['token_type_ids'].cpu()
                 logits = token_from_subtoken(logits,y_mask)
@@ -309,6 +328,38 @@ class MultiTaskPalBert(TorchModel):
                     seq_lengths = torch.sum(y_mask, dim=1).int()
                     pred = [p[:l] for l, p in zip(seq_lengths, pred)]
                 assert isinstance(pred,list)
+            elif self.tasks_type[task_id] == 'question_answering':
+                logits_start, logits_end = logits[0], logits[1]
+                bs, seq_len = _input['token_type_ids'].size()
+                mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
+                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
+                logit_mask = _input['token_type_ids'] + mask
+                logits_st = softmax_mask(logits_start, logit_mask)
+                logits_end = softmax_mask(logits_end, logit_mask)
+
+                start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
+                end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
+                # scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+
+                outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
+                                     end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
+                outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
+                    logits_end.size()[0], 1, logits_end.size()[1]))
+
+                context_max_len = torch.max(torch.sum(_input['token_type_ids'], dim=1)).to(torch.int64)
+
+                max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
+
+                outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
+                outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
+                    outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
+
+                start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
+                end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
+                logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
+                start_pred = start_pred.detach().cpu().numpy()
+                end_pred = end_pred.detach().cpu().numpy()
+                pred = [(pred1, pred2) for pred1, pred2 in zip(start_pred, end_pred)]
             elif self.tasks_type[task_id] in ["classification", "regression"]:
                 if self.tasks_type[task_id] == "regression":  # regression
                     pred = logits.squeeze(-1).detach().cpu().tolist()
@@ -350,32 +401,41 @@ class MultiTaskPalBert(TorchModel):
 
         task_features = in_by_tasks[self.task_names[task_id]][0]
         task_labels = in_y_by_tasks[self.task_names[task_id]][0]
-
+        if isinstance(task_features, list):
+            task_features = transform(task_features)
         _input = {}
+        #print(task_features.keys())
+        #breakpoint()
         for elem in ["input_ids", "attention_mask", "token_type_ids"]:
             if elem in task_features:
                 _input[elem] = task_features[elem].to(self.device)
         
         self.optimizer.zero_grad()
-        
         if self.tasks_type[task_id] == "regression":
             _input["labels"] = torch.tensor(
                 task_labels, dtype=torch.float32).to(self.device)
+        elif self.tasks_type[task_id] == "question_answering":
+                # start and end logits
+            _input["labels"] = [torch.tensor(label, dtype=torch.float32).to(self.device) for label in task_labels]
         else:
             try:
                 _input["labels"] = torch.tensor(
                     task_labels, dtype=torch.long).to(self.device)
-            except:
-                print('CHECK TASK_LABELS!!!!!')
+            except Exception as e:
+                print(f'CHECK TASK_LABELS {task_labels}')
+                print(e)
                 breakpoint()
+                raise e
         if self.tasks_type[task_id] == "sequence_labeling":
+            #token to subtoken
             subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
                            for y_el, y_mask, input_mask in zip(_input['labels'].detach().cpu().numpy(),
                                                                _input['token_type_ids'].detach().cpu().numpy(),
                                                                _input['attention_mask'].detach().cpu().numpy())]
             _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
+
         self.optimizer.zero_grad()
-        loss, logits = self.model(
+        loss, _ = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
         )
         loss = loss / self.gradient_accumulation_steps
@@ -468,6 +528,7 @@ class MultiTaskPalBert(TorchModel):
         task_names = flattened
 
         if args:
+            #print(f'Distributing {args}')
             if not ints:
                 distribution = {
                     task_name: len(in_distr) for task_name,
@@ -483,6 +544,7 @@ class MultiTaskPalBert(TorchModel):
             values_taken = 0
             for task_name in task_names:
                 n_args = distribution[task_name]
+                #breakpoint()
                 args_by_task[task_name] = [args[i]
                                            for i in range(values_taken, values_taken + n_args)]
                 values_taken += n_args

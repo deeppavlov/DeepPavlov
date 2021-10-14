@@ -148,6 +148,7 @@ def normalize_answer(s: str) -> str:
         return ''.join(ch for ch in text if ch not in exclude)
 
     def lower(text):
+        print(text)
         return text.lower()
 
     return white_space_fix(remove_articles(remove_punc(lower(s))))

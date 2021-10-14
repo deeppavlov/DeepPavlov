@@ -61,5 +61,8 @@ class MultiTaskReader(DatasetReader):
             reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
             log.info(f"Task: {task_name} data_path: {reader_params['data_path']}")
             data[task_name] = tasks[task_name].read(**reader_params)
+        #import _pickle as cPickle
+        #cPickle.dump(data,open('data.pkl','wb'))
+        #data['squad'] = data['ner']
         return data
 

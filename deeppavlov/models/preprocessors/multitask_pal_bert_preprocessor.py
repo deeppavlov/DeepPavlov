@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from typing import Iterable
 from logging import getLogger
 
 from deeppavlov.core.common.registry import register
@@ -30,15 +30,27 @@ class MultitaskPalBertPreprocessor(Component):
         self.n_task = len(kwargs["in"])
 
     def __call__(self, *args):
-        task_id = None
         out = []
+        #print('Preproc input')
+        #print(str(args))
         for task_no in range(self.n_task):
             examples = args[task_no]
+            # print(examples[:5])
             task_data = []
             for values in examples:
-                if task_id is None:
-                    task_id = values[0]
-                task_data.extend([*values[1:]])
+                if isinstance(values, Iterable):
+                    #print(values)
+                    task_id = task_no
+                    if isinstance(task_id, int):
+                        task_data.extend([*values[1:]])
+                    else:
+                        task_data.append(values)
+                else:
+                    pass
             if task_data:
                 out.append(tuple(task_data))
-        return [task_id, *out]
+        ans = [task_id, *out]
+        #print('Preproc output')
+        #print(ans)
+        # breakpoint()
+        return ans

@@ -46,8 +46,9 @@ class SquadDatasetReader(DatasetReader):
     url_squad = 'http://files.deeppavlov.ai/datasets/squad-v1.1.tar.gz'
     url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
-
-    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs) \
+    def __init__(self, return_list=False):
+        super(SquadDatasetReader, self).__init__()
+    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD',data_path: Optional[str] = None, url: Optional[str] = None, *args, **kwargs) \
             -> Dict[str, Dict[str, Any]]:
         """
 
@@ -88,7 +89,7 @@ class SquadDatasetReader(DatasetReader):
                 dataset['valid'] = data
             else:
                 dataset['train'] = data
-
+        dataset['test'] = dataset['valid']
         return dataset
 
 

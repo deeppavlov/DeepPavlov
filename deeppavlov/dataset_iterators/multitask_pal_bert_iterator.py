@@ -29,6 +29,42 @@ def is_nan(x):
        return any([len(x[0])>=2 and (x[0][0]!=x[0][0] or x[0][1]!=x[0][1]),
                x[0]!=x[0], len(x)>2 and x[1]!=x[1]])
 
+@register('checker')
+class Checker:
+    def __call__(self,*args,**kwargs):
+        ffd=args
+        return [1]
+    def __init__(self,*args,**kwargs):
+        pass
+
+@register('tuple_splitter')
+class TupleSplitter:
+    '''
+    Split the tuple
+    '''
+    def __call__(self, *args,**kwargs):
+        #print('Args to joiner'+str(args))
+        #print('KWARGS to joiner '+str(kwargs))
+        assert args or kwargs
+        return [k[0] for k in args[0]],[k[1] for k in args[0]]
+    def __init__(self, *args, **kwargs):
+        pass
+ 
+
+@register('squad_bert_label_preparer')
+class TupleJoiner:
+    '''
+    Prepare the tuple of squad args to dict format needed for multitask pal-BERT
+    '''
+    def __call__(self, *args,**kwargs):
+        #print('Args to joiner '+str(args))
+        #print('KWARGS to joiner '+str(kwargs))
+        assert args and len(args) == 2, args
+        return {'ans_start_squad': args[0], 'ans_end_squad': args[1]}
+    def __init__(self, *args, **kwargs):
+        pass
+
+
 @register('multitask_pal_bert_iterator')
 class MultiTaskPalBertIterator:
     """
@@ -60,6 +96,7 @@ class MultiTaskPalBertIterator:
                 "iterator_class_name"
             ]
             del task_iterator_params["iterator_class_name"]
+            #print(f"Making iterator for {task_name}")
             self.task_iterators[task_name] = from_params(
                 task_iterator_params, data=data[task_name]
             )
@@ -80,6 +117,10 @@ class MultiTaskPalBertIterator:
                     if is_nan(self.data[type_][task][i]):
                        del self.data[type_][task][i]
                        print('NAN CLEARED')
+        print(f'Len {len(self.data["train"])}')
+        #breakpoint()
+        self.data["all"] = self._unite_dataset_parts(
+            self.data["train"], self.data["valid"], self.data["test"])
         self.max_task_data_len = {}
         for data_type in self.data.keys():
             self.max_task_data_len[data_type] = max(
@@ -192,6 +233,8 @@ class MultiTaskPalBertIterator:
                     tuple(zip(*y_instances)),
                 )
                 self.steps_taken += 1
+                #print('Iterator returns '+str(batchs))
+                #breakpoint()
                 yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
@@ -215,6 +258,8 @@ class MultiTaskPalBertIterator:
                     y_instances.append(task_batch[1])
                 batchs = (self.add_task_id(-1, x_instances),
                           tuple(zip(*y_instances)))
+                #print('Iterator returns '+str(batchs))
+                #breakpoint()
                 yield batchs
 
     def add_task_id(self, task_id, x_instances):

@@ -1,0 +1,388 @@
+{
+	"dataset_reader": {
+		"class_name": "multitask_reader",
+		"data_path": "null",
+		"tasks": {
+			"squad": {
+				"reader_class_name": "squad_dataset_reader",
+				"dataset": "SberSQuADClean",
+				"url": "http://files.deeppavlov.ai/datasets/sber_squad_clean-v1.1.tar.gz",
+                                "data_path":"{DATA}/squad",
+                                "dir_path":"{DATA}/squad",
+                                "return_list":true
+			},
+			"relations": {
+				"reader_class_name": "paraphraser_reader",
+				"data_path": "{DATA}/relation_ranking_rus",
+				"do_lower_case": false
+			},
+			"ner": {
+				"reader_class_name": "conll2003_reader",
+				"data_path": "{DATA}/total_rus_lowercase/",
+				"dataset_name": "collection_rus",
+				"provide_pos": false
+			}
+		}
+	},
+	"dataset_iterator": {
+		"class_name": "multitask_pal_bert_iterator",
+		"num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+		"steps_per_epoch": "{STEPS_PER_EPOCH}",
+		"gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+		"tasks": {
+			"squad": {
+				"iterator_class_name": "squad_iterator",
+				"seed": 1337,
+				"shuffle": true
+			},
+			"relations": {
+				"iterator_class_name": "siamese_iterator",
+				"seed": 243,
+				"len_valid": 500
+			},
+			"ner": {
+				"iterator_class_name": "basic_classification_iterator",
+				"seed": 12
+			}
+		}
+	},
+	"chainer": {
+		"in": [
+			"x_squad_with_id",
+			"x_relations_with_id",
+			"x_ner_with_id"
+		],
+		"in_y": [
+			"y_squad",
+			"y_relations",
+			"y_ner"
+		],
+		"pipe": [
+			{
+				"class_name": "multitask_pal_bert_preprocessor",
+				"in": [
+					"x_squad_with_id",
+					"x_relations_with_id",
+					"x_ner_with_id"
+				],
+				"out": [
+					"task_id",
+					"x_squad",
+					"x_relations",
+					"x_ner"
+				]
+			},
+			{
+				"class_name":"tuple_splitter",
+				"in": ["x_squad"],
+				"out":["context_raw_squad","question_raw_squad"]
+			},
+			{"class_name":"tuple_splitter","is_y":true,"in":["y_squad"],
+				"out":["ans_raw_squad","ans_raw_start_squad"]},
+			{"class_name":"checker","in":[					"x_squad_with_id",
+				"x_relations_with_id",
+				"x_ner_with_id","y_squad","y_relations","y_ner"],"out":["dummy"]},
+			{
+				"class_name": "torch_squad_transformers_preprocessor",
+				"vocab_file": "{TRANSFORMER}",
+				"do_lower_case": "{LOWERCASE}",
+				"max_seq_length": 384,
+				"return_tokens": true,
+				"return_dict": false,
+				"in": ["question_raw_squad", "context_raw_squad"],
+				"out": [
+					"bert_features_squad",
+					"subtokens_squad"
+				]
+			},
+			{
+				"class_name": "squad_bert_mapping",
+				"do_lower_case": "{LOWERCASE}",
+				"in": [
+					"context_raw_squad",
+					"bert_features_squad",
+					"subtokens_squad"
+				],
+				"out": [
+					"subtok2chars_squad",
+					"char2subtoks_squad"
+				]
+			},
+			{
+				"class_name": "squad_bert_ans_preprocessor",
+				"do_lower_case": "{LOWERCASE}",
+				"in": [
+					"ans_raw_squad",
+					"ans_raw_start_squad",
+					"char2subtoks_squad"
+				],
+				"out": [
+					"ans_squad",
+					"ans_start_squad",
+					"ans_end_squad"
+				]
+			},
+			{
+				"class_name": "squad_bert_label_preparer",
+				"in": [
+					"ans_start_squad",
+					"ans_end_squad"
+				], "out": ["ans_startend_squad"]
+			},
+			{
+				"class_name": "input_splitter",
+				"keys_to_extract": [
+					0,
+					1
+				],
+				"in": [
+					"x_relations"
+				],
+				"out": [
+					"x_relations1",
+					"x_relations2"
+				]
+			},
+			{
+				"class_name": "torch_transformers_preprocessor",
+				"vocab_file": "{TRANSFORMER}",
+				"do_lower_case": "{LOWERCASE}",
+				"max_seq_length": 128,
+				"in": [
+					"x_relations1",
+					"x_relations2"
+				],
+				"out": [
+					"bert_features_relations"
+				]
+			},
+			{
+				"id": "vocab_relations",
+				"class_name": "simple_vocab",
+				"fit_on": [
+					"y_relations"
+				],
+				"save_path": "{MODELS_PATH}/relations.dict",
+				"load_path": "{MODELS_PATH}/relations.dict",
+				"in": [
+					"y_relations"
+				],
+				"out": [
+					"y_ids_relations"
+				]
+			},
+			{
+				"class_name": "torch_transformers_ner_preprocessor",
+				"vocab_file": "{TRANSFORMER}",
+				"return_features": true,
+				"do_lower_case": "{LOWERCASE}",
+				"max_seq_length": 512,
+				"max_subword_length": 15,
+				"token_masking_prob": 0.0,
+				"in": [
+					"x_ner"
+				],
+				"out": [
+					"bert_features_ner"
+				]
+			},
+			{
+				"id": "vocab_ner",
+				"class_name": "simple_vocab",
+				"unk_token": [
+					"O"
+				],
+				"pad_with_zeros": true,
+				"save_path": "{MODELS_PATH}/tag.dict",
+				"load_path": "{MODELS_PATH}/tag.dict",
+				"fit_on": [
+					"y_ner"
+				],
+				"in": [
+					"y_ner"
+				],
+				"out": [
+					"y_ids_ner"
+				]
+			},
+			{
+				"id": "multitask_pal_bert",
+				"class_name": "multitask_pal_bert",
+				"pretrained_bert": "{TRANSFORMER}",
+				"config_name": "configs/pals_multilin_config.json",
+				"optimizer_parameters": {
+					"lr": 5e-6,
+					"betas": [0.9, 0.99],
+					"eps": 1e-6
+				},
+				"gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+				"steps_per_epoch": "{STEPS_PER_EPOCH}",
+				"learning_rate_drop_patience": 5,
+				"learning_rate_drop_div": 2.5,
+				"return_probas": false,
+				"log_model_summary": false,
+				"save_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
+				"load_path": "{MODELS_PATH}/modelseqlabbF13kc2d2",
+				"tasks": {
+					"squad": {
+						"question_answering": true
+					},
+					"relations": {
+						"n_classes": "#vocab_relations.len"
+					},
+					"ner": {
+						"n_choices": "#vocab_ner.len"
+					}
+				},
+				"in_distribution": {
+					"squad": 1,
+					"relations": 1,
+					"ner": 1
+				},
+				"in": [
+					"task_id",
+					"bert_features_squad",
+					"bert_features_relations",
+					"bert_features_ner"
+				],
+				"in_y_distribution": {
+					"squad": 1,
+					"relations": 1,
+					"ner": 1
+				},
+				"in_y": [
+					"ans_startend_squad",
+					"y_ids_relations",
+					"y_ids_ner"
+				],
+				"out": [
+					"ans_start_end_squad_predicted",
+					"y_relations_pred_ids",
+					"y_ner_pred_ids"
+				]
+			},
+			{
+				"class_name":"tuple_splitter",
+				"in": ["ans_start_end_squad_predicted"],
+				"out":["ans_start_squad_predicted","ans_end_squad_predicted"]
+			},
+			{
+				"class_name": "squad_bert_ans_postprocessor",
+				"in": [
+					"ans_start_squad_predicted",
+					"ans_end_squad_predicted",
+					"context_raw_squad",
+					"bert_features_squad",
+					"subtok2chars_squad",
+					"subtokens_squad"
+				],
+				"out": [
+					"ans_squad_predicted",
+					"ans_start_squad_predicted",
+					"ans_end_squad_predicted"
+				]
+			},
+			{
+				"in": [
+					"y_relations_pred_ids"
+				],
+				"out": [
+					"y_relations_pred_labels"
+				],
+				"ref": "vocab_relations"
+			},
+			{
+				"in": [
+					"y_ner_pred_ids"
+				],
+				"out": [
+					"y_ner_pred_labels"
+				],
+				"ref": "vocab_ner"
+			}
+		],
+		"out": [
+			"ans_squad_predicted",
+			"y_relations_pred_labels",
+			"y_ner_pred_labels"
+		]
+	},
+	"train": {
+		"epochs": "{NUM_TRAIN_EPOCHS}",
+		"batch_size": 8,
+		"metrics": [{
+				"name": "squad_v1_f1",
+				"inputs": [
+					"ans_squad",
+					"ans_squad_predicted"
+				]
+			},
+			{
+				"name": "squad_v1_em",
+				"inputs": [
+					"ans_squad",
+					"ans_squad_predicted"
+				]
+			},
+			{
+				"name": "squad_v2_f1",
+				"inputs": [
+					"ans_squad",
+					"ans_squad_predicted"
+				]
+			},
+			{
+				"name": "squad_v2_em",
+				"inputs": [
+					"ans_squad",
+					"ans_squad_predicted"
+				]
+			}, {
+				"name": "ner_f1",
+				"inputs": [
+					"y_ner",
+					"y_ner_pred_labels"
+				]
+			},
+			{
+				"name": "ner_token_f1",
+				"inputs": [
+					"y_ner",
+					"y_ner_pred_labels"
+				]
+			},
+			{
+				"name": "f1_macro",
+				"inputs": [
+					"y_relations",
+					"y_relations_pred_labels"
+				]
+			}
+		],
+		"validation_patience": 5,
+		"val_every_n_epochs": 1,
+		"log_every_n_epochs": 1,
+		"show_examples": true,
+		"evaluation_targets": [
+
+			"valid", "train", "test"
+		],
+		"class_name": "torch_trainer"
+	},
+
+	"metadata": {
+		"variables": {
+			"ROOT_PATH": "/cephfs/home/karpov.d",
+			"DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+			"TRANSFORMER": "DeepPavlov/rubert-base-cased",
+			"PRETRAINED_BERT": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/pytorch_model.bin",
+			"VOCAB": "{ROOT_PATH}/.deeppavlov/models/rubert_base_cased/vocab.txt",
+			"MODELS_PATH": "{ROOT_PATH}/.deeppavlov/modedfl3",
+			"DATA": "{ROOT_PATH}/Data",
+			"NUM_TRAIN_EPOCHS": 1000,
+			"STEPS_PER_EPOCH": 11000,
+                        "LOWERCASE":false,
+			"GRADIENT_ACC_STEPS": 1
+		}
+	}
+}

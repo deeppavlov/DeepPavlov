@@ -22,7 +22,7 @@ import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
 import numpy as np
 
-from transformers import AutoTokenizer, BertTokenizer
+from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 from transformers.tokenization_utils_base import BatchEncoding
 
@@ -65,7 +65,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -147,7 +147,7 @@ class TorchTransformersPreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -214,7 +214,7 @@ class TorchSquadTransformersPreprocessor(Component):
         self.add_token_type_ids = add_token_type_ids
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+            self.tokenizer = AutoTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -261,15 +261,13 @@ class TorchSquadTransformersPreprocessor(Component):
                                                                 torch.ones(1, len_b, dtype=int)), dim=1)
                 else:
                     encoded_dict['token_type_ids'] = torch.tensor([0])
-
             curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
-                                          attention_mask=encoded_dict['attention_mask'],
-                                          token_type_ids=encoded_dict['token_type_ids'],
-                                          label=None)
+                                        attention_mask=encoded_dict['attention_mask'],
+                                        token_type_ids=encoded_dict['token_type_ids'],
+                                        label=None)
             input_features.append(curr_features)
             if self.return_tokens:
                 tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
-
         if self.return_tokens:
             return input_features, tokens
         else:
@@ -320,7 +318,7 @@ class TorchTransformersNerPreprocessor(Component):
         self.subword_mask_mode = subword_mask_mode
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = BertTokenizer(vocab_file,do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer(vocab_file,do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
