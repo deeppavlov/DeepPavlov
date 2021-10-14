@@ -211,7 +211,6 @@ class MockJSONNLGManager(NLGManagerInterface):
         Returns:
             the number of actions known to the NLG module
         """
-        raise Exception(str(len(self.action_tuples2ids.keys())))
         return len(self.action_tuples2ids.keys())
 
     def known_actions(self) -> List:
