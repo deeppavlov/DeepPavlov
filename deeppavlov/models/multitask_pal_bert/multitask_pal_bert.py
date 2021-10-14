@@ -382,10 +382,11 @@ class MultiTaskPalBert(TorchModel):
         try:
             loss.backward()
         except RuntimeError:
+            message = (f"More different classes found in task {self.task_names[task_id]} "
+                       f"than {self.tasks_num_classes[task_id]}")
+            print(message)
             breakpoint()
-            raise ValueError(
-                f"More different classes found in task {self.task_names[task_id]} "
-                f"than {self.tasks_num_classes[task_id]}")
+            raise ValueError(message)
 
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
