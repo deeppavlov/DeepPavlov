@@ -108,7 +108,6 @@ class BertConfig(object):
         config = BertConfig(vocab_size=None)
         for (key, value) in six.iteritems(json_object):
             config.__dict__[key] = value
-        
         return config
 
     @classmethod
@@ -172,7 +171,6 @@ class BERTAttention(nn.Module):
 class BERTPals(nn.Module):
     def __init__(self, config, extra_dim=None):
         super(BERTPals, self).__init__()
-        #assert config.hidden_size_aug == 204
         # Encoder and decoder matrices project down to the smaller dimension
         self.aug_dense = nn.Linear(config.hidden_size, config.hidden_size_aug)
         self.aug_dense2 = nn.Linear(config.hidden_size_aug, config.hidden_size)
