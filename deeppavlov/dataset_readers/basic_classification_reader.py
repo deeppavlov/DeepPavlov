@@ -35,24 +35,25 @@ class BasicClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
+             float_labels: bool = False,
              *args, **kwargs) -> dict:
         """
         Read dataset from data_path directory.
         Reading files are all data_types + extension
         (i.e for data_types=["train", "valid"] files "train.csv" and "valid.csv" form
         data_path will be read)
-
         Args:
             data_path: directory with files
             url: download data files if data_path not exists or empty
             format: extension of files. Set of Values: ``"csv", "json"``
             class_sep: string separator of labels in column with labels
             sep (str): delimeter for ``"csv"`` files. Default: None -> only one class per sample
+            float_labels (boolean): if True and class_sep is not None, we treat all classes as float
+            quotechar (str): what char we consider as quote in the dataset
             header (int): row number to use as the column names
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
             lines (boolean): read the file as a json object per line. Default: ``False``
-
         Returns:
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
@@ -80,7 +81,7 @@ class BasicClassificationDatasetReader(DatasetReader):
             file = Path(data_path).joinpath(file_name)
             if file.exists():
                 if format == 'csv':
-                    keys = ('sep', 'header', 'names')
+                    keys = ('sep', 'header', 'names', 'quotechar')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_csv(file, **options)
                 elif format == 'json':
@@ -92,22 +93,27 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                if isinstance(x, list):
-                    if class_sep is None:
-                        # each sample is a tuple ("text", "label")
-                        data[data_type] = [([row[x_] for x_ in x], str(row[y]))
-                                           for _, row in df.iterrows()]
-                    else:
-                        # each sample is a tuple ("text", ["label", "label", ...])
-                        data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep))
-                                           for _, row in df.iterrows()]
-                else:
-                    if class_sep is None:
-                        # each sample is a tuple ("text", "label")
-                        data[data_type] = [(row[x], str(row[y])) for _, row in df.iterrows()]
-                    else:
-                        # each sample is a tuple ("text", ["label", "label", ...])
-                        data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
+                data[data_type] = []
+                i = 0
+                prev_n_classes = 0  # to capture samples with different n_classes
+                for _, row in df.iterrows():
+                     if isinstance(x, list):
+                         sample = [row[x_] for x_ in x]
+                     else:
+                         sample = row[x]
+                     label = str(row[y])
+                     if class_sep:
+                         label = str(row[y]).split(class_sep)
+                         if prev_n_classes == 0:
+                             prev_n_classes = len(label)
+                         assert len(label) == prev_n_classes, f"Wrong class number at {i} row"
+                     if float_labels:
+                         label = [float(k) for k in label]                      
+                     if sample == sample and label == label:  # not NAN
+                         data[data_type].append((sample, label))
+                     else:
+                         log.warning(f'Skipping NAN received in file {file} at {i} row')
+                     i += 1
             else:
                 log.warning("Cannot find {} file".format(file))
 

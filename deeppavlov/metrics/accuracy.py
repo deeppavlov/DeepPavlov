@@ -52,6 +52,21 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
 def multitask_accuracy(*args) -> float:
     """
     Accuracy for multiple simultaneous tasks.
+    Args:
+        *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks,
+            and the last `n` are the predicted ones.
+    Returns:
+        The percentage of inputs where the answers for all `n` tasks are correct.
+    """
+    n = len(args)
+    y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
+    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
+    return accuracy(y_true, y_predicted)
+    
+@register_metric('multitask_glue_accuracy')
+def multitask_glue_accuracy(*args) -> float:
+    """
+    Accuracy for multiple simultaneous tasks.
 
     Args:
         *args: a list of `2n` inputs. The first `n` inputs are the correct answers for `n` tasks,
@@ -60,10 +75,22 @@ def multitask_accuracy(*args) -> float:
     Returns:
         The percentage of inputs where the answers for all `n` tasks are correct.
     """
+    names = ["rte","mnli","qnli","mrpc","cola","sst","qqp"]
     n = len(args)
+    ans=dict()
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
-    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
-    return accuracy(y_true, y_predicted)
+    for true,pred,name in zip(y_true_by_tasks, y_predicted_by_tasks,names):
+        true = [int(s) for s in true]
+        assert len(true) == len(pred)
+        print(name)
+        print(true[:3])
+        print(pred[:10])
+        ans[name] = accuracy(true,pred)
+    print(ans)
+    ans = sum(ans.values())/len(ans)
+    #if ans<0.3 or True:
+        #breakpoint()
+    return ans
 
 
 @register_metric('multitask_sequence_accuracy')

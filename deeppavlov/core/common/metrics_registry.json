@@ -15,6 +15,8 @@
   "matthews_correlation": "deeppavlov.metrics.correlation:matthews_correlation",
   "mean_squared_error": "deeppavlov.metrics.mse:mse",
   "multitask_accuracy": "deeppavlov.metrics.accuracy:multitask_accuracy",
+  "multitask_glue_accuracy": "deeppavlov.metrics.accuracy:multitask_glue_accuracy",
+
   "multitask_sequence_accuracy": "deeppavlov.metrics.accuracy:multitask_sequence_accuracy",
   "multitask_token_accuracy": "deeppavlov.metrics.accuracy:multitask_token_accuracy",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",

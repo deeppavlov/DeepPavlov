@@ -94,6 +94,7 @@ class MultiTaskPalBert(TorchModel):
         self.one_hot_labels = one_hot_labels
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
+        #raise Exception(self.task_names)
         self.tasks_num_classes = []
         self.tasks_type = []
         for task in tasks:
@@ -297,7 +298,7 @@ class MultiTaskPalBert(TorchModel):
                     **_input
                 )
             if self.tasks_type[task_id] == "sequence_labeling":
-                attn_mask = _input['attention_mask']
+                #attn_mask = _input['attention_mask']
                 logits = logits.cpu()
                 y_mask = _input['token_type_ids'].cpu()
                 logits = token_from_subtoken(logits,y_mask)
@@ -312,7 +313,7 @@ class MultiTaskPalBert(TorchModel):
             elif self.tasks_type[task_id] in ["classification", "regression"]:
                 if self.tasks_type[task_id] == "regression":  # regression
                     pred = logits.squeeze(-1).detach().cpu().tolist()
-                if self.return_probas:
+                elif self.return_probas:
                     pred = torch.nn.functional.softmax(logits, dim=-1)
                     pred = pred.detach().cpu().numpy()
                 else:
@@ -320,6 +321,11 @@ class MultiTaskPalBert(TorchModel):
                     pred = np.argmax(logits, axis=1)
             else:
                 raise NotImplementedError(f'Unsupported type {self.tasks_type[task_id]}')
+            try:
+                assert np.isfinite(pred).all()
+            except:
+                print('INFINITE PRED')
+                breakpoint()
             self.validation_predictions.append(pred)
         return self.validation_predictions
 
@@ -357,8 +363,12 @@ class MultiTaskPalBert(TorchModel):
             _input["labels"] = torch.tensor(
                 task_labels, dtype=torch.float32).to(self.device)
         else:
-            _input["labels"] = torch.tensor(
-                task_labels, dtype=torch.long).to(self.device)
+            try:
+                _input["labels"] = torch.tensor(
+                    task_labels, dtype=torch.long).to(self.device)
+            except:
+                print('CHECK TASK_LABELS!!!!!')
+                breakpoint()
         if self.tasks_type[task_id] == "sequence_labeling":
             subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
                            for y_el, y_mask, input_mask in zip(_input['labels'].detach().cpu().numpy(),
@@ -366,14 +376,19 @@ class MultiTaskPalBert(TorchModel):
                                                                _input['attention_mask'].detach().cpu().numpy())]
             _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
+        #print('labels')
+        #print(_input['labels'])
         loss, logits = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
         )
-
+        #pred = torch.nn.functional.softmax(logits, dim=-1)
+        #print('pred')
+        #print(pred)
         loss = loss / self.gradient_accumulation_steps
         try:
             loss.backward()
         except RuntimeError:
+            breakpoint()
             raise ValueError(
                 f"More different classes found in task {self.task_names[task_id]} "
                 f"than {self.tasks_num_classes[task_id]}")
@@ -391,6 +406,10 @@ class MultiTaskPalBert(TorchModel):
                 self.lr_scheduler.step()  # Update learning rate schedule
             self.optimizer.zero_grad()
         self.train_losses[task_id] = loss.item()
+        if not all([np.isfinite(s) or (type(s) == list and len(s)==0) for s in self.train_losses]):
+            print('NAN IN LOSSES FOUND!!!!!!!!!!!!!')
+            breakpoint()
+            
         self.steps_taken += 1
         return {"losses": self.train_losses}
 

@@ -25,6 +25,10 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 log = getLogger(__name__)
 
 
+def is_nan(x):
+       return any([len(x[0])>=2 and (x[0][0]!=x[0][0] or x[0][1]!=x[0][1]),
+               x[0]!=x[0], len(x)>2 and x[1]!=x[1]])
+
 @register('multitask_pal_bert_iterator')
 class MultiTaskPalBertIterator:
     """
@@ -70,8 +74,12 @@ class MultiTaskPalBertIterator:
             "valid": self._extract_data_type("valid"),
             "test": self._extract_data_type("test"),
         }
-        self.data["all"] = self._unite_dataset_parts(
-            self.data["train"], self.data["valid"], self.data["test"])
+        for type_ in self.data: 
+            for task in self.data[type_]:
+                for i in range(len(self.data[type_][task])-1,-1,-1):
+                    if is_nan(self.data[type_][task][i]):
+                       del self.data[type_][task][i]
+                       print('NAN CLEARED')
         self.max_task_data_len = {}
         for data_type in self.data.keys():
             self.max_task_data_len[data_type] = max(
