@@ -26,11 +26,9 @@ from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
     Calculate accuracy in terms of absolute coincidence
-
     Args:
         y_true: array of true values
         y_predicted: array of predicted values
-
     Returns:
         fraction of absolutely coincidental samples
     """
