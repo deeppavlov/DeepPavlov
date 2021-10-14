@@ -94,7 +94,6 @@ class MultiTaskPalBert(TorchModel):
         self.one_hot_labels = one_hot_labels
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
-        #raise Exception(self.task_names)
         self.tasks_num_classes = []
         self.tasks_type = []
         for task in tasks:
