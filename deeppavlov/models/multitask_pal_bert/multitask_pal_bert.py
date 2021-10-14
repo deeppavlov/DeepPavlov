@@ -375,14 +375,9 @@ class MultiTaskPalBert(TorchModel):
                                                                _input['attention_mask'].detach().cpu().numpy())]
             _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
-        #print('labels')
-        #print(_input['labels'])
         loss, logits = self.model(
             task_id=task_id, name=self.tasks_type[task_id], **_input
         )
-        #pred = torch.nn.functional.softmax(logits, dim=-1)
-        #print('pred')
-        #print(pred)
         loss = loss / self.gradient_accumulation_steps
         try:
             loss.backward()
