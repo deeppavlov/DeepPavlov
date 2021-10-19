@@ -54,7 +54,6 @@ Welcome to DeepPavlov's documentation!
    Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
    Frequently Asked Questions Answering <features/skills/faq>
-   DSL <features/skills/dsl_skill>
 
 
 .. toctree::
