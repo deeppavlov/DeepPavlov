@@ -1,6 +1,5 @@
 {
   "UD_pymorphy_lemmatizer": "deeppavlov.models.morpho_tagger.lemmatizer:UDPymorphyLemmatizer",
-  "aiml_skill": "deeppavlov.skills.aiml_skill.aiml_skill:AIMLSkill",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "base64_decode_bytesIO": "deeppavlov.models.nemo.common:ascii_to_bytes_io",

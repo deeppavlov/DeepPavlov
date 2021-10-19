@@ -190,7 +190,7 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['aiml', 'bert_dp', 'bs4', 'faiss', 'fastText', 'fasttext', 'gensim', 'hdt', 'kenlm', 'librosa',
+autodoc_mock_imports = ['bert_dp', 'bs4', 'faiss', 'fastText', 'fasttext', 'gensim', 'hdt', 'kenlm', 'librosa',
                         'lxml', 'nemo', 'nemo_asr', 'nemo_tts', 'nltk', 'opt_einsum', 'rapidfuzz', 'rasa',
                         'russian_tagsets', 'sacremoses', 'sortedcontainers', 'spacy', 'tensorflow', 'tensorflow_hub',
                         'torch', 'transformers', 'udapi', 'ufal_udpipe', 'whapi', 'xeger']

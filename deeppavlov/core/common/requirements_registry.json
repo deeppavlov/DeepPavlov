@@ -3,9 +3,6 @@
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "aiml_skill": [
-    "{DEEPPAVLOV_PATH}/requirements/aiml_skill.txt"
-  ],
   "bert_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
