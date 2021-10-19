@@ -34,11 +34,13 @@ class FilePathsReader(DatasetReader):
              *args, **kwargs) -> Dict:
         """
         Find all file paths by a data path glob
+
         Args:
             data_path: directory with data
             train: data path glob relative to data_path
             valid: data path glob relative to data_path
             test: data path glob relative to data_path
+
         Returns:
             A dictionary containing training, validation and test parts of the dataset obtainable via ``train``,
             ``valid`` and ``test`` keys.
