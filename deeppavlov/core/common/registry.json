@@ -47,8 +47,6 @@
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
   "elmo_embedder": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
-  "elmo_file_paths_iterator": "deeppavlov.dataset_iterators.elmo_file_paths_iterator:ELMoFilePathsIterator",
-  "elmo_model": "deeppavlov.models.elmo.elmo:ELMo",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_detection_parser": "deeppavlov.models.kbqa.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.kbqa.entity_linking:EntityLinker",
