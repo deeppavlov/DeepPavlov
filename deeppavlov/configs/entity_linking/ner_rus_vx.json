@@ -25,12 +25,18 @@
         "class_name": "ner_chunk_model",
         "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert.json"},
         "ner_parser": "#edp",
-        "lemmatize": true,
         "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"]
+      },
+      {
+        "class_name": "ner_postprocessor",
+        "lemmatize": true,
+        "in": ["x", "entity_substr", "entity_offsets", "tags", "sentences", "probas"],
+        "out": ["new_entity_substr", "new_entity_lemm_substr", "new_entity_offsets", "new_entity_init_offsets", "new_tags", "new_probas"]
       }
     ],
-    "out": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"]
+    "out": ["new_entity_substr", "new_entity_lemm_substr", "new_entity_offsets", "new_entity_init_offsets", "new_tags",
+            "sentences_offsets", "sentences", "new_probas"]
   },
   "metadata": {
     "variables": {

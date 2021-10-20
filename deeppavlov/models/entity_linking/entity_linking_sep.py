@@ -59,8 +59,6 @@ class NerChunkModel(Component):
         """
         self.ner = ner
         self.ner_parser = ner_parser
-        self.morph = pymorphy2.MorphAnalyzer()
-        self.lemmatize = lemmatize
 
     def __call__(self, text_batch_list: List[List[str]],
                  nums_batch_list: List[List[int]],
@@ -197,53 +195,102 @@ class NerChunkModel(Component):
         doc_entity_offsets_batch.append(doc_entity_offsets)
         doc_sentences_offsets_batch.append(doc_sentences_offsets)
         doc_sentences_batch.append(doc_sentences)
-        
-        text_batch = [" ".join(doc_sentences) for doc_sentences in doc_sentences_batch]
-        doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, doc_probas_batch = \
-            self.sanitize_entity_substr(doc_entity_substr_batch, text_batch, doc_entity_offsets_batch, doc_tags_batch,
-                                        doc_probas_batch)
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_tags_batch, \
                doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
-               
-    def sanitize_entity_substr(self, entity_substr_batch: List[List[str]], text_batch: List[str],
-                                     doc_entity_offsets_batch: List[List[List[int]]], doc_tags_batch: List[List[str]],
-                                     doc_probas_batch: List[List[Any]]):
+    
+    
+@register('ner_postprocessor')
+class NerPostprocessor:
+    def __init__(self, lemmatize: bool = False, **kwargs):
+        self.morph = pymorphy2.MorphAnalyzer()
+        self.lemmatize = lemmatize
+        
+    def __call__(self, text_batch: List[str], entity_substr_batch: List[List[str]],
+                   entity_offsets_batch: List[List[List[int]]], entity_tags_batch: List[List[str]],
+                   sentences_batch: List[List[str]], entity_probas_batch: List[List[Any]]):
         replace_list = [(" ' ", ' "'), (" '", '"'), ("' ", '"'), ("« ", "«"), (" »", "»"), ("- ", "-"), (" -", "-"),
-                        ("  ", " ")]
+                        (" ’ s", "’s"), ("( ", "("), (" )", ")"), ("{ ", "{"), (" }", "}"), (" :", ":"), ("№ ", "№"),
+                        (" ,", ","), ("  ", " ")]
+        delete_list = [("{", ''), ("}", ''), ("(", ' '), (")", ' '), ("  ", " ")]
         new_entity_substr_batch = []
+        new_entity_lemm_substr_batch = []
         new_entity_offsets_batch = []
+        new_entity_init_offsets_batch = []
         new_entity_tags_batch = []
         new_entity_probas_batch = []
-        for entity_substr_list, text, entity_offsets_list, doc_tags_list, doc_probas_list in \
-                zip(entity_substr_batch, text_batch, doc_entity_offsets_batch, doc_tags_batch, doc_probas_batch):
+        for entity_substr_list, text, sentences_list, entity_offsets_list, entity_tags_list, entity_probas_list in \
+                zip(entity_substr_batch, text_batch, sentences_batch, entity_offsets_batch, entity_tags_batch, entity_probas_batch):
+            entity_info = list(zip(entity_substr_list, entity_offsets_list, entity_tags_list, entity_probas_list))
+            entity_info = sorted(entity_info, key=lambda x: x[1][0])
+            if entity_info:
+                entity_substr_list, entity_offsets_list, entity_tags_list, entity_probas_list = zip(*entity_info)
+                entity_substr_list = list(entity_substr_list)
+                entity_offsets_list = list(entity_offsets_list)
+                entity_tags_list = list(entity_tags_list)
+                entity_probas_list = list(entity_probas_list)
             new_entity_substr_list = []
+            new_entity_lemm_substr_list = []
             new_entity_offsets_list = []
+            new_entity_init_offsets_list = []
             new_entity_tags_list = []
             new_entity_probas_list = []
+            text = text.lower()
+            text_from_sentences = " ".join(sentences_list)
+            prev_init_end_offset = 0
             for entity_substr, (start_offset, end_offset), tag, proba in \
-                    zip(entity_substr_list, entity_offsets_list, doc_tags_list, doc_probas_list):
-                found_entity_substr = text[start_offset:end_offset].replace(".", " ").replace(")", " ").replace("(", " ").replace("  ", " ")
+                    zip(entity_substr_list, entity_offsets_list, entity_tags_list, entity_probas_list):
+                entity_substr_lower = entity_substr.lower()
+                found_entity_substr = text_from_sentences[start_offset:end_offset]
+                found_entity_substr = found_entity_substr.replace(".", " ").replace(")", " ").replace("(", " ").replace("  ", " ")
+                new_text = text[prev_init_end_offset:]
+                fnd_init = new_text.find(entity_substr_lower)
                 for elem in replace_list:
                     entity_substr = entity_substr.replace(elem[0], elem[1])
+                if fnd_init == -1:
+                    fnd_init = new_text.find(entity_substr)
+                if fnd_init == -1 and "-" in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace("-", " - ").replace("  ", " "))
+                if fnd_init == -1 and ". " in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace(". ", "."))
+                if fnd_init == -1 and "/" in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace(" / ", "/"))
+                if fnd_init == -1 and " " in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace(" ", "  "))
+                if fnd_init == -1 and " " in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace(" (", "("))
+                if fnd_init == -1 and " ’" in entity_substr:
+                    fnd_init = new_text.find(entity_substr.replace(" ’", "’"))
                 san_found_entity_substr = [ch for ch in found_entity_substr.lower() if (ch not in punctuation and ch != " ")]
-                san_entity_substr = [ch for ch in entity_substr if (ch not in punctuation and ch != " ")]
-                if san_entity_substr == san_found_entity_substr:
+                san_entity_substr = [ch for ch in entity_substr.lower() if (ch not in punctuation and ch != " ")]
+                if san_entity_substr == san_found_entity_substr and fnd_init != -1:
+                    new_init_start_offset = prev_init_end_offset + fnd_init
+                    new_init_end_offset = new_init_start_offset + len(entity_substr)
+                    for elem in delete_list:
+                        entity_substr = entity_substr.replace(elem[0], elem[1])
                     if self.lemmatize:
                         entity_substr_tokens = entity_substr.split()
                         entity_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_tokens]
-                        entity_substr = detokenize(entity_substr_tokens)
-                    new_entity_substr_list.append(entity_substr)
-                    new_entity_offsets_list.append((start_offset, end_offset))
+                        lemm_entity_substr = detokenize(entity_substr_tokens)
+                    else:
+                        lemm_entity_substr = entity_substr
+                    new_entity_substr_list.append(entity_substr.replace("  ", " "))
+                    new_entity_lemm_substr_list.append(lemm_entity_substr.replace("  ", " "))
+                    new_entity_offsets_list.append([start_offset, end_offset])
                     new_entity_tags_list.append(tag)
                     new_entity_probas_list.append(proba)
+                    new_entity_init_offsets_list.append([new_init_start_offset, new_init_end_offset])
+                    prev_init_end_offset = new_init_end_offset
             
             new_entity_substr_batch.append(new_entity_substr_list)
+            new_entity_lemm_substr_batch.append(new_entity_lemm_substr_list)
             new_entity_offsets_batch.append(new_entity_offsets_list)
             new_entity_tags_batch.append(new_entity_tags_list)
             new_entity_probas_batch.append(new_entity_probas_list)
+            new_entity_init_offsets_batch.append(new_entity_init_offsets_list)
             
-        return new_entity_substr_batch, new_entity_offsets_batch, new_entity_tags_batch, new_entity_probas_batch
+        return new_entity_substr_batch, new_entity_lemm_substr_batch, new_entity_offsets_batch, new_entity_init_offsets_batch, \
+            new_entity_tags_batch, new_entity_probas_batch
 
 
 @register('entity_linker_sep')
