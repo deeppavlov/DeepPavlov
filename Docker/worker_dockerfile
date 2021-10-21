@@ -5,7 +5,7 @@ RUN cd DeepPavlov && \
     git pull && \
     git checkout 185d161cf5f8ec4af3beb0d78882ec3596009af7 && \
     pip install -e . && \
-    python -m deeppavlov install entity_linking_vx_siam
+    python -m deeppavlov install entity_linking_vx_siam_distil
 
 COPY requirements.txt ./
 
@@ -13,4 +13,4 @@ RUN pip install -r requirements.txt
 
 COPY . .
 
-CMD python -m deeppavlov riseapi $(echo entity_linking_vx_siam.json) -p 8000 2>&1 | tee /data/logs/$CONTAINER_NAME_$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')
+CMD python -m deeppavlov riseapi $(echo entity_linking_vx_siam_distil.json) -p 8000 2>&1 | tee /data/logs/$CONTAINER_NAME_$(date '+%Y-%m-%d-%H-%M-%S-%3N.log')

@@ -1,0 +1,94 @@
+{
+  "chainer": {
+    "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"],
+    "pipe": [
+      {
+        "class_name": "torch_distilbert_entity_ranker",
+        "id": "entity_descr_ranking",
+        "pretrained_bert": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational",
+        "context_weights_path": "{MODELS_PATH}/siamese_distilbert_el_ranking_lite/text_encoder.pth.tar",
+        "bilinear_weights_path": "{MODELS_PATH}/siamese_distilbert_el_ranking_lite/bilinear.pth.tar",
+        "q_to_descr_emb_path": "{DOWNLOADS_PATH}/wikidata_rus/q_to_descr_emb_trained_lite.pickle",
+        "add_special_tokens": ["[ENT]"],
+        "special_token_id": 100792,
+        "device": "gpu"
+      },
+      {
+        "class_name": "entity_linker_sep",
+        "in": ["entity_substr", "entity_offsets", "tags", "sentences_offsets", "sentences", "probas"],
+        "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels", "status"],
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "save_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "word_to_idlist_filename": "word_to_idlist_vx.pickle",
+        "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
+        "entities_types_sets_filename": "entities_types_sets.pickle",
+        "q_to_label_filename": "q_to_label_vx.pickle",
+        "q_to_label_out_filename": "q_to_label_out_vx.pickle",
+        "tfidf_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_vectorizer_vx.pk",
+        "tfidf_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/tfidf_faiss_vectors_cpu.index",
+        "fasttext_vectorizer_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasttext_dim100_ws10",
+        "fasttext_faiss_index_filename": "{DOWNLOADS_PATH}/wikidata_rus/fasstext_faiss_vectors_cpu.index",
+        "q_to_descr_filename": "q_to_descr_vx.pickle",
+        "entity_ranker": "#entity_descr_ranking",
+        "rank_in_runtime": true,
+        "num_tfidf_faiss_candidate_entities": 10,
+        "num_ft_faiss_candidate_entities": 50,
+        "num_entities_for_bert_ranking": 20,
+        "num_tfidf_faiss_cells": 1000,
+        "num_ft_faiss_cells": 1000,
+        "tfidf_index_nprobe": 5,
+        "fasttext_index_nprobe": 10,
+        "use_gpu": false,
+        "fit_tfidf_vectorizer": false,
+        "fit_fasttext_vectorizer": false,
+        "fit_bert_embedder": false,
+        "max_tfidf_features": 500,
+        "include_mention": false,
+        "ngram_range": [2, 2],
+        "num_entities_to_return": 5,
+        "build_inverted_index": false,
+        "lemmatize": true,
+        "use_descriptions": true,
+        "full_paragraph": true,
+        "return_confidences": true,
+        "use_prefix_tree": false,
+        "lang": "ru"
+      }
+    ],
+    "out": ["entity_substr", "conf", "entity_offsets", "entity_ids", "entity_tags", "entity_labels", "status"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+      "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    ],
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/entity_linking_rus_vx.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/q_to_descr_emb_trained_lite.pickle",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/siamese_el_ranking/siamese_distilbert_el_ranking_lite.tar.gz",
+        "subdir": "{MODELS_PATH}/siamese_distilbert_el_ranking_lite"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/distilrubert_tiny_cased.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational"
+      }
+    ]
+  }
+}
