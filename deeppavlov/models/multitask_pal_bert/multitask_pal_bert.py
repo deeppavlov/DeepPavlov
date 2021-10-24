@@ -295,9 +295,8 @@ class MultiTaskPalBert(TorchModel):
         """
         self.validation_predictions = []
         n_in = sum([inp for inp in self.in_distribution.values()])
-
-        features = args[1:]
-        args_in = features[:n_in]
+        #checked only if all inp are 1
+        args_in = features[-n_in:]  # last n_in ( leave 1 for task_id) 
         in_by_tasks = self._distribute_arguments_by_tasks(
             args_in, {}, self.task_names, "in"
         )
