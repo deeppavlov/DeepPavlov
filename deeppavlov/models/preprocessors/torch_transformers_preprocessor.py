@@ -22,7 +22,7 @@ import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
 import numpy as np
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, BertTokenizer
 from transformers.data.processors.utils import InputFeatures
 from transformers.tokenization_utils_base import BatchEncoding
 
@@ -65,7 +65,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file,
+            self.tokenizer = BertTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -147,7 +147,7 @@ class TorchTransformersPreprocessor(Component):
         self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file,
+            self.tokenizer = BertTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -214,7 +214,7 @@ class TorchSquadTransformersPreprocessor(Component):
         self.add_token_type_ids = add_token_type_ids
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file,
+            self.tokenizer = BertTokenizer(vocab_file,
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
@@ -318,7 +318,7 @@ class TorchTransformersNerPreprocessor(Component):
         self.subword_mask_mode = subword_mask_mode
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file,do_lower_case=do_lower_case)
+            self.tokenizer = BertTokenizer(vocab_file,do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
