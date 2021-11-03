@@ -29,7 +29,7 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
 |                                                         |       | :config:`ner_rus_convers_distilrubert_2L.json  <ner/ner_rus_convers_distilrubert_2L.json>` |  94.2 ± 0.2 |
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-|                                                         |       | :config:`ner_rus_convers_distilrubert_6L.json  <ner/ner_rus_convers_distilrubert_6L.json>` |  93.3 ± 0.3 |
+|                                                         |       | :config:`ner_rus_convers_distilrubert_6L.json  <ner/ner_rus_convers_distilrubert_6L.json>` |  96.4 ± 0.2 |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
 | Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>`                  |    88.8     |
 +                                                         +-------+--------------------------------------------------------------------------------------------+-------------+
@@ -120,9 +120,9 @@ Several pre-trained models are available and presented in Table below.
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
 |                  |                     |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                        |             | 0.7548           | 0.7742          |  657 Mb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Conversational DistilRuBERT-tiny <classifiers/rusentiment_convers_distilrubert_2L.json>`  |             |  0.72 ± 0.0016   | 0.7458 ± 0.0098 |  690 Mb   |
+|                  |                     |      | :config:`Conversational DistilRuBERT-tiny <classifiers/rusentiment_convers_distilrubert_2L.json>`  |             | 0.72 ± 0.0016    | 0.74 ± 0.01     |  690 Mb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Conversational DistilRuBERT-base <classifiers/rusentiment_convers_distilrubert_6L.json>`  |             |  0.7376 ± 0.0045 | 0.7645 ± 0.035  |  1.0 Gb   |
+|                  |                     |      | :config:`Conversational DistilRuBERT-base <classifiers/rusentiment_convers_distilrubert_6L.json>`  |             | 0.73 ± 0.003     | 0.75 ± 0.013    |  1.0 Gb   |
 +------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
 | Intent           | Ru like`Yahoo-L31`_ |      | :config:`Conversational vs Informational on ELMo <classifiers/yahoo_convers_vs_info.json>`         | ROC-AUC     | 0.9412           |   --            |  700 Mb   |
 +------------------+---------------------+------+----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
@@ -266,7 +266,7 @@ Available pre-trained models for paraphrase identification:
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+--------------+--------------+----------------+-----------------+-----------+
    | `paraphraser.ru`_      | :config:`paraphraser_convers_distilrubert_2L <classifiers/paraphraser_convers_distilrubert_2L.json>` |  79.4 ± 0.01   |  67.5 ± 0.006   | 84.4 ± 0.04  | 76.2 ± 0.006 |   --           |   --            | 618M      |
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+--------------+--------------+----------------+-----------------+-----------+
-   | `paraphraser.ru`_      | :config:`paraphraser_convers_distilrubert_6L <classifiers/paraphraser_convers_distilrubert_6L.json>` |  86.5 ± 0.5    |  78.9 ± 0.4     | 89.6 ± 0.3   | 83.2 ± 0.5   |   --           |   --            | 930M      |
+   | `paraphraser.ru`_      | :config:`paraphraser_convers_distilrubert_6L <classifiers/paraphraser_convers_distilrubert_6L.json>` |  87.1 ± 0.01   |  78.0 ± 0.01    | 90.0 ± 0.08  | 82.9 ± 0.003 |   --           |   --            | 930M      |
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+--------------+--------------+----------------+-----------------+-----------+
 
 .. _`paraphraser.ru`: https://paraphraser.ru/
@@ -348,7 +348,7 @@ R-Net model is based on `R-NET: Machine Reading Comprehension with Self-matching
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 | `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-tiny <squad/squad_ru_convers_distilrubert_2L_infer.json>`  |  ru   |  48.3 ± 0.41   |  68.9 ± 0.39    |     867Mb       |
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L_infer.json>`  |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
+| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L_infer.json>`  |  ru   |  61.77 ± 0.25  |  80.39 ± 0.21   |     1.18Gb      |
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 |    `DRCD`_     | :config:`DeepPavlov multilingual BERT <squad/squad_zh_bert_mult.json>`                      |  ch   |     84.86      |     89.03       |     630Mb       |
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
