@@ -69,10 +69,10 @@
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "attention_probs_keep_prob": 0.0,
-        "hidden_keep_prob": 0.33, 
+        "hidden_keep_prob": 1.0, 
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 3.67e-5
+          "lr": 2.78e-05
         },
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 1.5,
