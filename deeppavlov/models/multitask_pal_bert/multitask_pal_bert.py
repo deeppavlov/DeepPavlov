@@ -370,11 +370,6 @@ class MultiTaskPalBert(TorchModel):
                     pred = np.argmax(logits, axis=1)
             else:
                 raise NotImplementedError(f'Unsupported type {self.tasks_type[task_id]}')
-            try:
-                assert np.isfinite(pred).all()
-            except:
-                print('INFINITE PRED')
-                breakpoint()
             self.validation_predictions.append(pred)
         return self.validation_predictions
 
