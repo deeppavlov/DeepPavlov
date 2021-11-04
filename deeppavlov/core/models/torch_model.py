@@ -102,6 +102,23 @@ class TorchModel(NNModel):
         self.model.eval()
         log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
 
+    def get_optimizer(self):
+        """
+        Initialize optimizer from bnb. Resort to pytorch if already initialized
+        """
+        try:
+            # Import BNB opt
+            if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
+                opt_name = self.optimizer_name + '8bit'
+            else:
+                opt_name = self.optimizer_name
+            self.optimizer = getattr(bnb.optim, opt_name)(
+                self.model.parameters(), **self.optimizer_parameters)
+        except:
+            log.info('Not imported 8bit optimizer - resorting to torch optimizer')
+            self.optimizer = getattr(torch.optim, self.optimizer_name)(
+                self.model.parameters(), **self.optimizer_parameters)
+
     def init_from_opt(self, model_func: str) -> None:
         """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
             along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
@@ -116,18 +133,7 @@ class TorchModel(NNModel):
         """
         if callable(model_func):
             self.model = model_func(**self.opt).to(self.device)
-            try:
-                # Import BNB opt
-                if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
-                    opt_name = self.optimizer_name + '8bit'
-                else:
-                    opt_name = self.optimizer_name
-                self.optimizer = getattr(bnb.optim, opt_name)(
-                self.model.parameters(), **self.optimizer_parameters)
-            except:
-                log.info('Not imported 8bit optimizer - resorting to torch optimizer')
-                self.optimizer = getattr(torch.optim, self.optimizer_name)(
-                self.model.parameters(), **self.optimizer_parameters)
+            self.optimizer = self.get_optimizer()
             if self.lr_scheduler_name:
                 self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                     self.optimizer, **self.lr_scheduler_parameters)
