@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-import bnb
+import bitsandbytes as bnb
 from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
