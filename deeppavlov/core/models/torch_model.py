@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Optional
 
 import torch
+import bnb
 from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
@@ -115,7 +116,17 @@ class TorchModel(NNModel):
         """
         if callable(model_func):
             self.model = model_func(**self.opt).to(self.device)
-            self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            try:
+                # Import BNB opt
+                if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
+                    opt_name = self.optimizer_name + '8bit'
+                else:
+                    opt_name = self.optimizer_name
+                self.optimizer = getattr(bnb.optim, opt_name)(
+                self.model.parameters(), **self.optimizer_parameters)
+            except:
+                log.info('Not imported 8bit optimizer - resorting to torch optimizer')
+                self.optimizer = getattr(torch.optim, self.optimizer_name)(
                 self.model.parameters(), **self.optimizer_parameters)
             if self.lr_scheduler_name:
                 self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
