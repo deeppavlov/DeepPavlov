@@ -1,4 +1,4 @@
- {
+{
   "dataset_reader": {
     "class_name": "conll2003_reader",
     "data_path": "{DOWNLOADS_PATH}/total_rus/",
@@ -57,7 +57,7 @@
         "class_name": "torch_transformers_sequence_tagger",
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
-        "attention_probs_keep_prob": 0.0,
+        "attention_probs_keep_prob": 0.56,
         "hidden_keep_prob": 1.0, 
         "return_probas": false,
         "encoder_layer_ids": [
