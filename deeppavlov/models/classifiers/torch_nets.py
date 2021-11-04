@@ -16,6 +16,7 @@ from typing import List, Union, Optional
 
 import torch
 import torch.nn as nn
+import bitsandbytes as bnb
 
 
 class ShallowAndWideCnn(nn.Module):
@@ -27,7 +28,7 @@ class ShallowAndWideCnn(nn.Module):
         self.kernel_sizes_cnn = kernel_sizes_cnn
 
         if not embedded_tokens and vocab_size:
-            self.embedding = nn.Embedding(vocab_size, embedding_size)
+            self.embedding = bnb.nn.StableEmbedding(vocab_size, embedding_size)
         if isinstance(filters_cnn, int):
             filters_cnn = len(kernel_sizes_cnn) * [filters_cnn]
 
