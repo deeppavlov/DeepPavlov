@@ -1,0 +1,1 @@
+bitsandbytes-cuda111==0.25.0
