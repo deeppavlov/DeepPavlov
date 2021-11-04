@@ -1,3 +1,2 @@
 torch==1.6.0
 torchvision==0.7.0
-bitsandbytes-cuda111==0.25.0
