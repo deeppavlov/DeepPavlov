@@ -32,16 +32,16 @@ The download links are:
 | Description                | Model parameters                      | Download links                                                                                                     |
 +============================+=======================================+====================================================================================================================+
 | RuBERT                     | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__,         |
-|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz>`__             |
+|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__             |
 +----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
 | Slavic BERT                | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__,    |
-|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__        |
+|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__        |
 +----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
 | Conversational BERT        | vocab size = 30K, parameters = 110M,  | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__, |
-|                            | size = 385MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__     |
+|                            | size = 385MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__     |
 +----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
 | Conversational RuBERT      | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__, |
-|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__  |
+|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__  |
 +----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
 | Sentence Multilingual BERT | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,    |
 |                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__     |
