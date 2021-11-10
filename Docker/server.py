@@ -78,7 +78,8 @@ async def model(request: Request):
                                                                        "sentences": sentences,
                                                                        "probas": probas}).json()
                 logger.info(f"res {res}")
-                out = open("res_logs.txt", 'a')
+                logger.warning(f"res {res}")
+                out = open("/data/res_logs.txt", 'a')
                 out.write(str(res)+'\n')
                 out.close()
                 entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
