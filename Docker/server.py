@@ -77,9 +77,6 @@ async def model(request: Request):
                                                                        "sentences_offsets": [sentences_offsets],
                                                                        "sentences": [sentences],
                                                                        "probas": [probas]}).json()
-                out = open("/data/res_logs.txt", 'a')
-                out.write(str(res)+'\n')
-                out.close()
                 entity_substr_list, conf_list, entity_offsets_list, entity_ids_list, entity_tags_list, \
                     entity_labels_list, status_list = res[0]
                 for entity_ids, gold_entity in zip(entity_ids_list, gold_entities):
@@ -90,7 +87,7 @@ async def model(request: Request):
                     if gold_entity != "0":
                         num_relevant += 1
             precision = round(num_correct / num_found, 3)
-            recall = round(num_correct, num_relevant, 3)
+            recall = round(num_correct / num_relevant, 3)
             return {"precision": precision, "recall": recall}
         
         except aiohttp.client_exceptions.ClientConnectorError:
