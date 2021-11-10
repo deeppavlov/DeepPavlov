@@ -39,7 +39,7 @@
       {
         "class_name": "transformers_bert_embedder",
         "id": "my_embedder",
-        "bert_config_path": "{BERT_PATH}/bert_config.json",
+        "bert_config_path": "{BERT_PATH}/config.json",
         "truncate": false,
         "load_path": "{BERT_PATH}",
         "in": ["subword_tok_ids", "startofword_markers", "attention_mask"],
