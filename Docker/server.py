@@ -80,22 +80,19 @@ async def model(request: Request):
                 out = open("/data/res_logs.txt", 'a')
                 out.write(str(res)+'\n')
                 out.close()
-                entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
-                    entity_labels_batch, status_batch = res
-                for entity_ids, gold_entity in zip(entity_ids_batch[0], gold_entities):
+                entity_substr_list, conf_list, entity_offsets_list, entity_ids_list, entity_tags_list, \
+                    entity_labels_list, status_list = res[0]
+                for entity_ids, gold_entity in zip(entity_ids_list, gold_entities):
                     if entity_ids[0] != "not in wiki" and entity_ids[0] == gold_entity:
                         num_correct += 1
                     if entity_ids[0] != "not in wiki":
                         num_found += 1
                     if gold_entity != "0":
                         num_relevant += 1
-                precision = round(num_correct / num_found, 3)
-                recall = round(num_correct, num_relevant, 3)
-                return {"precision": precision, "recall": recall}
-            
-            async with aiohttp.ClientSession() as session:
-                async with session.post(f"http://{host}:8000/model", json=await request.json()) as resp:
-                    return await resp.json(content_type=None)
+            precision = round(num_correct / num_found, 3)
+            recall = round(num_correct, num_relevant, 3)
+            return {"precision": precision, "recall": recall}
+        
         except aiohttp.client_exceptions.ClientConnectorError:
             logger.warning(f'{host} is unavailable, restarting worker container')
             loop = asyncio.get_event_loop()
