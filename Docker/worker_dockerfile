@@ -7,7 +7,7 @@ RUN pip install -r requirements.txt
 RUN cd DeepPavlov && \
     git checkout master && \
     git pull && \
-    git checkout c5fd6c9f193d5ecb161a6fae0b501071b2e69804 && \
+    git checkout 9f40bc334cc1b7c65ab3baeaf3bbfad9cc1fc884 && \
     pip install -e .
 
 COPY . .
