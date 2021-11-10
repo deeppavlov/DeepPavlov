@@ -77,6 +77,10 @@ async def model(request: Request):
                                                                        "sentences_offsets": sentences_offsets,
                                                                        "sentences": sentences,
                                                                        "probas": probas}).json()
+                logger.info(f"res {res}")
+                out = open("res_logs.txt", 'a')
+                out.write(str(res)+'\n')
+                out.close()
                 entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
                     entity_labels_batch, status_batch = res
                 for entity_ids, gold_entity in zip(entity_ids_batch[0], gold_entities):
