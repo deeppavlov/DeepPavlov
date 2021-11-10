@@ -71,14 +71,12 @@ async def model(request: Request):
                 sentences = sample["sentences"]
                 sentences_offsets = sample["sentences_offsets"]
                 gold_entities = sample["gold_entities"]
-                res = requests.post(f"http://{host}:8000/model", json={"entity_substr": entity_substr,
-                                                                       "entity_offsets": entity_offsets,
-                                                                       "tags": tags,
-                                                                       "sentences_offsets": sentences_offsets,
-                                                                       "sentences": sentences,
-                                                                       "probas": probas}).json()
-                logger.info(f"res {res}")
-                logger.warning(f"res {res}")
+                res = requests.post(f"http://{host}:8000/model", json={"entity_substr": [entity_substr],
+                                                                       "entity_offsets": [entity_offsets],
+                                                                       "tags": [tags],
+                                                                       "sentences_offsets": [sentences_offsets],
+                                                                       "sentences": [sentences],
+                                                                       "probas": [probas]}).json()
                 out = open("/data/res_logs.txt", 'a')
                 out.write(str(res)+'\n')
                 out.close()
