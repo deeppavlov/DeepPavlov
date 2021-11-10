@@ -53,7 +53,8 @@ async def model(request: Request):
         except StopIteration:
             raise HTTPException(status_code=500, detail='No active workers')
         try:
-            test_filename = request.json()["test_filename"]
+            filename_data = await request.json()
+            test_filename = filename_data["test_filename"]
             with open(test_filename, 'r') as fl:
                 test_data = json.load(fl)
             
