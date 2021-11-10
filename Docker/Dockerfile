@@ -16,18 +16,17 @@ RUN apt update && \
     apt update && \
     apt install -y docker-ce docker-ce-cli containerd.io
 
+COPY requirements.txt ./
+
+RUN pip install -r requirements.txt
+
 RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     cd DeepPavlov && \
     git checkout master && \
     git pull && \
     git checkout c5fd6c9f193d5ecb161a6fae0b501071b2e69804 && \
     pip install -e . && \
-    python -m deeppavlov install entity_linking_vx_siam_distil && \
     python -c 'import deeppavlov.models'
-
-COPY requirements.txt ./
-
-RUN pip install -r requirements.txt
 
 COPY . .
 

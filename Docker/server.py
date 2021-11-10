@@ -3,6 +3,7 @@ from typing import Dict, List
 from logging import getLogger
 
 import aiohttp
+import requests
 import uvicorn
 from fastapi import FastAPI
 from fastapi import HTTPException
@@ -44,6 +45,56 @@ async def model(request: Request):
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
 
+@app.post("/metrics")
+async def model(request: Request):
+    while True:
+        try:
+            host = next(porter.active_hosts)
+        except StopIteration:
+            raise HTTPException(status_code=500, detail='No active workers')
+        try:
+            test_filename = request.json()["test_filename"]
+            with open(test_filename, 'r') as fl:
+                test_data = json.load(fl)
+            
+            num_correct = 0
+            num_found = 0
+            num_relevant = 0
+            
+            for sample in test_data:
+                entity_substr = sample["entity_substr"]
+                entity_offsets = sample["entity_offsets"]
+                tags = sample["tags"]
+                probas = sample["probas"]
+                sentences = sample["sentences"]
+                sentences_offsets = sample["sentences_offsets"]
+                gold_entities = sample["gold_entities"]
+                res = requests.post(f"http://{host}:8000/model", json={"entity_substr": entity_substr,
+                                                                       "entity_offsets": entity_offsets,
+                                                                       "tags": tags,
+                                                                       "sentences_offsets": sentences_offsets,
+                                                                       "sentences": sentences,
+                                                                       "probas": probas}).json()
+                entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
+                    entity_labels_batch, status_batch = res
+                for entity_ids, gold_entity in zip(entity_ids_batch[0], gold_entities):
+                    if entity_ids[0] != "not in wiki" and entity_ids[0] == gold_entity:
+                        num_correct += 1
+                    if entity_ids[0] != "not in wiki":
+                        num_found += 1
+                    if gold_entity != "0":
+                        num_relevant += 1
+                precision = round(num_correct / num_found, 3)
+                recall = round(num_correct, num_relevant, 3)
+                return {"precision": precision, "recall": recall}
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.post(f"http://{host}:8000/model", json=await request.json()) as resp:
+                    return await resp.json(content_type=None)
+        except aiohttp.client_exceptions.ClientConnectorError:
+            logger.warning(f'{host} is unavailable, restarting worker container')
+            loop = asyncio.get_event_loop()
+            loop.create_task(porter.update_container(host))
 
 @app.get('/update/containers')
 async def update():

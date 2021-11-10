@@ -3,3 +3,12 @@ docker==4.4.1
 aiohttp==3.7.3
 rapidfuzz==0.7.6
 fasttext==0.9.1
+tensorflow==1.15.2
+git+https://github.com/deepmipt/bert.git@feat/multi_gpu
+faiss-gpu==1.6.3
+torch==1.6.0
+torchvision==0.7.0
+torchtext==0.6.0
+torchsummary==1.5.1
+transformers==4.11.3
+datasets==1.1.2
