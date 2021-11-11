@@ -146,9 +146,13 @@ class TorchTransformersPreprocessor(Component):
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
+                 truncation: Union[bool, str] = 'longest_first',
+                 padding: Union[bool, str] = 'longest',
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
+        self.truncation = truncation
+        self.padding = padding
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -176,14 +180,16 @@ class TorchTransformersPreprocessor(Component):
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
 
-        input_features = self.tokenizer(text=texts_a,
-                                        text_pair=texts_b,
-                                        add_special_tokens=True,
-                                        max_length=self.max_seq_length,
-                                        padding='max_length',
-                                        return_attention_mask=True,
-                                        truncation=True,
-                                        return_tensors='pt')
+        input_features = self.tokenizer(
+            text=texts_a,
+            text_pair=texts_b,
+            add_special_tokens=True,
+            max_length=self.max_seq_length,
+            padding=self.padding,
+            return_attention_mask=True,
+            truncation=self.truncation,
+            return_tensors='pt'
+        )
         return input_features
 
 
