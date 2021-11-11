@@ -31,6 +31,8 @@
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 64,
+        "truncation": "longest_first",
+        "padding": "longest",
         "in": ["contexts_list", "choices_list"],
         "out": ["bert_features"]
       },
