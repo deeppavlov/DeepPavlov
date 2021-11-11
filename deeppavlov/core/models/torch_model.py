@@ -16,7 +16,7 @@ from abc import abstractmethod
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 from overrides import overrides
@@ -230,3 +230,19 @@ class TorchModel(NNModel):
     @abstractmethod
     def train_on_batch(self, x: list, y: list):
         pass
+
+    @property
+    def accepted_keys(self) -> Tuple[str]:
+        if self.model is None:
+            raise AttributeError
+        if self.is_data_parallel:
+            accepted_keys = self.model.module.forward.__code__.co_varnames
+        else:
+            accepted_keys = self.model.forward.__code__.co_varnames
+        return accepted_keys
+
+    @property
+    def is_data_parallel(self) -> bool:
+        if self.model is None:
+            raise AttributeError
+        return isinstance(self.model, torch.nn.DataParallel)

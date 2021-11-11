@@ -15,7 +15,7 @@
 import re
 from logging import getLogger
 from pathlib import Path
-from typing import List, Dict, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
@@ -176,20 +176,6 @@ class TorchTransformersClassifierModel(TorchModel):
             pred = logits.squeeze(-1).detach().cpu().numpy()
 
         return pred
-
-    # TODO move to the super class
-    @property
-    def accepted_keys(self) -> Tuple[str]:
-        if self.is_data_parallel:
-            accepted_keys = self.model.module.forward.__code__.co_varnames
-        else:
-            accepted_keys = self.model.forward.__code__.co_varnames
-        return accepted_keys
-
-    # TODO move to the super class
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
 
     # TODO this method requires massive refactoring
     @overrides

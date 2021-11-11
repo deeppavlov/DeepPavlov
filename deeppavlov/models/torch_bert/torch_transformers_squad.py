@@ -155,18 +155,6 @@ class TorchTransformersSquad(TorchModel):
 
         return {'loss': loss.item()}
 
-    @property
-    def accepted_keys(self) -> Tuple[str]:
-        if self.is_data_parallel:
-            accepted_keys = self.model.module.forward.__code__.co_varnames
-        else:
-            accepted_keys = self.model.forward.__code__.co_varnames
-        return accepted_keys
-
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
     def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
         """get predictions using features as input
 
