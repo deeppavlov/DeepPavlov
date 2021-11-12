@@ -13,6 +13,7 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from aliases import Aliases
 from porter import Porter
+from deeppavlov.core.data.utils import simple_download
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -27,6 +28,9 @@ app.add_middleware(
 )
 
 
+simple_download("http://files.deeppavlov.ai/rkn_data/el_test_samples.json", "/data/el_test_samples.json")
+with open("/data/el_test_samples.json", 'r') as fl:
+    init_test_data = json.load(fl)
 porter = Porter()
 
 
@@ -55,9 +59,12 @@ async def model(request: Request):
             raise HTTPException(status_code=500, detail='No active workers')
         try:
             filename_data = await request.json()
-            test_filename = filename_data["test_filename"]
-            with open(test_filename, 'r') as fl:
-                test_data = json.load(fl)
+            if filename_data is None or not filename_data.get("test_filename", ""):
+                test_data = init_test_data
+            else:
+                test_filename = filename_data["test_filename"]
+                with open(test_filename, 'r') as fl:
+                    test_data = json.load(fl)
             
             num_correct = 0
             num_found = 0
