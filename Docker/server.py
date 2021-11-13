@@ -53,7 +53,7 @@ async def model(request: Request):
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
 
-@app.post("/test")
+@app.get("/test")
 async def model(request: Request):
     while True:
         try:
@@ -121,6 +121,28 @@ async def model(request: Request):
             
             return {"precision": precision, "recall": recall}
         
+        except aiohttp.client_exceptions.ClientConnectorError:
+            logger.warning(f'{host} is unavailable, restarting worker container')
+            loop = asyncio.get_event_loop()
+            loop.create_task(porter.update_container(host))
+            
+@app.get('/last_train_metric')
+async def get_metric(request: Request):
+    while True:
+        try:
+            last_metrics = {}
+            if Path(metrics_filename).exists():
+                df = pd.read_csv(metrics_filename)
+                last_metrics = df.iloc[-1].to_dict()
+                logger.warning(f"last_metrics {last_metrics}")
+            
+            return {"success": True, "data": {"time": str(last_metrics.get("time", "")),
+                                              "old_precision": float(last_metrics.get("old_precision", "")),
+                                              "old_recall": float(last_metrics.get("old_recall", "")),
+                                              "new_precision": float(last_metrics.get("new_precision", "")),
+                                              "new_recall": float(last_metrics.get("new_recall", "")),
+                                              "update_model": bool(last_metrics.get("update_model", ""))}}
+            
         except aiohttp.client_exceptions.ClientConnectorError:
             logger.warning(f'{host} is unavailable, restarting worker container')
             loop = asyncio.get_event_loop()
