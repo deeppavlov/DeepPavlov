@@ -1,9 +1,11 @@
 import asyncio
+import datetime
 import json
 from typing import Dict, List
 from logging import getLogger
 
 import aiohttp
+import pandas as pd
 import requests
 import uvicorn
 from fastapi import FastAPI
@@ -27,6 +29,7 @@ app.add_middleware(
     allow_headers=['*']
 )
 
+metrics_filename = "/data/metrics_score_history.csv"
 
 simple_download("http://files.deeppavlov.ai/rkn_data/el_test_samples.json", "/data/el_test_samples.json")
 with open("/data/el_test_samples.json", 'r') as fl:
@@ -50,7 +53,7 @@ async def model(request: Request):
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
 
-@app.post("/metrics")
+@app.post("/test")
 async def model(request: Request):
     while True:
         try:
@@ -93,8 +96,29 @@ async def model(request: Request):
                         num_found += 1
                     if gold_entity != "0":
                         num_relevant += 1
-            precision = round(num_correct / num_found, 3)
-            recall = round(num_correct / num_relevant, 3)
+            cur_precision = round(num_correct / num_found, 3)
+            cur_recall = round(num_correct / num_relevant, 3)
+            
+            if Path(metrics_filename).exists():
+                df = pd.read_csv(metrics_filename)
+                max_precision = max(df["old_precision"].max(), df["new_precision"].max())
+                max_recall = max(df["old_recall"].max(), df["new_recall"].max())
+                if cur_precision > max_precision or cur_recall > max_recall:
+                    df = df.append({"time": datetime.datetime.now(),
+                                    "old_precision": max_precision,
+                                    "new_precision": cur_precision,
+                                    "old_recall": max_recall,
+                                    "new_recall": cur_recall,
+                                    "update_model": True}, ignore_index=True)
+            else:
+                df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
+                                             "old_precision": [max_precision],
+                                             "new_precision": [cur_precision],
+                                             "old_recall": [max_recall],
+                                             "new_recall": [cur_recall],
+                                             "update_model": [True]})
+            df.to_csv(metrics_filename, index=False)
+            
             return {"precision": precision, "recall": recall}
         
         except aiohttp.client_exceptions.ClientConnectorError:
