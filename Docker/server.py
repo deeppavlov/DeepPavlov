@@ -53,7 +53,29 @@ async def model(request: Request):
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
 
-@app.get("/test")
+
+@app.get('/last_train_metric')
+async def get_metric(request: Request):
+    while True:
+        try:
+            last_metrics = {}
+            if Path(metrics_filename).exists():
+                df = pd.read_csv(metrics_filename)
+                last_metrics = df.iloc[-1].to_dict()
+                logger.warning(f"last_metrics {last_metrics}")
+            
+            return {"success": True, "data": {"time": str(last_metrics["time"]),
+                                              "old_metric": float(last_metrics["old_metric"]),
+                                              "new_metric": float(last_metrics["new_metric"]),
+                                              "update_model": bool(last_metrics["update_model"])}}
+            
+        except aiohttp.client_exceptions.ClientConnectorError:
+            logger.warning(f'{host} is unavailable, restarting worker container')
+            loop = asyncio.get_event_loop()
+            loop.create_task(porter.update_container(host))
+
+
+@app.get("/evaluate")
 async def model(request: Request):
     while True:
         try:
@@ -62,10 +84,10 @@ async def model(request: Request):
             raise HTTPException(status_code=500, detail='No active workers')
         try:
             filename_data = await request.json()
-            if filename_data is None or not filename_data.get("test_filename", ""):
+            if filename_data is None or not filename_data.get("file", ""):
                 test_data = init_test_data
             else:
-                test_filename = filename_data["test_filename"]
+                test_filename = filename_data["file"]
                 with open(test_filename, 'r') as fl:
                     test_data = json.load(fl)
             
@@ -109,14 +131,14 @@ async def model(request: Request):
                                     "new_precision": cur_precision,
                                     "old_recall": max_recall,
                                     "new_recall": cur_recall,
-                                    "update_model": True}, ignore_index=True)
+                                    "update_model": False}, ignore_index=True)
             else:
                 df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
                                              "old_precision": [max_precision],
                                              "new_precision": [cur_precision],
                                              "old_recall": [max_recall],
                                              "new_recall": [cur_recall],
-                                             "update_model": [True]})
+                                             "update_model": [False]})
             df.to_csv(metrics_filename, index=False)
             
             return {"precision": precision, "recall": recall}
@@ -125,6 +147,7 @@ async def model(request: Request):
             logger.warning(f'{host} is unavailable, restarting worker container')
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
+
             
 @app.get('/last_train_metric')
 async def get_metric(request: Request):
@@ -147,6 +170,7 @@ async def get_metric(request: Request):
             logger.warning(f'{host} is unavailable, restarting worker container')
             loop = asyncio.get_event_loop()
             loop.create_task(porter.update_container(host))
+
 
 @app.get('/update/containers')
 async def update():
