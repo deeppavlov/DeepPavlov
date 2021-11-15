@@ -135,9 +135,9 @@ async def model(request: Request):
                                     "update_model": False}, ignore_index=True)
             else:
                 df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
-                                             "old_precision": [max_precision],
+                                             "old_precision": [cur_precision],
                                              "new_precision": [cur_precision],
-                                             "old_recall": [max_recall],
+                                             "old_recall": [cur_recall],
                                              "new_recall": [cur_recall],
                                              "update_model": [False]})
             df.to_csv(metrics_filename, index=False)
