@@ -66,8 +66,10 @@ async def get_metric(request: Request):
                 logger.warning(f"last_metrics {last_metrics}")
             
             return {"success": True, "data": {"time": str(last_metrics["time"]),
-                                              "old_metric": float(last_metrics["old_metric"]),
-                                              "new_metric": float(last_metrics["new_metric"]),
+                                              "old_precision": float(last_metrics["old_precision"]),
+                                              "new_precision": float(last_metrics["new_precision"]),
+                                              "old_recall": float(last_metrics["old_recall"]),
+                                              "new_recall": float(last_metrics["new_recall"]),
                                               "update_model": bool(last_metrics["update_model"])}}
             
         except aiohttp.client_exceptions.ClientConnectorError:
