@@ -24,7 +24,7 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     cd DeepPavlov && \
     git checkout master && \
     git pull && \
-    git checkout 3421fac496ca55c133af2330c389dd1e56f86d4f && \
+    git checkout c5d58bb5a0b48f2a084421c0e717c083ea175e3f && \
     pip install -e . && \
     python -c 'import deeppavlov.models'
 
