@@ -142,7 +142,7 @@ async def model(request: Request):
                                              "update_model": [False]})
             df.to_csv(metrics_filename, index=False)
             
-            return {"precision": precision, "recall": recall}
+            return {"precision": cur_precision, "recall": cur_recall}
         
         except aiohttp.client_exceptions.ClientConnectorError:
             logger.warning(f'{host} is unavailable, restarting worker container')
