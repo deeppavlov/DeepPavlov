@@ -1,7 +1,7 @@
 {
   "metadata": {
     "variables": {
-      "BASE_MODEL": "DeepPavlov/xlm-roberta-large-en-ru",
+      "BASE_MODEL": "DeepPavlov/xlm-roberta-large-en-ru-mnli",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
@@ -61,7 +61,7 @@
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 5e-06
+          "lr": 1e-05
         },
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
@@ -84,7 +84,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 24,
+    "batch_size": 28,
     "metrics": ["accuracy"],
     "validation_patience": 20,
     "val_every_n_epochs": 1,
