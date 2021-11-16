@@ -1,7 +1,7 @@
 {
   "metadata": {
     "variables": {
-      "BASE_MODEL": "roberta-large",
+      "BASE_MODEL": "DeepPavlov/xlm-roberta-large-en-ru-mnli",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
@@ -20,7 +20,7 @@
     "class_name": "huggingface_dataset_iterator",
     "features": ["contexts", "choices"],
     "label": "label",
-    "seed": 42
+    "seed": 100
   },
   "chainer": {
     "in": ["contexts_list", "choices_list"],
@@ -61,7 +61,7 @@
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 2e-05
+          "lr": 1e-05
         },
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
@@ -84,9 +84,9 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 16,
+    "batch_size": 28,
     "metrics": ["accuracy"],
-    "validation_patience": 10,
+    "validation_patience": 20,
     "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,

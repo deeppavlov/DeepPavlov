@@ -2,17 +2,11 @@
     "metadata": {
       "variables": {
         "ROOT_PATH": "~/.deeppavlov",
-        "BASE_MODEL": "roberta-large",
+        "BASE_MODEL": "DeepPavlov/xlm-roberta-large-en-ru",
         "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
         "MODELS_PATH": "{ROOT_PATH}/models",
-        "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mnli_{BASE_MODEL}"
-      },
-      "download": [
-        {
-          "url": "https://files.deeppavlov.ai/0.16/classifiers/glue_mnli.tar.gz",
-          "subdir": "{MODELS_PATH}"
-        }
-      ]
+        "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mnli/{BASE_MODEL}"
+      }
   },
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
@@ -44,7 +38,7 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 128,
+        "max_seq_length": 192,
         "truncation": "longest_first",
         "padding": "longest",
         "in": [
@@ -90,9 +84,9 @@
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
         "optimizer_parameters": {
-          "lr": 1e-05
+          "lr": 5e-06
         },
-        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_patience": 4,
         "learning_rate_drop_div": 2.0,
         "in": [
           "bert_features"
@@ -129,16 +123,15 @@
     ]
   },
   "train": {
-    "batch_size": 4,
+    "batch_size": 64,
     "metrics": [
       "accuracy"
     ],
     "validation_patience": 10,
-    "val_every_n_batches": 250,
-    "log_every_n_batches": 250,
+    "val_every_n_batches": 3066,
+    "log_every_n_batches": 3066,
     "show_examples": false,
     "evaluation_targets": [
-      "train",
       "valid"
     ],
     "class_name": "torch_trainer",

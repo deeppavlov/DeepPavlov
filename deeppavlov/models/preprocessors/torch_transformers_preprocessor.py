@@ -58,13 +58,16 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
+                 truncation: Union[bool, str] = 'longest_first',
+                 padding: Union[bool, str] = 'longest',
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
+        self.truncation = truncation
+        self.padding = padding
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
@@ -79,17 +82,20 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         examples = []
         for context_list, choice_list in zip(contexts, choices):
             for context, choice in zip(context_list, choice_list):
-                tokenized_input = self.tokenizer.encode_plus(text=context,
-                                                             text_pair=choice,
-                                                             return_attention_mask=True,
-                                                             add_special_tokens=True,
-                                                             truncation=True)
+                tokenized_input = self.tokenizer(
+                    text=context,
+                    text_pair=choice,
+                    return_attention_mask=True,
+                    add_special_tokens=True,
+                    truncation=self.truncation,
+                    max_length=self.max_seq_length,
+                )
 
                 examples.append(tokenized_input)
 
         padded_examples = self.tokenizer.pad(
             examples,
-            padding=True,
+            padding=self.padding,
             max_length=self.max_seq_length,
             return_tensors='pt',
         )
@@ -140,9 +146,13 @@ class TorchTransformersPreprocessor(Component):
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
+                 truncation: Union[bool, str] = 'longest_first',
+                 padding: Union[bool, str] = 'longest',
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.return_tokens = return_tokens
+        self.truncation = truncation
+        self.padding = padding
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -170,14 +180,16 @@ class TorchTransformersPreprocessor(Component):
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
 
-        input_features = self.tokenizer(text=texts_a,
-                                        text_pair=texts_b,
-                                        add_special_tokens=True,
-                                        max_length=self.max_seq_length,
-                                        padding='max_length',
-                                        return_attention_mask=True,
-                                        truncation=True,
-                                        return_tensors='pt')
+        input_features = self.tokenizer(
+            text=texts_a,
+            text_pair=texts_b,
+            add_special_tokens=True,
+            max_length=self.max_seq_length,
+            padding=self.padding,
+            return_attention_mask=True,
+            truncation=self.truncation,
+            return_tensors='pt'
+        )
         return input_features
 
 

@@ -73,7 +73,7 @@ class HuggingFaceDatasetReader(DatasetReader):
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
         if path == "super_glue" and name == "copa":
             dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
-        elif path == "super_glue" and name == "boolq":
+        elif (path == "super_glue" and name == "boolq") or (path == "russian_super_glue" and name == "danetqa"):
             dataset = load_dataset(path=path,
                                    name=name,
                                    split=interleave_splits(splits=list(split_mapping.values()),

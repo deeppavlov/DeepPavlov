@@ -15,7 +15,7 @@
 import re
 from logging import getLogger
 from pathlib import Path
-from typing import List, Dict, Union, Optional, Tuple
+from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
@@ -177,20 +177,6 @@ class TorchTransformersClassifierModel(TorchModel):
 
         return pred
 
-    # TODO move to the super class
-    @property
-    def accepted_keys(self) -> Tuple[str]:
-        if self.is_data_parallel:
-            accepted_keys = self.model.module.forward.__code__.co_varnames
-        else:
-            accepted_keys = self.model.forward.__code__.co_varnames
-        return accepted_keys
-
-    # TODO move to the super class
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
     # TODO this method requires massive refactoring
     @overrides
     def load(self, fname=None):
@@ -240,9 +226,8 @@ class TorchTransformersClassifierModel(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
-        # TODO that should probably be parametrized in config
-        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
+        if self.is_multi_gpu:
+            self._make_data_parallel()
 
         self.model.to(self.device)
 
@@ -250,7 +235,8 @@ class TorchTransformersClassifierModel(TorchModel):
             self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
+                self.optimizer, **self.lr_scheduler_parameters
+            )
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")

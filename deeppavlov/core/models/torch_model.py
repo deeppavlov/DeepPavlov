@@ -16,7 +16,7 @@ from abc import abstractmethod
 from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import torch
 from overrides import overrides
@@ -70,9 +70,12 @@ class TorchModel(NNModel):
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
                  min_learning_rate: float = 0.,
-                 *args, **kwargs):
+                 multi_gpu: bool = True,
+                 *args,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
+        self.is_multi_gpu = multi_gpu
         self.model = None
         self.optimizer = None
         self.lr_scheduler = None
@@ -230,3 +233,27 @@ class TorchModel(NNModel):
     @abstractmethod
     def train_on_batch(self, x: list, y: list):
         pass
+
+    @property
+    def accepted_keys(self) -> Tuple[str]:
+        if self.model is None:
+            raise AttributeError
+        if self.is_data_parallel:
+            accepted_keys = self.model.module.forward.__code__.co_varnames
+        else:
+            accepted_keys = self.model.forward.__code__.co_varnames
+        return accepted_keys
+
+    @property
+    def is_data_parallel(self) -> bool:
+        if self.model is None:
+            raise AttributeError
+        return isinstance(self.model, torch.nn.DataParallel)
+
+    def _make_data_parallel(self):
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            if self.model is None:
+                raise AttributeError
+            self.model = torch.nn.DataParallel(self.model)
+        else:
+            self.is_multi_gpu = False
