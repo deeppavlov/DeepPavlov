@@ -2,14 +2,14 @@ import asyncio
 import datetime
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 from logging import getLogger
 
 import aiohttp
 import pandas as pd
 import requests
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile
 from fastapi import HTTPException
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
@@ -79,20 +79,17 @@ async def get_metric(request: Request):
 
 
 @app.get("/evaluate")
-async def model(request: Request):
+async def model(fl: Optional[UploadFile] = File(None)):
     while True:
         try:
             host = next(porter.active_hosts)
         except StopIteration:
             raise HTTPException(status_code=500, detail='No active workers')
         try:
-            filename_data = await request.json()
-            if filename_data is None or not filename_data.get("file", ""):
-                test_data = init_test_data
+            if fl:
+                test_data = json.loads(await fl.read())
             else:
-                test_filename = filename_data["file"]
-                with open(test_filename, 'r') as fl:
-                    test_data = json.load(fl)
+                test_data = init_test_data
             
             num_correct = 0
             num_found = 0
