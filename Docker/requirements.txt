@@ -12,3 +12,4 @@ torchtext==0.6.0
 torchsummary==1.5.1
 transformers==4.11.3
 datasets==1.1.2
+python-multipart
