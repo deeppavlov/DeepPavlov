@@ -404,7 +404,7 @@ class SquadBertMappingPreprocessor(Component):
                 subtokens = args[0][batch_counter]
             else:
                 subtokens = features.tokens
-            if 'SEP' in subtokens:
+            if '[SEP]' in subtokens:
                 context_start = subtokens.index('[SEP]') + 1
             else:
                 context_start = subtokens.index('<s>') + 1

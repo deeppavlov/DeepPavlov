@@ -22,7 +22,7 @@
         "class_name": "torch_squad_transformers_preprocessor",
         "vocab_file": "{TRANSFORMER}",
         "do_lower_case": "{LOWERCASE}",
-        "max_seq_length": 768,
+        "max_seq_length": 384,
         "return_tokens": true,
         "in": [
           "question_raw",
@@ -159,7 +159,7 @@
   "metadata": {
     "variables": {
       "LOWERCASE": true,
-      "TRANSFORMER": "roberta-base",
+      "TRANSFORMER": "allenai/longformer-base-4096",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
