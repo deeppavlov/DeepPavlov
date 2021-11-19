@@ -130,6 +130,3 @@ download/
 /Dockerfile
 /entrypoint.sh
 /.dockerignore
-
-# zhenya test
-/zhenya_test
