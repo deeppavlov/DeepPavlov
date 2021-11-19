@@ -47,7 +47,7 @@
         "ngram_range": [2, 2],
         "num_entities_to_return": 5,
         "build_inverted_index": false,
-        "lemmatize": false,
+        "lemmatize": true,
         "use_descriptions": true,
         "full_paragraph": true,
         "return_confidences": true,
