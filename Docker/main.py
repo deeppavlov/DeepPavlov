@@ -97,71 +97,57 @@ def safe_rmtree(dir_path: Path):
         rmtree(dir_path)
 
 
-def parse_wikidata(state: State) -> None:
-    if state.parsed_wikidata_is_fresh():
-        log.info('Current parsed wikidata is the latest. Skipping parsing of wikidata')
-    else:
-        safe_rmtree(PARSED_WIKIDATA_NEW_PATH)
-        wikidata_parser = WikidataParser(WIKIDATA_PATH,
-                                         save_path=PARSED_WIKIDATA_NEW_PATH)
-        wikidata_parser.parse()
-        safe_rmtree(PARSED_WIKIDATA_OLD_PATH)
-        if PARSED_WIKIDATA_PATH.exists():
-            PARSED_WIKIDATA_PATH.rename(PARSED_WIKIDATA_OLD_PATH)
-        PARSED_WIKIDATA_NEW_PATH.rename(PARSED_WIKIDATA_PATH)
-        state.wikidata_parsed = state.wikidata_created
-        state.save()
+def parse_wikidata() -> None:
+    safe_rmtree(PARSED_WIKIDATA_NEW_PATH)
+    wikidata_parser = WikidataParser(WIKIDATA_PATH,
+                                     save_path=PARSED_WIKIDATA_NEW_PATH)
+    wikidata_parser.parse()
+    safe_rmtree(PARSED_WIKIDATA_OLD_PATH)
+    if PARSED_WIKIDATA_PATH.exists():
+        PARSED_WIKIDATA_PATH.rename(PARSED_WIKIDATA_OLD_PATH)
+    PARSED_WIKIDATA_NEW_PATH.rename(PARSED_WIKIDATA_PATH)
 
 
-def parse_entities(state: State) -> None:
+def parse_entities() -> None:
     aliases = Aliases()
-    if state.entities_is_fresh(aliases.mtime):
-        log.info('Current entities is the latest. Skipping entities parsing')
-    else:
-        safe_rmtree(ENTITIES_NEW_PATH)
-        ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
-        entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
-                                         save_path=ENTITIES_NEW_PATH)
-        entities_parser.load()
-        entities_parser.parse()
-        aliases = Aliases()  # entities parsing is quiet long, at this time labels could be updated,
-        # so variable is re-initialized intentionally
-        for label, entity_ids in aliases.aliases.items():
-            entities_parser.add_label(label, entity_ids)
-        entities_parser.save()
-        safe_rmtree(ENTITIES_OLD_PATH)
-        if ENTITIES_PATH.exists():
-            ENTITIES_PATH.rename(ENTITIES_OLD_PATH)
-        ENTITIES_NEW_PATH.rename(ENTITIES_PATH)
-
-        state.entities_wikidata = state.wikidata_parsed
-        state.aliases_updated = aliases.mtime
-        state.entities_parsed = str(datetime.datetime.now())
-        state.save()
+    safe_rmtree(ENTITIES_NEW_PATH)
+    ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
+    entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
+                                     save_path=ENTITIES_NEW_PATH)
+    entities_parser.load()
+    log.info("----- loaded parser")
+    entities_parser.parse()
+    log.info("----- parsed")
+    aliases = Aliases()  # entities parsing is quiet long, at this time labels could be updated,
+    # so variable is re-initialized intentionally
+    for label, entity_ids in aliases.aliases.items():
+        entities_parser.add_label(label, entity_ids)
+    entities_parser.save()
+    if ENTITIES_PATH.exists():
+        safe_rmtree(ENTITIES_PATH)
+    ENTITIES_NEW_PATH.rename(ENTITIES_PATH)
 
 
-def update_faiss(state: State):
-    if state.faiss_is_fresh():
-        log.info('skipping faiss update')
-    else:
-        safe_rmtree(FAISS_NEW_PATH)
-        FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
-        config = parse_config('entity_linking_vx_sep_cpu.json')
-        config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
-        config['chainer']['pipe'][-1]['fit_tfidf_vectorizer'] = True
-        config['chainer']['pipe'][-1]['fit_fasttext_vectorizer'] = True
-        config['chainer']['pipe'][-1]['fit_bert_embedder'] = True
-        config['chainer']['pipe'][-1]['vectorizer_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['vectorizer_filename']).name
-        config['chainer']['pipe'][-1]['faiss_index_filename'] = FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['faiss_index_filename']).name
-        build_model(config)
-        log.info('faiss cpu updated')
-        safe_rmtree(FAISS_OLD_PATH)
-        if FAISS_PATH.exists():
-            FAISS_PATH.rename(FAISS_OLD_PATH)
-        FAISS_NEW_PATH.rename(FAISS_PATH)
-
-        state.faiss_updated = state.entities_parsed
-        state.save()
+def update_faiss():
+    safe_rmtree(FAISS_NEW_PATH)
+    FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
+    config = parse_config('entity_linking_vx_siam_distil.json')
+    config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
+    config['chainer']['pipe'][-1]['fit_tfidf_vectorizer'] = True
+    config['chainer']['pipe'][-1]['fit_fasttext_vectorizer'] = True
+    config['chainer']['pipe'][-1]['fasttext_vectorizer_filename'] = \
+        FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['fasttext_vectorizer_filename']).name
+    config['chainer']['pipe'][-1]['tfidf_vectorizer_filename'] = \
+        FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['tfidf_vectorizer_filename']).name
+    config['chainer']['pipe'][-1]['fasttext_faiss_index_filename'] = \
+        FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['fasttext_faiss_index_filename']).name
+    config['chainer']['pipe'][-1]['tfidf_faiss_index_filename'] = \
+        FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['tfidf_faiss_index_filename']).name
+    build_model(config)
+    log.info('faiss cpu updated')
+    if FAISS_PATH.exists():
+        safe_rmtree(FAISS_PATH)
+    FAISS_NEW_PATH.rename(FAISS_PATH)
 
 
 def initial_setup():

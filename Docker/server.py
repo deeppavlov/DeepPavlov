@@ -176,16 +176,14 @@ async def get_metric(request: Request):
 
 @app.get('/update/wikidata')
 async def update_wikidata():
-    state = State.from_yaml()
-    download_wikidata(state)
-    parse_wikidata(state)
+    download_wikidata()
+    parse_wikidata()
 
 
 @app.get('/update/model')
 async def update_model():
-    state = State.from_yaml()
-    parse_entities(state)
-    update_faiss(state)
+    parse_entities()
+    update_faiss()
 
 
 @app.get('/aliases')

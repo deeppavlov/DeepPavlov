@@ -481,7 +481,9 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
         self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
-        self.q_to_label_out = load_pickle(self.load_path / self.q_to_label_out_filename)
+        self.q_to_label_out = None
+        if self.q_to_label_out_filename:
+            self.q_to_label_out = load_pickle(self.load_path / self.q_to_label_out_filename)
         self.label_to_q = {}
         for q_id in self.q_to_label:
             for label in self.q_to_label[q_id]:
@@ -1308,9 +1310,15 @@ class EntityLinkerSep(Component, Serializable):
             entity_labels_list = []
             for entity_ids in entity_ids_list:
                 if isinstance(entity_ids, list):
-                    entity_labels = [self.first_element(self.q_to_label_out.get(entity_id, [entity_id])) for entity_id in entity_ids]
+                    if self.q_to_label_out is not None:
+                        entity_labels = [self.first_element(self.q_to_label_out.get(entity_id, [entity_id])) for entity_id in entity_ids]
+                    else:
+                        entity_labels = [self.first_element(self.q_to_label.get(entity_id, [entity_id])) for entity_id in entity_ids]
                 elif isinstance(entity_ids, str):
-                    entity_labels = self.first_element(self.q_to_label_out.get(entity_ids, entity_ids))
+                    if self.q_to_label_out is not None:
+                        entity_labels = self.first_element(self.q_to_label_out.get(entity_ids, entity_ids))
+                    else:
+                        entity_labels = self.first_element(self.q_to_label.get(entity_ids, entity_ids))
                 else:
                     entity_labels = ["not in wiki" for _ in entity_ids]
                 entity_labels_list.append(entity_labels)

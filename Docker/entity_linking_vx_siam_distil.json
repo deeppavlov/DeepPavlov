@@ -60,9 +60,9 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "/data",
-      "ENTITIES_PATH": "{ROOT_PATH}/entities",
-      "FAISS_PATH": "{ROOT_PATH}/faiss",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "ENTITIES_PATH": "{DOWNLOADS_PATH}/wikidata_rus/entities",
+      "FAISS_PATH": "{DOWNLOADS_PATH}/wikidata_rus/faiss",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
@@ -79,11 +79,11 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/faiss.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/q_to_descr_emb_trained_lite.pickle",
