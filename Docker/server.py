@@ -16,10 +16,9 @@ from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from aliases import Aliases
 from main import initial_setup, State, download_wikidata, parse_wikidata, parse_entities, update_faiss
-from porter import Porter
-from deeppavlov import build_model
+from deeppavlov import build_model, deep_download
 from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.data.utils import simple_download, deep_download
+from deeppavlov.core.data.utils import simple_download
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -42,7 +41,6 @@ with open("/data/el_test_samples.json", 'r') as fl:
 el_config = parse_config('entity_linking_vx_siam_distil.json')
 deep_download('entity_linking_vx_siam_distil.json')
 el_model = build_model(el_config, download=False)
-porter = Porter()
 
 
 @app.post("/model")
@@ -91,10 +89,6 @@ async def get_metric(request: Request):
 @app.get("/evaluate")
 async def model(fl: Optional[UploadFile] = File(None)):
     while True:
-        try:
-            host = next(porter.active_hosts)
-        except StopIteration:
-            raise HTTPException(status_code=500, detail='No active workers')
         try:
             if fl:
                 test_data = json.loads(await fl.read())
