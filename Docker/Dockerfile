@@ -30,4 +30,4 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
 
 COPY . .
 
-CMD python prepare.py && python server.py
+CMD python server.py

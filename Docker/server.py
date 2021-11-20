@@ -15,8 +15,11 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from aliases import Aliases
+from main import initial_setup, State, download_wikidata, parse_wikidata, parse_entities, update_faiss
 from porter import Porter
-from deeppavlov.core.data.utils import simple_download
+from deeppavlov import build_model
+from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.data.utils import simple_download, deep_download
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -35,6 +38,10 @@ metrics_filename = "/data/metrics_score_history.csv"
 simple_download("http://files.deeppavlov.ai/rkn_data/el_test_samples.json", "/data/el_test_samples.json")
 with open("/data/el_test_samples.json", 'r') as fl:
     init_test_data = json.load(fl)
+
+el_config = parse_config('entity_linking_vx_siam_distil.json')
+deep_download('entity_linking_vx_siam_distil.json')
+el_model = build_model(el_config, download=False)
 porter = Porter()
 
 
@@ -42,17 +49,22 @@ porter = Porter()
 async def model(request: Request):
     while True:
         try:
-            host = next(porter.active_hosts)
-        except StopIteration:
-            raise HTTPException(status_code=500, detail='No active workers')
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(f"http://{host}:8000/model", json=await request.json()) as resp:
-                    return await resp.json(content_type=None)
-        except aiohttp.client_exceptions.ClientConnectorError:
-            logger.warning(f'{host} is unavailable, restarting worker container')
-            loop = asyncio.get_event_loop()
-            loop.create_task(porter.update_container(host))
+            input_data = await request.json()
+            entity_substr = input_data["entity_substr"]
+            entity_offsets = input_data["entity_offsets"]
+            tags = input_data["tags"]
+            sentences_offsets = input_data["sentences_offsets"]
+            sentences = input_data["sentences"]
+            probas = input_data["probas"]
+            res = el_model(entity_substr, entity_offsets, tags, sentences_offsets, sentences, probas)
+            entity_substr, conf, entity_offsets, entity_ids, entity_tags, entity_labels, status = res
+            response = {"entity_substr": entity_substr, "conf": conf, "entity_offsets": entity_offsets,
+                        "entity_ids": entity_ids, "entity_tags": entity_tags, "entity_labels": entity_labels,
+                        "status": status}
+            return response
+        
+        except:
+            logger.warning(f'Interal server error')
 
 
 @app.get('/last_train_metric')
@@ -72,10 +84,8 @@ async def get_metric(request: Request):
                                               "new_recall": float(last_metrics["new_recall"]),
                                               "update_model": bool(last_metrics["update_model"])}}
             
-        except aiohttp.client_exceptions.ClientConnectorError:
-            logger.warning(f'{host} is unavailable, restarting worker container')
-            loop = asyncio.get_event_loop()
-            loop.create_task(porter.update_container(host))
+        except:
+            logger.warning(f'Interal server error')
 
 
 @app.get("/evaluate")
@@ -103,14 +113,17 @@ async def model(fl: Optional[UploadFile] = File(None)):
                 sentences = sample["sentences"]
                 sentences_offsets = sample["sentences_offsets"]
                 gold_entities = sample["gold_entities"]
-                res = requests.post(f"http://{host}:8000/model", json={"entity_substr": [entity_substr],
-                                                                       "entity_offsets": [entity_offsets],
-                                                                       "tags": [tags],
-                                                                       "sentences_offsets": [sentences_offsets],
-                                                                       "sentences": [sentences],
-                                                                       "probas": [probas]}).json()
-                entity_substr_list, conf_list, entity_offsets_list, entity_ids_list, entity_tags_list, \
-                    entity_labels_list, status_list = res[0]
+                entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
+                    entity_labels_batch, status_batch = el_model([entity_substr], [entity_offsets], [tags],
+                                                                 [sentences_offsets], [sentences], [probas])
+                
+                entity_substr_list = entity_substr_batch[0]
+                conf_list = conf_batch[0]
+                entity_offsets_list = entity_offsets_batch[0]
+                entity_ids_list = entity_ids_batch[0]
+                entity_tags_list = entity_tags_batch[0]
+                entity_labels_list = entity_labels_batch[0]
+                status_list = status_batch[0]
                 for entity_ids, gold_entity in zip(entity_ids_list, gold_entities):
                     if entity_ids[0] != "not in wiki" and entity_ids[0] == gold_entity:
                         num_correct += 1
@@ -140,13 +153,10 @@ async def model(fl: Optional[UploadFile] = File(None)):
                                              "new_recall": [cur_recall],
                                              "update_model": [False]})
             df.to_csv(metrics_filename, index=False)
-            
             return {"precision": cur_precision, "recall": cur_recall}
         
-        except aiohttp.client_exceptions.ClientConnectorError:
-            logger.warning(f'{host} is unavailable, restarting worker container')
-            loop = asyncio.get_event_loop()
-            loop.create_task(porter.update_container(host))
+        except:
+            logger.warning(f'Interal server error')
 
             
 @app.get('/last_train_metric')
@@ -166,30 +176,23 @@ async def get_metric(request: Request):
                                               "new_recall": float(last_metrics.get("new_recall", "")),
                                               "update_model": bool(last_metrics.get("update_model", ""))}}
             
-        except aiohttp.client_exceptions.ClientConnectorError:
-            logger.warning(f'{host} is unavailable, restarting worker container')
-            loop = asyncio.get_event_loop()
-            loop.create_task(porter.update_container(host))
+        except:
+            logger.warning(f'Interal server error')
 
-
-@app.get('/update/containers')
-async def update():
-    loop = asyncio.get_event_loop()
-    loop.create_task(porter.update_containers())
 
 @app.get('/update/wikidata')
 async def update_wikidata():
-    try:
-        porter.start_manager('python update_wikidata.py')
-    except RuntimeError as e:
-        return HTTPException(repr(e))
+    state = State.from_yaml()
+    download_wikidata(state)
+    parse_wikidata(state)
+
 
 @app.get('/update/model')
 async def update_model():
-    try:
-        porter.start_manager('python update_model.py')
-    except RuntimeError as e:
-        return HTTPException(repr(e))
+    state = State.from_yaml()
+    parse_entities(state)
+    update_faiss(state)
+
 
 @app.get('/aliases')
 async def get_aliases():
@@ -222,54 +225,6 @@ async def get_alias(label: str):
     found_aliases = aliases.get_alias(label)
     return f"{found_aliases}"
 
-
-@app.get('/worker/{worker_id}')
-async def container_logs(worker_id: str):
-    if worker_id not in porter.workers:
-        return f'no such container'
-    else:
-        loop = asyncio.get_event_loop()
-        return str(await loop.run_in_executor(None, porter.workers[worker_id].logs))
-
-@app.get('/status', response_class=HTMLResponse)
-async def status():
-    containers = await porter.get_stats()
-    workers = '\n'.join([f"<tr><td><a href='/logs/{name}'>{name}</a></td><td>{status}</td></tr>" for name, status in containers.items() if name != 'manager'])
-    manager = f"<tr><td><a href='/logs/manager'>manager</a></td><td>{containers['manager']}</td></tr>"
-    return f"""
-    <html>
-        <head>
-            <title>Entity linking containers</title>
-        </head>
-        <body>
-            <h4>Manager</h4>
-            <table>
-            <tr><td>name</td><td>status</td></tr>
-            {manager}
-            </table>
-            <h4>Workers</h4>
-            <table>
-            <tr><td>name</td><td>status</td></tr>
-            {workers}
-            </table>
-        </body>
-    </html>
-    """
-
-@app.get('/logs/{container_name}', response_class=HTMLResponse)
-async def container_logs(container_name: str):
-    logs = await porter.get_logs(container_name)
-    logs = logs.replace("\n", "<br />")
-    return f"""
-    <html>
-        <head>
-            <title>{container_name} logs</title>
-        </head>
-        <body>
-            {logs}
-        </body>
-    </html>
-    """
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
 '''
