@@ -11,6 +11,8 @@ import requests
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi import HTTPException
+from pydantic import BaseConfig, BaseModel, Field
+from deeppavlov.core.data.utils import jsonify_data
 from starlette.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
@@ -43,47 +45,51 @@ deep_download('entity_linking_vx_siam_distil.json')
 el_model = build_model(el_config, download=False)
 
 
+class Batch(BaseModel):
+    entity_substr: List[List[str]] = Field(..., example=[["москва", "россии"]])
+    entity_offsets: List[List[List[int]]] = Field(..., example=[[[0, 6], [17, 23]]])
+    tags: List[List[str]] = Field(..., example=[["LOC", "LOC"]])
+    sentences_offsets: List[List[List[int]]] = Field(..., example=[[[0, 24]]])
+    sentences: List[List[str]] = Field(..., example=[["Москва - столица России."]])
+    probas: List[List[float]] = Field(..., example=[[0.42]])
+
+
 @app.post("/model")
-async def model(request: Request):
-    while True:
-        try:
-            input_data = await request.json()
-            entity_substr = input_data["entity_substr"]
-            entity_offsets = input_data["entity_offsets"]
-            tags = input_data["tags"]
-            sentences_offsets = input_data["sentences_offsets"]
-            sentences = input_data["sentences"]
-            probas = input_data["probas"]
-            res = el_model(entity_substr, entity_offsets, tags, sentences_offsets, sentences, probas)
-            entity_substr, conf, entity_offsets, entity_ids, entity_tags, entity_labels, status = res
-            response = {"entity_substr": entity_substr, "conf": conf, "entity_offsets": entity_offsets,
-                        "entity_ids": entity_ids, "entity_tags": entity_tags, "entity_labels": entity_labels,
-                        "status": status}
-            return response
-        
-        except:
-            logger.warning(f'Interal server error')
+async def model(payload: Batch):
+    res = el_model(payload.entity_substr,
+                   payload.entity_offsets,
+                   payload.tags,
+                   payload.sentences_offsets,
+                   payload.sentences,
+                   payload.probas)
+    entity_substr, conf, entity_offsets, entity_ids, entity_tags, entity_labels, status = res
+    response = {
+        "entity_substr": entity_substr,
+        "conf": conf,
+        "entity_offsets": entity_offsets,
+        "entity_ids": entity_ids,
+        "entity_tags": entity_tags,
+        "entity_labels": entity_labels,
+        "status": status
+    }
+    return jsonify_data(response)
 
 
 @app.get('/last_train_metric')
-async def get_metric(request: Request):
-    while True:
-        try:
-            last_metrics = {}
-            if Path(metrics_filename).exists():
-                df = pd.read_csv(metrics_filename)
-                last_metrics = df.iloc[-1].to_dict()
-                logger.warning(f"last_metrics {last_metrics}")
-            
-            return {"success": True, "data": {"time": str(last_metrics["time"]),
+async def get_metric():
+        last_metrics = {}
+        if Path(metrics_filename).exists():
+            df = pd.read_csv(metrics_filename)
+            last_metrics = df.iloc[-1].to_dict()
+            logger.warning(f"last_metrics {last_metrics}")
+
+            return jsonify_data({"success": True, "data": {"time": str(last_metrics["time"]),
                                               "old_precision": float(last_metrics["old_precision"]),
                                               "new_precision": float(last_metrics["new_precision"]),
                                               "old_recall": float(last_metrics["old_recall"]),
                                               "new_recall": float(last_metrics["new_recall"]),
-                                              "update_model": bool(last_metrics["update_model"])}}
-            
-        except:
-            logger.warning(f'Interal server error')
+                                              "update_model": bool(last_metrics["update_model"])}})
+        return {"success": False}
 
 
 @app.get("/evaluate")
@@ -219,6 +225,3 @@ async def get_alias(label: str):
 
 
 uvicorn.run(app, host='0.0.0.0', port=8000)
-'''
-{"entity_substr": [["москва", "россии"]],"entity_offsets": [[[0, 6], [17, 23]]],"tags": [["LOC", "LOC"]],"sentences_offsets": [[[0, 24]]],"sentences": [["Москва - столица России."]]}
-'''

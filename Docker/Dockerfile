@@ -28,6 +28,8 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     pip install -e . && \
     python -c 'import deeppavlov.models'
 
+WORKDIR /src
+
 COPY . .
 
 CMD python server.py
