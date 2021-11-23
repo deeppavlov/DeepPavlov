@@ -32,9 +32,9 @@ We have trained BERT-base model for other languages and domains:
 -  Conversational DistilRuBERT, Russian, cased, 6-layer, 768-hidden, 12-heads, 135.4M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-6_H-768_A-12_pt.tar.gz>`__
 -  Conversational DistilRuBERT-tiny, Russian, cased, 2-layer, 768-hidden, 12-heads, 107M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-2_H-768_A-12_pt.tar.gz>`__
 -  Sentence Multilingual BERT, 101 languages, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 
 The ``deeppavlov_pytorch`` models are designed to be run with the `HuggingFace's Transformers <https://huggingface.co/transformers/>`__ library.
 
