@@ -125,7 +125,7 @@
 	"logger": [
 		{
 		  "name": "TensorboardLogger",
-		  "log_dir": "{MODELS_PATH}/sentiment_twitter/logs_new"
+		  "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
 		}
 	]
   },

@@ -26,6 +26,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics, NumpyArrayEncoder
 
+from deeppavlov.core.common.logging_class import *
+
 log = getLogger(__name__)
 
 
@@ -57,6 +59,7 @@ class NNTrainer(FitTrainer):
             in evaluation logs (default is ``False``)
         tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
             (default is ``None``)
+        logger : list of dictionary of possible loggers provided in config file
         validate_first: flag used to calculate metrics on the ``'valid'`` data type before starting training
             (default is ``True``)
         validation_patience: how many times in a row the validation metric has to not improve for early stopping,
@@ -98,14 +101,19 @@ class NNTrainer(FitTrainer):
                  metric_optimization: str = 'maximize',
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 # tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 logger : list = [], ## see FitTrainer
+
                  max_test_batches: int = -1,
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
                  log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1,
+
                  **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
-                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir,
+                         show_examples=show_examples,
+                         # tensorboard_log_dir=tensorboard_log_dir,
+                         logger = logger,
                          max_test_batches=max_test_batches, **kwargs)
         if train_metrics is None:
             self.train_metrics = self.metrics
@@ -146,9 +154,17 @@ class NNTrainer(FitTrainer):
         self.losses = []
         self.start_time: Optional[float] = None
 
-        if self.tensorboard_log_dir is not None:
-            self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
-            self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
+        # if self.tensorboard_log_dir is not None:
+        #     self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
+        #     self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
+        
+        if self.tensorboard_idx is not None:
+            self.TensorboardLogger_train = TensorboardLogger('train', str(self.logger[self.tensorboard_idx]["log_dir"] / 'train_log'))
+            self.TensorboardLogger_valid = TensorboardLogger('valid', str(self.logger[self.tensorboard_idx]["log_dir"] / 'valid_log'))
+            # self.TensorboardLogger = TensorboardLogger(self.logger[self.tensorboard_idx]["log_dir"])
+            #self.tb_train_writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] / 'train_log'))
+            #self.tb_valid_writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] / 'valid_log'))
+        
 
     def save(self) -> None:
         if self._loaded:
@@ -162,102 +178,111 @@ class NNTrainer(FitTrainer):
     def _is_first_validation(self):
         return self.validation_number == 1
 
-    def _validate(self, iterator: DataLearningIterator,
-                  tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
-        self._send_event(event_name='before_validation')
-        report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
-                           start_time=self.start_time)
+    # def _validate(self, iterator: DataLearningIterator,
+    #               tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
+    #     self.TensorboardLogger_valid(self , iterator, tensorboard_tag, tensorboard_index, log)
+        # self._send_event(event_name='before_validation')
+        # report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
+        #                    start_time=self.start_time)
 
-        report['epochs_done'] = self.epoch
-        report['batches_seen'] = self.train_batches_seen
-        report['train_examples_seen'] = self.examples
+        # report['epochs_done'] = self.epoch
+        # report['batches_seen'] = self.train_batches_seen
+        # report['train_examples_seen'] = self.examples
 
-        metrics = list(report['metrics'].items())
+        # metrics = list(report['metrics'].items())
 
-        if tensorboard_tag is not None and self.tensorboard_log_dir is not None:
-            summary = self._tf.Summary()
-            for name, score in metrics:
-                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
-            if tensorboard_index is None:
-                tensorboard_index = self.train_batches_seen
-            self.tb_valid_writer.add_summary(summary, tensorboard_index)
-            self.tb_valid_writer.flush()
+        # if tensorboard_tag is not None and self.tensorboard_log_dir is not None:
+        #     summary = self._tf.Summary()
+        #     for name, score in metrics:
+        #         summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
+        #     if tensorboard_index is None:
+        #         tensorboard_index = self.train_batches_seen
+        #     self.tb_valid_writer.add_summary(summary, tensorboard_index)
+        #     self.tb_valid_writer.flush()
 
-        m_name, score = metrics[0]
+        # m_name, score = metrics[0]
 
-        # Update the patience
-        if self.score_best is None:
-            self.patience = 0
-        else:
-            if self.improved(score, self.score_best):
-                self.patience = 0
-            else:
-                self.patience += 1
+        # # Update the patience
+        # if self.score_best is None:
+        #     self.patience = 0
+        # else:
+        #     if self.improved(score, self.score_best):
+        #         self.patience = 0
+        #     else:
+        #         self.patience += 1
 
-        # Run the validation model-saving logic
-        if self._is_initial_validation():
-            log.info('Initial best {} of {}'.format(m_name, score))
-            self.score_best = score
-        elif self._is_first_validation() and self.score_best is None:
-            log.info('First best {} of {}'.format(m_name, score))
-            self.score_best = score
-            log.info('Saving model')
-            self.save()
-        elif self.improved(score, self.score_best):
-            log.info(f'Improved best {m_name} from {self.score_best} to {score}')
-            self.score_best = score
-            log.info('Saving model')
-            self.save()
-        else:
-            log.info('Did not improve on the {} of {}'.format(m_name, self.score_best))
+        # # Run the validation model-saving logic
+        # if self._is_initial_validation():
+        #     log.info('Initial best {} of {}'.format(m_name, score))
+        #     self.score_best = score
+        # elif self._is_first_validation() and self.score_best is None:
+        #     log.info('First best {} of {}'.format(m_name, score))
+        #     self.score_best = score
+        #     log.info('Saving model')
+        #     self.save()
+        # elif self.improved(score, self.score_best):
+        #     log.info('Improved best {} of {}'.format(m_name, score))
+        #     self.score_best = score
+        #     log.info('Saving model')
+        #     self.save()
+        # else:
+        #     log.info('Did not improve on the {} of {}'.format(m_name, self.score_best))
 
-        report['impatience'] = self.patience
-        if self.validation_patience > 0:
-            report['patience_limit'] = self.validation_patience
+        # report['impatience'] = self.patience
+        # if self.validation_patience > 0:
+        #     report['patience_limit'] = self.validation_patience
 
-        self._send_event(event_name='after_validation', data=report)
-        report = {'valid': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
-        self.validation_number += 1
+        # self._send_event(event_name='after_validation', data=report)
+        # report = {'valid': report}
+        # print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        # self.validation_number += 1
 
-    def _log(self, iterator: DataLearningIterator,
-             tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
-        self._send_event(event_name='before_log')
-        if self.log_on_k_batches == 0:
-            report = {
-                'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
-            }
-        else:
-            data = islice(iterator.gen_batches(self.batch_size, data_type='train', shuffle=True),
-                          self.log_on_k_batches)
-            report = self.test(data, self.train_metrics, start_time=self.start_time)
+    # def _log(self, iterator: DataLearningIterator,
+    #          tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
+    #     self.TensorboardLogger_train(self , iterator, tensorboard_tag, tensorboard_index , log)
+        # self._send_event(event_name='before_log')
+        # if self.log_on_k_batches == 0:
+        #     report = {
+        #         'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
+        #     }
+        # else:
+        #     data = islice(iterator.gen_batches(self.batch_size, data_type='train', shuffle=True),
+        #                   self.log_on_k_batches)
+        #     report = self.test(data, self.train_metrics, start_time=self.start_time)
 
-        report.update({
-            'epochs_done': self.epoch,
-            'batches_seen': self.train_batches_seen,
-            'train_examples_seen': self.examples
-        })
+        # report.update({
+        #     'epochs_done': self.epoch,
+        #     'batches_seen': self.train_batches_seen,
+        #     'train_examples_seen': self.examples
+        # })
 
-        metrics: List[Tuple[str, float]] = list(report.get('metrics', {}).items()) + list(self.last_result.items())
+        # metrics: List[Tuple[str, float]] = list(report.get('metrics', {}).items()) + list(self.last_result.items())
 
-        report.update(self.last_result)
-        if self.losses:
-            report['loss'] = sum(self.losses) / len(self.losses)
-            self.losses.clear()
-            metrics.append(('loss', report['loss']))
+        # report.update(self.last_result)
+        # if self.losses:
+        #     report['loss'] = sum(self.losses) / len(self.losses)
+        #     self.losses.clear()
+        #     metrics.append(('loss', report['loss']))
 
-        if metrics and self.tensorboard_log_dir is not None:
-            summary = self._tf.Summary()
+        # # if metrics and self.tensorboard_log_dir is not None:
+        # if metrics and self.tensorboard_idx is not None:
+        #     self.TensorboardLogger_train(self, metrics, tensorboard_tag, tensorboard_index)
+        # # if metrics and self.tensorboard_idx is not None:
+        # #     summary = self._tf.Summary()
 
-            for name, score in metrics:
-                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
-            self.tb_train_writer.add_summary(summary, tensorboard_index)
-            self.tb_train_writer.flush()
+        # #     for name, score in metrics:
+        # #         summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
+            
+        # #     self.TensorboardLogger_train(summary,tensorboard_index)
+        #     # self.TensorboardLogger('train',summary,tensorboard_index)
+        #     #self.tb_train_writer.add_summary(summary, tensorboard_index)
+        #     #self.tb_train_writer.flush()
 
-        self._send_event(event_name='after_train_log', data=report)
+        # self._send_event(event_name='after_train_log', data=report)
 
-        report = {'train': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        
+        # report = {'train': report}
+        # print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
 
     def _send_event(self, event_name: str, data: Optional[dict] = None) -> None:
         report = {
@@ -274,7 +299,8 @@ class NNTrainer(FitTrainer):
         """Train pipeline on batches using provided data iterator and initialization parameters"""
         self.start_time = time.time()
         if self.validate_first:
-            self._validate(iterator)
+            # self._validate(iterator)
+            self.TensorboardLogger_valid(self , iterator , log = log)
 
         while True:
             impatient = False
@@ -292,11 +318,12 @@ class NNTrainer(FitTrainer):
                 self.examples += len(x)
 
                 if self.log_every_n_batches > 0 and self.train_batches_seen % self.log_every_n_batches == 0:
-                    self._log(iterator, tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+                    # self._log(iterator, tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+                    self.TensorboardLogger_train(self , iterator, 'every_n_batches', self.train_batches_seen , log) # log not used for TB_train
 
                 if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
-                    self._validate(iterator,
-                                   tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+                    # self._validate(iterator,tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+                    self.TensorboardLogger_valid(self , iterator, 'every_n_batches', self.train_batches_seen, log)
 
                 self._send_event(event_name='after_batch')
 
@@ -315,10 +342,12 @@ class NNTrainer(FitTrainer):
             self.epoch += 1
 
             if self.log_every_n_epochs > 0 and self.epoch % self.log_every_n_epochs == 0:
-                self._log(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+                # self._log(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+                self.TensorboardLogger_train(self , iterator, 'every_n_epochs', self.epoch , log =log)
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
-                self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+                # self._validate(iterator, tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch)
+                self.TensorboardLogger_valid(self , iterator, 'every_n_epochs', self.epoch, log)
 
             self._send_event(event_name='after_epoch')
 

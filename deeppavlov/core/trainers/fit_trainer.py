@@ -52,6 +52,7 @@ class FitTrainer:
             in evaluation logs (default is ``False``)
         tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
             (default is ``None``)
+        logger : list of dictionary of possible loggers provided in config file
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
@@ -61,8 +62,9 @@ class FitTrainer:
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
+                 # tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  max_test_batches: int = -1,
+                 logger: list = [],
                  **kwargs) -> None:
         if kwargs:
             log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
@@ -75,19 +77,40 @@ class FitTrainer:
 
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
-        self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
-        if tensorboard_log_dir is not None:
+        # self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
+        self.logger: list = logger
+        def get_method_idx(logger, name):
+            for i in range(len(logger)):
+                if logger[i]["name"] == name:
+                    return i
+            return None
+        self.tensorboard_idx = get_method_idx(self.logger, "TensorboardLogger")
+        # self.wandb = get_method_idx(self.logger, "")
+        if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
                 # noinspection PyUnresolvedReferences
                 import tensorflow
             except ImportError:
                 log.warning('TensorFlow could not be imported, so tensorboard log directory'
-                            f'`{self.tensorboard_log_dir}` will be ignored')
-                self.tensorboard_log_dir = None
+                            f'`{self.logger[self.tensorboard_idx]["log_dir"]}` will be ignored')
+                self.logger[self.tensorboard_idx]["log_dir"] = None
             else:
-                self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
+                self.logger[self.tensorboard_idx]["log_dir"] = expand_path(self.logger[self.tensorboard_idx]["log_dir"])
                 self._tf = tensorflow
+
+        # if tensorboard_log_dir is not None:
+        #     try:
+        #         # noinspection PyPackageRequirements
+        #         # noinspection PyUnresolvedReferences
+        #         import tensorflow
+        #     except ImportError:
+        #         log.warning('TensorFlow could not be imported, so tensorboard log directory'
+        #                     f'`{self.tensorboard_log_dir}` will be ignored')
+        #         self.tensorboard_log_dir = None
+        #     else:
+        #         self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
+        #         self._tf = tensorflow
 
         self._built = False
         self._saved = False
@@ -117,9 +140,19 @@ class FitTrainer:
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
-                        if result is not None and self.tensorboard_log_dir is not None:
+                        # if result is not None and self.tensorboard_log_dir is not None:
+                        #     if writer is None:
+                        #         writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                        #                                                  f'partial_fit_{component_index}_log'))
+                        #     for name, score in result.items():
+                        #         summary = self._tf.Summary()
+                        #         summary.value.add(tag='partial_fit/' + name, simple_value=score)
+                        #         writer.add_summary(summary, i)
+                        #     writer.flush()
+                        
+                        if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
                             if writer is None:
-                                writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                                writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                          f'partial_fit_{component_index}_log'))
                             for name, score in result.items():
                                 summary = self._tf.Summary()
@@ -132,8 +165,17 @@ class FitTrainer:
                         preprocessed = [preprocessed]
                     result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
 
-                    if result is not None and self.tensorboard_log_dir is not None:
-                        writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                    # if result is not None and self.tensorboard_log_dir is not None:
+                    #     writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                    #                                              f'fit_log_{component_index}'))
+                    #     for name, scores in result.items():
+                    #         for i, score in enumerate(scores):
+                    #             summary = self._tf.Summary()
+                    #             summary.value.add(tag='fit/' + name, simple_value=score)
+                    #             writer.add_summary(summary, i)
+                    #     writer.flush()
+                    if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
+                        writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                  f'fit_log_{component_index}'))
                         for name, scores in result.items():
                             for i, score in enumerate(scores):
