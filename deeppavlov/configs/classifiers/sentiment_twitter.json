@@ -3,7 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
+	"data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -62,7 +62,7 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODEL_PATH}/model",
+        "save_path": "{MODEL_PATH}/new_model",
         "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
@@ -100,7 +100,8 @@
     ]
   },
   "train": {
-    "epochs": 100,
+    "epochs": 5,
+	  "log_every_n_epochs": 1,
     "batch_size": 64,
     "metrics": [
       "accuracy",
@@ -119,7 +120,14 @@
       "valid",
       "test"
     ],
-    "class_name": "nn_trainer"
+    "class_name": "nn_trainer",
+	"tensorboard_log_dir": "{MODELS_PATH}/sentiment_twitter/logs",
+	"logger": [
+		{
+		  "name": "TensorboardLogger",
+		  "log_dir": "{MODELS_PATH}/sentiment_twitter/logs_new"
+		}
+	]
   },
   "metadata": {
     "variables": {
@@ -128,6 +136,10 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_twitter_v6"
     },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
