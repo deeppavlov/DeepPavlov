@@ -143,10 +143,6 @@ async def model(fl: Optional[UploadFile] = File(None)):
 async def update_wikidata():
     download_wikidata()
     parse_wikidata()
-
-
-@app.get('/update/model')
-async def update_model():
     parse_entities()
     update_faiss()
 
