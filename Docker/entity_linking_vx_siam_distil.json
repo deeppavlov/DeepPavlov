@@ -61,8 +61,8 @@
     "variables": {
       "ROOT_PATH": "/data",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "ENTITIES_PATH": "{DOWNLOADS_PATH}/wikidata_rus/entities",
-      "FAISS_PATH": "{DOWNLOADS_PATH}/wikidata_rus/faiss",
+      "ENTITIES_PATH": "{ROOT_PATH}/entities",
+      "FAISS_PATH": "{ROOT_PATH}/faiss",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "NER_PATH": "{MODELS_PATH}/ner_rus_bert"
@@ -79,11 +79,11 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/faiss.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/entities.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/q_to_descr_emb_trained_lite.pickle",
@@ -96,6 +96,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/distilrubert_tiny_cased.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/rkn_data/el_test_samples.json",
+        "subdir":"{ROOT_PATH}"
       }
     ]
   }

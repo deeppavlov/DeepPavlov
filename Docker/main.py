@@ -4,14 +4,13 @@ from pathlib import Path
 from shutil import rmtree, copytree
 from typing import Optional
 
-import requests
 import yaml
 from dateutil.parser import parse as parsedate
 
+from aliases import Aliases
 from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_WIKIDATA_OLD_PATH, \
     PARSED_WIKIDATA_NEW_PATH, ENTITIES_PATH, ENTITIES_OLD_PATH, ENTITIES_NEW_PATH, FAISS_PATH, FAISS_OLD_PATH, \
     FAISS_NEW_PATH, STATE_PATH, DATA_PATH, LOGS_PATH
-from aliases import Aliases
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import simple_download
@@ -79,17 +78,9 @@ class State:
         return parsedate(self.faiss_updated) >= parsedate(self.entities_parsed)
 
 
-def download_wikidata(state: State) -> None:
-    r = requests.head(WIKIDATA_URL)
-    remote_wikidata_created = r.headers['Last-Modified']
-
-    if WIKIDATA_PATH.exists() and state.wikidata_is_fresh(remote_wikidata_created):
-        log.info('Current wikidata is the latest. Downloading of wikidata is skipped')
-    else:
-        simple_download(WIKIDATA_URL, WIKIDATA_PATH)
-        state.wikidata_created = remote_wikidata_created
-        state.save()
-        log.info('Wikidata updated')
+def download_wikidata() -> None:
+    simple_download(WIKIDATA_URL, WIKIDATA_PATH)
+    log.info('Wikidata updated')
 
 
 def safe_rmtree(dir_path: Path):
@@ -109,7 +100,6 @@ def parse_wikidata() -> None:
 
 
 def parse_entities() -> None:
-    aliases = Aliases()
     safe_rmtree(ENTITIES_NEW_PATH)
     ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
     entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
@@ -118,13 +108,13 @@ def parse_entities() -> None:
     log.info("----- loaded parser")
     entities_parser.parse()
     log.info("----- parsed")
-    aliases = Aliases()  # entities parsing is quiet long, at this time labels could be updated,
-    # so variable is re-initialized intentionally
+    aliases = Aliases()
     for label, entity_ids in aliases.aliases.items():
         entities_parser.add_label(label, entity_ids)
     entities_parser.save()
+    safe_rmtree(ENTITIES_OLD_PATH)
     if ENTITIES_PATH.exists():
-        safe_rmtree(ENTITIES_PATH)
+        ENTITIES_PATH.rename(ENTITIES_OLD_PATH)
     ENTITIES_NEW_PATH.rename(ENTITIES_PATH)
 
 
@@ -145,8 +135,9 @@ def update_faiss():
         FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['tfidf_faiss_index_filename']).name
     build_model(config)
     log.info('faiss cpu updated')
+    safe_rmtree(FAISS_OLD_PATH)
     if FAISS_PATH.exists():
-        safe_rmtree(FAISS_PATH)
+        FAISS_PATH.rename(FAISS_OLD_PATH)
     FAISS_NEW_PATH.rename(FAISS_PATH)
 
 

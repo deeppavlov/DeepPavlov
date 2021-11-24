@@ -1,26 +1,21 @@
-import asyncio
 import datetime
 import json
+from logging import getLogger
 from pathlib import Path
 from typing import Dict, List, Optional
-from logging import getLogger
 
-import aiohttp
 import pandas as pd
-import requests
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi import HTTPException
-from pydantic import BaseConfig, BaseModel, Field
-from deeppavlov.core.data.utils import jsonify_data
+from pydantic import BaseModel, Field
 from starlette.middleware.cors import CORSMiddleware
-from starlette.requests import Request
-from starlette.responses import HTMLResponse
+
 from aliases import Aliases
-from main import initial_setup, State, download_wikidata, parse_wikidata, parse_entities, update_faiss
+from constants import METRICS_FILENAME
 from deeppavlov import build_model, deep_download
-from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.data.utils import simple_download
+from deeppavlov.core.data.utils import jsonify_data
+from main import download_wikidata, parse_wikidata, parse_entities, update_faiss, initial_setup
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -34,15 +29,12 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-metrics_filename = "/data/metrics_score_history.csv"
-
-simple_download("http://files.deeppavlov.ai/rkn_data/el_test_samples.json", "/data/el_test_samples.json")
 with open("/data/el_test_samples.json", 'r') as fl:
     init_test_data = json.load(fl)
 
-el_config = parse_config('entity_linking_vx_siam_distil.json')
 deep_download('entity_linking_vx_siam_distil.json')
-el_model = build_model(el_config, download=False)
+initial_setup()
+el_model = build_model('entity_linking_vx_siam_distil.json', download=False)
 
 
 class Batch(BaseModel):
@@ -77,107 +69,74 @@ async def model(payload: Batch):
 
 @app.get('/last_train_metric')
 async def get_metric():
-        last_metrics = {}
-        if Path(metrics_filename).exists():
-            df = pd.read_csv(metrics_filename)
-            last_metrics = df.iloc[-1].to_dict()
-            logger.warning(f"last_metrics {last_metrics}")
+    if Path(METRICS_FILENAME).exists():
+        df = pd.read_csv(METRICS_FILENAME)
+        last_metrics = df.iloc[-1].to_dict()
+        logger.warning(f"last_metrics {last_metrics}")
 
-            return jsonify_data({"success": True, "data": {"time": str(last_metrics["time"]),
-                                              "old_precision": float(last_metrics["old_precision"]),
-                                              "new_precision": float(last_metrics["new_precision"]),
-                                              "old_recall": float(last_metrics["old_recall"]),
-                                              "new_recall": float(last_metrics["new_recall"]),
-                                              "update_model": bool(last_metrics["update_model"])}})
-        return {"success": False}
+        return jsonify_data({"success": True, "data": {"time": str(last_metrics["time"]),
+                                          "old_precision": float(last_metrics["old_precision"]),
+                                          "new_precision": float(last_metrics["new_precision"]),
+                                          "old_recall": float(last_metrics["old_recall"]),
+                                          "new_recall": float(last_metrics["new_recall"]),
+                                          "update_model": bool(last_metrics["update_model"])}})
+    raise HTTPException(status_code=424, detail='Metrics not found. Call /evaluate to evaluate metrics.')
 
 
 @app.get("/evaluate")
 async def model(fl: Optional[UploadFile] = File(None)):
-    while True:
-        try:
-            if fl:
-                test_data = json.loads(await fl.read())
-            else:
-                test_data = init_test_data
-            
-            num_correct = 0
-            num_found = 0
-            num_relevant = 0
-            
-            for sample in test_data:
-                entity_substr = sample["entity_substr"]
-                entity_offsets = sample["entity_offsets"]
-                tags = sample["tags"]
-                probas = sample["probas"]
-                sentences = sample["sentences"]
-                sentences_offsets = sample["sentences_offsets"]
-                gold_entities = sample["gold_entities"]
-                entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
-                    entity_labels_batch, status_batch = el_model([entity_substr], [entity_offsets], [tags],
-                                                                 [sentences_offsets], [sentences], [probas])
-                
-                entity_substr_list = entity_substr_batch[0]
-                conf_list = conf_batch[0]
-                entity_offsets_list = entity_offsets_batch[0]
-                entity_ids_list = entity_ids_batch[0]
-                entity_tags_list = entity_tags_batch[0]
-                entity_labels_list = entity_labels_batch[0]
-                status_list = status_batch[0]
-                for entity_ids, gold_entity in zip(entity_ids_list, gold_entities):
-                    if entity_ids[0] != "not in wiki" and entity_ids[0] == gold_entity:
-                        num_correct += 1
-                    if entity_ids[0] != "not in wiki":
-                        num_found += 1
-                    if gold_entity != "0":
-                        num_relevant += 1
-            cur_precision = round(num_correct / num_found, 3)
-            cur_recall = round(num_correct / num_relevant, 3)
-            
-            if Path(metrics_filename).exists():
-                df = pd.read_csv(metrics_filename)
-                max_precision = max(df["old_precision"].max(), df["new_precision"].max())
-                max_recall = max(df["old_recall"].max(), df["new_recall"].max())
-                if cur_precision > max_precision or cur_recall > max_recall:
-                    df = df.append({"time": datetime.datetime.now(),
-                                    "old_precision": max_precision,
-                                    "new_precision": cur_precision,
-                                    "old_recall": max_recall,
-                                    "new_recall": cur_recall,
-                                    "update_model": False}, ignore_index=True)
-            else:
-                df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
-                                             "old_precision": [cur_precision],
-                                             "new_precision": [cur_precision],
-                                             "old_recall": [cur_recall],
-                                             "new_recall": [cur_recall],
-                                             "update_model": [False]})
-            df.to_csv(metrics_filename, index=False)
-            return {"precision": cur_precision, "recall": cur_recall}
-        
-        except:
-            logger.warning(f'Interal server error')
+    if fl:
+        test_data = json.loads(await fl.read())
+    else:
+        test_data = init_test_data
 
-            
-@app.get('/last_train_metric')
-async def get_metric(request: Request):
-    while True:
-        try:
-            last_metrics = {}
-            if Path(metrics_filename).exists():
-                df = pd.read_csv(metrics_filename)
-                last_metrics = df.iloc[-1].to_dict()
-                logger.warning(f"last_metrics {last_metrics}")
-            
-            return {"success": True, "data": {"time": str(last_metrics.get("time", "")),
-                                              "old_precision": float(last_metrics.get("old_precision", "")),
-                                              "old_recall": float(last_metrics.get("old_recall", "")),
-                                              "new_precision": float(last_metrics.get("new_precision", "")),
-                                              "new_recall": float(last_metrics.get("new_recall", "")),
-                                              "update_model": bool(last_metrics.get("update_model", ""))}}
-            
-        except:
-            logger.warning(f'Interal server error')
+    num_correct = 0
+    num_found = 0
+    num_relevant = 0
+
+    for sample in test_data:
+        entity_substr = sample["entity_substr"]
+        entity_offsets = sample["entity_offsets"]
+        tags = sample["tags"]
+        probas = sample["probas"]
+        sentences = sample["sentences"]
+        sentences_offsets = sample["sentences_offsets"]
+        gold_entities = sample["gold_entities"]
+        entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, entity_tags_batch, \
+            entity_labels_batch, status_batch = el_model([entity_substr], [entity_offsets], [tags],
+                                                         [sentences_offsets], [sentences], [probas])
+
+        entity_ids_list = entity_ids_batch[0]
+        for entity_ids, gold_entity in zip(entity_ids_list, gold_entities):
+            if entity_ids[0] != "not in wiki" and entity_ids[0] == gold_entity:
+                num_correct += 1
+            if entity_ids[0] != "not in wiki":
+                num_found += 1
+            if gold_entity != "0":
+                num_relevant += 1
+    cur_precision = round(num_correct / num_found, 3)
+    cur_recall = round(num_correct / num_relevant, 3)
+
+    if Path(METRICS_FILENAME).exists():
+        df = pd.read_csv(METRICS_FILENAME)
+        max_precision = max(df["old_precision"].max(), df["new_precision"].max())
+        max_recall = max(df["old_recall"].max(), df["new_recall"].max())
+        if cur_precision > max_precision or cur_recall > max_recall:
+            df = df.append({"time": datetime.datetime.now(),
+                            "old_precision": max_precision,
+                            "new_precision": cur_precision,
+                            "old_recall": max_recall,
+                            "new_recall": cur_recall,
+                            "update_model": True}, ignore_index=True)
+    else:
+        df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
+                                     "old_precision": [cur_precision],
+                                     "new_precision": [cur_precision],
+                                     "old_recall": [cur_recall],
+                                     "new_recall": [cur_recall],
+                                     "update_model": [False]})
+    df.to_csv(METRICS_FILENAME, index=False)
+    return {"precision": cur_precision, "recall": cur_recall}
 
 
 @app.get('/update/wikidata')
@@ -215,8 +174,8 @@ async def add_alias(label: str):
     if label not in aliases.aliases:
         raise HTTPException(status_code=404, detail=f'Alias with label "{label}" not found')
     aliases.delete_alias(label)
-    
-    
+
+
 @app.get('/aliases/get/{label}')
 async def get_alias(label: str):
     aliases = Aliases()
