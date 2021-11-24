@@ -2,12 +2,11 @@ version: "3"
 
 services:
   el_vx:
-    container_name: el_vx
     build:
       context: .
       dockerfile: Dockerfile
     volumes:
       - ./:/src
-      - ~:/data
+      - ~/data:/data
     ports:
       - 8000:8000
