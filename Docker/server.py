@@ -83,7 +83,7 @@ async def get_metric():
     raise HTTPException(status_code=424, detail='Metrics not found. Call /evaluate to evaluate metrics.')
 
 
-@app.get("/evaluate")
+@app.post("/evaluate")
 async def model(fl: Optional[UploadFile] = File(None)):
     if fl:
         test_data = json.loads(await fl.read())

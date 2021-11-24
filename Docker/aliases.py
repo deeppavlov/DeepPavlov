@@ -3,8 +3,8 @@ from datetime import datetime
 from logging import getLogger
 from pathlib import Path
 from typing import Dict, List
+
 from constants import ALIASES_PATH
-import yaml
 
 log = getLogger(__file__)
 

@@ -1,5 +1,5 @@
-from pathlib import Path
 from os import getenv
+from pathlib import Path
 
 DATA_PATH = Path(getenv('DATA_PATH', '/data')).resolve()
 DOWNLOADS_PATH = Path('/data/downloads').resolve()
