@@ -21,7 +21,7 @@ FAISS_OLD_PATH = DATA_PATH / 'faiss_old'
 FAISS_NEW_PATH = DATA_PATH / 'faiss_new'
 
 STATE_PATH = DATA_PATH / 'state.yaml'
-ALIASES_PATH = ENTITIES_PATH / 'q_to_alias_vx.pickle'
+ALIASES_PATH = DATA_PATH / 'aliases.pickle'
 CONTAINERS_CONFIG_PATH = DATA_PATH / 'containers.yaml'
 LOGS_PATH = DATA_PATH / 'logs'
 
