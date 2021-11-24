@@ -114,8 +114,8 @@ async def model(fl: Optional[UploadFile] = File(None)):
                 num_found += 1
             if gold_entity != "0":
                 num_relevant += 1
-    cur_precision = round(num_correct / num_found, 3)
-    cur_recall = round(num_correct / num_relevant, 3)
+    cur_precision = num_correct / num_found
+    cur_recall = num_correct / num_relevant
 
     if Path(METRICS_FILENAME).exists():
         df = pd.read_csv(METRICS_FILENAME)
@@ -135,7 +135,7 @@ async def model(fl: Optional[UploadFile] = File(None)):
                                      "old_recall": [cur_recall],
                                      "new_recall": [cur_recall],
                                      "update_model": [False]})
-    df.to_csv(METRICS_FILENAME, index=False)
+    df.to_csv(METRICS_FILENAME, index=False, float_format='%.3f')
     return {"precision": cur_precision, "recall": cur_recall}
 
 
