@@ -139,12 +139,17 @@ async def model(fl: Optional[UploadFile] = File(None)):
     return {"precision": cur_precision, "recall": cur_recall}
 
 
+@app.get('/update/model')
+async def update_model():
+    parse_entities()
+    update_faiss()
+
+
 @app.get('/update/wikidata')
 async def update_wikidata():
     download_wikidata()
     parse_wikidata()
-    parse_entities()
-    update_faiss()
+    await update_model()
 
 
 @app.get('/aliases')
