@@ -30,10 +30,9 @@ class Aliases:
         self.save()
 
     def add_aliases(self, aliases: Dict[str, List[str]]) -> None:
-        for entity_id, entity_aliases in aliases.items():
-            self.aliases[entity_id] += entity_aliases
+        self.aliases.update(aliases)
         self.save()
-        
+
     def get_alias(self, label: str) -> List[str]:
         return self.aliases.get(label, [])
 
