@@ -146,7 +146,7 @@ async def upd_model():
 
 
 @app.get('/update/wikidata')
-async def update_wikidata():
+async def upd_wikidata():
     return start_process(update_wikidata)
 
 
