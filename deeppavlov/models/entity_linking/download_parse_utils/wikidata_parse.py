@@ -47,7 +47,7 @@ class WikidataParser:
             self.num_processors = mp.cpu_count()
         else:
             self.num_processors = num_processors
-        log.debug(f"number of processors {self.num_processors}")
+        log.info(f"number of processors {self.num_processors}")
         self.wiki_dict = self.manager.dict()
         self.bz_file = bz2.BZ2File(self.wikidata_filename)
 
@@ -105,8 +105,8 @@ class WikidataParser:
         """
         Method for parallel processing of lines from Wikidata file
         """
-        cur_wiki_dict = {}
-        for line in lines_list:
+        cur_wiki_list = []
+        for nl, line in enumerate(lines_list):
             line = line[:-2]
             entity_id = ""
             try:
@@ -116,8 +116,10 @@ class WikidataParser:
                 self.log_to_file("run_error", line, self.log_parse_errors)
                 self.log_to_file("run_error", e, self.log_parse_errors)
             if entity_id:
-                cur_wiki_dict[entity_id] = entity_info
-        self.wiki_dict[num_proc] = cur_wiki_dict
+                cur_wiki_list.append((entity_id, entity_info))
+            if nl % 10000 == 0:
+                log.info(f"parsing, {num_proc} {nl}")
+        self.wiki_dict[num_proc] = cur_wiki_list
                      
 
     def parse(self, continue_parsing: bool = False):
@@ -145,7 +147,7 @@ class WikidataParser:
                 parsed_lines += 1
 
         while True:
-            log.debug(f"iteration number {num_iterations}")
+            log.info(f"iteration number {num_iterations}")
             self.log_to_file("iteration number", num_iterations, self.log_parse_progress)
             self.wiki_dict = self.manager.dict()
             common_list = []
@@ -159,6 +161,8 @@ class WikidataParser:
                 if count == self.chunk_num_lines * self.num_processors:
                     log.info(f"parsed lines {round(100*parsed_lines/self.total_lines_num)}")
                     break
+                if count % 10000 == 0:
+                    log.info(f"reading lines {count}")
             
             if not common_list:
                 break
@@ -172,9 +176,12 @@ class WikidataParser:
                 worker.join()
 
             total_dict = {}
+            total_list = []
             for key in self.wiki_dict:
-                for entity in self.wiki_dict[key]:
-                    total_dict[entity] = self.wiki_dict[key][entity]
+                total_list += self.wiki_dict[key]
+            
+            for entity, entity_info in total_list:
+                total_dict[entity] = entity_info
 
             save_pickle(total_dict, self.save_path / f"{num_iterations}.pickle")
 
