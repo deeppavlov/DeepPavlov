@@ -29,12 +29,12 @@ app.add_middleware(
     allow_headers=['*']
 )
 
-with open("/data/el_test_samples.json", 'r') as fl:
-    init_test_data = json.load(fl)
-
 deep_download('entity_linking_vx_siam_distil.json')
 initial_setup()
 el_model = build_model('entity_linking_vx_siam_distil.json', download=False)
+
+with open("/data/el_test_samples.json", 'r') as fl:
+    init_test_data = json.load(fl)
 
 
 class Batch(BaseModel):

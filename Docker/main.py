@@ -79,8 +79,9 @@ class State:
 
 
 def download_wikidata() -> None:
+    print('Wikidate update started', flush=True)
     simple_download(WIKIDATA_URL, WIKIDATA_PATH)
-    log.info('Wikidata updated')
+    print('Wikidata updated', flush=True)
 
 
 def safe_rmtree(dir_path: Path):
@@ -89,6 +90,7 @@ def safe_rmtree(dir_path: Path):
 
 
 def parse_wikidata() -> None:
+    print('Wikidata parsing started', flush=True)
     safe_rmtree(PARSED_WIKIDATA_NEW_PATH)
     wikidata_parser = WikidataParser(WIKIDATA_PATH,
                                      save_path=PARSED_WIKIDATA_NEW_PATH)
@@ -97,9 +99,11 @@ def parse_wikidata() -> None:
     if PARSED_WIKIDATA_PATH.exists():
         PARSED_WIKIDATA_PATH.rename(PARSED_WIKIDATA_OLD_PATH)
     PARSED_WIKIDATA_NEW_PATH.rename(PARSED_WIKIDATA_PATH)
+    print('Wikidata parsed', flush=True)
 
 
 def parse_entities() -> None:
+    print('Entities parsing started', flush=True)
     safe_rmtree(ENTITIES_NEW_PATH)
     ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
     entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
@@ -116,9 +120,11 @@ def parse_entities() -> None:
     if ENTITIES_PATH.exists():
         ENTITIES_PATH.rename(ENTITIES_OLD_PATH)
     ENTITIES_NEW_PATH.rename(ENTITIES_PATH)
+    print('Entities parsing finished', flush=True)
 
 
 def update_faiss():
+    print('Faiss update started', flush=True)
     safe_rmtree(FAISS_NEW_PATH)
     FAISS_NEW_PATH.mkdir(parents=True, exist_ok=True)
     config = parse_config('entity_linking_vx_siam_distil.json')
@@ -139,6 +145,7 @@ def update_faiss():
     if FAISS_PATH.exists():
         FAISS_PATH.rename(FAISS_OLD_PATH)
     FAISS_NEW_PATH.rename(FAISS_PATH)
+    print('Faiss update finished')
 
 
 def initial_setup():
