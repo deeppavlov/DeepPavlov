@@ -15,7 +15,8 @@ from aliases import Aliases
 from constants import METRICS_FILENAME
 from deeppavlov import build_model, deep_download
 from deeppavlov.core.data.utils import jsonify_data
-from main import download_wikidata, parse_wikidata, parse_entities, update_faiss, initial_setup
+from main import download_wikidata, parse_wikidata, parse_entities, update_faiss, initial_setup, start_process, \
+    update_model, update_wikidata
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -140,16 +141,13 @@ async def model(fl: Optional[UploadFile] = File(None)):
 
 
 @app.get('/update/model')
-async def update_model():
-    parse_entities()
-    update_faiss()
+async def upd_model():
+    return start_process(update_model)
 
 
 @app.get('/update/wikidata')
 async def update_wikidata():
-    download_wikidata()
-    parse_wikidata()
-    await update_model()
+    return start_process(update_wikidata)
 
 
 @app.get('/aliases')

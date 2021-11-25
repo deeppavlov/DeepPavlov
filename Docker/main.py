@@ -1,16 +1,20 @@
 import datetime
 import logging
+import sys
+from multiprocessing import Process
 from pathlib import Path
 from shutil import rmtree, copytree
 from typing import Optional
 
 import yaml
 from dateutil.parser import parse as parsedate
+from fastapi import HTTPException
+from filelock import FileLock, Timeout
 
 from aliases import Aliases
 from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_WIKIDATA_OLD_PATH, \
     PARSED_WIKIDATA_NEW_PATH, ENTITIES_PATH, ENTITIES_OLD_PATH, ENTITIES_NEW_PATH, FAISS_PATH, FAISS_OLD_PATH, \
-    FAISS_NEW_PATH, STATE_PATH, DATA_PATH, LOGS_PATH
+    FAISS_NEW_PATH, STATE_PATH, DATA_PATH, LOGS_PATH, LOCKFILE
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import simple_download
@@ -157,3 +161,36 @@ def initial_setup():
         copytree(f'{DATA_PATH}/downloads/parsed_wikidata', PARSED_WIKIDATA_PATH)
     if not LOGS_PATH.exists():
         LOGS_PATH.mkdir(parents=True)
+
+
+def redirect_std():
+    filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+    sys.stdout = open(LOGS_PATH / f'{filename}.out', 'w')
+    sys.stderr = open(LOGS_PATH / f'{filename}.err', 'w')
+
+
+def update_model():
+    with FileLock(LOCKFILE):
+        redirect_std()
+        parse_entities()
+        update_faiss()
+
+
+def update_wikidata():
+    with FileLock(LOCKFILE):
+        redirect_std()
+        download_wikidata()
+        parse_wikidata()
+        parse_entities()
+        update_faiss()
+
+
+def start_process(foo):
+    try:
+        with FileLock(LOCKFILE, timeout=1):
+            print('asdf', flush=True)
+            p = Process(target=foo)
+            p.start()
+            return 'Process successfully started'
+    except Timeout:
+        raise HTTPException(status_code=409, detail='Update process is already running')

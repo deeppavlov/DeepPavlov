@@ -2,8 +2,10 @@ import bz2
 import json
 import multiprocessing as mp
 import os
+import pickle
 from logging import getLogger
 from pathlib import Path
+
 from deeppavlov.core.common.file import save_pickle
 
 log = getLogger(__name__)

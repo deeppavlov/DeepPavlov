@@ -26,3 +26,5 @@ CONTAINERS_CONFIG_PATH = DATA_PATH / 'containers.yaml'
 LOGS_PATH = DATA_PATH / 'logs'
 
 METRICS_FILENAME = DATA_PATH / "metrics_score_history.csv"
+
+LOCKFILE = DATA_PATH / 'lockfile'
