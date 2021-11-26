@@ -1,20 +1,13 @@
 import datetime
 import logging
 import sys
-from multiprocessing import Process
 from pathlib import Path
 from shutil import rmtree, copytree
-from typing import Optional
-
-import yaml
-from dateutil.parser import parse as parsedate
-from fastapi import HTTPException
-from filelock import FileLock, Timeout
 
 from aliases import Aliases
 from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_WIKIDATA_OLD_PATH, \
     PARSED_WIKIDATA_NEW_PATH, ENTITIES_PATH, ENTITIES_OLD_PATH, ENTITIES_NEW_PATH, FAISS_PATH, FAISS_OLD_PATH, \
-    FAISS_NEW_PATH, STATE_PATH, DATA_PATH, LOGS_PATH, LOCKFILE
+    FAISS_NEW_PATH, DATA_PATH, LOGS_PATH
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import simple_download
@@ -28,58 +21,6 @@ ch.setLevel(logging.DEBUG)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 ch.setFormatter(formatter)
 log.addHandler(ch)
-
-
-class State:
-    def __init__(self,
-                 state_path: Path,
-                 wikidata_created: Optional[str] = None,
-                 wikidata_parsed: Optional[str] = None,
-                 entities_wikidata: Optional[str] = None,
-                 aliases_updated: Optional[datetime.datetime] = None,
-                 entities_parsed: Optional[str] = None,
-                 faiss_updated: Optional[str] = None) -> None:
-        self._state_path = state_path
-        self.wikidata_created = wikidata_created
-        self.wikidata_parsed = wikidata_parsed
-        self.entities_wikidata = entities_wikidata
-        self.aliases_updated = aliases_updated
-        self.entities_parsed = entities_parsed
-        self.faiss_updated = faiss_updated
-
-    def save(self) -> None:
-        with open(self._state_path, 'w') as fout:
-            yaml.dump({k: v for k, v in self.__dict__.items() if not k.startswith('_')}, fout)
-
-    @classmethod
-    def from_yaml(cls, state_path: Path = STATE_PATH):
-        if state_path.exists():
-            with open(state_path) as fin:
-                params = yaml.safe_load(fin)
-        else:
-            params = {}
-        return cls(state_path, **params)
-
-    def wikidata_is_fresh(self, remote_wikidata_created: str) -> bool:
-        if self.wikidata_created is None:
-            return False
-        return parsedate(remote_wikidata_created) == parsedate(self.wikidata_created)
-
-    def parsed_wikidata_is_fresh(self) -> bool:
-        if self.wikidata_parsed is None:
-            return False
-        return parsedate(self.wikidata_created) <= parsedate(self.wikidata_parsed)
-
-    def entities_is_fresh(self, aliases_mtime: datetime.datetime) -> bool:
-        if self.entities_wikidata is None or self.aliases_updated is None:
-            return False
-        return parsedate(self.entities_wikidata) >= parsedate(self.wikidata_parsed) \
-               and aliases_mtime <= self.aliases_updated
-
-    def faiss_is_fresh(self):
-        if self.faiss_updated is None:
-            return False
-        return parsedate(self.faiss_updated) >= parsedate(self.entities_parsed)
 
 
 def download_wikidata() -> None:
@@ -167,30 +108,3 @@ def redirect_std():
     filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
     sys.stdout = open(LOGS_PATH / f'{filename}.out', 'w')
     sys.stderr = open(LOGS_PATH / f'{filename}.err', 'w')
-
-
-def update_model():
-    with FileLock(LOCKFILE):
-        redirect_std()
-        parse_entities()
-        update_faiss()
-
-
-def update_wikidata():
-    with FileLock(LOCKFILE):
-        redirect_std()
-        download_wikidata()
-        parse_wikidata()
-        parse_entities()
-        update_faiss()
-
-
-def start_process(foo):
-    try:
-        with FileLock(LOCKFILE, timeout=1):
-            print('asdf', flush=True)
-            p = Process(target=foo)
-            p.start()
-            return 'Process successfully started'
-    except Timeout:
-        raise HTTPException(status_code=409, detail='Update process is already running')
