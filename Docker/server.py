@@ -190,10 +190,12 @@ async def proba():
     if LOCKFILE.exists():
         try:
             with filelock.FileLock(LOCKFILE, timeout=1):
-                return 'failed'
+                message = 'failed'
         except filelock.Timeout:
-            return 'running'
-    return 'finished sucessfully'
+            message = 'running'
+    else:
+        message = 'finished sucessfully'
+    return JSONResponse(status_code=200, content={'success': True, 'message': message})
 
 
 @app.get('/aliases')
