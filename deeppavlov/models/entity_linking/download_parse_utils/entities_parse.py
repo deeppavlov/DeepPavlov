@@ -75,12 +75,11 @@ class EntitiesParser(Serializable):
     def load(self):
         self.load_path = str(expand_path(self.load_path))
         files = os.listdir(self.load_path)
-        log.info(f"processed wikidata files for further parsing: {len(files)}")
+        print(f"processed wikidata files for further parsing: {len(files)}", flush=True)
         for fl in files:
             wiki_chunk = load_pickle(self.load_path / Path(fl))
-            for elem in wiki_chunk:
-                self.wiki_dict[elem] = wiki_chunk[elem]
-        log.info("loaded files")
+            self.wiki_dict.update(wiki_chunk)
+        print("loaded files", flush=True)
 
     def save(self):
         save_pickle(self.word_to_idlist, self.save_path / self.word_to_idlist_filename)
@@ -88,10 +87,10 @@ class EntitiesParser(Serializable):
         save_pickle(self.entities_descr, self.save_path / self.entities_descr_filename)
         save_pickle(self.entities_types_sets, self.save_path / self.entities_types_sets_filename)
         save_pickle(self.q_to_label, self.save_path / self.q_to_label_filename)
-        log.info("saved files")
+        print("saved files", flush=True)
 
     def parse(self):
-        log.info(f"start parsing entities, entities_num {len(self.wiki_dict)}")
+        print(f"start parsing entities, entities_num {len(self.wiki_dict)}", flush=True)
         for entity_id in self.wiki_dict:
             entity_info = self.wiki_dict[entity_id]
             triplets = entity_info.get("triplets", [])
@@ -100,18 +99,18 @@ class EntitiesParser(Serializable):
                     self.types_dict[entity_id] = set(objects)
                 if rel == "P279":
                     self.subclass_dict[entity_id] = set(objects)
-        log.info(f"parsed types_dict, {len(self.types_dict)} and subclass_dict, {len(self.subclass_dict)}")
+        print(f"parsed types_dict, {len(self.types_dict)} and subclass_dict, {len(self.subclass_dict)}", flush=True)
         
         entity_type_count = 0
         for entity_id in self.wiki_dict:
             entity_type = self.find(entity_id)
             entity_type_count += 1
             if entity_type_count%500000 == 0:
-                log.info(f"parsed entity types {entity_type_count} used_entities {len(self.used_entities)}")
+                print(f"parsed entity types {entity_type_count} used_entities {len(self.used_entities)}", flush=True)
             if entity_type:
                 self.used_entities.add(entity_id)
                 self.entities_types_sets[entity_type].add(entity_id)
-        log.info(f"parsed used_entities and entities_types_sets {len(self.used_entities)}")
+        print(f"parsed used_entities and entities_types_sets {len(self.used_entities)}", flush=True)
         
         for entity_id in self.wiki_dict:
             if entity_id in self.used_entities or not self.filter_tags:
@@ -131,7 +130,7 @@ class EntitiesParser(Serializable):
                         self.name_to_idlist[surname].append(entity_id)
                 number_of_relations = entity_info.get("number_of_relations", 0)
                 self.entities_ranking_dict[entity_id] = number_of_relations
-        log.info("parsed name_to_idlist and entities_ranking_dict")
+        print("parsed name_to_idlist and entities_ranking_dict", flush=True)
 
         for entity_id in self.wiki_dict:
             if entity_id in self.used_entities:
