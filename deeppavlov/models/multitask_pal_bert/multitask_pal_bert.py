@@ -458,7 +458,7 @@ class MultiTaskPalBert(TorchModel):
         if not all([np.isfinite(s) or (type(s) == list and len(s)==0) for s in self.train_losses]):
             print('NAN IN LOSSES FOUND!!!!!!!!!!!!!')
             breakpoint()
-            raise Exception(f"Found NAN in losses {losses}")
+            raise Exception(f"Found NAN in losses {self.train_losses}")
             
         self.steps_taken += 1
         return {"losses": self.train_losses}
