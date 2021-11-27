@@ -23,7 +23,6 @@
         "entities_ranking_filename": "entities_ranking_dict_vx.pickle",
         "entities_types_sets_filename": "entities_types_sets.pickle",
         "q_to_label_filename": "q_to_label_vx.pickle",
-        "q_to_label_out_filename": "q_to_label_out_vx.pickle",
         "tfidf_vectorizer_filename": "{FAISS_PATH}/tfidf_vectorizer_vx.pk",
         "tfidf_faiss_index_filename": "{FAISS_PATH}/tfidf_faiss_vectors_cpu.index",
         "fasttext_vectorizer_filename": "{FAISS_PATH}/fasttext_dim100_ws10",
