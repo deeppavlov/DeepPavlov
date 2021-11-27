@@ -13,12 +13,12 @@ from starlette.responses import JSONResponse
 from filelock import FileLock, Timeout
 from pydantic import BaseModel, Field
 from starlette.middleware.cors import CORSMiddleware
-
+import subprocess
 from aliases import Aliases
-from constants import METRICS_FILENAME, LOCKFILE
+from constants import METRICS_FILENAME, LOCKFILE, LOGS_PATH
 from deeppavlov import build_model, deep_download
 from deeppavlov.core.data.utils import jsonify_data
-from main import initial_setup, redirect_std, download_wikidata, parse_wikidata, parse_entities, update_faiss
+from main import initial_setup, download_wikidata, parse_wikidata, parse_entities, update_faiss
 
 logger = getLogger(__file__)
 app = FastAPI()
@@ -142,11 +142,11 @@ async def model(fl: Optional[UploadFile] = File(None)):
     return {"precision": cur_precision, "recall": cur_recall}
 
 
-def start_process(foo):
+def start_process(filename: str):
     try:
         with FileLock(LOCKFILE, timeout=1):
-            p = Process(target=foo)
-            p.start()
+            logfile = LOGS_PATH / f'{datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S")}.log'
+            subprocess.Popen(['/bin/bash', '-c', f'python {filename} > {logfile} 2>&1'])
             status_code, message = 200, 'Process successfully started.'
     except Timeout:
         status_code, message = 409, 'Update is already running.'
@@ -156,27 +156,13 @@ def start_process(foo):
 @app.get('/update/model')
 async def update_model():
     """Starts model update using current parsed wikidata and aliases list"""
-    def _update_model():
-        with FileLock(LOCKFILE):
-            redirect_std()
-            parse_entities()
-            update_faiss()
-        LOCKFILE.unlink()
-    return start_process(_update_model)
+    return start_process('update_model.py')
 
 
 @app.get('/update/wikidata')
 async def update_wikidata():
     """Download wikidata, parse it, update model using new wikidata and aliases"""
-    def _update_wikidata():
-        with FileLock(LOCKFILE):
-            redirect_std()
-            download_wikidata()
-            parse_wikidata()
-            parse_entities()
-            update_faiss()
-        LOCKFILE.unlink()
-    return start_process(_update_wikidata)
+    return start_process('update_wikidata.py')
 
 
 @app.get('/status')

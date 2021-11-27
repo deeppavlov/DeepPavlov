@@ -1,6 +1,4 @@
-import datetime
 import logging
-import sys
 from pathlib import Path
 from shutil import rmtree, copytree
 
@@ -100,9 +98,3 @@ def initial_setup():
         copytree(f'{DATA_PATH}/downloads/parsed_wikidata', PARSED_WIKIDATA_PATH)
     if not LOGS_PATH.exists():
         LOGS_PATH.mkdir(parents=True)
-
-
-def redirect_std():
-    filename = datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-    sys.stdout = open(LOGS_PATH / f'{filename}.out', 'w')
-    sys.stderr = open(LOGS_PATH / f'{filename}.err', 'w')

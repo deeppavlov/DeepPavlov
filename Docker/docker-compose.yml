@@ -10,3 +10,5 @@ services:
       - ~/data:/data
     ports:
       - 8000:8000
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
