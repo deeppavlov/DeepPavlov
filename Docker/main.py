@@ -76,8 +76,6 @@ def update_faiss():
     config['chainer']['pipe'][-1]['load_path'] = config['chainer']['pipe'][-1]['save_path'] = str(ENTITIES_PATH)
     config['chainer']['pipe'][-1]['fit_tfidf_vectorizer'] = True
     config['chainer']['pipe'][-1]['fit_fasttext_vectorizer'] = True
-    config['chainer']['pipe'][-1]['fasttext_vectorizer_filename'] = \
-        FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['fasttext_vectorizer_filename']).name
     config['chainer']['pipe'][-1]['tfidf_vectorizer_filename'] = \
         FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['tfidf_vectorizer_filename']).name
     config['chainer']['pipe'][-1]['fasttext_faiss_index_filename'] = \

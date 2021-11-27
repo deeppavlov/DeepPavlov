@@ -304,12 +304,12 @@ class EntityLinkerSep(Component, Serializable):
                  entities_ranking_filename: str,
                  entities_types_sets_filename: str,
                  q_to_label_filename: str,
-                 q_to_label_out_filename: str,
                  q_to_descr_filename: str,
                  tfidf_vectorizer_filename: str,
                  tfidf_faiss_index_filename: str,
                  fasttext_vectorizer_filename: str,
                  fasttext_faiss_index_filename: str,
+                 q_to_label_out_filename: str = '',
                  entity_ranker=None,
                  bert_embedder=None,
                  descr_to_emb_filename: str = None,
@@ -455,7 +455,7 @@ class EntityLinkerSep(Component, Serializable):
             self.fasttext_faiss_index = faiss.IndexIVFFlat(quantizer, fasttext_dim, self.num_ft_faiss_cells)
             self.fasttext_faiss_index.train(np.array(labels_fasttext_vectors))
             self.fasttext_faiss_index.add(np.array(labels_fasttext_vectors))
-            faiss.write_index(self.ft_faiss_index, str(expand_path(self.fasttext_faiss_index_filename)))
+            faiss.write_index(self.fasttext_faiss_index, str(expand_path(self.fasttext_faiss_index_filename)))
 
         if self.fit_bert_embedder:
             q_to_descr_list = list(self.q_to_descr.items())
