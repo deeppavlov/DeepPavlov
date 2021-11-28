@@ -1,4 +1,5 @@
 import logging
+import shutil
 from pathlib import Path
 from shutil import rmtree, copytree
 
@@ -9,7 +10,7 @@ from constants import WIKIDATA_PATH, WIKIDATA_URL, PARSED_WIKIDATA_PATH, PARSED_
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import simple_download
-from deeppavlov.models.entity_linking.download_parse_utils.entities_parse import EntitiesParser
+from entities_parse import EntitiesParser
 from deeppavlov.models.entity_linking.download_parse_utils.wikidata_parse import WikidataParser
 
 log = logging.getLogger(__file__)
@@ -50,6 +51,7 @@ def parse_entities() -> None:
     safe_rmtree(ENTITIES_NEW_PATH)
     ENTITIES_NEW_PATH.mkdir(parents=True, exist_ok=True)
     entities_parser = EntitiesParser(load_path=PARSED_WIKIDATA_PATH,
+                                     old_load_path=ENTITIES_PATH,
                                      save_path=ENTITIES_NEW_PATH)
     entities_parser.load()
     log.info("----- loaded parser")
@@ -80,6 +82,9 @@ def update_faiss():
         FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['fasttext_faiss_index_filename']).name
     config['chainer']['pipe'][-1]['tfidf_faiss_index_filename'] = \
         FAISS_NEW_PATH / Path(config['chainer']['pipe'][-1]['tfidf_faiss_index_filename']).name
+    fasttext_vectorizer_filename = FAISS_PATH / Path(config['chainer']['pipe'][-1]['fasttext_vectorizer_filename']).name
+    if fasttext_vectorizer_filename.exists():
+        shutil.copy(fasttext_vectorizer_filename, FAISS_NEW_PATH)
     build_model(config)
     log.info('faiss cpu updated')
     safe_rmtree(FAISS_OLD_PATH)
