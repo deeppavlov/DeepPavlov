@@ -12,6 +12,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException
 from starlette.responses import JSONResponse
 from filelock import FileLock, Timeout
 from pydantic import BaseModel, Field
+from starlette.requests import Request
 from starlette.middleware.cors import CORSMiddleware
 import subprocess
 from aliases import Aliases
