@@ -189,20 +189,25 @@ async def get_aliases():
     return Aliases().aliases
 
 
-@app.post('/aliases/add/{label}')
-async def add_alias(label: str, entity_ids: List[str]):
+@app.post('/aliases/add')
+async def add_one_alias(request: Request):
     aliases = Aliases()
-    aliases.add_alias(label, entity_ids)
+    data = await request.json()
+    logger.info(f"data {data}")
+    if "label" in data and "entity_ids" in data:
+        label = data["label"]
+        entity_ids = data["entity_ids"]
+        aliases.add_alias(label, entity_ids)
 
 
 @app.post('/aliases/add_many')
-async def add_alias(new_aliases: Dict[str, List[str]]):
+async def add_many_aliases(new_aliases: Dict[str, List[str]]):
     aliases = Aliases()
     aliases.add_aliases(new_aliases)
 
 
 @app.get('/aliases/delete/{label}')
-async def add_alias(label: str):
+async def delete_alias(label: str):
     aliases = Aliases()
     if label not in aliases.aliases:
         raise HTTPException(status_code=404, detail=f'Alias with label "{label}" not found')
