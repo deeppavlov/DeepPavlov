@@ -50,6 +50,11 @@ class Batch(BaseModel):
     probas: List[List[float]] = Field(..., example=[[0.42]])
 
 
+class Alias(BaseModel):
+    label: str
+    entity_ids: List[str]
+
+
 @app.post("/model")
 async def model(payload: Batch):
     res = el_model(payload.entity_substr,
@@ -191,14 +196,9 @@ async def get_aliases():
 
 
 @app.post('/aliases/add')
-async def add_one_alias(request: Request):
+async def add_one_alias(alias: Alias):
     aliases = Aliases()
-    data = await request.json()
-    logger.info(f"data {data}")
-    if "label" in data and "entity_ids" in data:
-        label = data["label"]
-        entity_ids = data["entity_ids"]
-        aliases.add_alias(label, entity_ids)
+    aliases.add_alias(alias.label, alias.entity_ids)
 
 
 @app.post('/aliases/add_many')
