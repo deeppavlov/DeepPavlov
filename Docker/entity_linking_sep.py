@@ -537,9 +537,6 @@ class EntityLinkerSep(Component, Serializable):
         save_pickle(self.tfidf_vectorizer, expand_path(self.tfidf_vectorizer_filename))
         faiss.write_index(self.tfidf_faiss_index, str(expand_path(self.tfidf_faiss_index_filename)))
         
-    def log_to_file(self, log_str):
-        with open(self.log_filename, 'r') as out:
-            out.write(str(log_str)+'\n')
 
     def __call__(self, entity_substr_batch: List[List[str]],
                  entity_offsets_batch: List[List[List[int]]],
@@ -820,14 +817,8 @@ class EntityLinkerSep(Component, Serializable):
                                 morph_parsed_word = self.morph_parse(word)
                             else:
                                 morph_parsed_word = word
-                            out = open("/data/log.txt", 'a')
-                            out.write(f"word {word} {word in self.word_to_idlist}"+'\n')
-                            out.close()
                             if word in self.word_to_idlist or morph_parsed_word in self.word_to_idlist:
                                 entities_set = self.word_to_idlist.get(word, set())
-                                out = open("/data/log.txt", 'a')
-                                out.write(f"entities_set {entities_set}"+'\n')
-                                out.close()
                                 if tag == "ORG":
                                     entities_set_1 = self.filter_entities_by_tags(entities_set, "ORG", proba)
                                     entities_set_2 = self.filter_entities_by_tags(entities_set, "LOC", proba)
@@ -903,10 +894,6 @@ class EntityLinkerSep(Component, Serializable):
                                                 zip(candidate_entities_total, substr_lens)]
                     candidate_entities_total = [list(candidate_entities) for candidate_entities in candidate_entities_total]
 
-                    out = open("/data/log.txt", 'a')
-                    out.write(f"candidate_entities_total {candidate_entities_total}"+'\n')
-                    out.close()
-                    
                     candidate_entities_list = []
                     entities_scores_list = []
                     for entity_substr, candidate_entities, candidate_entities_ft \
@@ -1028,12 +1015,6 @@ class EntityLinkerSep(Component, Serializable):
         log.info(f"rank, sentences_list {sentences_list}")
         log.info(f"rank, sent offsets {sentences_offsets_list}")
         log.info(f"rank, substr_lens {substr_lens}")
-        out = open("/data/log.txt", 'a')
-        out.write(f"rank, entity pos {entity_offsets_list}"+'\n')
-        out.write(f"rank, sentences_list {sentences_list}"+'\n')
-        out.write(f"rank, sent offsets {sentences_offsets_list}"+'\n')
-        out.write(f"rank, candidate_entities_list {candidate_entities_list}"+'\n')
-        out.close()
         entity_ids_list = []
         conf_list = []
         contexts = []
@@ -1201,12 +1182,6 @@ class EntityLinkerSep(Component, Serializable):
         log.info(f"rank, sentences_list {sentences_list}")
         log.info(f"rank, sent offsets {sentences_offsets_list}")
         log.info(f"rank, substr_lens {substr_lens}")
-        out = open("/data/log.txt", 'a')
-        out.write(f"rank, entity pos {entity_offsets_list}"+'\n')
-        out.write(f"rank, sentences_list {sentences_list}"+'\n')
-        out.write(f"rank, sent offsets {sentences_offsets_list}"+'\n')
-        out.write(f"rank, candidate_entities_list {candidate_entities_list}"+'\n')
-        out.close()
         entity_ids_list = []
         conf_list = []
         contexts = []
