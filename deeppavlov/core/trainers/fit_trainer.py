@@ -18,7 +18,7 @@ import time
 from itertools import islice
 from logging import getLogger
 from pathlib import Path
-from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
+from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path
@@ -64,28 +64,35 @@ class FitTrainer:
                  show_examples: bool = False,
                  # tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  max_test_batches: int = -1,
-                 logger: list = [],
+                 logger: Optional[List[Dict]] = None,
                  **kwargs) -> None:
         if kwargs:
-            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
+            log.info(
+                f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
-        self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
+        self._chainer = Chainer(
+            chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
-        self.metrics = parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
+        self.metrics = parse_metrics(
+            metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
 
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
         # self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
-        self.logger: list = logger
+        self.logger: Optional[List[Dict]] = logger
+
         def get_method_idx(logger, name):
-            for i in range(len(logger)):
-                if logger[i]["name"] == name:
-                    return i
-            return None
+            try:
+                for i in range(len(logger)):
+                    if logger[i]["name"] == name:
+                        return i
+            except:
+                return None
         self.tensorboard_idx = get_method_idx(self.logger, "TensorboardLogger")
-        # self.wandb = get_method_idx(self.logger, "")
+        self.stdlogger_idx = get_method_idx(self.logger, "StdLogger")
+
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
@@ -94,23 +101,12 @@ class FitTrainer:
             except ImportError:
                 log.warning('TensorFlow could not be imported, so tensorboard log directory'
                             f'`{self.logger[self.tensorboard_idx]["log_dir"]}` will be ignored')
+                self.tensorboard_idx = None  # check it
                 self.logger[self.tensorboard_idx]["log_dir"] = None
             else:
-                self.logger[self.tensorboard_idx]["log_dir"] = expand_path(self.logger[self.tensorboard_idx]["log_dir"])
+                self.logger[self.tensorboard_idx]["log_dir"] = expand_path(
+                    self.logger[self.tensorboard_idx]["log_dir"])
                 self._tf = tensorflow
-
-        # if tensorboard_log_dir is not None:
-        #     try:
-        #         # noinspection PyPackageRequirements
-        #         # noinspection PyUnresolvedReferences
-        #         import tensorflow
-        #     except ImportError:
-        #         log.warning('TensorFlow could not be imported, so tensorboard log directory'
-        #                     f'`{self.tensorboard_log_dir}` will be ignored')
-        #         self.tensorboard_log_dir = None
-        #     else:
-        #         self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
-        #         self._tf = tensorflow
 
         self._built = False
         self._saved = False
@@ -136,51 +132,37 @@ class FitTrainer:
                     writer = None
 
                     for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
-                        preprocessed = self._chainer.compute(x, y, targets=targets)
+                        preprocessed = self._chainer.compute(
+                            x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
-                        # if result is not None and self.tensorboard_log_dir is not None:
-                        #     if writer is None:
-                        #         writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
-                        #                                                  f'partial_fit_{component_index}_log'))
-                        #     for name, score in result.items():
-                        #         summary = self._tf.Summary()
-                        #         summary.value.add(tag='partial_fit/' + name, simple_value=score)
-                        #         writer.add_summary(summary, i)
-                        #     writer.flush()
-                        
                         if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
                             if writer is None:
                                 writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                          f'partial_fit_{component_index}_log'))
                             for name, score in result.items():
                                 summary = self._tf.Summary()
-                                summary.value.add(tag='partial_fit/' + name, simple_value=score)
+                                summary.value.add(
+                                    tag='partial_fit/' + name, simple_value=score)
                                 writer.add_summary(summary, i)
                             writer.flush()
                 else:
-                    preprocessed = self._chainer.compute(*iterator.get_instances(), targets=targets)
+                    preprocessed = self._chainer.compute(
+                        *iterator.get_instances(), targets=targets)
                     if len(targets) == 1:
                         preprocessed = [preprocessed]
-                    result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
+                    result: Optional[Dict[str, Iterable[float]]
+                                     ] = component.fit(*preprocessed)
 
-                    # if result is not None and self.tensorboard_log_dir is not None:
-                    #     writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
-                    #                                              f'fit_log_{component_index}'))
-                    #     for name, scores in result.items():
-                    #         for i, score in enumerate(scores):
-                    #             summary = self._tf.Summary()
-                    #             summary.value.add(tag='fit/' + name, simple_value=score)
-                    #             writer.add_summary(summary, i)
-                    #     writer.flush()
                     if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
                         writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                  f'fit_log_{component_index}'))
                         for name, scores in result.items():
                             for i, score in enumerate(scores):
                                 summary = self._tf.Summary()
-                                summary.value.add(tag='fit/' + name, simple_value=score)
+                                summary.value.add(
+                                    tag='fit/' + name, simple_value=score)
                                 writer.add_summary(summary, i)
                         writer.flush()
 
@@ -197,7 +179,8 @@ class FitTrainer:
     def _load(self) -> None:
         if not self._loaded:
             self._chainer.destroy()
-            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=self._saved)
+            self._chainer = build_model(
+                {'chainer': self.chainer_config}, load_trained=self._saved)
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
@@ -237,7 +220,8 @@ class FitTrainer:
         if metrics is None:
             metrics = self.metrics
 
-        expected_outputs = list(set().union(self._chainer.out_params, *[m.inputs for m in metrics]))
+        expected_outputs = list(set().union(
+            self._chainer.out_params, *[m.inputs for m in metrics]))
 
         outputs = {out: [] for out in expected_outputs}
         examples = 0
@@ -246,7 +230,8 @@ class FitTrainer:
 
         for x, y_true in data:
             examples += len(x)
-            y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
+            y_predicted = list(self._chainer.compute(
+                list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
@@ -273,7 +258,8 @@ class FitTrainer:
                                 for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
                                 if out_name in self._chainer.out_params])
             if len(self._chainer.out_params) == 1:
-                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
+                y_predicted = [y_predicted_item[0]
+                               for y_predicted_item in y_predicted]
             report['examples'] = [{
                 'x': x_item,
                 'y_predicted': y_predicted_item,
@@ -302,10 +288,12 @@ class FitTrainer:
         res = {}
 
         for data_type in evaluation_targets:
-            data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
+            data_gen = iterator.gen_batches(
+                self.batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report
             if print_reports:
-                print(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
+                print(json.dumps({data_type: report},
+                      ensure_ascii=False, cls=NumpyArrayEncoder))
 
         return res

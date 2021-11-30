@@ -3,7 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-	"data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
+    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -100,15 +100,17 @@
     ]
   },
   "train": {
-    "epochs": 5,
-	  "log_every_n_epochs": 1,
+    "epochs": 10,
     "batch_size": 64,
     "metrics": [
       "accuracy",
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,
@@ -121,13 +123,16 @@
       "test"
     ],
     "class_name": "nn_trainer",
-	"tensorboard_log_dir": "{MODELS_PATH}/sentiment_twitter/logs",
-	"logger": [
-		{
-		  "name": "TensorboardLogger",
-		  "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
-		}
-	]
+    "tensorboard_log_dir": "{MODELS_PATH}/sentiment_twitter/logs",
+    "logger": [
+      {
+        "name": "TensorboardLogger",
+        "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
+      },
+      {
+        "name": "StdLogger"
+      }
+    ]
   },
   "metadata": {
     "variables": {
