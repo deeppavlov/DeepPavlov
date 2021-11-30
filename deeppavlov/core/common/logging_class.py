@@ -69,7 +69,7 @@ class TensorboardLogger(TrainLogger):
     Args:
         type: 'train' for logging metrics of training process or 'valid' for validation process.
         log_dir: path to local folder to log data into.
-        
+
     """
 
     def __init__(self, type: str, log_dir: str):
@@ -220,8 +220,9 @@ class StdLogger(TrainLogger):
     Args:
         type: 'train' for printing report of training process or 'valid' for validation process.
         log_true (boo): if True: print of the StdLogger is provided in .json file as logging method or not. default False.
-        
+
     """
+
     def __init__(self, type: str, log_true: bool = False):
         self.type = type
         self.log_true = log_true
