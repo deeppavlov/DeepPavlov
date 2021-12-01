@@ -130,13 +130,13 @@ async def model(fl: Optional[UploadFile] = File(None)):
         df = pd.read_csv(METRICS_FILENAME)
         max_precision = max(df["old_precision"].max(), df["new_precision"].max())
         max_recall = max(df["old_recall"].max(), df["new_recall"].max())
-        if cur_precision > max_precision or cur_recall > max_recall:
-            df = df.append({"time": datetime.datetime.now(),
-                            "old_precision": max_precision,
-                            "new_precision": cur_precision,
-                            "old_recall": max_recall,
-                            "new_recall": cur_recall,
-                            "update_model": True}, ignore_index=True)
+        update_model = cur_precision > max_precision or cur_recall > max_recall
+        df = df.append({"time": datetime.datetime.now(),
+                        "old_precision": max_precision,
+                        "new_precision": cur_precision,
+                        "old_recall": max_recall,
+                        "new_recall": cur_recall,
+                        "update_model": update_model}, ignore_index=True)
     else:
         df = pd.DataFrame.from_dict({"time": [datetime.datetime.now()],
                                      "old_precision": [cur_precision],
