@@ -16,8 +16,8 @@ node('cuda-module') {
                     
                     git clone https://github.com/facebookresearch/bitsandbytes.git
                     cd bitsandbytes
-                    make cuda101
-                    CUDA_VERSION=101 python setup.py install
+                    make cuda10x
+                    CUDA_VERSION=100 python setup.py install
                     cd -
                     pip install -r deeppavlov/requirements/tf-gpu.txt
                     rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name docs ! -name '.venv-$BUILD_NUMBER'`
