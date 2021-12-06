@@ -11,6 +11,7 @@
 
 import os
 import re
+import conda.cli
 
 from setuptools import setup, find_packages
 
@@ -46,6 +47,7 @@ def readme():
 
 
 if __name__ == '__main__':
+    conda.cli.main('conda', 'install',  '-y', 'cudatoolkit==1.3.1')
     setup(
         name='deeppavlov',
         packages=find_packages(exclude=('tests', 'docs', 'utils')),
