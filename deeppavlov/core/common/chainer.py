@@ -170,7 +170,10 @@ class Chainer(Component):
             component: NNModel
             main = True
             in_y = lists_to_tuples(in_y)
-            missing_names = set(flatten(in_x+in_y)) - set(flatten(self.train_map))          
+            try:
+                missing_names = set(flatten(list(in_x)+list(in_y))) - set(flatten(self.train_map))
+            except Exception as e:
+                log.exception(f'{e} {in_x} {in_y} {self.train_map}')
             assert not missing_names, ('Arguments {} are expected but only {} are set'
                                                             .format(missing_names, self.train_map))
             preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
