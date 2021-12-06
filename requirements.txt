@@ -1,5 +1,4 @@
 aio-pika==6.4.1
-bitsandbytes-cuda100==0.25.0
 Cython==0.29.14
 fastapi==0.47.1
 filelock==3.0.12
