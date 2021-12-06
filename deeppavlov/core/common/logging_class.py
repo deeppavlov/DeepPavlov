@@ -21,6 +21,7 @@ from typing import List, Tuple, Optional
 from logging import getLogger
 
 import tensorflow as tf
+import wandb
 
 from deeppavlov.core.trainers.utils import NumpyArrayEncoder
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -67,8 +68,8 @@ class TensorboardLogger(TrainLogger):
     TensorboardLogger class for logging metrics during training process into a local folder, later using TensorBoard tool for visualizations the logged data.
 
     Args:
-        type: 'train' for logging metrics of training process or 'valid' for validation process.
-        log_dir: path to local folder to log data into.
+        type (str): 'train' for logging metrics of training process or 'valid' for validation process.
+        log_dir (str): path to local folder to log data into.
 
     """
 
@@ -77,6 +78,8 @@ class TensorboardLogger(TrainLogger):
         if log_dir is not None:
             self.tb_writer = tf.summary.FileWriter(log_dir)
             self.log_dir = log_dir
+        else:
+            self.log_dir = None
 
     def __call__(self,
                  nn_trainer,
@@ -136,7 +139,7 @@ class TensorboardLogger(TrainLogger):
                 nn_trainer.losses.clear()
                 metrics.append(('loss', report['loss']))
 
-            if metrics and nn_trainer.tensorboard_idx is not None:
+            if metrics and self.log_dir is not None:  # nn_trainer.tensorboard_idx is not None
                 log.info(f"logging Training metrics to {self.log_dir}")
                 summary = nn_trainer._tf.Summary()
 
@@ -159,7 +162,8 @@ class TensorboardLogger(TrainLogger):
 
             metrics = list(report['metrics'].items())
 
-            if tensorboard_tag is not None and nn_trainer.tensorboard_idx is not None:
+            # nn_trainer.tensorboard_idx is not None:
+            if tensorboard_tag is not None and self.log_dir is not None:
                 log.info(f"logging Validation metrics to {self.log_dir}")
                 summary = nn_trainer._tf.Summary()
                 for name, score in metrics:
@@ -228,6 +232,13 @@ class StdLogger(TrainLogger):
         self.log_true = log_true
 
     def __call__(self, report: dict) -> None:
+        """
+        Print report to stdout.
+
+        Args:
+            report(dict): report to log to stdout.
+
+        """
         if(self.log_true):
             report = {self.type: report}
             log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
@@ -237,8 +248,50 @@ class StdLogger(TrainLogger):
 
 
 class WandbLogger(TrainLogger):
-    def __init__(self):
-        raise NotImplementedError
+    """
+    WandbLogger class for logging report about current training or validation process to WandB  ("https://wandb.ai/site").
+
+    WandB is a central dashboard to keep track of your hyperparameters, system metrics, and predictions so you can compare models live, and share your findings.
+
+    Args:
+        key (string, optional): authentication key.
+
+    """
+
+    def __init__(self, key: Optional[str] = None):
+        self.config = {"lr": 0.1} # not completed
+        wandb.login(key=key, relogin=True)
+        wandb.init(project="Deeppavlov_Test",
+                   group="Group_3",
+                   job_type="train",
+                   config=self.config,
+                   name="Test_logging"
+                   )
+
+    def __call__(self, report: dict) -> None:
+        """"
+        Logging report of the training process to wandb.
+
+        Args:
+            report (dict): report to log to WandB.
+
+        Returns:
+            a report dict containing calculated metrics, spent time value, and other metrics according to 'type'.
+
+        """
+        for i in report.keys():
+            if type(report[i]) == dict:
+                for j in report[i].keys():
+                    wandb.log({j: report[i].keys()[j]})
+            else:
+                if (i == 'time_spent'):
+                    t = time.strptime(report[i], '%H:%M:%S')
+                    y_seconds = int(datetime.timedelta(
+                        hours=t.tm_hour, minutes=t.tm_min, seconds=t.tm_sec).total_seconds())
+                    wandb.log({i: y_seconds})
+                else:
+                    wandb.log({i: report[i]})
 
     def print_info(self):
         raise NotImplementedError
+

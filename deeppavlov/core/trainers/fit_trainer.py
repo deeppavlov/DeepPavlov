@@ -92,7 +92,7 @@ class FitTrainer:
                 return None
         self.tensorboard_idx = get_method_idx(self.logger, "TensorboardLogger")
         self.stdlogger_idx = get_method_idx(self.logger, "StdLogger")
-
+        self.wandblogger_idx = get_method_idx(self.logger, "WandbLogger")
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements

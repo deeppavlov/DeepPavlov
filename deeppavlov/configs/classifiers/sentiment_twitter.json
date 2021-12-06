@@ -131,6 +131,11 @@
       },
       {
         "name": "StdLogger"
+      },
+      {
+        "name": "WandbLogger",
+        "API_Key":"40_chars from your setting in wandb site",
+        "config": {"configs": "an option for user to write his config, not implemented!"}
       }
     ]
   },

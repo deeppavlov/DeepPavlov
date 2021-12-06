@@ -160,6 +160,9 @@ class NNTrainer(FitTrainer):
         else:
             self.tensorboardlogger_train = TensorboardLogger('train')
             self.tensorboardlogger_valid = TensorboardLogger('valid')
+        
+        if self.wandblogger_idx is not None:
+            self.wandblogger = WandbLogger(self.logger[self.wandblogger_idx]["API_Key"]) 
 
         self.std_logger_train = StdLogger(
             'train', self.stdlogger_idx is not None)
@@ -215,6 +218,8 @@ class NNTrainer(FitTrainer):
                     report_stdlogger = self.tensorboardlogger_train(
                         self, iterator, tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
                     self.std_logger_train(report_stdlogger)
+                    if self.wandblogger_idx is not None:
+                        self.wandblogger(report_stdlogger)
 
                 if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
                     report_stdlogger = self.tensorboardlogger_valid(
@@ -240,6 +245,8 @@ class NNTrainer(FitTrainer):
                 report_stdlogger = self.tensorboardlogger_train(
                     self, iterator, 'every_n_epochs', self.epoch)
                 self.std_logger_train(report_stdlogger)
+                if self.wandblogger_idx is not None:
+                    self.wandblogger(report_stdlogger)
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
                 report_stdlogger = self.tensorboardlogger_valid(
