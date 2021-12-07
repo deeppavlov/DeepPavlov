@@ -13,12 +13,6 @@ node('cuda-module') {
                     virtualenv --python=python3.7 '.venv-$BUILD_NUMBER'
                     . '.venv-$BUILD_NUMBER/bin/activate'
                     pip install .[tests,docs]
-                    
-                    git clone https://github.com/facebookresearch/bitsandbytes.git
-                    cd bitsandbytes
-                    make cuda10x
-                    CUDA_VERSION=100 python setup.py install
-                    cd -
                     pip install -r deeppavlov/requirements/tf-gpu.txt
                     rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name docs ! -name '.venv-$BUILD_NUMBER'`
                 """
