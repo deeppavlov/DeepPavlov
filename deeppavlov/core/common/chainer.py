@@ -176,7 +176,8 @@ class Chainer(Component):
                 log.exception(f'{e} {in_x} {in_y} {self.train_map}')
             assert not missing_names, ('Arguments {} are expected but only {} are set'
                                                             .format(missing_names, self.train_map))
-            preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
+            log.info(f'{self.in_x} {in_x} {in_y} {self.in_y}')
+            preprocessor = Chainer(self.in_x, list(in_x) + list(in_y), self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
                     t_in_x = dict(zip(t_in_x_keys, t_in_x))
