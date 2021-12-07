@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-import bitsandbytes as bnb
 from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
@@ -108,6 +107,7 @@ class TorchModel(NNModel):
         """
         try:
             # Import BNB opt
+            import bitsandbytes as bnb
             if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
                 opt_name = self.optimizer_name + '8bit'
             else:
