@@ -112,12 +112,13 @@ class TorchModel(NNModel):
                 opt_name = self.optimizer_name + '8bit'
             else:
                 opt_name = self.optimizer_name
-            self.optimizer = getattr(bnb.optim, opt_name)(
+            optimizer = getattr(bnb.optim, opt_name)(
                 self.model.parameters(), **self.optimizer_parameters)
         except:
             log.info('Not imported 8bit optimizer - resorting to torch optimizer')
-            self.optimizer = getattr(torch.optim, self.optimizer_name)(
+            optimizer = getattr(torch.optim, self.optimizer_name)(
                 self.model.parameters(), **self.optimizer_parameters)
+        return optimizer
 
     def init_from_opt(self, model_func: str) -> None:
         """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
