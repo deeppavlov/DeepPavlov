@@ -16,7 +16,7 @@ import pickle
 from itertools import islice
 from logging import getLogger
 from types import FunctionType
-from typing import Union, Tuple, List, Optional, Hashable, Reversible,  Iterable
+from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -24,22 +24,6 @@ from deeppavlov.core.models.nn_model import NNModel
 from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
-
-def lists_to_tuples(a: list):
-    ans = ([tuple(x) if isinstance(x, list) else x for x in a])
-    if isinstance(a, set): # set to set
-        ans = set(ans)
-    return ans
-
-
-def flatten(a: Iterable):
-    ans = []
-    for subj in a:
-        if isinstance(subj, tuple) or isinstance(subj, list) or isinstance(subj, set):
-            ans += list(subj)
-        else:
-            ans.append(subj)
-    return ans
 
 
 class Chainer(Component):
@@ -77,9 +61,7 @@ class Chainer(Component):
         self.in_y = in_y or ['y']
         self.out_params = out_params or self.in_x
 
-        self.forward_map = set(lists_to_tuples(self.in_x))
-        self.in_y = lists_to_tuples(self.in_y)
-        #print(self.in_y)
+        self.forward_map = set(self.in_x)
         self.train_map = self.forward_map.union(self.in_y)
 
         self._components_dict = {}
@@ -169,15 +151,9 @@ class Chainer(Component):
 
             component: NNModel
             main = True
-            in_y = lists_to_tuples(in_y)
-            try:
-                missing_names = set(flatten(list(in_x)+list(in_y))) - set(flatten(self.train_map))
-            except Exception as e:
-                log.exception(f'{e} {in_x} {in_y} {self.train_map}')
-            assert not missing_names, ('Arguments {} are expected but only {} are set'
-                                                            .format(missing_names, self.train_map))
-            log.info(f'{self.in_x} {in_x} {in_y} {self.in_y}')
-            preprocessor = Chainer(self.in_x, list(in_x) + list(in_y), self.in_y)
+            assert self.train_map.issuperset(in_x + in_y), ('Arguments {} are expected but only {} are set'
+                                                            .format(in_x + in_y, self.train_map))
+            preprocessor = Chainer(self.in_x, in_x + in_y, self.in_y)
             for (t_in_x_keys, t_in_x), t_out, t_component in self.train_pipe:
                 if t_in_x_keys:
                     t_in_x = dict(zip(t_in_x_keys, t_in_x))
@@ -196,23 +172,17 @@ class Chainer(Component):
             self.process_event = component.process_event
         if main:
             self.main = component
-        in_x = lists_to_tuples(in_x)
         if self.forward_map.issuperset(in_x):
             self.pipe.append(((x_keys, in_x), out_params, component))
-            out_params = lists_to_tuples(out_params)
             self.forward_map = self.forward_map.union(out_params)
-        missing_names = set(flatten(in_x)) - set(flatten(self.train_map))
-        if not missing_names:
-            self.train_pipe.append(((x_keys, in_x), out_params, component))
-            out_params = lists_to_tuples(out_params)
-            self.train_map = self.train_map.union(out_params)
 
-        else:            
-            raise ConfigError('Arguments {} are expected but only {} are set'.format(missing_names, self.train_map))
+        if self.train_map.issuperset(in_x):
+            self.train_pipe.append(((x_keys, in_x), out_params, component))
+            self.train_map = self.train_map.union(out_params)
+        else:
+            raise ConfigError('Arguments {} are expected but only {} are set'.format(in_x, self.train_map))
 
     def compute(self, x, y=None, targets=None):
-        #print('COMPUTING')
-        #breakpoint()
         if targets is None:
             targets = self.out_params
         in_params = list(self.in_x)
@@ -234,66 +204,26 @@ class Chainer(Component):
         return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets)
 
     def __call__(self, *args):
-        #print('CALLING')
-        #breakpoint()
         return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params)
 
     @staticmethod
     def _compute(*args, param_names, pipe, targets):
-        #print('Computing  names '+str(param_names)+' targets '+str(targets))
-        #print(f'Args {[str(k)[:1000] for k in args]}')
-        aa = args
-        #breakpoint()
-        expected = set(lists_to_tuples(targets))
+        expected = set(targets)
         final_pipe = []
         for (in_keys, in_params), out_params, component in reversed(pipe):
-            out_params = lists_to_tuples(out_params)
             if expected.intersection(out_params):
                 expected = expected - set(out_params) | set(in_params)
                 final_pipe.append(((in_keys, in_params), out_params, component))
         final_pipe.reverse()
-        missing_names = set(flatten(expected)) - set(flatten(lists_to_tuples(param_names)))
-        if missing_names:
-            raise RuntimeError(f'{missing_names} are required to compute {targets} but were not found in memory or inputs')
+        if not expected.issubset(param_names):
+            raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
-        assert len(param_names) == len(args), f'For params {param_names} only {len(args)} args provided'
-        if 'subtok2chars_squad' in str(param_names):
-            mm=args
-        mem={}
-        for param_name, arg in zip(param_names, args):
-            if isinstance(param_name, list):
-                assert len(param_name) == len(arg)
-                for param_name_part, arg_part in zip(param_name,arg):
-                    mem[param_name_part] = arg_part
-            else:
-                mem[param_name] = arg
-        param_names = lists_to_tuples(param_names)
-        #breakpoint()
-        #print(param_names)
-        #print('mem keys')
-        #print(mem.keys())
-        #if 'y_relations' in mem:
-            #print(str(mem['y_relations'])[:1000])
-            #breakpoint()
-        if 'y_squad' in mem:
-            assert mem['y_squad']
-            #print(str(mem['y_squad'])[:1000])
-            if not isinstance(mem['y_squad'][1][1][0], int):
-                print('Assertion error')
-                breakpoint()
-        del args
-        # print('Targets '+str(targets))
-        #breakpoint()
-        for (in_keys, in_params), out_params, component in pipe:
-            #print('in keys '+str(in_keys)+' in params '+str(in_params)+' out params '+str(out_params)+' component '+str(component))
-            x = [mem[k] for k in flatten(in_params)]
-            #if ('y_squad' in in_params or 'x_squad' in in_params) and len(in_params) == 1:
-                #def f(*args):
-                #    #print(args)
-               #     return [k[0] for k in args[0]],[k[1] for k in args[0]]
-                #print(f(*x))
-                #breakpoint()
 
+        mem = dict(zip(param_names, args))
+        del args
+
+        for (in_keys, in_params), out_params, component in pipe:
+            x = [mem[k] for k in in_params]
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:
@@ -302,14 +232,10 @@ class Chainer(Component):
                 mem[out_params[0]] = res
             else:
                 mem.update(zip(out_params, res))
+
         res = [mem[k] for k in targets]
         if len(res) == 1:
             res = res[0]
-        #print('res ')
-        #print(res)
-        #print('Yielding '+str(targets) + 'as '+str(res)[:1000])
-        if 'y_squad' in targets:
-            breakpoint()
         return res
 
     def batched_call(self, *args: Reversible, batch_size: int = 16) -> Union[list, Tuple[list, ...]]:
@@ -330,7 +256,7 @@ class Chainer(Component):
             batch = [list(islice(arg, batch_size)) for arg in args]
             if not any(batch):  # empty batch, reached the end
                 break
-            #print(f'Batch {str(batch)}')
+
             curr_answer = self.__call__(*batch)
             if len(self.out_params) == 1:
                 curr_answer = [curr_answer]
