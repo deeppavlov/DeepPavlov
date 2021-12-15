@@ -140,7 +140,7 @@
         "download": [
             {
                 "url": "http://files.deeppavlov.ai/0.17/classifiers/superglue/superglue_copa_roberta.tar.gz",
-                "subdir": "{MODEL_PATH}"
+                "subdir": "{MODELS_PATH}"
             }
         ]
     }
