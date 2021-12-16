@@ -121,7 +121,6 @@ Before using the model make sure that all required packages are installed runnin
 .. code:: bash
 
     python -m deeppavlov install paraphrase_ident_paraphraser
-    python -m deeppavlov install elmo_paraphraser_fine_tuning
 
 To train the model on the `paraphraser.ru`_ dataset with fasttext embeddings one can use the following code in python:
 
@@ -130,15 +129,6 @@ To train the model on the `paraphraser.ru`_ dataset with fasttext embeddings one
     from deeppavlov import configs, train_model
 
     para_model = train_model(configs.ranking.paraphrase_ident_paraphraser, download=True)
-
-
-To train the model on the `paraphraser.ru`_ dataset with fine-tuned ELMO embeddings one should first fine-tune ELMO embeddings:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    para_model = train_model(configs.elmo.elmo_paraphraser_fine_tuning, download=True)
 
 Training and inference on your own data
 ---------------------------------------

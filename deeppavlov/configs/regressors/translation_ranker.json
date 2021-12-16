@@ -1,0 +1,105 @@
+{
+  "metadata":
+  {
+    "variables": {
+      "BASE_MODEL": "cointegrated/LaBSE-en-ru",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/ranker_labse",
+      "SEED": 42
+    },
+    "download": [
+	{
+		"url": "http://files.deeppavlov.ai/v1/tmp/translation_ranker.tar.gz",
+		"subdir": "{MODELS_PATH}"
+	}
+    ]
+  },
+    "dataset_iterator": {
+      "class_name": "huggingface_dataset_iterator",
+      "features": [
+        "source",
+        "hypothesis"
+      ],
+    "label": "agg_score",
+    "seed": "{SEED}",
+    "use_label_name": false
+  },
+    "chainer": {
+      "in": [
+        "source",
+        "hypothesis"
+      ],
+      "in_y": [
+        "score"
+      ],
+      "pipe": [
+        {
+          "class_name": "torch_transformers_preprocessor",
+          "vocab_file": "{BASE_MODEL}",
+          "do_lower_case": false,
+          "max_seq_length": 256,
+          "in": [
+          "source",
+          "hypothesis"
+          ],
+          "out": [
+            "bert_features"
+          ]
+        },
+      {
+        "class_name": "torch_transformers_classifier",
+        "n_classes": 1,
+        "return_probas": false,
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-06,
+          "weight_decay": 0.1
+        },
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 2.0,
+        "in": [
+          "bert_features"
+        ],
+        "in_y": [
+          "score"
+        ],
+        "out": [
+          "pred_score"
+        ]
+      }
+      ],
+      "out": [
+        "pred_score"
+      ]
+    },
+    "train": {
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "mean_squared_error",
+        "inputs": [
+          "score",
+          "pred_score"
+        ]
+      }
+    ],
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "class_name": "torch_trainer",
+    "evaluation_targets": [
+      "train",
+      "valid"
+    ],
+    "metric_optimization": "minimize",
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 2
+  }
+}

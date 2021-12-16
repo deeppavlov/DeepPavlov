@@ -1,25 +1,39 @@
 {
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "BASE_MODEL": "roberta-large",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_wnli/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/0.16/classifiers/glue_wnli_roberta.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
+    ]
+  },
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
     "path": "glue",
-    "name": "mnli",
+    "name": "wnli",
     "train": "train",
-    "valid": "validation_matched",
-    "test": "test_matched"
+    "valid": "validation"
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
     "features": [
-      "hypothesis",
-      "premise"
+      "sentence1",
+      "sentence2"
     ],
     "label": "label",
     "seed": 42
   },
   "chainer": {
     "in": [
-      "hypothesis",
-      "premise"
+      "sentence1",
+      "sentence2"
     ],
     "in_y": [
       "y"
@@ -29,10 +43,12 @@
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 128,
+        "max_seq_length": 192,
+        "truncation": "longest_first",
+        "padding": "longest",
         "in": [
-          "hypothesis",
-          "premise"
+          "sentence1",
+          "sentence2"
         ],
         "out": [
           "bert_features"
@@ -112,34 +128,20 @@
     ]
   },
   "train": {
-    "batch_size": 4,
+    "batch_size": 24,
     "metrics": [
       "accuracy"
     ],
-    "validation_patience": 10,
+    "epochs": 1,
     "val_every_n_batches": 250,
     "log_every_n_batches": 250,
     "show_examples": false,
     "evaluation_targets": [
+      "train",
       "valid"
     ],
     "class_name": "torch_trainer",
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2
-  },
-  "metadata": {
-    "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
-      "BASE_MODEL": "roberta-large",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mnli_{BASE_MODEL}"
-    },
-    "download": [
-      {
-        "url": "https://files.deeppavlov.ai/0.16/classifiers/glue_mnli.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      }
-    ]
   }
 }

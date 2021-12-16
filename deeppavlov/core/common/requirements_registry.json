@@ -3,9 +3,6 @@
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "aiml_skill": [
-    "{DEEPPAVLOV_PATH}/requirements/aiml_skill.txt"
-  ],
   "bert_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -75,10 +72,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
   ],
-  "elmo_model": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
-  ],
   "fasttext": [
     "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
   ],
@@ -139,10 +132,6 @@
   ],
   "pymorphy_vectorizer": [
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "rasa_skill": [
-    "{DEEPPAVLOV_PATH}/requirements/rasa_skill.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "rel_ranker": [

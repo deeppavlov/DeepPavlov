@@ -1,6 +1,5 @@
 {
   "UD_pymorphy_lemmatizer": "deeppavlov.models.morpho_tagger.lemmatizer:UDPymorphyLemmatizer",
-  "aiml_skill": "deeppavlov.skills.aiml_skill.aiml_skill:AIMLSkill",
   "api_requester": "deeppavlov.models.api_requester.api_requester:ApiRequester",
   "api_router": "deeppavlov.models.api_requester.api_router:ApiRouter",
   "base64_decode_bytesIO": "deeppavlov.models.nemo.common:ascii_to_bytes_io",
@@ -47,8 +46,6 @@
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
   "elmo_embedder": "deeppavlov.models.embedders.elmo_embedder:ELMoEmbedder",
-  "elmo_file_paths_iterator": "deeppavlov.dataset_iterators.elmo_file_paths_iterator:ELMoFilePathsIterator",
-  "elmo_model": "deeppavlov.models.elmo.elmo:ELMo",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_detection_parser": "deeppavlov.models.kbqa.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.kbqa.entity_linking:EntityLinker",
@@ -119,7 +116,6 @@
   "query_generator_online": "deeppavlov.models.kbqa.query_generator_online:QueryGeneratorOnline",
   "question_sign_checker": "deeppavlov.models.kbqa.entity_detection_parser:QuestionSignChecker",
   "random_emb_mat": "deeppavlov.models.preprocessors.random_embeddings_matrix:RandomEmbeddingsMatrix",
-  "rasa_skill": "deeppavlov.skills.rasa_skill.rasa_skill:RASASkill",
   "rel_ranker": "deeppavlov.models.ranking.rel_ranker:RelRanker",
   "rel_ranking_bert_infer": "deeppavlov.models.kbqa.rel_ranking_bert_infer:RelRankerBertInfer",
   "rel_ranking_infer": "deeppavlov.models.kbqa.rel_ranking_infer:RelRankerInfer",
