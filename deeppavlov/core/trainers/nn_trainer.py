@@ -16,6 +16,7 @@ import datetime
 import time
 from logging import getLogger
 from typing import List, Dict, Union, Optional, Iterable
+from collections import defaultdict
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -160,9 +161,9 @@ class NNTrainer(FitTrainer):
         else:
             self.tensorboardlogger_train = TensorboardLogger('train')
             self.tensorboardlogger_valid = TensorboardLogger('valid')
-        
+
         if self.wandblogger_idx is not None:
-            self.wandblogger = WandbLogger(self.logger[self.wandblogger_idx]["API_Key"]) 
+            self.wandblogger = WandbLogger(self.logger[self.wandblogger_idx])
 
         self.std_logger_train = StdLogger(
             'train', self.stdlogger_idx is not None)

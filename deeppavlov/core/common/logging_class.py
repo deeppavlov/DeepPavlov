@@ -17,7 +17,7 @@ import time
 import datetime
 from itertools import islice
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Dict
 from logging import getLogger
 
 import tensorflow as tf
@@ -257,15 +257,14 @@ class WandbLogger(TrainLogger):
         key (string, optional): authentication key.
 
     """
-
-    def __init__(self, key: Optional[str] = None):
-        self.config = {"lr": 0.1} # not completed
-        wandb.login(key=key, relogin=True)
-        wandb.init(project="Deeppavlov_Test",
-                   group="Group_3",
-                   job_type="train",
-                   config=self.config,
-                   name="Test_logging"
+    # wandb_keys = ["project","group","job_type","name","config"]
+    def __init__(self, wandb_init: Optional[Dict] = None):
+        wandb.login(key=wandb_init.get("API_Key",None), relogin=True)
+        wandb.init(project=wandb_init.get("project",None),
+                   group=wandb_init.get("group",None),
+                   job_type=wandb_init.get("job_type",None),
+                   config=wandb_init.get("config",None),
+                   name=wandb_init.get("run_name",None)
                    )
 
     def __call__(self, report: dict) -> None:

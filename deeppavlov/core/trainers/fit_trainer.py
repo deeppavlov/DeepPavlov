@@ -19,6 +19,7 @@ from itertools import islice
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
+from collections import defaultdict
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path
