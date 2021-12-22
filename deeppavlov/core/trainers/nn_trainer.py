@@ -268,6 +268,9 @@ class NNTrainer(FitTrainer):
         if callable(getattr(self._chainer, 'train_on_batch', None)):
             try:
                 self.train_on_batches(iterator)
+                # wandblogger will finish by itself, but finishing wandb manually here will be directly after training
+                if self.wandblogger_idx is not None: 
+                    self.wandblogger.close()
             except KeyboardInterrupt:
                 log.info('Stopped training')
         else:

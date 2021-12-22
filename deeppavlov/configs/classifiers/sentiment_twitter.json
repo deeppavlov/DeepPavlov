@@ -100,7 +100,7 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 30,
     "batch_size": 64,
     "metrics": [
       "accuracy",
@@ -143,8 +143,9 @@
           "description": "add any hyperprameter you want to monitor, architecture discription,..",
           "learning_rate": 0.02,
           "architecture": "CNN",
-          "dataset": "CIFAR-100"
+          "dataset": "sentiment_twitter_data"
         }
+        
       }
     ]
   },
