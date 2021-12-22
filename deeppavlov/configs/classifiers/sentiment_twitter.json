@@ -3,7 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
+    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
