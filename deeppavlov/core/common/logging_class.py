@@ -271,18 +271,23 @@ class WandbLogger(TrainLogger):
 
     """
 
-    def __init__(self, wandb_init: Optional[Dict] = None):
-        wandb.login(key=wandb_init.get("API_Key", None), relogin=True)
-
-        wandb.init(
-            anonymous="allow",
-            project=wandb_init.get("project", None),
-            group=wandb_init.get("group", None),
-            job_type=wandb_init.get("job_type", None),
-            config=wandb_init.get("config", None),
-            name=wandb_init.get("run_name", None),
-            id = wandb_init.get("id",None) # to resume a run
-        )
+    # def __init__(self, wandb_init: Optional[Dict] = None):
+    def __init__(self, API_Key = None, **kwargs):
+        print(kwargs)
+        # wandb.login(key=wandb_init.get("API_Key", None), relogin=True)
+        # wandb.login(key=kwargs.get("API_Key", None), relogin=True)
+        wandb.login(key=API_Key, relogin=True)
+        
+        # wandb.init(
+        #     anonymous="allow",
+        #     project=wandb_init.get("project", None),
+        #     group=wandb_init.get("group", None),
+        #     job_type=wandb_init.get("job_type", None),
+        #     config=wandb_init.get("config", None),
+        #     name=wandb_init.get("run_name", None),
+        #     id = wandb_init.get("id",None) # to resume a run
+        # )
+        wandb.init(**kwargs["init"])
 
     def __call__(self, report: dict) -> None:
         """ "

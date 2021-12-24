@@ -163,7 +163,7 @@ class NNTrainer(FitTrainer):
             self.tensorboardlogger_valid = TensorboardLogger('valid')
 
         if self.wandblogger_idx is not None:
-            self.wandblogger = WandbLogger(self.logger[self.wandblogger_idx])
+            self.wandblogger = WandbLogger(**self.logger[self.wandblogger_idx])
 
         self.std_logger_train = StdLogger(
             'train', self.stdlogger_idx is not None)

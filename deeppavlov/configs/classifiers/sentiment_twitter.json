@@ -3,7 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
+    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -115,6 +115,7 @@
     ],
     "validation_patience": 5,
     "val_every_n_epochs": 1,
+    "val_every_n_batchs":3,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "evaluation_targets": [
@@ -135,15 +136,18 @@
       {
         "name": "WandbLogger",
         "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0253",
-        "project": "DeepTest",
-        "group": "Group_Name",
-        "job_type":"Name job Type",
-        "run_name":"Run name",
-        "config": {
+        "init":{
+          "project": "Deep_Test",
+          "group": "Group_Name",
+          "job_type":"Name job Type",
+          "name":"Run name",
+          "config": {
           "description": "add any hyperprameter you want to monitor, architecture discription,..",
           "learning_rate": 0.02,
           "architecture": "CNN",
           "dataset": "sentiment_twitter_data"
+        }
+        
         }
         
       }
