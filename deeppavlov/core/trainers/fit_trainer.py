@@ -17,9 +17,7 @@ import json
 import time
 from itertools import islice
 from logging import getLogger
-from pathlib import Path
 from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
-from collections import defaultdict
 
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.commands.utils import expand_path
@@ -51,9 +49,20 @@ class FitTrainer:
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
-        tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
+        logger : list of dictionaries of possible loggers provided in config file.
             (default is ``None``)
-        logger : list of dictionary of possible loggers provided in config file
+                Possible loggers:
+                - TensorboardLogger: for running tesnorboard logs, keys:
+                    "name": "TensorboardLogger", logging to tensorboard will be ignored if None
+                    "log_dir":str or path to a directory where tensorboard logs can be stored, ignored if None
+                    (default is ``None``)
+                - StdLogger: for logging report about current training and validation processes to stdout. Keys:
+                    "name": "StdLogger". logging to stdout will be ignored if None. (default is ``None``)
+                - WandbLogger: logging report about current training and validation processes to WandB. with keys:
+                    "name": "WandbLogger", logging to wandb will be ignored if None.
+                    "API_Key": API of 40-chars from 'https://wandb.ai/home' personal account.
+                    "init": dictionary of key:value for wandb.init configurations. see: 'https://docs.wandb.ai/ref/python/init'
+                    (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
@@ -63,7 +72,6 @@ class FitTrainer:
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 # tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  max_test_batches: int = -1,
                  logger: Optional[List[Dict]] = None,
                  **kwargs) -> None:
@@ -81,19 +89,18 @@ class FitTrainer:
 
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
-        # self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
         self.logger: Optional[List[Dict]] = logger
 
-        def get_method_idx(logger, name):
-            try:
-                for i in range(len(logger)):
-                    if logger[i]["name"] == name:
-                        return i
-            except:
-                return None
-        self.tensorboard_idx = get_method_idx(self.logger, "TensorboardLogger")
-        self.stdlogger_idx = get_method_idx(self.logger, "StdLogger")
-        self.wandblogger_idx = get_method_idx(self.logger, "WandbLogger")
+        self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
+        for i in range(len(logger)):
+            if logger[i].get("name",None) == "TensorboardLogger" and self.logger[i].get("log_dir", None) is not None:
+                self.tensorboard_idx = i
+                # self.tensorboard_log_dir = logger[i].get("log_dir",None)
+            if logger[i].get("name",None) == "StdLogger":
+                self.stdlogger_idx = i
+            if logger[i].get("name",None) == "WandbLogger":
+                self.wandblogger_idx = i
+
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
@@ -102,8 +109,8 @@ class FitTrainer:
             except ImportError:
                 log.warning('TensorFlow could not be imported, so tensorboard log directory'
                             f'`{self.logger[self.tensorboard_idx]["log_dir"]}` will be ignored')
-                self.tensorboard_idx = None  # check it
-                self.logger[self.tensorboard_idx]["log_dir"] = None
+                self.tensorboard_idx = None
+                # self.logger[self.tensorboard_idx]["log_dir"] = None
             else:
                 self.logger[self.tensorboard_idx]["log_dir"] = expand_path(
                     self.logger[self.tensorboard_idx]["log_dir"])
@@ -138,7 +145,8 @@ class FitTrainer:
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
-                        if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
+                        #if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
+                        if result is not None and self.tensorboard_idx is not None:
                             if writer is None:
                                 writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                          f'partial_fit_{component_index}_log'))
@@ -156,7 +164,7 @@ class FitTrainer:
                     result: Optional[Dict[str, Iterable[float]]
                                      ] = component.fit(*preprocessed)
 
-                    if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
+                    if result is not None and self.tensorboard_idx is not None:
                         writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                  f'fit_log_{component_index}'))
                         for name, scores in result.items():
