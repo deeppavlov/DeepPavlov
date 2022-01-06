@@ -49,19 +49,19 @@ class FitTrainer:
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
-        logger : list of dictionaries of possible loggers provided in config file.
+        logger : list of dictionaries of possible loggers from deeppavlov.configs files.
             (default is ``None``)
                 Possible loggers:
-                - TensorboardLogger: for running tesnorboard logs, keys:
+                - TensorboardLogger: for logging to tesnorboard. Keys:
                     "name": "TensorboardLogger", logging to tensorboard will be ignored if None
                     "log_dir":str or path to a directory where tensorboard logs can be stored, ignored if None
                     (default is ``None``)
                 - StdLogger: for logging report about current training and validation processes to stdout. Keys:
                     "name": "StdLogger". logging to stdout will be ignored if None. (default is ``None``)
-                - WandbLogger: logging report about current training and validation processes to WandB. with keys:
+                - WandbLogger: logging report about current training and validation processes to WandB. Keys:
                     "name": "WandbLogger", logging to wandb will be ignored if None.
-                    "API_Key": API of 40-chars from 'https://wandb.ai/home' personal account.
-                    "init": dictionary of key:value for wandb.init configurations. see: 'https://docs.wandb.ai/ref/python/init'
+                    "API_Key": API of 40 characters long from 'https://wandb.ai/home' personal account.
+                    "init": dictionary of (key:value) for wandb.init configurations. see: 'https://docs.wandb.ai/ref/python/init'
                     (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
@@ -92,15 +92,18 @@ class FitTrainer:
         self.logger: Optional[List[Dict]] = logger
 
         self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
-        for i in range(len(logger)):
-            if logger[i].get("name",None) == "TensorboardLogger" and self.logger[i].get("log_dir", None) is not None:
-                self.tensorboard_idx = i
-                # self.tensorboard_log_dir = logger[i].get("log_dir",None)
-            if logger[i].get("name",None) == "StdLogger":
-                self.stdlogger_idx = i
-            if logger[i].get("name",None) == "WandbLogger":
-                self.wandblogger_idx = i
-
+        if logger is not None:
+            try:
+                for i in range(len(logger)):
+                    if logger[i].get("name", None) == "StdLogger":
+                        self.stdlogger_idx = i
+                    if logger[i].get("name", None) == "TensorboardLogger" and self.logger[i].get("log_dir", None) is not None:
+                        self.tensorboard_idx = i
+                    if logger[i].get("name", None) == "WandbLogger":
+                        self.wandblogger_idx = i
+            except AttributeError:
+                log.warning(
+                    "Check logger dictionary in configs, logging will be ignored")
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
@@ -110,7 +113,6 @@ class FitTrainer:
                 log.warning('TensorFlow could not be imported, so tensorboard log directory'
                             f'`{self.logger[self.tensorboard_idx]["log_dir"]}` will be ignored')
                 self.tensorboard_idx = None
-                # self.logger[self.tensorboard_idx]["log_dir"] = None
             else:
                 self.logger[self.tensorboard_idx]["log_dir"] = expand_path(
                     self.logger[self.tensorboard_idx]["log_dir"])
@@ -145,7 +147,6 @@ class FitTrainer:
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
-                        #if result is not None and self.logger[self.tensorboard_idx]["log_dir"] is not None:
                         if result is not None and self.tensorboard_idx is not None:
                             if writer is None:
                                 writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
