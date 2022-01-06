@@ -73,7 +73,7 @@ class FitTrainer:
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
                  max_test_batches: int = -1,
-                 logger: Optional[List[Dict]] = None,
+                 logger: Optional[List[dict]] = None,
                  **kwargs) -> None:
         if kwargs:
             log.info(
@@ -102,6 +102,7 @@ class FitTrainer:
                     if logger[i].get("name", None) == "WandbLogger":
                         self.wandblogger_idx = i
             except AttributeError:
+                self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
                 log.warning(
                     "Check logger dictionary in configs, logging will be ignored")
         if self.tensorboard_idx is not None:

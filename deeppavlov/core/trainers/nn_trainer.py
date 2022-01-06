@@ -22,7 +22,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics
-from deeppavlov.core.common.logging_class import TensorboardLogger, StdLogger, WandbLogger
 
 log = getLogger(__name__)
 
@@ -153,16 +152,15 @@ class NNTrainer(FitTrainer):
             self.std_logger = StdLogger(stdlogging=True)
 
         if self.tensorboard_idx is not None:
-            self.tensorboardlogger = TensorboardLogger(
+            self.tensorboard_logger = TensorboardLogger(
                 log_dir=self.logger[self.tensorboard_idx]["log_dir"])
 
         if self.wandblogger_idx is not None:
-            if WandbLogger.login(
-                    self.logger[self.wandblogger_idx].get("API_Key", None)):
+            if WandbLogger.login(API_Key =
+                    self.logger[self.wandblogger_idx].get("API_Key", None), relogin = True):
                 if self.log_every_n_epochs > 0 or self.val_every_n_epochs > 0:
                     self.wandb_logger = WandbLogger(
                         log_on="epochs", commit_on_valid=self.val_every_n_epochs > 0, **self.logger[self.wandblogger_idx].get("init", None))
-                    WandbLogger.log_on_train = True
                 elif self.log_every_n_batches > 0 or self.val_every_n_batches > 0:
                     self.wandb_logger = WandbLogger(
                         log_on="batches", commit_on_valid=self.val_every_n_batches > 0, **self.logger[self.wandblogger_idx].get("init", None))
@@ -197,7 +195,7 @@ class NNTrainer(FitTrainer):
         self.start_time = time.time()
         if self.validate_first:
             self._send_event(event_name="before_validation")
-            _, report = self.validate_(self, iterator, "valid")
+            report = self.validate_(self, iterator, "valid")
             self._send_event(event_name='after_validation', data=report)
 
         while True:
@@ -217,36 +215,36 @@ class NNTrainer(FitTrainer):
 
                 if self.log_every_n_batches > 0 and self.train_batches_seen % self.log_every_n_batches == 0:
                     self._send_event(event_name="before_log")
-                    metrics, report = None, None
+                    report = None
                     if self.stdlogger_idx is not None:
-                        metrics, report = self.std_logger(
-                            self, iterator, type="train", report=report, metrics=metrics)
+                        report = self.std_logger(
+                            self, iterator, type="train", report=report)
 
                     if self.tensorboard_idx is not None:
-                        metrics, report = self.tensorboardlogger(
-                            self, iterator, type="train", tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen, report=report, metrics=metrics)
+                        report = self.tensorboard_logger(
+                            self, iterator, type="train", tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen, report=report)
 
                     if self.wandblogger_idx is not None and self.wandb_logger.log_on == "batches":
-                        metrics, report = self.wandb_logger(
-                            self, iterator=iterator, type="train", report=report, metrics=metrics)
+                        report = self.wandb_logger(
+                            self, iterator=iterator, type="train", report=report)
 
                     # empty report if no logging method.
                     self._send_event(event_name='after_train_log', data=report)
 
                 if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
                     self._send_event(event_name='before_validation')
-                    report, metrics = None, None
+                    report = None
                     if self.stdlogger_idx is not None:
-                        metrics, report = self.std_logger(
-                            self, iterator, type="valid", report=report, metrics=metrics)
+                        report = self.std_logger(
+                            self, iterator, type="valid", report=report)
 
                     if self.tensorboard_idx is not None:
-                        metrics, report = self.tensorboardlogger(
-                            self, iterator, type="valid", tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen, report=report, metrics=metrics)
+                        report = self.tensorboard_logger(
+                            self, iterator, type="valid", tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen, report=report)
 
                     if self.wandblogger_idx is not None and self.wandb_logger.log_on == "batches":
-                        metrics, report = self.wandb_logger(
-                            self, iterator, type="valid", report=report, metrics=metrics)
+                        report = self.wandb_logger(
+                            self, iterator, type="valid", report=report)
 
                     self._send_event(
                         event_name='after_validation', data=report)
@@ -269,36 +267,36 @@ class NNTrainer(FitTrainer):
             if self.log_every_n_epochs > 0 and self.epoch % self.log_every_n_epochs == 0:
                 self._send_event(event_name="before_log")
 
-                report, metrics = None, None
+                report = None
                 if self.stdlogger_idx is not None:
-                    metrics, report = self.std_logger(
-                        self, iterator=iterator, type="train", report=report, metrics=metrics)
-
-                if self.tensorboard_idx is not None:
-                    metrics, report = self.tensorboardlogger(
-                        self, iterator=iterator, type="train", tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch, report=report, metrics=metrics)
+                    report = self.std_logger(
+                        self, iterator=iterator, type="train", report=report)
 
                 if self.wandblogger_idx is not None and self.wandb_logger.log_on == "epochs":
-                    metrics, report = self.wandb_logger(
-                        self, iterator, type="train", report=report, metrics=metrics)
+                    report = self.wandb_logger(
+                        self, iterator, type="train", report=report)
+
+                if self.tensorboard_idx is not None:
+                    report = self.tensorboard_logger(
+                        self, iterator=iterator, type="train", tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch, report=report)
 
                 self._send_event(event_name='after_train_log', data=report)
 
             if self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0:
                 self._send_event(event_name='before_validation')
 
-                report, metrics = None, None
+                report = None
                 if self.stdlogger_idx is not None:
-                    metrics, report = self.std_logger(
-                        self, iterator, type="valid", report=report, metrics=metrics)
+                    report = self.std_logger(
+                        self, iterator, type="valid", report=report)
 
                 if self.tensorboard_idx is not None:
-                    metrics, report = self.tensorboardlogger(
-                        self, iterator=iterator, type="valid", tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch, report=report, metrics=metrics)
+                    report = self.tensorboard_logger(
+                        self, iterator=iterator, type="valid", tensorboard_tag='every_n_epochs', tensorboard_index=self.epoch, report=report)
 
                 if self.wandblogger_idx is not None and self.wandb_logger.log_on == "epochs":
-                    metrics, report = self.wandb_logger(
-                        self, iterator, type="valid", report=report, metrics=metrics)
+                    report = self.wandb_logger(
+                        self, iterator, type="valid", report=report)
 
                 self._send_event(event_name='after_validation', data=report)
 
@@ -329,3 +327,5 @@ class NNTrainer(FitTrainer):
         if self.validation_number < 1:
             log.info('Save model to capture early training results')
             self.save()
+
+from deeppavlov.core.common.logging_class import TensorboardLogger, StdLogger, WandbLogger

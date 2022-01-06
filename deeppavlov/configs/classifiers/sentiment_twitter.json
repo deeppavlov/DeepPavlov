@@ -100,7 +100,7 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 30,
     "batch_size": 64,
     "metrics": [
       "accuracy",
@@ -114,7 +114,7 @@
       }
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 1,
+    "val_every_n_epochs": 4,
     "log_every_n_epochs": 3,
     "log_on_k_batches":2,
     "show_examples": false,
@@ -125,6 +125,7 @@
     ],
     "class_name": "nn_trainer",
     "logger": [
+      "hello",
       {
         "name": "TensorboardLogger",
         "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
@@ -134,12 +135,13 @@
       },
       {
         "name": "WandbLogger",
-        "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0253",
+        "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0252",
         "init":{
-          "project": "Deep_Test_final",
-          "group": "Group_Name11",
+          "project": "Deep_Test_third",
+          "group": "Group_Name",
           "job_type":"Name job Type",
           "name":"Run name",
+          "reinit": true,
           "config": {
           "description": "add any hyperprameter you want to monitor, architecture discription,..",
           "learning_rate": 0.02,

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-import logging
 import time
 from pathlib import Path
 import datetime
@@ -24,10 +23,10 @@ from logging import getLogger
 
 import tensorflow as tf
 import wandb
-from wandb.errors import Error, UsageError, CommError
 
 from deeppavlov.core.trainers.utils import NumpyArrayEncoder
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.trainers.nn_trainer import NNTrainer
 
 log = getLogger(__name__)
 
@@ -36,14 +35,14 @@ class TrainLogger(ABC):
     """An abstract class for logging metrics during training process.
 
     There are three types of logging:
-        1- StdLogger: print metrics during training
-        2- TensorboardLogger: to log metrics to local file specified by log_dir in .json file.
-        3- WandbLogger: Not implemented yet.
+        - StdLogger: for logging report about current training and validation processes to stdout.
+        - TensorboardLogger: for logging to tensorboard.
+        - WandbLogger: for logging to WandB.
 
     """
 
     @abstractmethod
-    def __init__(self):
+    def __init__() -> None:
         """
         The constructor for TrainLogger class.
 
@@ -52,8 +51,21 @@ class TrainLogger(ABC):
 
     @abstractmethod
     def get_report(self,
-                   nn_trainer,
-                   iterator: DataLearningIterator, type: str = None):
+                   nn_trainer: NNTrainer,
+                   iterator: DataLearningIterator, type: str = None) -> dict:
+        """"
+        Get report about current process.
+        for 'valid' type, 'get_report' function also saves best score on validation data, and the model parameters corresponding to the best score.
+
+        Args:
+            nn_trainer: 'NNTrainer' object contains parameters required for preparing the report.
+            iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
+            type : if "train" returns report about training process, "valid" returns report about validation process.
+
+        Returns:
+            dict contains data about current 'type' process.
+
+        """
         if type == "train":
             if nn_trainer.log_on_k_batches == 0:
                 report = {
@@ -94,8 +106,7 @@ class TrainLogger(ABC):
                 nn_trainer.losses.clear()
                 metrics.append(("loss", report["loss"]))
 
-        else:
-            # nn_trainer._send_event(event_name="before_validation")
+        elif type == "valid":
             report = nn_trainer.test(
                 iterator.gen_batches(
                     nn_trainer.batch_size, data_type="valid", shuffle=False
@@ -145,80 +156,63 @@ class TrainLogger(ABC):
             if nn_trainer.validation_patience > 0:
                 report["patience_limit"] = nn_trainer.validation_patience
 
-            # nn_trainer._send_event(event_name="after_validation", data=report)
-
             nn_trainer.validation_number += 1
-        return metrics, report
+        return report
 
     @abstractmethod
-    def __call__(self,
-                 nn_trainer,
-                 iterator: DataLearningIterator,
-                 type: str = None,
-                 tensorboard_tag: Optional[str] = None,
-                 tensorboard_index: Optional[int] = None):
-        """
-        Call method with metrics as parameters for logging, according to chosen method.
-
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def print_info(self):
-        """
-        Print inforamtion about logging method, like the logging directory...
-
-        """
+    def __call__() -> None:
         raise NotImplementedError
 
 
 class StdLogger(TrainLogger):
     """
-    StdLogger class for printing report about current training and validation processes to stdout.
+    StdLogger class for logging report about current training and validation processes to stdout.
 
     Args:
-        type: 'train' for printing report of training process or 'valid' for validation process.
-        log_true (boo): if True: print of the StdLogger is provided in .json file as logging method or not. default False.
+        stdlogging (bool): if True, log report to stdout. 
+            the object of this class with stdlogging = False can be used for validation process.
 
     """
 
-    def __init__(self, stdlogging: bool = True):
+    def __init__(self, stdlogging: bool = True) -> None:
         self.stdlogging = stdlogging
 
-    def get_report(self, nn_trainer, iterator: DataLearningIterator, type: str = None):
-        return super().get_report(nn_trainer, iterator, type=type)
+    def get_report(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None) -> dict:
+        return super().get_report(nn_trainer=nn_trainer, iterator=iterator, type=type)
 
-    def __call__(self, nn_trainer, iterator: DataLearningIterator, type: str = None, report: Dict = None, metrics: Dict = None) -> None:
+    def __call__(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None, report: Dict = None) -> dict:
         """
-        Print report to stdout.
+        override call method, to log report to stdout.
 
         Args:
-            report(dict): report to log to stdout.
+            nn_trainer: NNTrainer object contains parameters required for preparing report. 
+            iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation.
+            type : process type, if "train" logs report about training process, else if "valid" logs report about validation process.
+            report: dictionary contains current process information, if None, use 'get_report' method to get this report.
+
+        Returns:
+            dict contains logged data to stdout.
+
         """
         if report is None:
-            print("Calling from StdLogger:::::::::::::::::::::::::::::::::::::::::::::::")
-            metrics, report = self.get_report(
+            report = self.get_report(
                 nn_trainer=nn_trainer, iterator=iterator, type=type)
         if self.stdlogging:
             log.info(json.dumps({type: report},
                      ensure_ascii=False, cls=NumpyArrayEncoder))
-        return metrics, report
-
-    def print_info(self):
-        raise NotImplementedError
+        return report
 
 
 class TensorboardLogger(TrainLogger):
     """
-    TensorboardLogger class for logging metrics during training process into a local folder, later using TensorBoard tool for visualizations the logged data.
+    TensorboardLogger class for logging to tesnorboard.
 
     Args:
-        type (str): 'train' for logging metrics of training process or 'valid' for validation process.
-        log_dir (str): path to local folder to log data into.
+        log_dir (Path): path to local folder to log data into.
 
     """
 
-    def __init__(self, log_dir: Path = None):
+    def __init__(self, log_dir: Path = None) -> None:
         self.train_log_dir = str(log_dir / 'train_log')
         self.valid_log_dir = str(log_dir / 'valid_log')
         self.tb_train_writer = tf.summary.FileWriter(self.train_log_dir)
@@ -227,52 +221,45 @@ class TensorboardLogger(TrainLogger):
     def get_report(self, nn_trainer, iterator: DataLearningIterator, type: str = None):
         return super().get_report(nn_trainer, iterator, type=type)
 
-    def __call__(
-        self,
-        nn_trainer,
-        iterator: DataLearningIterator,
-        type: str = None,
-        tensorboard_tag: Optional[str] = None,
-        tensorboard_index: Optional[int] = None,
-        report: Dict = None,
-        metrics: List = None,
-    ):
+    def __call__(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None, tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None, report: Dict = None) -> dict:
         """
         override call method, for 'train' logging type, log metircs of training process to log_dir/train_log.
         for 'valid' logging type, log metrics of validation process to log_dir/valid_log.
-        for 'valid' type, 'call' function saves best score on validation data, and the model parameters corresponding to the best score.
 
         Args:
-            nn_trainer: 'NNTrainer' object which contains 'self' as variable.
+            nn_trainer: NNTrainer object contains parameters required for preparing the report.
             iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
+            type : process type, if "train" logs report about training process, else if "valid" logs report about validation process.
             tensorboard_tag: one of two options : 'every_n_batches', 'every_n_epochs'
             tensorboard_index: one of two options: 'train_batches_seen', 'epoch' corresponding to 'tensorboard_tag' types respectively.
+            report: dictionary contains current process information, if None, use 'get_report' method to get this report.
 
         Returns:
-            a report dict containing calculated metrics, spent time value, and other metrics according to 'type'.
+            dict contains metrics logged to tesnorboard.
 
         """
         if report is None:
-            print(
-                "Calling from TensorboardLogger:::::::::::::::::::::::::::::::::::::::::::::::")
-            metrics, report = self.get_report(
+            report = self.get_report(
                 nn_trainer=nn_trainer, iterator=iterator, type=type)
 
-        # logging to tensorboard:
         if type == "train":
-            if metrics and self.train_log_dir is not None:  # nn_trainer.tensorboard_idx is not None
-                # log.info(f"logging Training metrics to {self.train_log_dir}")
+            metrics: List[Tuple[str, float]] = list(
+                report.get("metrics", {}).items()
+            ) + list(nn_trainer.last_result.items())
+            if report.get("loss", None) is not None:
+                metrics.append(("loss", report["loss"]))
+
+            if metrics and self.train_log_dir is not None:
                 summary = nn_trainer._tf.Summary()
 
                 for name, score in metrics:
                     summary.value.add(
                         tag=f"{tensorboard_tag}/{name}", simple_value=score
                     )
-                # if tensorboard_index is None:
-                #     tensorboard_index = nn_trainer.train_batches_seen
                 self.tb_train_writer.add_summary(summary, tensorboard_index)
                 self.tb_train_writer.flush()
         else:
+            metrics = list(report["metrics"].items())
             if tensorboard_tag is not None and self.valid_log_dir is not None:
                 summary = nn_trainer._tf.Summary()
                 for name, score in metrics:
@@ -282,74 +269,83 @@ class TensorboardLogger(TrainLogger):
                     tensorboard_index = nn_trainer.train_batches_seen
                 self.tb_valid_writer.add_summary(summary, tensorboard_index)
                 self.tb_valid_writer.flush()
-        return metrics, report
-
-    def print_info(self):
-        raise NotImplementedError
+        return report
 
 
 class WandbLogger(TrainLogger):
     """
-    WandbLogger class for logging report about current training or validation process to WandB  ("https://wandb.ai/site").
+    WandbLogger class for logging report about current training and validation processes to WandB during training. ("https://wandb.ai/site").
 
     WandB is a central dashboard to keep track of your hyperparameters, system metrics, and predictions so you can compare models live, and share your findings.
+    WandB doesn't support more than one run concurrently, so logging will be on "epochs" or "batches"
+    If val_every_n_epochs > 0 or log_every_n_epochs > 0 in config file, logging to wandb will be on epochs.
+    Otherwise if  val_every_n_batches > 0 or log_every_n_batches > 0 in config file, logging to wandb will be on batches. 
+    if none of them, logging to wandb will be ignored.
 
     Args:
-        key (string, optional): authentication key.
+        log_on (str): if "epochs": logging to wandb on epochs, if "batches: logging on batches.
+        commit_on_valid (bool): If False wandb.log just updates the current metrics dict with the row argument and metrics won't be saved until wandb.log is called with commit=True
+            to commit training and validation reports with the same steps, this argument is True if logging on validation required
+        **kwargs: arguments for wandb initialization, more info: https://docs.wandb.ai/ref/python/init
 
     """
 
     @staticmethod
-    def login(API_Key: str = None):
+    def login(API_Key: str = None, relogin: bool = True) -> bool:
+        """"
+        static method to login to wandb account, if login or init to wandb failed, logging to wandb will be ignored.
+
+        Args:
+            API_Key (str): authentication key.
+            relogin (bool): if True, force relogin if already logged in.
+            report(dict): dictionary contains current process information, if None, use 'get_report' method to get this report.
+
+        Returns:
+            True if login and init processes succeed, otherwise False and logging to wandb will be ignored.
+
+        """
         try:
-            wandb.login(key=API_Key, relogin=True)
-            wandb.init()# in case wandb.login() return True with not valid key, but this will throw an error when initializing
+            wandb.login(key=API_Key, relogin=relogin)
+            wandb.init()  # in case wandb.login() returns True with not valid key, but this will throw an error when initializing
             return True
         except Exception as e:
             log.warning(str(e)+", logging to WandB will be ignored")
             return False
 
-    def get_report(self, nn_trainer, iterator: DataLearningIterator, type: str = None):
-        return super().get_report(nn_trainer, iterator, type=type)
+    def get_report(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None) -> dict:
+        return super().get_report(nn_trainer=nn_trainer, iterator=iterator, type=type)
 
-    def __init__(self, log_on: str = None, commit_on_valid: bool = False, **kwargs):
+    def __init__(self, log_on: str = "epochs", commit_on_valid: bool = False, **kwargs) -> None:
         self.log_on = log_on  # "epochs","batches"
         self.commit_on_valid = commit_on_valid
-        print("HEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE")
-        try:
-            wandb.init(**kwargs, reinit=True)
-        except:
-            # set self.wandblogger_idx to None
-            print("NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN")
+        wandb.init(**kwargs)
 
-    def __call__(self, nn_trainer,
+    def __call__(self, nn_trainer: NNTrainer,
                  iterator: DataLearningIterator,
                  type: str = None,
-                 report: Dict = None,
-                 metrics: List = None
+                 report: Dict = None
                  ):
         """ "
         Logging report of the training process to wandb.
 
         Args:
-            report (dict): report to log to WandB.
+            nn_trainer: 'NNTrainer' object contains parameters required for preparing the report.
+            iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
+            report (dict): report for logging to WandB. If None, use 'get_report' method to get this report.
+            type (str) : process type, if "train" logs report about training process, else if "valid" logs report about validation process.
 
         Returns:
-            a report dict containing calculated metrics, spent time value, and other metrics according to 'type'.
+            dict contains logged data to WandB.
 
         """
         if report is None:
-            print(
-                "Calling from WandbLogger:::::::::::::::::::::::::::::::::::::::::::::::")
-            metrics, report = self.get_report(
+            report = self.get_report(
                 nn_trainer=nn_trainer, iterator=iterator, type=type)
 
         logging_type = type + "/"
         for i in report.keys():
             if isinstance(report[i], dict):
-                # if type(report[i]) == dict:
                 for key, value in report[i].items():
-                    # for j in report[i].keys():
                     wandb.log(
                         {logging_type+key: value}, commit=False)
             else:
@@ -370,12 +366,10 @@ class WandbLogger(TrainLogger):
         if (self.commit_on_valid and logging_type == "valid/") or (not self.commit_on_valid and logging_type == "train/"):
             wandb.log({}, commit=True)
 
-        return metrics, report
+        return report
 
     @staticmethod
     def close():
-        wandb.log({}, commit=True)
+        """close function to commit the not commited logs and to mark a run as finished wiht wanb.finish method, and finishes uploading all data."""
+        wandb.log({}, commit= True)
         wandb.finish()
-
-    def print_info(self):
-        raise NotImplementedError
