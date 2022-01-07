@@ -161,9 +161,13 @@ class NNTrainer(FitTrainer):
                 if self.log_every_n_epochs > 0 or self.val_every_n_epochs > 0:
                     self.wandb_logger = WandbLogger(
                         log_on="epochs", commit_on_valid=self.val_every_n_epochs > 0, **self.logger[self.wandblogger_idx].get("init", None))
+                    if self.wandb_logger.init_succeed == False:
+                            self.wandblogger_idx = None
                 elif self.log_every_n_batches > 0 or self.val_every_n_batches > 0:
                     self.wandb_logger = WandbLogger(
                         log_on="batches", commit_on_valid=self.val_every_n_batches > 0, **self.logger[self.wandblogger_idx].get("init", None))
+                    if self.wandb_logger.init_succeed == False:
+                            self.wandblogger_idx = None
             else:
                 self.wandblogger_idx = None
 

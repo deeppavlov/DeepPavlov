@@ -305,9 +305,7 @@ class WandbLogger(TrainLogger):
 
         """
         try:
-            wandb.login(key=API_Key, relogin=relogin)
-            wandb.init()  # in case wandb.login() returns True with not valid key, but this will throw an error when initializing
-            return True
+            return wandb.login(key=API_Key, relogin=relogin)
         except Exception as e:
             log.warning(str(e)+", logging to WandB will be ignored")
             return False
@@ -318,7 +316,12 @@ class WandbLogger(TrainLogger):
     def __init__(self, log_on: str = "epochs", commit_on_valid: bool = False, **kwargs) -> None:
         self.log_on = log_on  # "epochs","batches"
         self.commit_on_valid = commit_on_valid
-        wandb.init(**kwargs)
+        try:
+            wandb.init(**kwargs)
+            self.init_succeed = True
+        except Exception as e:
+            log.warning(str(e)+", logging to WandB will be ignored")
+            self.init_succeed = False
 
     def __call__(self, nn_trainer: NNTrainer,
                  iterator: DataLearningIterator,

@@ -63,7 +63,7 @@
         "main": true,
         "class_name": "keras_classification_model",
         "save_path": "{MODEL_PATH}/new_model",
-        
+        "load_path": "",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -74,7 +74,7 @@
         "filters_cnn": 256,
         "optimizer": "Adam",
         "learning_rate": 0.01,
-        "learning_rate_decay": 0.1,
+        "learning_rate_decay": 0.01,
         "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
@@ -100,7 +100,7 @@
     ]
   },
   "train": {
-    "epochs": 30,
+    "epochs": 10,
     "batch_size": 64,
     "metrics": [
       "accuracy",
@@ -114,9 +114,8 @@
       }
     ],
     "validation_patience": 5,
-    "val_every_n_epochs": 4,
-    "log_every_n_epochs": 3,
-    "log_on_k_batches":2,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
     "show_examples": false,
     "evaluation_targets": [
       "train",
@@ -125,7 +124,6 @@
     ],
     "class_name": "nn_trainer",
     "logger": [
-      "hello",
       {
         "name": "TensorboardLogger",
         "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
@@ -135,13 +133,11 @@
       },
       {
         "name": "WandbLogger",
-        "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0252",
+        "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0253",
         "init":{
-          "project": "Deep_Test_third",
-          "group": "Group_Name",
-          "job_type":"Name job Type",
-          "name":"Run name",
-          "reinit": true,
+          "project": "Tuning Hyperparameters",
+          "group": "Tuning lr & lr_decay",
+          "job_type":"lr=0.01, lr_decay=0.01",
           "config": {
           "description": "add any hyperprameter you want to monitor, architecture discription,..",
           "learning_rate": 0.02,
