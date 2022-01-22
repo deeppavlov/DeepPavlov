@@ -51,18 +51,6 @@ class FitTrainer:
             in evaluation logs (default is ``False``)
         logger : list of dictionaries of possible loggers from deeppavlov.configs files.
             (default is ``None``)
-                Possible loggers:
-                - TensorboardLogger: for logging to tesnorboard. Keys:
-                    "name": "TensorboardLogger", logging to tensorboard will be ignored if None
-                    "log_dir":str or path to a directory where tensorboard logs can be stored, ignored if None
-                    (default is ``None``)
-                - StdLogger: for logging report about current training and validation processes to stdout. Keys:
-                    "name": "StdLogger". logging to stdout will be ignored if None. (default is ``None``)
-                - WandbLogger: logging report about current training and validation processes to WandB. Keys:
-                    "name": "WandbLogger", logging to wandb will be ignored if None.
-                    "API_Key": API of 40 characters long from 'https://wandb.ai/home' personal account.
-                    "init": dictionary of (key:value) for wandb.init configurations. see: 'https://docs.wandb.ai/ref/python/init'
-                    (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
@@ -105,6 +93,8 @@ class FitTrainer:
                 self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
                 log.warning(
                     "Check logger dictionary in configs, logging will be ignored")
+        if self.tensorboard_idx is None and self.wandblogger_idx is None:
+            self.stdlogger_idx = 1
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
