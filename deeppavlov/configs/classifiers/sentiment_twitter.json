@@ -3,7 +3,7 @@
     "class_name": "basic_classification_reader",
     "x": "Twit",
     "y": "Class",
-    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data/modified_data"
+    "data_path": "{DOWNLOADS_PATH}/sentiment_twitter_data"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
@@ -62,8 +62,8 @@
         ],
         "main": true,
         "class_name": "keras_classification_model",
-        "save_path": "{MODEL_PATH}/new_model",
-        "load_path": "",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
         "n_classes": "#classes_vocab.len",
         "kernel_sizes_cnn": [
@@ -73,7 +73,7 @@
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
-        "learning_rate": 0.01,
+        "learning_rate": 0.1,
         "learning_rate_decay": 0.01,
         "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
@@ -100,7 +100,7 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 100,
     "batch_size": 64,
     "metrics": [
       "accuracy",

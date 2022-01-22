@@ -24,6 +24,3 @@ click==7.1.2
 uvicorn==0.11.7
 sacremoses==0.0.35
 uvloop==0.14.0
-wandb==0.12.7
-pybind11==2.2
-fasttext
