@@ -94,7 +94,7 @@ class FitTrainer:
                 log.warning(
                     "Check logger dictionary in configs, logging will be ignored")
         if self.tensorboard_idx is None and self.wandblogger_idx is None:
-            self.stdlogger_idx = 1
+            self.stdlogger_idx = 1 # make std logger default
         if self.tensorboard_idx is not None:
             try:
                 # noinspection PyPackageRequirements
