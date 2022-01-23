@@ -222,6 +222,138 @@ _______
 |
 | Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
 
+Logging data during training process
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+| Logging data is done following two steps:
+
+* Add at least one of the following arguments in configuration file with strictly positive integer value:
+
+  - ``val_every_n_batches``: how often (in batches) to validate the pipeline.
+
+  -	``val_every_n_epochs``: how often (in epochs) to validate the pipeline.
+
+  - ``log_every_n_epochs``: how often (in epochs) to calculate metrics on train data.
+
+  -	``log_every_n_batches``: how often (in batches) to calculate metrics on train data.
+
+  Logging will be ignored for negative or zero.
+  
+  Example: 
+
+  .. code:: python
+
+      "train": {
+      "log_every_n_epochs": 3,
+      "val_every_n_batches": 2
+      }
+
+  To log training data every 3 epochs, and validation data every 2 batches, using the appropriate logging method.
+
+* Add the logging method:
+
+  Deeppavlov library supports three types of logging:
+
+  - StdLogging: for logging data about current training and validation processes to stdout.
+
+  To log data using this logger, add "logger" list containing dictionary with ``name``: ``StdLogger`` in configuration file.
+  For example:
+
+  .. code:: python
+
+      "train": {
+        "logger": [
+          {
+            "name": "StdLogger"
+          }
+        ],
+        ...
+      }
+
+  -	TensorboardLogger: for logging data to Tensorboard, stored in local folder.
+
+  To log data using this logger, add logger name, with local directory path.
+
+  For example:
+
+  .. code:: python
+
+      "train": {
+        "logger": [
+          {
+            "name": "TensorboardLogger",
+            "log_dir": "local_folder/Tensorboard_logs"
+          }
+        ],
+        ...
+      }
+
+  In this case, training data will be stored in "local_folder/Tensorboard_logs/train_log", 
+  and validation data in "local_folder/Tensorboard_logs/valid_log".
+
+  To visualize training logs, use the following command line: 
+
+  "tensorboard --logdir local_folder/Tensorboard_logs/train_log"
+
+  -	WandbLogger: for logging data to Weights & Biases platform in real time.
+
+  To log data using this logger, add logger name, with API key.
+
+  To get API key:
+
+  Sign up to wandb platform : https://wandb.ai/site if don’t have an account, login and go to setting (upper right corner), copy the API key.
+
+  To create a new run in W&B with specific configurations, add ``init`` keyword with its configuration as dictionary (see https://docs.wandb.ai/ref/python/init).
+
+  For example:
+
+  .. code:: python
+
+      "train": { 
+        "logger": [
+          {
+            "name": "WandbLogger",
+            "API_Key":"API of 40 characters long",
+            "init":{ 
+              "project": "project_name",
+              "group": "group_name",
+              "job_type":"job_type",
+              "name":"run_name",
+            },
+            "config": {
+            "learning_rate": 0.1,
+            }
+          }
+        ],
+        ...
+      }
+
+  Logging to W&B will be on epochs if ``log_every_n_epochs`` or ``val_every_n_epochs`` were added to configuration file, otherwise logging on batches if ``log_every_n_batches`` or ``val_every_n_batches`` were added.
+
+  To view run while training, follow the run link logged to stdout.
+
+  To add more than one logger type as dictionary, for example:
+
+  .. code:: python
+
+      "train": { 
+        "logger": [
+          {
+            "name": "TensorboardLogger",
+            "log_dir": "local_folder/Tensorboard_logs"
+          },
+          {
+            "name": "StdLogger"
+          }
+        ],
+        ...
+      }
+
+  Default logging method is ``StdLogger`` (if ``logger`` not provided in configuration file), for no logging, add ``logger`` with empty list.
+
+  
+
+
+
 
 DatasetReader
 ~~~~~~~~~~~~~
