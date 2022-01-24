@@ -111,7 +111,7 @@ You can train it in the same simple way:
         model = train_model(<config_path>, download=True)
 
     * ``download=True`` downloads pretrained model, therefore the pretrained
-      model will be, first, loaded and then train (optional).
+      model will be, first, loaded and then trained (optional).
 
     Dataset will be downloaded regardless of whether there was ``-d`` flag or
     not.
