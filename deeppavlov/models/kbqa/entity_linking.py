@@ -110,7 +110,7 @@ class EntityLinker(Component, Serializable):
 
     def __init__(self, load_path: str,
                  entities_database_filename: str,
-                 entity_ranker,
+                 entity_ranker = None,
                  num_entities_for_bert_ranking: int = 50,
                  ngram_range: List[int] = None,
                  num_entities_to_return: int = 10,
