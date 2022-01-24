@@ -119,20 +119,16 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 @register('torch_transformers_preprocessor')
 class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
-
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
-
     Args:
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         return_tokens: whether to return tuple of input features and tokens, or only input features
-
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         return_tokens: whether to return tuple of input features and tokens, or only input features
         tokenizer: instance of Bert FullTokenizer
-
     """
 
     def __init__(self,
@@ -154,13 +150,10 @@ class TorchTransformersPreprocessor(Component):
                                                                                          Tuple[List[InputFeatures],
                                                                                                List[List[str]]]]:
         """Tokenize and create masks.
-
         texts_a and texts_b are separated by [SEP] token
-
         Args:
             texts_a: list of texts,
             texts_b: list of texts, it could be None, e.g. single sentence classification task
-
         Returns:
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
@@ -172,6 +165,50 @@ class TorchTransformersPreprocessor(Component):
 
         input_features = self.tokenizer(text=texts_a,
                                         text_pair=texts_b,
+                                        add_special_tokens=True,
+                                        max_length=self.max_seq_length,
+                                        padding='max_length',
+                                        return_attention_mask=True,
+                                        truncation=True,
+                                        return_tensors='pt')
+        return input_features
+
+
+@register('torch_transformers_entity_ranker_preprocessor')
+class TorchTransformersEntityRankerPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 512,
+                 return_tokens: bool = False,
+                 special_tokens: List[str] = None,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+        self.return_tokens = return_tokens
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        if special_tokens is not None:
+            special_tokens_dict = {'additional_special_tokens': special_tokens}
+            num_added_toks = self.tokenizer.add_special_tokens(special_tokens_dict)
+
+    def __call__(self, texts_a: List[str]) -> Union[List[InputFeatures], Tuple[List[InputFeatures], List[List[str]]]]:
+        # in case of iterator's strange behaviour
+        if isinstance(texts_a, tuple):
+            texts_a = list(texts_a)
+        lengths = []
+        for text_a in texts_a:
+            encoding = self.tokenizer.encode_plus(
+                text_a, add_special_tokens = True, pad_to_max_length = True, return_attention_mask = True)
+            input_ids = encoding["input_ids"]
+            lengths.append(len(input_ids))
+            
+        max_length = min(max(lengths), self.max_seq_length)
+
+        input_features = self.tokenizer(text=texts_a,
                                         add_special_tokens=True,
                                         max_length=self.max_seq_length,
                                         padding='max_length',

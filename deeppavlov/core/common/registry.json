@@ -186,6 +186,7 @@
   "torch_record_postprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchRecordPostprocessor",
   "torch_trainer": "deeppavlov.core.trainers.torch_trainer:TorchTrainer",
   "torch_transformers_classifier": "deeppavlov.models.torch_bert.torch_transformers_classifier:TorchTransformersClassifierModel",
+  "torch_transformers_entity_ranker_infer": "deeppavlov.models.torch_bert.torch_transformers_el_ranker:TorchTransformersEntityRankerInfer",
   "torch_transformers_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersPreprocessor",
   "re_preprocessor": "deeppavlov.models.preprocessors.re_preprocessor:REPreprocessor",
   "torchtext_classification_data_reader": "deeppavlov.dataset_readers.torchtext_classification_data_reader:TorchtextClassificationDataReader",
