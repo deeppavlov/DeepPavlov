@@ -72,7 +72,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
                              contexts: List[List[str]],
                              choices: List[List[str]]) -> Dict[str, torch.tensor]:
 
-        num_choices = len(contexts[0])
+        num_choices = len(choices[0])
         batch_size = len(contexts)
 
         # tokenize examples in groups of `num_choices`
