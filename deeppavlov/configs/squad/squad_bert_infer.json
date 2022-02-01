@@ -13,12 +13,12 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "class_name": "squad_bert_infer",
+        "class_name": "torch_transformers_squad_infer",
         "batch_size": 10,
         "squad_model_config": "{CONFIGS_PATH}/squad/squad_bert.json",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
+        "vocab_file": "bert-base-cased",
         "do_lower_case": false,
-        "max_seq_length": 512,
+        "max_seq_length": 384,
         "in": ["context_raw", "question_raw"],
         "out": ["ans_predicted", "ans_start_predicted", "logits"]
       }
@@ -27,8 +27,9 @@
   },
   "train": {
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
+    "evaluation_targets": [
+      "valid"
+    ],
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
@@ -51,24 +52,17 @@
         "name": "squad_v2_em",
         "inputs": ["ans_raw", "ans_predicted"]
       }
-    ],
-    "tensorboard_log_dir": "{MODELS_PATH}/squad_bert/logs"
+    ]
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
+      "TRANSFORMER": "bert-base-cased",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODELS_PATH": "{ROOT_PATH}/models/squad_torch_bert/{TRANSFORMER}",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "download": [{
-	    "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-	    "subdir": "{DOWNLOADS_PATH}/bert_models"
-    },
-    {
-	    "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_bert.tar.gz",
-	    "subdir": "{MODELS_PATH}"
-    }
+    "download": [
     ]
   }
 }

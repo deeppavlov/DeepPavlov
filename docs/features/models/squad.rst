@@ -69,22 +69,14 @@ Default configs could be found in :config:`deeppavlov/configs/squad/ <squad/>` f
 Prerequisites
 -------------
 
-Before using the model make sure that all required packages are installed running the command for TensorFlow:
+Before using the model make sure that all required packages are installed running the command
 
 .. code:: bash
 
     python -m deeppavlov install squad_bert
 
-and for PyTorch
-
-.. code:: bash
-
-    python -m deeppavlov install squad_torch_bert
-
-
 By running this command we will install requirements for
-:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>` or for
-:config:`deeppavlov/configs/squad/squad_torch_bert.json <squad/squad_torch_bert.json>`
+:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>`
 
 Model usage from Python
 -----------------------
@@ -139,7 +131,7 @@ We have all pretrained model available to download:
 
     python -m deeppavlov download deeppavlov/configs/squad/squad_bert.json
 
-It achieves ~88 F-1 score and ~80 EM on `SQuAD-v1.1`_ dev set.
+It achieves ~86.8 F-1 score and ~78.8 EM on `SQuAD-v1.1`_ dev set.
 
 In the following table you can find comparison with published results. Results of the most recent competitive solutions could be found on `SQuAD
 Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
@@ -147,9 +139,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 +---------------------------------------------------------+----------------+-----------------+
 | Model (single model)                                    |    EM (dev)    |    F-1 (dev)    |
 +=========================================================+================+=================+
-| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
-+---------------------------------------------------------+----------------+-----------------+
-| :config:`BERT on PyTorch <squad/squad_torch_bert.json>` |     78.8       |     86.7        |
+| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     78.84      |     86.76       |
 +---------------------------------------------------------+----------------+-----------------+
 | :config:`DeepPavlov R-Net <squad/squad.json>`           |     71.49      |     80.34       |
 +---------------------------------------------------------+----------------+-----------------+
