@@ -174,7 +174,6 @@ PARAMS = {
         ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_torch.json", "ner_ontonotes_bert_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_mult_torch.json", "ner_ontonotes_bert_mult_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
     },
