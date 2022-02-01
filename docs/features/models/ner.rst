@@ -12,15 +12,15 @@ model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
-    python -m deeppavlov install ner_ontonotes_bert_torch
+    python -m deeppavlov install ner_ontonotes_bert
 
 To use a pre-trained model from CLI use the following command:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact ner_ontonotes_bert_torch [-d]
+    python deeppavlov/deep.py interact ner_ontonotes_bert [-d]
 
-where ``ner_ontonotes_bert_torch`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
+where ``ner_ontonotes_bert`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. Other possible
 commands are ``train``, ``evaluate``, and ``download``,
 
@@ -40,9 +40,9 @@ Here is the list of all available configs:
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_rus <ner/ner_rus.json>`                                   |                    |          | 1.0 GB          |   5.6 MB   |   95.1     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`<ner/ner_ontonotes_bert_mult_torch.json>`                     | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **87.2**   |
+    | :config:`<ner/ner_ontonotes_bert_mult      .json>`                     | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **87.2**   |
     +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_torch <ner/ner_ontonotes_bert_torch.json>` |                    | En       | 400 MB          |   1.3 GB   |   87.9     |
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`             |                    | En       | 400 MB          |   1.3 GB   |   87.7     |
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                       |                    |          | 331 MB          |   7.8 MB   |   86.7     |
     +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
@@ -61,7 +61,7 @@ Models can be used from Python using the following code:
 
     from deeppavlov import configs, build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_torch, download=True)
+    ner_model = build_model(configs.ner.ner_ontonotes_bert, download=True)
 
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
@@ -72,7 +72,7 @@ The model also can be trained from the Python:
 
     from deeppavlov import configs, train_model
 
-    ner_model = train_model(configs.ner.ner_ontonotes_bert_torch)
+    ner_model = train_model(configs.ner.ner_ontonotes_bert)
 
 The data for training should be placed in the folder provided in the config:
 
@@ -81,7 +81,7 @@ The data for training should be placed in the folder provided in the config:
     from deeppavlov import configs, train_model
     from deeppavlov.core.commands.utils import parse_config
     
-    config_dict = parse_config(configs.ner.ner_ontonotes_bert_torch)
+    config_dict = parse_config(configs.ner.ner_ontonotes_bert)
 
     print(config_dict['dataset_reader']['data_path'])
     >>> '~/.deeppavlov/downloads/ontonotes'
@@ -96,7 +96,7 @@ Multilingual BERT Zero-Shot Transfer
 ------------------------------------
 
 Multilingual BERT models allow to perform zero-shot transfer from one language to another. The model
-:config:`ner_ontonotes_bert_mult_torch <ner/ner_ontonotes_bert_mult_torch.json>` was trained on OntoNotes corpus which has 19 types
+:config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>` was trained on OntoNotes corpus which has 19 types
 in the markup schema. The model performance was evaluated on Russian corpus Collection 3 [1]_. Results of the
 transfer are presented in the table below.
 
@@ -117,7 +117,7 @@ The following Python code can be used to infer the model:
 
     from deeppavlov import configs, build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult_torch, download=True)
+    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
 
     ner_model(['Curling World Championship will be held in Antananarivo'])
     >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
