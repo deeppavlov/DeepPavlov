@@ -21,7 +21,7 @@ import spacy
 
 log = getLogger(__name__)
 
-# en_core_web_sm installed and used by test_inferring_pretrained_model in the same interpreter session during tests.
+# en_core_web_sm is installed and used by test_inferring_pretrained_model in the same interpreter session during tests.
 # Spacy checks en_core_web_sm package presence with pkg_resources, but pkg_resources is initialized with interpreter,
 # sot it doesn't see en_core_web_sm installed after interpreter initialization, so we use importlib.reload below.
 
