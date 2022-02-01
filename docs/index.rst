@@ -35,7 +35,6 @@ Welcome to DeepPavlov's documentation!
    Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
-   Slot filling <features/models/slot_filling>
    Speech recognition and synthesis <features/models/nemo>
    Spelling Correction <features/models/spelling_correction>
    Syntactic Parser <features/models/syntaxparser>

@@ -27,7 +27,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/master/features/models/slot_filling.html)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html)
 
 [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
 
@@ -132,8 +132,8 @@ python -m deeppavlov install <config_path>
 ```
 
 * where `<config_path>` is path to the chosen model's config file (e.g.
-  `deeppavlov/configs/ner/slotfill_dstc2.json`) or just name without
-  *.json* extension (e.g. `slotfill_dstc2`)
+  `deeppavlov/configs/classifiers/insults_kaggle_bert.json`) or just name without
+  *.json* extension (e.g. `insults_kaggle_bert`)
 
 
 ### Command line interface (CLI)

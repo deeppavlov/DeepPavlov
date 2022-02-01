@@ -42,22 +42,7 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 |                                                         |       | :config:`ner_conll2003_torch_bert.json <ner/ner_conll2003_torch_bert.json>`                |    88.6     |
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
 |                                                         |       | :config:`ner_conll2003.json <ner/ner_conll2003.json>`                                      |    89.9     |
-+---------------------------------------------------------+       +--------------------------------------------------------------------------------------------+-------------+
-| DSTC2                                                   |       | :config:`ner_dstc2.json <ner/ner_dstc2.json>`                                              |    97.1     |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
-
-Slot filling models :doc:`[docs] </features/models/slot_filling>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on fuzzy Levenshtein search to extract normalized slot values from text. The models either rely on NER results
-or perform needle in haystack search.
-
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-| Dataset                                                                                                                   |  Slots Accuracy  |
-+===========================================================================================================================+==================+
-| :config:`DSTC 2 <ner/slotfill_dstc2.json>`                                                                                |       98.85      |
-+---------------------------------------------------------------------------------------------------------------------------+------------------+
-
 
 Classification model :doc:`[docs] </features/models/classifiers>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -70,51 +55,15 @@ Several pre-trained models are available and presented in Table below.
 +------------------+---------------------+------+----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
 | Task             | Dataset             | Lang | Model                                                                                              | Metric      | Valid            | Test            | Downloads |
 +==================+=====================+======+====================================================================================================+=============+==================+=================+===========+
-| 28 intents       | `DSTC 2`_           | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                              | Accuracy    | 0.7613           | 0.7733          |  800 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                            |             | 0.9629           | 0.9617          |  8.5 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`BERT <classifiers/intents_dstc2_bert.json>`                                               |             | 0.9673           | 0.9636          |  800 Mb   |
-+------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-| 7 intents        | `SNIPS-2017`_ [1]_  |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                              | F1-macro    | 0.8591           |    --           |  800 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                            |             | 0.9820           |    --           |  8.5 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`            |             | 0.9673           |    --           |  8.6 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Wiki emb weighted by Tfidf <classifiers/intents_snips_tfidf_weighted.json>`               |             | 0.9786           |    --           |  8.5 Gb   |
-+------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-| Insult detection | `Insults`_          |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                             | ROC-AUC     | 0.9263           | 0.8556          |  6.2 Gb   |
+| Insult detection | `Insults`_          | En   | :config:`English BERT on PyTorch <classifiers/insults_kaggle_bert_torch.json>`                     | ROC-AUC     | 0.9329           | 0.877           |  1.1 Gb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
 |                  |                     |      | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                      |             | 0.9255           | 0.8612          |  1200 Mb  |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`English Conversational BERT <classifiers/insults_kaggle_conv_bert.json>`                  |             | 0.9389           | 0.8941          |  1200 Mb  |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`English BERT on PyTorch <classifiers/insults_kaggle_bert_torch.json>`                     |             | 0.9329           | 0.877           |  1.1 Gb   |
-+------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-| 5 topics         | `AG News`_          |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                                | Accuracy    | 0.8922           | 0.9059          |  8.5 Gb   |
-+------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-| Intent           | `Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`           | ROC-AUC     | 0.9436           |   --            |  1200 Mb  |
 +------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
 | Sentiment        | `SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`          | Accuracy    | 0.6456           | 0.6715          |  400 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`           |             | 0.5738           | 0.6024          |  660 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`3-classes SST SWCNN on PyTorch <classifiers/sst_torch_swcnn.json>`                        |             | 0.7379           | 0.6312          |  4.3 Mb   |
-+                  +---------------------+      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  | `Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`        |             | 0.6925           | 0.6842          |  400 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`         |             | 0.5896           | 0.5874          |  660 Mb   |
 +------------------+---------------------+------+----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
 | Sentiment        | `Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`                  |             | 0.9965           | 0.9961          |  6.2 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`         |             | 0.7823           | 0.7759          |  6.2 Gb   |
 +                  +---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-|                  | `RuSentiment`_      |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                      | F1-weighted | 0.6541           | 0.7016          |  6.2 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [2]_        |             | 0.7301           | 0.7576          |  3.4 Gb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                     |             | 0.7519           | 0.7875          |  700 Mb   |
+|                  | `RuSentiment`_      |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                     | F1-weighted | 0.7519           | 0.7875          |  700 Mb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
 |                  |                     |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                                  |             | 0.6809           | 0.7193          |  1900 Mb  |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
@@ -123,12 +72,7 @@ Several pre-trained models are available and presented in Table below.
 |                  |                     |      | :config:`Conversational DistilRuBERT-tiny <classifiers/rusentiment_convers_distilrubert_2L.json>`  |             |  0.703 ± 0.0031  | 0.7348 ± 0.0028 |  690 Mb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
 |                  |                     |      | :config:`Conversational DistilRuBERT-base <classifiers/rusentiment_convers_distilrubert_6L.json>`  |             |  0.7376 ± 0.0045 | 0.7645 ± 0.035  |  1.0 Gb   |
-+------------------+---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-| Intent           | Ru like`Yahoo-L31`_ |      | :config:`Conversational vs Informational on ELMo <classifiers/yahoo_convers_vs_info.json>`         | ROC-AUC     | 0.9412           |   --            |  700 Mb   |
 +------------------+---------------------+------+----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-
-.. [1] Coucke A. et al. Snips voice platform: an embedded spoken language understanding system for private-by-design voice interfaces //arXiv preprint arXiv:1805.10190. – 2018.
-.. [2] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
@@ -139,7 +83,6 @@ Several pre-trained models are available and presented in Table below.
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`SST`: https://nlp.stanford.edu/sentiment/index.html
-.. _`Yelp`: https://www.yelp.com/dataset
 
 As no one had published intent recognition for DSTC-2 data, the
 comparison of the presented model is given on **SNIPS** dataset. The
@@ -192,13 +135,9 @@ on Automatic Spelling Correction for Russian:
 +-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
 | :config:`Damerau Levenshtein 1 + lm<spelling_correction/levenshtein_corrector_ru.json>` | 53.26     | 53.74  | 53.50     | 29.3                |
 +-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
-| :config:`Brill Moore top 4 + lm<spelling_correction/brillmoore_kartaslov_ru.json>`      | 51.92     | 53.94  | 52.91     | 0.6                 |
-+-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
 | Hunspell + lm                                                                           | 41.03     | 48.89  | 44.61     | 2.1                 |
 +-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
 | JamSpell                                                                                | 44.57     | 35.69  | 39.64     | 136.2               |
-+-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
-| :config:`Brill Moore top 1 <spelling_correction/brillmoore_kartaslov_ru_nolm.json>`     | 41.29     | 37.26  | 39.17     | 2.4                 |
 +-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
 | Hunspell                                                                                | 30.30     | 34.02  | 32.06     | 20.3                |
 +-----------------------------------------------------------------------------------------+-----------+--------+-----------+---------------------+
@@ -245,8 +184,6 @@ Available pre-trained models for ranking:
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
    | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_bert_sep <ranking/ranking_ubuntu_v2_bert_sep.json>`                                       |   66.5    | 66.5  | --    | --    |  396 MB   |
    +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_interact <ranking/ranking_ubuntu_v2_mt_interact.json>`                                 |   59.2    | 58.7  | --    | --    |  8906 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
 
 .. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
 
@@ -258,8 +195,6 @@ Available pre-trained models for paraphrase identification:
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+------------+------------+----------------+-----------------+-----------+
    |    Dataset             | Model config                                                                                         | Val (accuracy) | Test (accuracy) | Val (F1)   | Test (F1)  | Val (log_loss) | Test (log_loss) | Downloads |
    +========================+======================================================================================================+================+=================+============+============+================+=================+===========+
-   | `paraphraser.ru`_      | :config:`paraphrase_ident_paraphraser_ft <ranking/paraphrase_ident_paraphraser_interact.json>`       |   83.8         |   75.4          |   87.9     |  80.9      |   0.468        |   0.616         | 5938M     |
-   +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+------------+------------+----------------+-----------------+-----------+
    | `paraphraser.ru`_      | :config:`paraphrase_bert_multilingual <classifiers/paraphraser_bert.json>`                           |   87.4         |   79.3          |   90.2     |  83.4      |   --           |   --            | 1330M     |
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+------------+------------+----------------+-----------------+-----------+
    | `paraphraser.ru`_      | :config:`paraphrase_rubert <classifiers/paraphraser_rubert.json>`                                    |   90.2         |   84.9          |   92.3     |  87.9      |   --           |   --            | 1325M     |
@@ -362,14 +297,9 @@ model. This model outputs empty string in case if there is no answer in context.
 Morphological tagging model :doc:`[docs] </features/models/morphotagger>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-We have a BERT-based model for Russian and character-based models for 11 languages.
-The character model is based on `Heigold et al., 2017. An extensive empirical evaluation of
-character-based morphological tagging for 14 languages <http://www.aclweb.org/anthology/E17-1048>`__.
-It is a state-of-the-art model for Russian and near state of the art for several other languages.
+We have a BERT-based model for Russian language.
 Model takes as input tokenized sentences and outputs the corresponding
 sequence of morphological labels in `UD format <http://universaldependencies.org/format.html>`__.
-The table below contains word and sentence accuracy on UD2.0 datasets.
-For more scores see :doc:`full table </features/models/morphotagger>`.
 
 .. table::
     :widths: auto
@@ -383,32 +313,8 @@ For more scores see :doc:`full table </features/models/morphotagger>`.
     |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
     |                      | :config:`BERT-based model <morpho_tagger/BERT/morpho_ru_syntagrus_bert.json>`                                |    97.83      |     72.02      |       661          |
     +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | `Pymorphy`_ + `russian_tagsets`_ (first tag)                                                                 |     60.93     |      0.00      |                    |
-    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    | `UD2.0`_ (Russian)   | `UD Pipe 1.2`_ (Straka et al., 2017)                                                                         |     93.57     |     43.04      |                    |
-    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | :config:`Basic model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus.json>`                            |     95.17     |     50.58      |        48.7        |
-    +                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | :config:`Pymorphy-enhanced model <morpho_tagger/UD2.0/ru_syntagrus/morpho_ru_syntagrus_pymorphy.json>`       |   **96.23**   |     58.00      |        48.7        |
-    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    | `UD2.0`_ (Czech)     | `UD Pipe 1.2`_ (Straka et al., 2017)                                                                         |     91.86     |     42.28      |                    |
-    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | :config:`Basic model <morpho_tagger/UD2.0/morpho_cs.json>`                                                   |   **94.35**   |     51.56      |        41.8        |
-    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    | `UD2.0`_ (English)   | `UD Pipe 1.2`_ (Straka et al., 2017)                                                                         |     92.89     |     55.75      |                    |
-    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | :config:`Basic model <morpho_tagger/UD2.0/morpho_en.json>`                                                   |   **93.00**   |     55.18      |        16.9        |
-    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    | `UD2.0`_ (German)    | `UD Pipe 1.2`_ (Straka et al., 2017)                                                                         |     76.65     |     10.24      |                    |
-    |                      +--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
-    |                      | :config:`Basic model <morpho_tagger/UD2.0/morpho_de.json>`                                                   |   **83.83**   |     15.25      |        18.6        |
-    +----------------------+--------------------------------------------------------------------------------------------------------------+---------------+----------------+--------------------+
 
-.. _`Pymorphy`: https://pymorphy2.readthedocs.io/en/latest/
-.. _`russian_tagsets`: https://github.com/kmike/russian-tagsets
-.. _`UD2.0`: https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-1983
 .. _`UD2.3`: http://hdl.handle.net/11234/1-2895
-.. _`UD Pipe 1.2`: http://ufal.mff.cuni.cz/udpipe
 .. _`UD Pipe 2.3`: http://ufal.mff.cuni.cz/udpipe
 .. _`UD Pipe Future`: https://github.com/CoNLL-UD-2018/UDPipe-Future
 
@@ -452,32 +358,11 @@ Skills
 Goal-oriented bot :doc:`[docs] </features/skills/go_bot>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi, 
-Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control 
+Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi,
+Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control
 with supervised and reinforcement learning – 2017 <https://arxiv.org/abs/1702.03274>`__.
 It allows to predict responses in a goal-oriented dialog. The model is
 customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
-
-Available pre-trained models and their comparison with existing benchmarks:
-
-+-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
-| Dataset                           | Lang | Model                                                                              | Metric        | Test      | Downloads     |
-+===================================+======+====================================================================================+===============+===========+===============+
-| `DSTC 2`_                         | En   | :config:`basic bot <go_bot/gobot_dstc2_minimal.json>`                              | Turn Accuracy | 0.380     | 10 Mb         |
-+ (:ref:`modified <dstc2_dataset>`) +      +------------------------------------------------------------------------------------+               +-----------+---------------+
-|                                   |      | :config:`bot with slot filler <go_bot/gobot_dstc2.json>`                           |               | 0.542     | 400 Mb        |
-+                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
-|                                   |      | :config:`bot with slot filler, intents & attention <go_bot/gobot_dstc2_best.json>` |               | **0.553** | 8.5 Gb        |
-+-----------------------------------+      +------------------------------------------------------------------------------------+               +-----------+---------------+
-| `DSTC 2`_                         |      | Bordes and Weston (2016)                                                           |               | 0.411     | --            |
-+                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
-|                                   |      | Eric and Manning (2017)                                                            |               | 0.480     | --            |
-+                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
-|                                   |      | Perez and Liu (2016)                                                               |               | 0.487     | --            |
-+                                   +      +------------------------------------------------------------------------------------+               +-----------+---------------+
-|                                   |      | Williams et al. (2017)                                                             |               | **0.556** | --            |
-+-----------------------------------+------+------------------------------------------------------------------------------------+---------------+-----------+---------------+
-
 
 ODQA :doc:`[docs] </features/skills/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -490,8 +375,6 @@ based on its Wikipedia knowledge.
 | Dataset        | Model config                                                       |  Wiki dump            |   F1   | Downloads |
 +================+====================================================================+=======================+========+===========+
 | `SQuAD-v1.1`_  | :config:`ODQA <odqa/en_odqa_infer_wiki.json>`                      | enwiki (2018-02-11)   |  35.89 | 9.7Gb     |
-+----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
-| `SQuAD-v1.1`_  | :config:`ODQA <odqa/en_odqa_infer_enwiki20161221.json>`            | enwiki (2016-12-21)   |  37.83 | 9.3Gb     |
 +----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
 | `SDSJ Task B`_ | :config:`ODQA <odqa/ru_odqa_infer_wiki.json>`                      | ruwiki (2018-04-01)   |  28.56 | 7.7Gb     |
 +----------------+--------------------------------------------------------------------+-----------------------+--------+-----------+
@@ -522,47 +405,29 @@ Word vectors for the Russian language trained on joint `Russian Wikipedia <https
 Examples of some models
 ---------------------------
 
--  Run goal-oriented bot with Telegram interface:
+-  Run insults detection model with Telegram interface:
 
    .. code-block:: bash
 
-      python -m deeppavlov telegram gobot_dstc2 -d -t <TELEGRAM_TOKEN>
+      python -m deeppavlov telegram insults_kaggle_bert -d -t <TELEGRAM_TOKEN>
 
--  Run goal-oriented bot with console interface:
-
-   .. code-block:: bash
-
-      python -m deeppavlov interact gobot_dstc2 -d
-
--  Run goal-oriented bot with REST API:
+-  Run insults detection model with console interface:
 
    .. code-block:: bash
 
-      python -m deeppavlov riseapi gobot_dstc2 -d
+      python -m deeppavlov interact insults_kaggle_bert -d
 
--  Run slot-filling model with Telegram interface:
-
-   .. code-block:: bash
-
-      python -m deeppavlov telegram slotfill_dstc2 -d -t <TELEGRAM_TOKEN>
-
--  Run slot-filling model with console interface:
+-  Run insults detection model with REST API:
 
    .. code-block:: bash
 
-      python -m deeppavlov interact slotfill_dstc2 -d
+      python -m deeppavlov riseapi insults_kaggle_bert -d
 
--  Run slot-filling model with REST API:
-
-   .. code-block:: bash
-
-      python -m deeppavlov riseapi slotfill_dstc2 -d
-
--  Predict intents on every line in a file:
+-  Predict whether it is an insult on every line in a file:
 
    .. code-block:: bash
 
-      python -m deeppavlov predict intents_snips -d --batch-size 15 < /data/in.txt > /data/out.txt
+      python -m deeppavlov predict insults_kaggle_bert -d --batch-size 15 < /data/in.txt > /data/out.txt
 
 
 View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a

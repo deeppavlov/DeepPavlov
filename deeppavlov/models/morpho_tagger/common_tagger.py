@@ -16,7 +16,6 @@
 
 from typing import Union, Optional, Tuple
 
-from tensorflow.keras import backend as K
 import numpy as np
 
 EPS = 1e-15
@@ -33,11 +32,6 @@ def to_one_hot(x, k):
     """
     unit = np.eye(k, dtype=int)
     return unit[x]
-
-
-def repeat_(x, k):
-    tile_factor = [1, k] + [1] * (K.ndim(x) - 1)
-    return K.tile(x[:, None, :], tile_factor)
 
 
 def make_pos_and_tag(tag: str, sep: str = ",",
