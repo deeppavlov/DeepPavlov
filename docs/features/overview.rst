@@ -31,9 +31,9 @@ which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
 |                                                         |       | :config:`ner_rus_convers_distilrubert_6L.json  <ner/ner_rus_convers_distilrubert_6L.json>` |  93.3 ± 0.3 |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
-| Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>`                  |    87.2     |
+| Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>`                  |    88.8     |
 +                                                         +-------+--------------------------------------------------------------------------------------------+-------------+
-|                                                         | En    | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`                            |    87.7     |
+|                                                         | En    | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`                            |    88.6     |
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
 |                                                         |       | :config:`ner_ontonotes.json <ner/ner_ontonotes.json>`                                      |    87.1     |
 +---------------------------------------------------------+       +--------------------------------------------------------------------------------------------+-------------+
