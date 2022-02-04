@@ -8,80 +8,51 @@
     "seed": 243
   },
   "chainer": {
-    "in": [
-      "x"
-    ],
-    "in_y": [
-      "y"
-    ],
+    "in": ["x"],
+    "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "torch_bert_ranker_preprocessor",
-        "vocab_file": "bert-base-uncased",
+        "class_name": "bert_ranker_preprocessor",
+        "vocab_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/vocab.txt",
         "do_lower_case": true,
         "max_seq_length": 128,
-        "in": [
-          "x"
-        ],
-        "out": [
-          "bert_features"
-        ]
+        "in": ["x"],
+        "out": ["bert_features"]
       },
       {
-        "class_name": "torch_bert_ranker",
+        "class_name": "bert_ranker",
         "one_hot_labels": false,
-        "pretrained_bert": "bert-base-uncased",
+        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_config.json",
+        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/uncased_L-12_H-768_A-12/bert_model.ckpt",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "optimizer": "AdamW",
-        "optimizer_parameters": {
-          "lr": 2e-5,
-          "weight_decay": 1e-2,
-          "betas": [
-            0.9,
-            0.999
-          ],
-          "eps": 1e-6
-        },
-        "in": [
-          "bert_features"
-        ],
-        "in_y": [
-          "y"
-        ],
-        "out": [
-          "predictions"
-        ]
+        "learning_rate": 2e-05,
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["predictions"]
       }
     ],
-    "out": [
-      "predictions"
-    ]
+    "out": ["predictions"]
   },
   "train": {
     "batch_size": 32,
     "pytest_max_batches": 2,
     "train_metrics": [],
-    "metrics": [
-      "r@1",
-      "r@2",
-      "r@5"
-    ],
+    "metrics": ["r@1", "r@2", "r@5"],
     "validation_patience": 1,
+    "val_every_n_batches": -1,
     "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
-    "evaluation_targets": [
-      "valid",
-      "test"
-    ],
-    "class_name": "torch_trainer"
+    "log_every_n_batches": -1,
+    "validate_best": true,
+    "test_best": true,
+    "tensorboard_log_dir": "{MODEL_PATH}/"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_torch_bert_model"
+      "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_bert_model"
     },
     "download": [
       {
@@ -89,7 +60,11 @@
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/uncased_L-12_H-768_A-12.zip",
+        "subdir": "{DOWNLOADS_PATH}/bert_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_bert_model.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
