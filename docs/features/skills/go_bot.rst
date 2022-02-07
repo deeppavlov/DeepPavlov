@@ -234,7 +234,7 @@ Tutorials
 We encourage you to explore the tutorials below to get better understanding of how to build basic and more advanced
 goal-oriented skills with these RASA DSLs:
 
-* `Original Tutorial Notebook Featuring Simple and DSTC2-based Skills <https://github.com/deepmipt/DeepPavlov/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`_
+* `Original Tutorial Notebook Featuring Simple and DSTC2-based Skills <https://github.com/deepmipt/dp_notebooks/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`_
 
 * `Tutorial Notebook Featuring Harvesters Maintenance Go-Bot Skill from Deepy 3000 Demo <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
 
@@ -265,7 +265,7 @@ Tutorials
 
 Follow this tutorial to experiment with the Form-Filling functionality in Go-Bot-based goal-oriented skills built using RASA DSLs (v1):
 
-* `Tutorial Notebook Featuring Basic Form-Filling <https://github.com/deepmipt/DeepPavlov/blob/feature/gobot_naive_formfilling/examples/gobot_formfilling_tutorial.ipynb>`_
+* `Tutorial Notebook Featuring Basic Form-Filling <https://github.com/deepmipt/dp_notebooks/blob/master/examples/gobot_formfilling_tutorial.ipynb>`_
 
 Usage example
 ^^^^^^^^^^^^^
