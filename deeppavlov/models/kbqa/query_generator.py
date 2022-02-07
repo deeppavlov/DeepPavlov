@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import itertools
+import json
 import re
+import time
 from logging import getLogger
-from typing import Tuple, List, Optional, Union, Dict, Any
-from collections import namedtuple, defaultdict
+from typing import Tuple, List, Optional, Union, Dict, Any, Set
+from collections import namedtuple, OrderedDict
 
 import numpy as np
 import nltk
@@ -24,7 +26,6 @@ import nltk
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.rel_ranking_bert_infer import RelRankerBertInfer
 from deeppavlov.models.kbqa.utils import \
     extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
@@ -39,7 +40,7 @@ class QueryGenerator(QueryGeneratorBase):
     """
 
     def __init__(self, wiki_parser: WikiParser,
-                 rel_ranker: Union[RelRankerInfer, RelRankerBertInfer],
+                 rel_ranker: RelRankerInfer,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
@@ -74,18 +75,29 @@ class QueryGenerator(QueryGeneratorBase):
                  question_san_batch: List[str],
                  template_type_batch: Union[List[List[str]], List[str]],
                  entities_from_ner_batch: List[List[str]],
-                 types_from_ner_batch: List[List[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
+                 entity_tags_batch: List[List[str]],
+                 answer_types_batch: List[Set[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
 
         candidate_outputs_batch = []
         template_answers_batch = []
-        for question, question_sanitized, template_type, entities_from_ner, types_from_ner in \
-                zip(question_batch, question_san_batch, template_type_batch,
-                    entities_from_ner_batch, types_from_ner_batch):
-            candidate_outputs, template_answer = self.find_candidate_answers(question, question_sanitized,
-                                                                             template_type, entities_from_ner,
-                                                                             types_from_ner)
+        templates_nums_batch = []
+        qg_tm1 = time.time()
+        candidate_outputs = []
+        template_answer = ""
+        log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch} {template_type_batch} {entity_tags_batch}")
+        for question, question_sanitized, template_type, entities_from_ner, entity_tags_list, answer_types in \
+                zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
+                    entity_tags_batch, answer_types_batch):
+            if template_type == "-1":
+                template_type = "7"
+            candidate_outputs, template_answer, templates_nums = \
+                self.find_candidate_answers(question, question_sanitized, template_type, entities_from_ner,
+                                            entity_tags_list, answer_types)
             candidate_outputs_batch.append(candidate_outputs)
             template_answers_batch.append(template_answer)
+            templates_nums_batch.append(templates_nums)
+        qg_tm2 = time.time()
+        log.debug(f"--------query generator time {qg_tm2-qg_tm1}")
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
                                       template_answers_batch)
@@ -95,12 +107,13 @@ class QueryGenerator(QueryGeneratorBase):
             return answers
         else:
             log.debug(f"(__call__)candidate_outputs_batch: {[output[:5] for output in candidate_outputs_batch]}")
-            return candidate_outputs_batch
+            return candidate_outputs_batch, entities_from_ner_batch, template_answers_batch
 
     def query_parser(self, question: str, query_info: Dict[str, str],
                      entities_and_types_select: List[str],
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
+                     answer_types: Set[str],
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower()
@@ -126,11 +139,15 @@ class QueryGenerator(QueryGeneratorBase):
                              search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
+        rel_tm1 = time.time()
         if rels_from_template is not None:
             rels = [[(rel, 1.0) for rel in rel_list] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, triplet_info)
                     for triplet_info in triplet_info_list]
+        rels = [[rel for rel in rel_list] for rel_list in rels]
+        rel_tm2 = time.time()
+        log.debug(f"--------rels find time: {rel_tm2-rel_tm1}")
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
@@ -161,8 +178,6 @@ class QueryGenerator(QueryGeneratorBase):
             filter_info.append((unk_prop, prop_type))
         log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
         rel_combs = make_combs(rels, permut=False)
-        import datetime
-        start_time = datetime.datetime.now()
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
         selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
@@ -178,7 +193,11 @@ class QueryGenerator(QueryGeneratorBase):
         if self.wiki_file_format == "pickle":
             total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
                                   list(itertools.chain.from_iterable(selected_type_ids))
-            parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+            try:
+                parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+            except json.decoder.JSONDecodeError:
+                log.info("parse triplets, not received output from wiki parser")
+        query_tm1 = time.time()
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             confidences_list.append(confidence)
@@ -186,14 +205,19 @@ class QueryGenerator(QueryGeneratorBase):
                 fill_query(query_hdt_elem, combs[0], combs[1], combs[2]) for query_hdt_elem in query_sequence]
             if comb_num == 0:
                 log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
-            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, return_if_found))
+            if comb_num > 0:
+                 answer_types = []
+            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types, rel_types,
+                                 return_if_found))
+            
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
                 break
 
         candidate_outputs = []
+        candidate_outputs_list = []
         candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
-        if self.use_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
+        if self.use_wp_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             candidate_outputs_list = candidate_outputs_list[0]
 
         if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
@@ -203,18 +227,29 @@ class QueryGenerator(QueryGeneratorBase):
             for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
                 candidate_outputs += [[combs[0]] + [rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
+            
             if self.return_all_possible_answers:
-                candidate_outputs_dict = defaultdict(list)
+                candidate_outputs_dict = OrderedDict()
                 for candidate_output in candidate_outputs:
-                    candidate_outputs_dict[(tuple(candidate_output[0]),
-                                            tuple(candidate_output[1:-2]))].append(candidate_output[-2:])
+                    candidate_output_key = (tuple(candidate_output[0]), tuple(candidate_output[1:-2]))
+                    if candidate_output_key not in candidate_outputs_dict:
+                        candidate_outputs_dict[candidate_output_key] = []
+                    candidate_outputs_dict[candidate_output_key].append(candidate_output[-2:])
                 candidate_outputs = []
                 for (candidate_entity_comb, candidate_rel_comb), candidate_output in candidate_outputs_dict.items():
-                    candidate_outputs.append(list(candidate_rel_comb) +
-                                             [tuple([ans for ans, conf in candidate_output]), candidate_output[0][1]])
+                    candidate_outputs.append({"entities": candidate_entity_comb,
+                                              "relations": list(candidate_rel_comb),
+                                              "answers": tuple([ans for ans, conf in candidate_output]),
+                                              "rel_conf": candidate_output[0][1]
+                                             })
             else:
-                candidate_outputs = [output[1:] for output in candidate_outputs]
-        log.debug(f"(query_parser)loop time: {datetime.datetime.now() - start_time}")
+                candidate_outputs = [{"entities": f_entities,
+                                      "relations": f_relations,
+                                      "answers": f_answers,
+                                      "rel_conf": f_rel_conf
+                                     } for f_entities, *f_relations, f_answers, f_rel_conf in candidate_outputs]
+        query_tm2 = time.time()
+        log.debug(f"--------queries execution time: {query_tm2-query_tm1}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs

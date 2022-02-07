@@ -1,0 +1,33 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_rus.json",
+        "in": ["x"],
+        "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_rus.json",
+        "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
+        "out": ["entity_substr", "entity_ids"]
+      }
+    ],
+    "out": ["entity_ids"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "TRANSFORMER": "bert-base-cased",
+      "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch/{TRANSFORMER}"
+    },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+      "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    ]
+  }
+}
