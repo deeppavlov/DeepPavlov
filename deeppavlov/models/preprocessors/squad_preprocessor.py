@@ -389,8 +389,12 @@ class SquadBertMappingPreprocessor(Component):
 
     """
 
-    def __init__(self, do_lower_case: bool = True, *args, **kwargs):
+    def __init__(self, do_lower_case: bool = True, sep_token: str = "[SEP]", shift: int = 1,
+                       subtok_start: str = "##", *args, **kwargs):
         self.do_lower_case = do_lower_case
+        self.sep_token = sep_token
+        self.shift = shift
+        self.subtok_start = subtok_start
 
     def __call__(self, contexts, bert_features, *args, **kwargs):
         subtok2chars: List[Dict[int, int]] = []
@@ -404,12 +408,12 @@ class SquadBertMappingPreprocessor(Component):
                 subtokens = args[0][batch_counter]
             else:
                 subtokens = features.tokens
-            context_start = subtokens.index('[SEP]') + 1
+            context_start = subtokens.index(self.sep_token) + self.shift
             idx = 0
             subtok2char: Dict[int, int] = {}
             char2subtok: Dict[int, int] = {}
             for i, subtok in list(enumerate(subtokens))[context_start:-1]:
-                subtok = subtok[2:] if subtok.startswith('##') else subtok
+                subtok = subtok[len(self.subtok_start):] if subtok.startswith(self.subtok_start) else subtok
                 subtok_pos = context[idx:].find(subtok)
                 if subtok_pos == -1:
                     # it could be UNK

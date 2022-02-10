@@ -57,7 +57,7 @@ class FitTrainer:
         **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
 
-    def __init__(self, chainer_config: dict, *, batch_size: int = -1,
+    def __init__(self, chainer_config: dict, *, batch_size: int = -1, valid_batch_size: int = -1,
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
@@ -69,6 +69,9 @@ class FitTrainer:
         self.chainer_config = chainer_config
         self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
+        if valid_batch_size == -1:
+            valid_batch_size = batch_size
+        self.valid_batch_size = valid_batch_size
         self.metrics = parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
@@ -260,7 +263,7 @@ class FitTrainer:
         res = {}
 
         for data_type in evaluation_targets:
-            data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
+            data_gen = iterator.gen_batches(self.valid_batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report
             if print_reports:

@@ -79,6 +79,7 @@ class TorchTransformersSquad(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
+                 add_token_type_ids: bool = True,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -93,6 +94,7 @@ class TorchTransformersSquad(TorchModel):
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.add_token_type_ids = add_token_type_ids
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -132,11 +134,12 @@ class TorchTransformersSquad(TorchModel):
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,
-            'token_type_ids': b_input_type_ids,
             'start_positions': b_y_st,
             'end_positions': b_y_end,
             'return_dict': True
         }
+        if self.add_token_type_ids:
+            input_['token_type_ids'] = b_input_type_ids
 
         self.optimizer.zero_grad()
         input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
@@ -188,9 +191,10 @@ class TorchTransformersSquad(TorchModel):
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,
-            'token_type_ids': b_input_type_ids,
             'return_dict': True
         }
+        if self.add_token_type_ids:
+            input_['token_type_ids'] = b_input_type_ids
 
         with torch.no_grad():
             input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
