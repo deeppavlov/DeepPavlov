@@ -39,8 +39,6 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
 
-[Speech recognition and synthesis (ASR and TTS)](http://docs.deeppavlov.ai/en/master/features/models/nemo.html) based on [NVIDIA NeMo](https://nvidia.github.io/NeMo/index.html)
-
 [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html) | [Multitask BERT](http://docs.deeppavlov.ai/en/master/features/models/multitask_bert.html)
 
 **Skills**
