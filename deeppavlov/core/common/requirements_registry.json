@@ -1,7 +1,6 @@
 {
   "UD_pymorphy_lemmatizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
   "bert_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -62,8 +61,7 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "dictionary_vectorizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
   "dstc_slotfilling": [
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
@@ -105,12 +103,6 @@
   "lemmatized_output_prettifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "morpho_tagger": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "mpm_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "mt_bert": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -131,16 +123,12 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "pymorphy_vectorizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
+    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
   "rel_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "rel_ranking_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "siamese_predictor": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "smn_nn": [
@@ -165,9 +153,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "two_sentences_emb": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bilstm_gru_nn": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "wiki_parser": [
@@ -199,10 +184,6 @@
   ],
   "tree_to_sparql": [
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
-  ],
-  "torch_squad_bert_model": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -255,10 +236,6 @@
   ],
   "typos_kartaslov_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
-  ],
-  "torch_squad_bert_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"

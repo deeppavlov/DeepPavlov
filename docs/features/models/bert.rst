@@ -92,8 +92,8 @@ you can use or modify a :config:`BERT embedder configuration <embedder/bert_embe
     texts = ['Hi, i want my embedding.', 'And mine too, please!']
     tokens, token_embs, subtokens, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m(texts)
 
-Examples of using these embeddings in model training pipelines can be found in :config:`Sentiment Twitter <classifiers/sentiment_twitter_bert_emb.json>`
-and :config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration files.
+Examples of using these embeddings in model training pipelines can be found in
+:config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration file.
 
 
 BERT for Classification
