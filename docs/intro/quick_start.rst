@@ -27,8 +27,8 @@ Before making choice of an interface, install model's package requirements
         python -m deeppavlov install <config_path>
 
     * where ``<config_path>`` is path to the chosen model's config file (e.g.
-      ``deeppavlov/configs/ner/slotfill_dstc2.json``) or just name without
-      `.json` extension (e.g. ``slotfill_dstc2``)
+      ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``) or just name without
+      `.json` extension (e.g. ``insults_kaggle_bert``)
 
 
 Command line interface (CLI)
@@ -252,7 +252,7 @@ related to.
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
-    | En       | :config:`insults_kaggle_conv_bert <classifiers/insults_kaggle_conv_bert.json>`                 | https://demo.deeppavlov.ai/#/en/insult    |
+    | En       | :config:`insults_kaggle_bert <classifiers/insults_kaggle_bert.json>`                           | https://demo.deeppavlov.ai/#/en/insult    |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
 
 
