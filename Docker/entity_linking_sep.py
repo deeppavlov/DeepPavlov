@@ -1371,9 +1371,18 @@ class EntityLinkerSep(Component, Serializable):
                     entity_types_labels = [self.type_to_label.get(tp, "") for tp in entity_types]
                 else:
                     entity_types_tags = ["MISC" for _ in entity_ids]
-                    entity_types_labels = ["not in wiki" for _ in entity_ids]
-                entity_wiki_tags_list.append(entity_types_tags_unique)
-                entity_wiki_types_list.append(entity_types_labels)
+                    entity_types_labels = ["not found" for _ in entity_ids]
+                if entity_ids:
+                    entity_wiki_tags_list.append(entity_types_tags_unique[0])
+                    if isinstance(entity_types_labels[0], list) and entity_types_labels[0]:
+                        entity_wiki_types_list.append(entity_types_labels[0][0])
+                    elif isinstance(entity_types_labels[0], str):
+                        entity_wiki_types_list.append(entity_types_labels[0])
+                    else:
+                        entity_wiki_types_list.append("not found")
+                else:
+                    entity_wiki_tags_list.append("not found")
+                    entity_wiki_types_list.append("not found")
             entity_wiki_tags_batch.append(entity_wiki_tags_list)
             entity_wiki_types_batch.append(entity_wiki_types_list)
         return entity_wiki_types_batch, entity_wiki_tags_batch
