@@ -63,7 +63,7 @@ async def model(payload: Batch):
                    payload.sentences_offsets,
                    payload.sentences,
                    payload.probas)
-    entity_substr, conf, entity_offsets, entity_ids, entity_tags, entity_labels, entity_wiki_tags, status = res
+    entity_substr, conf, entity_offsets, entity_ids, entity_tags, entity_labels, entity_wiki_types, entity_wiki_tags, status = res
     response = {
         "entity_substr": entity_substr,
         "conf": conf,
@@ -71,6 +71,7 @@ async def model(payload: Batch):
         "entity_ids": entity_ids,
         "entity_tags": entity_tags,
         "entity_labels": entity_labels,
+        "entity_wiki_types": entity_wiki_types,
         "entity_wiki_tags": entity_wiki_tags,
         "status": status
     }

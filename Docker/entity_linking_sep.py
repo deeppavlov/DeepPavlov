@@ -305,7 +305,9 @@ class EntityLinkerSep(Component, Serializable):
                  entities_types_sets_filename: str,
                  q_to_label_filename: str,
                  q_to_descr_filename: str,
-                 q_to_tag_filename: str,
+                 q_to_types_filename: str,
+                 type_to_tag_filename: str,
+                 type_to_label_filename: str,
                  tfidf_vectorizer_filename: str,
                  tfidf_faiss_index_filename: str,
                  fasttext_vectorizer_filename: str,
@@ -384,7 +386,9 @@ class EntityLinkerSep(Component, Serializable):
         self.q_to_label_filename = q_to_label_filename
         self.q_to_label_out_filename = q_to_label_out_filename
         self.q_to_descr_filename = q_to_descr_filename
-        self.q_to_tag_filename = q_to_tag_filename
+        self.q_to_types_filename = q_to_types_filename
+        self.type_to_tag_filename = type_to_tag_filename
+        self.type_to_label_filename = type_to_label_filename
         self.descr_to_emb_filename = descr_to_emb_filename
         self.tfidf_vectorizer_filename = tfidf_vectorizer_filename
         self.tfidf_faiss_index_filename = tfidf_faiss_index_filename
@@ -493,7 +497,9 @@ class EntityLinkerSep(Component, Serializable):
         self.entities_ranking_dict = load_pickle(self.load_path / self.entities_ranking_filename)
         self.entities_types_sets = load_pickle(self.load_path / self.entities_types_sets_filename)
         self.q_to_label = load_pickle(self.load_path / self.q_to_label_filename)
-        self.q_to_tag = load_pickle(self.load_path / self.q_to_tag_filename)
+        self.q_to_types = load_pickle(self.load_path / self.q_to_types_filename)
+        self.type_to_tag = load_pickle(self.load_path / self.type_to_tag_filename)
+        self.type_to_label = load_pickle(self.load_path / self.type_to_label_filename)
         self.q_to_label_out = None
         if self.q_to_label_out_filename:
             self.q_to_label_out = load_pickle(self.load_path / self.q_to_label_out_filename)
@@ -753,7 +759,7 @@ class EntityLinkerSep(Component, Serializable):
             tags_batch[i] = tags_list
             entity_labels_batch[i] = entity_labels_list
             
-        entity_types_batch = self.find_types(entity_ids_batch)
+        entity_wiki_types_batch, entity_wiki_tags_batch = self.find_types(entity_ids_batch)
             
         status_batch = []
         for entity_ids_list in entity_ids_batch:
@@ -765,10 +771,10 @@ class EntityLinkerSep(Component, Serializable):
 
         if self.return_confidences:
             return entity_substr_batch, conf_batch, entity_offsets_batch, entity_ids_batch, tags_batch, \
-                   entity_labels_batch, entity_types_batch, status_batch
+                   entity_labels_batch, entity_wiki_types_batch, entity_wiki_tags_batch, status_batch
         else:
             return entity_substr_batch, entity_offsets_batch, entity_ids_batch, tags_batch, entity_labels_batch, \
-                entity_types_batch, status_batch
+                entity_wiki_types_batch, entity_wiki_tags_batch, status_batch
 
     def link_entities(self, entity_substr_batch: List[List[str]],
                       tags_batch: List[List[str]],
@@ -1341,19 +1347,28 @@ class EntityLinkerSep(Component, Serializable):
         return entity_labels_batch
     
     def find_types(self, entity_ids_batch: List[List[List[str]]]):
-        entity_types_batch = []
+        entity_wiki_types_batch, entity_wiki_tags_batch = [], []
         for entity_ids_list in entity_ids_batch:
-            entity_types_list = []
+            entity_wiki_types_list, entity_wiki_tags_list = [], []
             for entity_ids in entity_ids_list:
                 if isinstance(entity_ids, list):
-                    entity_types = [self.q_to_tag.get(entity_id, "MISC") for entity_id in entity_ids]
+                    entity_types = [self.q_to_types.get(entity_id, []) for entity_id in entity_ids]
+                    entity_types_tags = [[self.type_to_tag.get(tp, "") for tp in elem] for elem in entity_types]
+                    entity_types_tags = [list(set(elem))[0] for elem in entity_types_tags]
+                    entity_types_labels = [[self.type_to_label.get(tp, "") for tp in elem] for elem in entity_types]
                 elif isinstance(entity_ids, str):
-                    entity_types = self.q_to_tag.get(entity_ids, "MISC")
+                    entity_types = self.q_to_types.get(entity_ids, "")
+                    entity_types_tags = [self.type_to_tag.get(tp, "") for tp in entity_types]
+                    entity_types_tags = list(set(entity_types_tags))[0]
+                    entity_types_labels = [self.type_to_label.get(tp, "") for tp in entity_types]
                 else:
-                    entity_types = ["not in wiki" for _ in entity_ids]
-                entity_types_list.append(entity_types)
-            entity_types_batch.append(entity_types_list)
-        return entity_types_batch
+                    entity_types_tags = ["MISC" for _ in entity_ids]
+                    entity_types_labels = ["not in wiki" for _ in entity_ids]
+                entity_wiki_tags_list.append(entity_types_tags)
+                entity_wiki_types_list.append(entity_types_labels)
+            entity_wiki_tags_batch.append(entity_wiki_tags_list)
+            entity_wiki_types_batch.append(entity_wiki_types_list)
+        return entity_wiki_types_batch, entity_wiki_tags_batch
 
     def filter_entities_by_tags(self, entities_set, tag, proba):
         if proba > self.tag_thres_probas[tag]:
