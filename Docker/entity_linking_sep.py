@@ -1354,17 +1354,25 @@ class EntityLinkerSep(Component, Serializable):
                 if isinstance(entity_ids, list):
                     entity_types = [self.q_to_types.get(entity_id, []) for entity_id in entity_ids]
                     entity_types_tags = [[self.type_to_tag.get(tp, "") for tp in elem] for elem in entity_types]
-                    entity_types_tags = [list(set(elem))[0] for elem in entity_types_tags]
+                    entity_types_tags_unique = []
+                    for elem in entity_types_tags:
+                        if elem:
+                            entity_types_tags_unique.append(list(set(elem))[0])
+                        else:
+                            entity_types_tags_unique.append("MISC")
                     entity_types_labels = [[self.type_to_label.get(tp, "") for tp in elem] for elem in entity_types]
                 elif isinstance(entity_ids, str):
                     entity_types = self.q_to_types.get(entity_ids, "")
                     entity_types_tags = [self.type_to_tag.get(tp, "") for tp in entity_types]
-                    entity_types_tags = list(set(entity_types_tags))[0]
+                    if entity_types_tags:
+                        entity_types_tags_unique = list(set(entity_types_tags))[0]
+                    else:
+                        entity_types_tags_unique = "MISC"
                     entity_types_labels = [self.type_to_label.get(tp, "") for tp in entity_types]
                 else:
                     entity_types_tags = ["MISC" for _ in entity_ids]
                     entity_types_labels = ["not in wiki" for _ in entity_ids]
-                entity_wiki_tags_list.append(entity_types_tags)
+                entity_wiki_tags_list.append(entity_types_tags_unique)
                 entity_wiki_types_list.append(entity_types_labels)
             entity_wiki_tags_batch.append(entity_wiki_tags_list)
             entity_wiki_types_batch.append(entity_wiki_types_list)
