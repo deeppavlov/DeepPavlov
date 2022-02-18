@@ -17,11 +17,9 @@ import json
 import time
 from itertools import islice
 from logging import getLogger
-from pathlib import Path
-from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
+from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
@@ -50,9 +48,17 @@ class FitTrainer:
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
-        tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
+        logger: list of dictionaries with train and evaluation loggers configuration.
             (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
+            (default is ``-1``)
+        val_every_n_epochs: how often (in epochs) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        val_every_n_batches: how often (in batches) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_epochs: how often (in epochs) to calculate metrics on train data, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_batches: how often (in batches) to calculate metrics on train data, ignored if negative or zero
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
@@ -61,8 +67,10 @@ class FitTrainer:
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  max_test_batches: int = -1,
+                 logger: Optional[List[dict]] = None,
+                 val_every_n_batches:  int = -1, val_every_n_epochs: int = -1, 
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1,
                  **kwargs) -> None:
         if kwargs:
             log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
@@ -75,19 +83,36 @@ class FitTrainer:
 
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
-        self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
-        if tensorboard_log_dir is not None:
+        from deeppavlov.core.common.logging.logging_class import TrainLogger
+        from deeppavlov.core.common.logging.std_logger import StdLogger
+
+        self.logger: List[TrainLogger] = []
+
+        self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
+
+        if logger is None:
+            logger = [{'name': 'StdLogger'}]
+        for logger_config in logger:
+            logger_name = logger_config.pop('name',None)
+            if logger_name is None:
+                raise KeyError("There is no 'name' key in logger configuration")
+            lgr = None
             try:
-                # noinspection PyPackageRequirements
-                # noinspection PyUnresolvedReferences
-                import tensorflow
+                if logger_name == 'StdLogger':
+                    lgr = StdLogger(**logger_config)
+                elif logger_name == 'TensorboardLogger':
+                    from deeppavlov.core.common.logging.tensorboard_logger import TensorboardLogger
+                    lgr = TensorboardLogger(self, **logger_config)
+                elif logger_name == 'WandbLogger':
+                    from deeppavlov.core.common.logging.wandb_logger import WandbLogger
+                    lgr = WandbLogger(**logger_config, val_every_n_batches = val_every_n_batches,
+                                      val_every_n_epochs = val_every_n_epochs, 
+                                      log_every_n_batches = log_every_n_batches, log_every_n_epochs=log_every_n_epochs)
             except ImportError:
-                log.warning('TensorFlow could not be imported, so tensorboard log directory'
-                            f'`{self.tensorboard_log_dir}` will be ignored')
-                self.tensorboard_log_dir = None
-            else:
-                self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
-                self._tf = tensorflow
+                log.warning(f'{logger_name} will be ignored due to import error. Check that all necessary requirements'
+                            f'are installed')
+            if lgr is not None:
+                self.logger.append(lgr)
 
         self._built = False
         self._saved = False
@@ -117,13 +142,14 @@ class FitTrainer:
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
-                        if result is not None and self.tensorboard_log_dir is not None:
+                        if result is not None and self.tensorboard_idx is not None:
                             if writer is None:
-                                writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                                writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                          f'partial_fit_{component_index}_log'))
                             for name, score in result.items():
                                 summary = self._tf.Summary()
-                                summary.value.add(tag='partial_fit/' + name, simple_value=score)
+                                summary.value.add(
+                                    tag='partial_fit/' + name, simple_value=score)
                                 writer.add_summary(summary, i)
                             writer.flush()
                 else:
@@ -132,13 +158,14 @@ class FitTrainer:
                         preprocessed = [preprocessed]
                     result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
 
-                    if result is not None and self.tensorboard_log_dir is not None:
-                        writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
+                    if result is not None and self.tensorboard_idx is not None:
+                        writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
                                                                  f'fit_log_{component_index}'))
                         for name, scores in result.items():
                             for i, score in enumerate(scores):
                                 summary = self._tf.Summary()
-                                summary.value.add(tag='fit/' + name, simple_value=score)
+                                summary.value.add(
+                                    tag='fit/' + name, simple_value=score)
                                 writer.add_summary(summary, i)
                         writer.flush()
 
@@ -264,6 +291,7 @@ class FitTrainer:
             report = self.test(data_gen)
             res[data_type] = report
             if print_reports:
-                print(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
+                print(json.dumps({data_type: report},
+                      ensure_ascii=False, cls=NumpyArrayEncoder))
 
         return res

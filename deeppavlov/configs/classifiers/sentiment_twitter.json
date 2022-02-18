@@ -73,8 +73,8 @@
         ],
         "filters_cnn": 256,
         "optimizer": "Adam",
-        "learning_rate": 0.01,
-        "learning_rate_decay": 0.1,
+        "learning_rate": 0.1,
+        "learning_rate_decay": 0.01,
         "loss": "binary_crossentropy",
         "last_layer_activation": "softmax",
         "coef_reg_cnn": 1e-3,
@@ -107,7 +107,10 @@
       "f1_macro",
       {
         "name": "roc_auc",
-        "inputs": ["y_onehot", "y_pred_probas"]
+        "inputs": [
+          "y_onehot",
+          "y_pred_probas"
+        ]
       }
     ],
     "validation_patience": 5,
@@ -119,7 +122,31 @@
       "valid",
       "test"
     ],
-    "class_name": "nn_trainer"
+    "class_name": "nn_trainer",
+    "logger": [
+      {
+        "name": "TensorboardLogger",
+        "log_dir": "{MODELS_PATH}/sentiment_twitter/Tensorboard_logs"
+      },
+      {
+        "name": "StdLogger"
+      },
+      {
+        "name": "WandbLogger",
+        "API_Key":"40-chars API KEY",
+        "init":{
+          "project": "Tuning Hyperparameters",
+          "group": "Tuning lr & lr_decay",
+          "job_type":"lr=0.01, lr_decay=0.01",
+          "config": {
+          "description": "add any hyperprameter you want to monitor, architecture discription,..",
+          "learning_rate": 0.02,
+          "architecture": "CNN",
+          "dataset": "sentiment_twitter_data"
+          }
+        }
+      }
+    ]
   },
   "metadata": {
     "variables": {
@@ -128,6 +155,10 @@
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_twitter_v6"
     },
+    "requirements": [
+      "{DEEPPAVLOV_PATH}/requirements/tf.txt",
+      "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
+    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/sentiment_twitter_data.tar.gz",
