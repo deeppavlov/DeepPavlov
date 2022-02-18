@@ -2,10 +2,11 @@ from pathlib import Path
 from typing import List, Tuple, Optional, Dict
 from logging import getLogger
 
-import tensorflow as tf
+from deeppavlov.core.commands.utils import expand_path
 
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.nn_trainer import NNTrainer
+from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.common.logging.logging_class import TrainLogger
 
 log = getLogger(__name__)
@@ -16,25 +17,30 @@ class TensorboardLogger(TrainLogger):
     TensorboardLogger class for logging to tesnorboard.
 
     Args:
+        fit_trainer: FitTrainer object passed to set Tensorflow as one of its parameter if successful importation.
         log_dir (Path): path to local folder to log data into.
 
     """
 
-    def __init__(self, log_dir: Path = None) -> None:
-        self.train_log_dir = str(log_dir / "train_log")
-        self.valid_log_dir = str(log_dir / "valid_log")
-        self.tb_train_writer = tf.summary.FileWriter(self.train_log_dir)
-        self.tb_valid_writer = tf.summary.FileWriter(self.valid_log_dir)
+    def __init__(self, fit_trainer:FitTrainer , log_dir: Path = None) -> None:
+        try:
+                # noinspection PyPackageRequirements
+                # noinspection PyUnresolvedReferences
+            import tensorflow as tf
+        except ImportError:
+            log.warning('TensorFlow could not be imported, so tensorboard log directory'
+                        f'`{log_dir}` will be ignored')
+        else:
+            log_dir = expand_path(log_dir)
+            fit_trainer._tf = tf
+            self.train_log_dir = str(log_dir / 'train_log')
+            self.valid_log_dir = str(log_dir / 'valid_log')
+            self.tb_train_writer = tf.summary.FileWriter(self.train_log_dir)
+            self.tb_valid_writer = tf.summary.FileWriter(self.valid_log_dir)
 
-    def __call__(
-        self,
-        nn_trainer: NNTrainer,
-        iterator: DataLearningIterator,
-        type: str = None,
-        tensorboard_tag: Optional[str] = None,
-        tensorboard_index: Optional[int] = None,
-        report: Dict = None,
-    ) -> dict:
+    def __call__(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None,
+                 tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None,
+                 report: Dict = None, **kwargs) -> dict:
         """
         override call method, for 'train' logging type, log metircs of training process to log_dir/train_log.
         for 'valid' logging type, log metrics of validation process to log_dir/valid_log.
@@ -46,7 +52,8 @@ class TensorboardLogger(TrainLogger):
             tensorboard_tag: one of two options : 'every_n_batches', 'every_n_epochs'
             tensorboard_index: one of two options: 'train_batches_seen', 'epoch' corresponding to 'tensorboard_tag' types respectively.
             report: dictionary contains current process information, if None, use 'get_report' method to get this report.
-
+            **kwargs: additional parameters whose names will be logged but otherwise ignored
+            
         Returns:
             dict contains metrics logged to tesnorboard.
 
@@ -85,3 +92,7 @@ class TensorboardLogger(TrainLogger):
                 self.tb_valid_writer.add_summary(summary, tensorboard_index)
                 self.tb_valid_writer.flush()
         return report
+        
+    @staticmethod
+    def close():
+        log.info("Logging to Tensorboard completed")

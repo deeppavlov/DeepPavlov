@@ -26,7 +26,7 @@ from deeppavlov.core.trainers.utils import parse_metrics
 log = getLogger(__name__)
 
 
-@register("nn_trainer")
+@register('nn_trainer')
 class NNTrainer(FitTrainer):
     """
     | Bases :class:`~deeppavlov.core.trainers.FitTrainer`
@@ -85,10 +85,7 @@ class NNTrainer(FitTrainer):
 
     """
 
-    def __init__(
-        self,
-        chainer_config: dict,
-        *,
+    def __init__(self, chainer_config: dict, *,
         batch_size: int = 1,
         epochs: int = -1,
         start_epoch_num: int = 0,
@@ -107,47 +104,33 @@ class NNTrainer(FitTrainer):
         log_every_n_batches: int = -1,
         log_every_n_epochs: int = -1,
         log_on_k_batches: int = 1,
-        **kwargs,
-    ) -> None:
-        super().__init__(
-            chainer_config,
-            batch_size=batch_size,
-            metrics=metrics,
-            evaluation_targets=evaluation_targets,
-            show_examples=show_examples,
-            logger=logger,
-            max_test_batches=max_test_batches,
-            **kwargs,
-        )
+        **kwargs) -> None:
+        super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
+            show_examples=show_examples, logger=logger, max_test_batches=max_test_batches,
+            val_every_n_batches = val_every_n_batches, val_every_n_epochs = val_every_n_epochs, 
+            log_every_n_batches = log_every_n_batches, log_every_n_epochs=log_every_n_epochs, **kwargs)
+
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
-            self.train_metrics = parse_metrics(
-                train_metrics, self._chainer.in_y, self._chainer.out_params
-            )
+            self.train_metrics = parse_metrics(train_metrics, self._chainer.in_y, self._chainer.out_params)
 
         metric_optimization = metric_optimization.strip().lower()
         self.score_best = None
 
         def _improved(op):
-            return (
-                lambda score, baseline: False
-                if baseline is None or score is None
+            return lambda score, baseline: False if baseline is None or score is None \
                 else op(score, baseline)
-            )
 
         if metric_optimization == "maximize":
             self.improved = _improved(lambda a, b: a > b)
         elif metric_optimization == "minimize":
             self.improved = _improved(lambda a, b: a < b)
         else:
-            raise ConfigError(
-                "metric_optimization has to be one of {}".format(
-                    ["maximize", "minimize"]
-                )
-            )
+            raise ConfigError("metric_optimization has to be one of {}".format(["maximize", "minimize"]))
 
         self.validate_first = validate_first
+        from deeppavlov.core.common.logging.std_logger import StdLogger
         self.validate_ = StdLogger(self.stdlogger_idx is not None)
         self.validation_number = 0 if validate_first else 1
         self.validation_patience = validation_patience
@@ -168,41 +151,10 @@ class NNTrainer(FitTrainer):
         self.losses = []
         self.start_time: Optional[float] = None
 
-        if self.stdlogger_idx is not None:
-            self.std_logger = StdLogger(stdlogging=True)
-
-        if self.tensorboard_idx is not None:
-            self.tensorboard_logger = TensorboardLogger(
-                log_dir=self.logger[self.tensorboard_idx]["log_dir"]
-            )
-
-        if self.wandblogger_idx is not None:
-            if WandbLogger.login(
-                API_Key=self.logger[self.wandblogger_idx].get("API_Key", None),
-                relogin=True,
-            ):
-                if self.log_every_n_epochs > 0 or self.val_every_n_epochs > 0:
-                    self.wandb_logger = WandbLogger(
-                        log_on="epochs",
-                        commit_on_valid=self.val_every_n_epochs > 0,
-                        **self.logger[self.wandblogger_idx].get("init", None),
-                    )
-                    if self.wandb_logger.init_succeed == False:
-                        self.wandblogger_idx = None
-                elif self.log_every_n_batches > 0 or self.val_every_n_batches > 0:
-                    self.wandb_logger = WandbLogger(
-                        log_on="batches",
-                        commit_on_valid=self.val_every_n_batches > 0,
-                        **self.logger[self.wandblogger_idx].get("init", None),
-                    )
-                    if self.wandb_logger.init_succeed == False:
-                        self.wandblogger_idx = None
-            else:
-                self.wandblogger_idx = None
 
     def save(self) -> None:
         if self._loaded:
-            raise RuntimeError("Cannot save already finalized chainer")
+            raise RuntimeError('Cannot save already finalized chainer')
 
         self._chainer.save()
 
@@ -254,60 +206,21 @@ class NNTrainer(FitTrainer):
                 ):
                     self._send_event(event_name="before_log")
                     report = None
-                    if self.stdlogger_idx is not None:
-                        report = self.std_logger(
-                            self, iterator, type="train", report=report
-                        )
 
-                    if self.tensorboard_idx is not None:
-                        report = self.tensorboard_logger(
-                            self,
-                            iterator,
-                            type="train",
-                            tensorboard_tag="every_n_batches",
-                            tensorboard_index=self.train_batches_seen,
-                            report=report,
-                        )
-
-                    if (
-                        self.wandblogger_idx is not None
-                        and self.wandb_logger.log_on == "batches"
-                    ):
-                        report = self.wandb_logger(
-                            self, iterator=iterator, type="train", report=report
-                        )
+                    for lgr in self.logger:
+                        report = lgr(self, iterator, type="train", tensorboard_tag="every_n_batches",
+                                tensorboard_index=self.train_batches_seen, report=report)
 
                     # empty report if no logging method.
                     self._send_event(event_name="after_train_log", data=report)
 
-                if (
-                    self.val_every_n_batches > 0
-                    and self.train_batches_seen % self.val_every_n_batches == 0
-                ):
+                if (self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0):
                     self._send_event(event_name="before_validation")
                     report = None
-                    if self.stdlogger_idx is not None:
-                        report = self.std_logger(
-                            self, iterator, type="valid", report=report
-                        )
 
-                    if self.tensorboard_idx is not None:
-                        report = self.tensorboard_logger(
-                            self,
-                            iterator,
-                            type="valid",
-                            tensorboard_tag="every_n_batches",
-                            tensorboard_index=self.train_batches_seen,
-                            report=report,
-                        )
-
-                    if (
-                        self.wandblogger_idx is not None
-                        and self.wandb_logger.log_on == "batches"
-                    ):
-                        report = self.wandb_logger(
-                            self, iterator, type="valid", report=report
-                        )
+                    for lgr in self.logger:
+                        report = lgr(self, iterator, type="valid",tensorboard_tag="every_n_batches",
+                                tensorboard_index=self.train_batches_seen, report = report)
 
                     self._send_event(event_name="after_validation", data=report)
 
@@ -318,7 +231,7 @@ class NNTrainer(FitTrainer):
                     break
 
                 if 0 < self.validation_patience <= self.patience:
-                    log.info("Ran out of patience")
+                    log.info('Ran out of patience')
                     impatient = True
                     break
 
@@ -326,67 +239,25 @@ class NNTrainer(FitTrainer):
                 break
 
             self.epoch += 1
-            if (
-                self.log_every_n_epochs > 0
-                and self.epoch % self.log_every_n_epochs == 0
-            ):
+            if (self.log_every_n_epochs > 0 and self.epoch % self.log_every_n_epochs == 0):
                 self._send_event(event_name="before_log")
 
                 report = None
-                if self.stdlogger_idx is not None:
-                    report = self.std_logger(
-                        self, iterator=iterator, type="train", report=report
-                    )
 
-                if (
-                    self.wandblogger_idx is not None
-                    and self.wandb_logger.log_on == "epochs"
-                ):
-                    report = self.wandb_logger(
-                        self, iterator, type="train", report=report
-                    )
-
-                if self.tensorboard_idx is not None:
-                    report = self.tensorboard_logger(
-                        self,
-                        iterator=iterator,
-                        type="train",
-                        tensorboard_tag="every_n_epochs",
-                        tensorboard_index=self.epoch,
-                        report=report,
-                    )
+                for lgr in self.logger:
+                    report = lgr(self, iterator, type="train",tensorboard_tag="every_n_epochs",
+                                tensorboard_index=self.epoch, report=report)    
 
                 self._send_event(event_name="after_train_log", data=report)
 
-            if (
-                self.val_every_n_epochs > 0
-                and self.epoch % self.val_every_n_epochs == 0
-            ):
+            if (self.val_every_n_epochs > 0 and self.epoch % self.val_every_n_epochs == 0):
                 self._send_event(event_name="before_validation")
 
                 report = None
-                if self.stdlogger_idx is not None:
-                    report = self.std_logger(
-                        self, iterator, type="valid", report=report
-                    )
 
-                if self.tensorboard_idx is not None:
-                    report = self.tensorboard_logger(
-                        self,
-                        iterator=iterator,
-                        type="valid",
-                        tensorboard_tag="every_n_epochs",
-                        tensorboard_index=self.epoch,
-                        report=report,
-                    )
-
-                if (
-                    self.wandblogger_idx is not None
-                    and self.wandb_logger.log_on == "epochs"
-                ):
-                    report = self.wandb_logger(
-                        self, iterator, type="valid", report=report
-                    )
+                for lgr in self.logger:
+                    report = lgr(self, iterator, type="valid",tensorboard_tag="every_n_epochs",
+                                tensorboard_index=self.epoch,report = report)
 
                 self._send_event(event_name="after_validation", data=report)
 
@@ -402,24 +273,20 @@ class NNTrainer(FitTrainer):
     def train(self, iterator: DataLearningIterator) -> None:
         """Call :meth:`~fit_chainer` and then :meth:`~train_on_batches` with provided data iterator as an argument"""
         self.fit_chainer(iterator)
-        if callable(getattr(self._chainer, "train_on_batch", None)):
+        if callable(getattr(self._chainer, 'train_on_batch', None)):
             try:
                 self.train_on_batches(iterator)
-                if self.wandblogger_idx is not None:
-                    self.wandb_logger.close()
             except KeyboardInterrupt:
-                log.info("Stopped training")
+                log.info('Stopped training')
         else:
-            log.warning(
-                f"Using {self.__class__.__name__} for a pipeline without batched training"
-            )
+            log.warning(f'Using {self.__class__.__name__} for a pipeline without batched training')
 
         # Run the at-train-exit model-saving logic
         if self.validation_number < 1:
-            log.info("Save model to capture early training results")
+            log.info('Save model to capture early training results')
             self.save()
+        
+        for lgr in self.logger:
+            lgr.close()
 
 
-from deeppavlov.core.common.logging.wandb_logger import WandbLogger
-from deeppavlov.core.common.logging.std_logger import StdLogger
-from deeppavlov.core.common.logging.tensorboard_logger import TensorboardLogger

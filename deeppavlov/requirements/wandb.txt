@@ -1,3 +1,1 @@
 wandb==0.12.7
-pybind11==2.2
-fasttext

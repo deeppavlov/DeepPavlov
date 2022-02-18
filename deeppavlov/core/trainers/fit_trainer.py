@@ -20,7 +20,6 @@ from logging import getLogger
 from typing import List, Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
@@ -49,9 +48,17 @@ class FitTrainer:
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
-        logger : list of dictionaries of possible loggers from deeppavlov.configs files.
+        logger: list of dictionaries with train and evaluation loggers configuration.
             (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
+            (default is ``-1``)
+        val_every_n_epochs: how often (in epochs) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        val_every_n_batches: how often (in batches) to validate the pipeline, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_epochs: how often (in epochs) to calculate metrics on train data, ignored if negative or zero
+            (default is ``-1``)
+        log_every_n_batches: how often (in batches) to calculate metrics on train data, ignored if negative or zero
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
@@ -62,52 +69,50 @@ class FitTrainer:
                  show_examples: bool = False,
                  max_test_batches: int = -1,
                  logger: Optional[List[dict]] = None,
+                 val_every_n_batches:  int = -1, val_every_n_epochs: int = -1, 
+                 log_every_n_batches: int = -1, log_every_n_epochs: int = -1,
                  **kwargs) -> None:
         if kwargs:
-            log.info(
-                f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
+            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
-        self._chainer = Chainer(
-            chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
+        self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
-        self.metrics = parse_metrics(
-            metrics, self._chainer.in_y, self._chainer.out_params)
+        self.metrics = parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
 
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
 
-        self.logger: Optional[List[Dict]] = logger
+        from deeppavlov.core.common.logging.logging_class import TrainLogger
+        from deeppavlov.core.common.logging.std_logger import StdLogger
+
+        self.logger: List[TrainLogger] = []
 
         self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
-        if logger is not None:
+
+        if logger is None:
+            logger = [{'name': 'StdLogger'}]
+        for logger_config in logger:
+            logger_name = logger_config.pop('name',None)
+            if logger_name is None:
+                raise KeyError("There is no 'name' key in logger configuration")
+            lgr = None
             try:
-                for i in range(len(logger)):
-                    if logger[i].get("name", None) == "StdLogger":
-                        self.stdlogger_idx = i
-                    if logger[i].get("name", None) == "TensorboardLogger" and self.logger[i].get("log_dir", None) is not None:
-                        self.tensorboard_idx = i
-                    if logger[i].get("name", None) == "WandbLogger":
-                        self.wandblogger_idx = i
-            except AttributeError:
-                self.tensorboard_idx, self.stdlogger_idx, self.wandblogger_idx = None, None, None
-                log.warning(
-                    "Check logger dictionary in configs, logging will be ignored")
-        if self.tensorboard_idx is None and self.wandblogger_idx is None:
-            self.stdlogger_idx = 1 # make std logger default
-        if self.tensorboard_idx is not None:
-            try:
-                # noinspection PyPackageRequirements
-                # noinspection PyUnresolvedReferences
-                import tensorflow
+                if logger_name == 'StdLogger':
+                    lgr = StdLogger(**logger_config)
+                elif logger_name == 'TensorboardLogger':
+                    from deeppavlov.core.common.logging.tensorboard_logger import TensorboardLogger
+                    lgr = TensorboardLogger(self, **logger_config)
+                elif logger_name == 'WandbLogger':
+                    from deeppavlov.core.common.logging.wandb_logger import WandbLogger
+                    lgr = WandbLogger(**logger_config, val_every_n_batches = val_every_n_batches,
+                                      val_every_n_epochs = val_every_n_epochs, 
+                                      log_every_n_batches = log_every_n_batches, log_every_n_epochs=log_every_n_epochs)
             except ImportError:
-                log.warning('TensorFlow could not be imported, so tensorboard log directory'
-                            f'`{self.logger[self.tensorboard_idx]["log_dir"]}` will be ignored')
-                self.tensorboard_idx = None
-            else:
-                self.logger[self.tensorboard_idx]["log_dir"] = expand_path(
-                    self.logger[self.tensorboard_idx]["log_dir"])
-                self._tf = tensorflow
+                log.warning(f'{logger_name} will be ignored due to import error. Check that all necessary requirements'
+                            f'are installed')
+            if lgr is not None:
+                self.logger.append(lgr)
 
         self._built = False
         self._saved = False
@@ -133,8 +138,7 @@ class FitTrainer:
                     writer = None
 
                     for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
-                        preprocessed = self._chainer.compute(
-                            x, y, targets=targets)
+                        preprocessed = self._chainer.compute(x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
                         result = component.partial_fit(*preprocessed)
 
@@ -149,12 +153,10 @@ class FitTrainer:
                                 writer.add_summary(summary, i)
                             writer.flush()
                 else:
-                    preprocessed = self._chainer.compute(
-                        *iterator.get_instances(), targets=targets)
+                    preprocessed = self._chainer.compute(*iterator.get_instances(), targets=targets)
                     if len(targets) == 1:
                         preprocessed = [preprocessed]
-                    result: Optional[Dict[str, Iterable[float]]
-                                     ] = component.fit(*preprocessed)
+                    result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
 
                     if result is not None and self.tensorboard_idx is not None:
                         writer = self._tf.summary.FileWriter(str(self.logger[self.tensorboard_idx]["log_dir"] /
@@ -180,8 +182,7 @@ class FitTrainer:
     def _load(self) -> None:
         if not self._loaded:
             self._chainer.destroy()
-            self._chainer = build_model(
-                {'chainer': self.chainer_config}, load_trained=self._saved)
+            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=self._saved)
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
@@ -221,8 +222,7 @@ class FitTrainer:
         if metrics is None:
             metrics = self.metrics
 
-        expected_outputs = list(set().union(
-            self._chainer.out_params, *[m.inputs for m in metrics]))
+        expected_outputs = list(set().union(self._chainer.out_params, *[m.inputs for m in metrics]))
 
         outputs = {out: [] for out in expected_outputs}
         examples = 0
@@ -231,8 +231,7 @@ class FitTrainer:
 
         for x, y_true in data:
             examples += len(x)
-            y_predicted = list(self._chainer.compute(
-                list(x), list(y_true), targets=expected_outputs))
+            y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
@@ -259,8 +258,7 @@ class FitTrainer:
                                 for out_name, y_predicted_group in zip(expected_outputs, y_predicted)
                                 if out_name in self._chainer.out_params])
             if len(self._chainer.out_params) == 1:
-                y_predicted = [y_predicted_item[0]
-                               for y_predicted_item in y_predicted]
+                y_predicted = [y_predicted_item[0] for y_predicted_item in y_predicted]
             report['examples'] = [{
                 'x': x_item,
                 'y_predicted': y_predicted_item,
@@ -289,8 +287,7 @@ class FitTrainer:
         res = {}
 
         for data_type in evaluation_targets:
-            data_gen = iterator.gen_batches(
-                self.batch_size, data_type=data_type, shuffle=False)
+            data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report
             if print_reports:

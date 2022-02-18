@@ -17,19 +17,14 @@ class StdLogger(TrainLogger):
     Args:
         stdlogging (bool): if True, log report to stdout.
             the object of this class with stdlogging = False can be used for validation process.
-
+        **kwargs: additional parameters whose names will be logged but otherwise ignored
     """
 
-    def __init__(self, stdlogging: bool = True) -> None:
+    def __init__(self, stdlogging: bool = True, **kwargs) -> None:
         self.stdlogging = stdlogging
 
-    def __call__(
-        self,
-        nn_trainer: NNTrainer,
-        iterator: DataLearningIterator,
-        type: str = None,
-        report: Dict = None,
-    ) -> dict:
+    def __call__(self,nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None, report: Dict = None,
+                 **kwargs) -> dict:
         """
         override call method, to log report to stdout.
 
@@ -38,7 +33,7 @@ class StdLogger(TrainLogger):
             iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation.
             type : process type, if "train" logs report about training process, else if "valid" logs report about validation process.
             report: dictionary contains current process information, if None, use 'get_report' method to get this report.
-
+            **kwargs: additional parameters whose names will be logged but otherwise ignored
         Returns:
             dict contains logged data to stdout.
 
@@ -52,3 +47,7 @@ class StdLogger(TrainLogger):
                 json.dumps({type: report}, ensure_ascii=False, cls=NumpyArrayEncoder)
             )
         return report
+        
+    @staticmethod
+    def close():
+        log.info("Logging to Stdout completed")

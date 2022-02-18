@@ -133,7 +133,7 @@
       },
       {
         "name": "WandbLogger",
-        "API_Key":"be5cac1976dae2abd87fd045a7a101248c0a0253",
+        "API_Key":"40-chars API KEY",
         "init":{
           "project": "Tuning Hyperparameters",
           "group": "Tuning lr & lr_decay",

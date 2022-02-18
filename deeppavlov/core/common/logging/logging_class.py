@@ -29,9 +29,7 @@ log = getLogger(__name__)
 class TrainLogger(ABC):
     """An abstract class for logging metrics during training process."""
 
-    def get_report(
-        self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None
-    ) -> dict:
+    def get_report(self, nn_trainer: NNTrainer, iterator: DataLearningIterator, type: str = None) -> dict:
         """ "
         Get report about current process.
         for 'valid' type, 'get_report' function also saves best score on validation data, and the model parameters corresponding to the best score.
@@ -47,20 +45,11 @@ class TrainLogger(ABC):
         """
         if type == "train":
             if nn_trainer.log_on_k_batches == 0:
-                report = {
-                    "time_spent": str(
-                        datetime.timedelta(
-                            seconds=round(time.time() - nn_trainer.start_time + 0.5)
-                        )
-                    )
-                }
+                report = {"time_spent": str(datetime.timedelta(
+                            seconds=round(time.time() - nn_trainer.start_time + 0.5)))}
             else:
-                data = islice(
-                    iterator.gen_batches(
-                        nn_trainer.batch_size, data_type="train", shuffle=True
-                    ),
-                    nn_trainer.log_on_k_batches,
-                )
+                data = islice(iterator.gen_batches(nn_trainer.batch_size, data_type="train", shuffle=True),
+                    nn_trainer.log_on_k_batches,)
                 report = nn_trainer.test(
                     data, nn_trainer.train_metrics, start_time=nn_trainer.start_time
                 )
@@ -138,4 +127,7 @@ class TrainLogger(ABC):
 
     @abstractmethod
     def __call__() -> None:
+        raise NotImplementedError
+
+    def close():
         raise NotImplementedError
