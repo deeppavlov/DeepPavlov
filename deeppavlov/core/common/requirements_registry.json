@@ -167,17 +167,11 @@
   "static_dictionary": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
-  "base64_decode_bytesIO": [
-    "{DEEPPAVLOV_PATH}/requirements/nemo.txt"
-  ],
   "wikitionary_100K_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "huggingface_dataset_iterator": [
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
-  ],
-  "bytesIO_encode_base64": [
-    "{DEEPPAVLOV_PATH}/requirements/nemo.txt"
   ],
   "typos_custom_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
@@ -242,18 +236,6 @@
   ],
   "typos_kartaslov_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
-  ],
-  "nemo_asr": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
-    "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
-    "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt"
-  ],
-  "nemo_tts": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch14.txt",
-    "{DEEPPAVLOV_PATH}/requirements/nemo.txt",
-    "{DEEPPAVLOV_PATH}/requirements/nemo-asr.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt",
-    "{DEEPPAVLOV_PATH}/requirements/nemo-tts.txt"
   ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
