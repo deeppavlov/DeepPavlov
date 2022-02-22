@@ -5,7 +5,7 @@ filelock>=3.0.6,<=3.4.2
 h5py>=2.6.0,<=3.6.0
 nltk>=3.2.5,<=3.6.7
 numpy<=1.22.2
-overrides<=6.1.0
+overrides<=4.1.2
 pandas<=1.4.0
 prometheus-client<=0.13.1
 pytz<=2021.3
