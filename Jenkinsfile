@@ -45,14 +45,14 @@ node('cuda-module') {
                 currentBuild.result = 'SUCCESS'
             }
         }
-        catch (e) {
+        catch(e) {
             currentBuild.result = 'FAILURE'
             throw e
         }
         finally {
-            emailext to: '${DEFAULT_RECIPIENTS}',
+            emailext to: "\${DEFAULT_RECIPIENTS}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
-                body: "${env.BUILD_URL}",
+                body: '${BRANCH_NAME} - ${BUILD_URL}',
                 attachLog: true
         }
     }
