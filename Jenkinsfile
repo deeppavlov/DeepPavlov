@@ -15,14 +15,7 @@ node('cuda-module') {
                     pip install .[tests,docs]
                     pip install -r deeppavlov/requirements/tf-gpu.txt
 
-                    deactivate
-
-                    virtualenv --python=python3 ".venv6-$BUILD_NUMBER"
-                    . .venv6-$BUILD_NUMBER/bin/activate
-                    pip install .[tests,docs]
-                    pip install -r deeppavlov/requirements/tf-gpu.txt
-
-                    rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name docs ! -name '.venv-$BUILD_NUMBER' ! -name '.venv6-$BUILD_NUMBER'`
+                    rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name docs ! -name '.venv-$BUILD_NUMBER'`
                 """
             }
             stage('Tests') {
@@ -38,8 +31,6 @@ node('cuda-module') {
 
                     flake8 `python -c 'import deeppavlov; print(deeppavlov.__path__[0])'` --count --select=E9,F63,F7,F82 --show-source --statistics
 
-                    pytest -v --disable-warnings
-                    . .venv6-$BUILD_NUMBER/bin/activate
                     pytest -v --disable-warnings
                 """
                 currentBuild.result = 'SUCCESS'
