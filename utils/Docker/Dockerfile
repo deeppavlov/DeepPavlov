@@ -23,3 +23,5 @@ RUN apt update && \
 WORKDIR /app
 
 COPY . .
+
+CMD utils/Docker/cmd.sh
