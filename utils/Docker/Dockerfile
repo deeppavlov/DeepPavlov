@@ -2,10 +2,13 @@ ARG BASE_IMAGE
 
 FROM $BASE_IMAGE
 
+SHELL ["/bin/bash", "-c"]
+
+ENV DP_PYTEST_API_PORT=5000
+ENV DP_PYTEST_NO_CACHE=True
+
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PYTHON_VERSION
-
-SHELL ["/bin/bash", "-c"]
 
 RUN apt update && \
     apt install -y curl \
