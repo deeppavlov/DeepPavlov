@@ -31,6 +31,7 @@
         "class_name": "torch_bert_ranker",
         "one_hot_labels": false,
         "pretrained_bert": "bert-base-uncased",
+        "bert_config_file": "{MODEL_PATH}/model/config.json",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
@@ -86,7 +87,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data_"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v0.tar.gz",
