@@ -10,6 +10,7 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - PYTEST_ARGS=$PYTEST_ARGS
   py37:
     build:
       context: ../../
@@ -20,6 +21,7 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS
   py38:
     build:
       context: ../../
@@ -30,6 +32,7 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - PYTEST_ARGS=$PYTEST_ARGS
   py39:
     build:
       context: ../../
@@ -40,3 +43,4 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS

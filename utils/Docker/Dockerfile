@@ -14,6 +14,7 @@ RUN apt update && \
     apt install -y curl \
                    git \
                    python${PYTHON_VERSION} \
+                   python${PYTHON_VERSION}-dev \
                    python3-distutils && \
     curl https://bootstrap.pypa.io/pip$([ $PYTHON_VERSION == 3.6 ] && echo /3.6 || echo "")/get-pip.py | python$PYTHON_VERSION && \
     ln -s /usr/bin/python$PYTHON_VERSION /usr/bin/python && \
