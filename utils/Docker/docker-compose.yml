@@ -33,6 +33,7 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
       - PYTEST_ARGS=$PYTEST_ARGS
+      - SKIP_TF=True
   py39:
     build:
       context: ../../
@@ -44,3 +45,4 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
       - PYTEST_ARGS=$PYTEST_ARGS
+      - SKIP_TF=True
