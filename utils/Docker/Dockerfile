@@ -22,7 +22,8 @@ RUN apt update && \
     curl https://bootstrap.pypa.io/pip$([ $PYTHON_VERSION == 3.6 ] && echo /3.6 || echo "")/get-pip.py | python$PYTHON_VERSION && \
     ln -s /usr/bin/python$PYTHON_VERSION /usr/bin/python && \
     rm /usr/local/bin/pip && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip
+    ln -s /usr/local/bin/pip3 /usr/local/bin/pip && \
+    pip install pybind11==2.2.4
 
 WORKDIR /app
 
