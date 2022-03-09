@@ -10,7 +10,7 @@ node('cuda-module') {
             stage('Setup') {
                 env.TFHUB_CACHE_DIR="tfhub_cache"
                 sh """
-                    EPOCH=$(date +%s) docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG build
+                    EPOCH=\$(date +%s) docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG build
                 """
             }
             stage('Tests') {
