@@ -5,7 +5,8 @@ services:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
       args:
-        - PYTHON_VERSION=3.6
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.6.15
         - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
     user: '${UID}:${GID}'
     environment:
@@ -16,7 +17,8 @@ services:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
       args:
-        - PYTHON_VERSION=3.7
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.7.11
         - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
     user: '${UID}:${GID}'
     environment:
@@ -27,7 +29,8 @@ services:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
       args:
-        - PYTHON_VERSION=3.8
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.8.12
         - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
     user: '${UID}:${GID}'
     environment:
@@ -39,7 +42,8 @@ services:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
       args:
-        - PYTHON_VERSION=3.9
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.9.10
         - BASE_IMAGE=nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04
     user: '${UID}:${GID}'
     environment:

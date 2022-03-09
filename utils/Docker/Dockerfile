@@ -12,20 +12,43 @@ ARG DEBIAN_FRONTEND=noninteractive
 ARG PYTHON_VERSION
 
 RUN apt update && \
-    apt install -y curl \
-                   git \
-                   locales \
-                   python${PYTHON_VERSION} \
-                   python${PYTHON_VERSION}-dev \
-                   python3-distutils && \
+    apt install -y --no-install-recommends \
+        dpkg-dev \
+        gcc \
+        git	\
+        libbz2-dev \
+        libc6-dev \
+        libexpat1-dev \
+        libffi-dev \
+        libgdbm-dev \
+        liblzma-dev \
+        libncursesw5-dev \
+        libreadline-dev \
+        libsqlite3-dev \
+        libssl-dev \
+        locales \
+        make \
+        tk-dev \
+        wget \
+        xz-utils \
+        zlib1g-dev && \
     locale-gen en_US.UTF-8 && \
-    curl https://bootstrap.pypa.io/pip$([ $PYTHON_VERSION == 3.6 ] && echo /3.6 || echo "")/get-pip.py | python$PYTHON_VERSION && \
-    ln -s /usr/bin/python$PYTHON_VERSION /usr/bin/python && \
-    rm /usr/local/bin/pip && \
-    ln -s /usr/local/bin/pip3 /usr/local/bin/pip && \
-    pip install pybind11==2.2.4
+    wget --no-check-certificate -O python.tar.xz https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tar.xz && \
+    mkdir -p /usr/src/python && \
+	tar -xC /usr/src/python --strip-components=1 -f python.tar.xz && \
+    rm python.tar.xz && \
+    cd /usr/src/python && \
+	./configure && \
+	make -j "$(nproc)" altinstall && \
+	ln -s /usr/local/bin/python${PYTHON_VERSION%.*} /usr/local/bin/python && \
+    ln -s /usr/local/bin/pip${PYTHON_VERSION%.*} /usr/local/bin/pip && \
+    rm -rf /usr/src/python /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# two commands to prevent caching of the next layers
+ARG EPOCH
+ENV EPOCH=$EPOCH
 
 COPY . .
 
