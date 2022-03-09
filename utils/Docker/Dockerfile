@@ -42,6 +42,7 @@ RUN apt update && \
 	make -j "$(nproc)" altinstall && \
 	ln -s /usr/local/bin/python${PYTHON_VERSION%.*} /usr/local/bin/python && \
     ln -s /usr/local/bin/pip${PYTHON_VERSION%.*} /usr/local/bin/pip && \
+    pip install --upgrade pip && \
     rm -rf /usr/src/python /var/lib/apt/lists/*
 
 WORKDIR /app
