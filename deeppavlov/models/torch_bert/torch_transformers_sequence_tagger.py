@@ -193,6 +193,22 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
     return subtoken_labels
 
 
+def token_labels_to_subtoken_labels_xlnet(labels, y_mask, input_mask):
+    subtoken_labels = []
+    labels_ind = 0
+    n_tokens_with_special = int(np.sum(input_mask))
+
+    for el in y_mask[:n_tokens_with_special - 2]:
+        if el == 1:
+            subtoken_labels += [labels[labels_ind]]
+            labels_ind += 1
+        else:
+            subtoken_labels += [labels[labels_ind - 1]]
+
+    subtoken_labels = subtoken_labels + [0] * (len(input_mask) - n_tokens_with_special + 2)
+    return subtoken_labels
+
+
 @register('torch_transformers_sequence_tagger')
 class TorchTransformersSequenceTagger(TorchModel):
     """Transformer-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken)
@@ -230,6 +246,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-07,
+                 transformer_type: str = "bert",
                  **kwargs) -> None:
 
         self.n_classes = n_tags
@@ -237,9 +254,11 @@ class TorchTransformersSequenceTagger(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
+        self.transformer_type = transformer_type
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.min_learning_rate = min_learning_rate
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -272,14 +291,20 @@ class TorchTransformersSequenceTagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
-                           for y_el, y_mask, input_mask in zip(y, y_masks, input_masks)]
+        if self.transformer_type == "xlnet":
+            subtoken_labels = [token_labels_to_subtoken_labels_xlnet(y_el, y_mask, input_mask)
+                               for y_el, y_mask, input_mask in zip(y, y_masks, input_masks)]
+        else:
+            subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
+                               for y_el, y_mask, input_mask in zip(y, y_masks, input_masks)]
         b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
         loss = self.model(input_ids=b_input_ids,
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
+        if isinstance(self.model, torch.nn.DataParallel):
+            loss = loss.mean()
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -348,13 +373,15 @@ class TorchTransformersSequenceTagger(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
-        self.model.to(self.device)
-
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
+        
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
+        self.model.to(self.device)
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
@@ -370,7 +397,10 @@ class TorchTransformersSequenceTagger(TorchModel):
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
+                if isinstance(self.model, torch.nn.DataParallel):
+                    self.model.module.load_state_dict(checkpoint["model_state_dict"])
+                else:
+                    self.model.load_state_dict(checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:

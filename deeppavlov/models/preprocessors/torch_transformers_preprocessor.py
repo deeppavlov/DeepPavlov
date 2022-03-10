@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import copy
 import re
 import random
 from collections import defaultdict
@@ -307,6 +308,9 @@ class TorchTransformersNerPreprocessor(Component):
                  token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  subword_mask_mode: str = "first",
+                 sep_token: str = "[SEP]",
+                 cls_token: str = "[CLS]",
+                 transformer_type = "bert",
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -314,6 +318,9 @@ class TorchTransformersNerPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         self.subword_mask_mode = subword_mask_mode
+        self.sep_token = sep_token
+        self.cls_token = cls_token
+        self.transformer_type = transformer_type
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -326,6 +333,7 @@ class TorchTransformersNerPreprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
+        init_tokens = copy.deepcopy(tokens)
         if isinstance(tokens[0], str):
             tokens = [re.findall(self._re_tokenizer, s) for s in tokens]
         subword_tokens, subword_tok_ids, startofword_markers, subword_tags = [], [], [], []
@@ -379,8 +387,7 @@ class TorchTransformersNerPreprocessor(Component):
                        attention_mask, startofword_markers, nonmasked_tags
         return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
-    @staticmethod
-    def _ner_bert_tokenize(tokens: List[str],
+    def _ner_bert_tokenize(self, tokens: List[str],
                            tags: List[str],
                            tokenizer: AutoTokenizer,
                            max_subword_len: int = None,
@@ -389,9 +396,14 @@ class TorchTransformersNerPreprocessor(Component):
                            token_masking_prob: float = None) -> Tuple[List[str], List[int], List[str]]:
         do_masking = (mode == 'train') and (token_masking_prob is not None)
         do_cutting = (max_subword_len is not None)
-        tokens_subword = ['[CLS]']
-        startofword_markers = [0]
-        tags_subword = ['X']
+        if self.transformer_type == "xlnet":
+            tokens_subword = []
+            startofword_markers = []
+            tags_subword = []
+        else:
+            tokens_subword = [self.cls_token]
+            startofword_markers = [0]
+            tags_subword = ['X']
         for token, tag in zip(tokens, tags):
             token_marker = int(tag != 'X')
             subwords = tokenizer.tokenize(token)
@@ -410,9 +422,13 @@ class TorchTransformersNerPreprocessor(Component):
                     startofword_markers.extend([token_marker] + [0] * (len(subwords) - 1))
                 tags_subword.extend([tag] + ['X'] * (len(subwords) - 1))
 
-        tokens_subword.append('[SEP]')
+        tokens_subword.append(self.sep_token)
         startofword_markers.append(0)
         tags_subword.append('X')
+        if self.transformer_type == "xlnet":
+            tokens_subword.append(self.cls_token)
+            startofword_markers.append(0)
+            tags_subword.append('X')
         return tokens_subword, startofword_markers, tags_subword
 
 
