@@ -1,2 +1,3 @@
 # TODO: hdt has pybind11 in requirements but imports it in the setup.py before installation. Should be fixed.
+# fasttext==0.9.1 installs pybind11==2.9.1. If install pybind11==2.2.4 after that two times, second installation will raise error Cannot uninstall pybind11 2.9.1, RECORD file not found.
 hdt==2.3
