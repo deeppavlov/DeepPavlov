@@ -307,6 +307,8 @@ def _override_with_test_values(item: Union[dict, list]) -> None:
 
 def skip_tf_config(config_path):
     src_file = src_dir / config_path
+    if not src_file.is_file():
+        src_file = test_src_dir / config_path
     requirements = {Path(req).name for req in get_config_requirements(src_file)}
     config_uses_tf = bool(requirements & {'tf.txt', 'tf-gpu.txt', 'tf-hub.txt'})
     if config_uses_tf and SKIP_TF:
