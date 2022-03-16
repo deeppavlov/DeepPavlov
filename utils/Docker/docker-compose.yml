@@ -12,6 +12,7 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
       - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
   py37:
     build:
       context: ../../
@@ -24,6 +25,7 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
       - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
   py38:
     build:
       context: ../../
@@ -37,6 +39,7 @@ services:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
       - PYTEST_ARGS=$PYTEST_ARGS
       - SKIP_TF=True
+      - DP_PYTEST_NO_CACHE=True
   py39:
     build:
       context: ../../
@@ -50,3 +53,4 @@ services:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
       - PYTEST_ARGS=$PYTEST_ARGS
       - SKIP_TF=True
+      - DP_PYTEST_NO_CACHE=True
