@@ -13,6 +13,7 @@ ARG PYTHON_VERSION
 
 RUN apt update && \
     apt install -y --no-install-recommends \
+        build-essential \
         dpkg-dev \
         gcc \
         git	\
