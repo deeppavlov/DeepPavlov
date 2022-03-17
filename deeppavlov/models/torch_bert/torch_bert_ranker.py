@@ -164,16 +164,11 @@ class TorchBertRankerModel(TorchModel):
             log.info(f"From pretrained {self.pretrained_bert}.")
             if Path(expand_path(self.pretrained_bert)).exists():
                 self.pretrained_bert = str(expand_path(self.pretrained_bert))
-                config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                    # num_labels=self.n_classes,
-                                                    output_attentions=False,
-                                                    output_hidden_states=False)
-            
-            else:
-                config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                    # num_labels=self.n_classes,
-                                                    output_attentions=False,
-                                                    output_hidden_states=False)
+            config = AutoConfig.from_pretrained(self.pretrained_bert,
+                                                # num_labels=self.n_classes,
+                                                output_attentions=False,
+                                                output_hidden_states=False)
+                            
 
             self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
             try:
