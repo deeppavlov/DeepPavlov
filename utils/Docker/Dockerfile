@@ -27,6 +27,7 @@ RUN apt update && \
         libreadline-dev \
         libsqlite3-dev \
         libssl-dev \
+        libxslt-dev \
         locales \
         make \
         tk-dev \
