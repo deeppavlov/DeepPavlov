@@ -385,11 +385,6 @@ sample).
       assign additional multiplcative weights to particular tags). If ``mean``
       returns one vector per sample - mean of embedding vectors of tokens.
 
-    - :class:`~deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder`
-      (registered as ``elmo``) converts tokens to pre-trained contextual
-      representations from large-scale bidirectional language models. See
-      examples `here <https://www.tensorflow.org/hub/modules/google/elmo/2>`__.
-
 Vectorizers
 ~~~~~~~~~~~
 
