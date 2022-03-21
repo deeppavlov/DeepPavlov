@@ -90,9 +90,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
   ],
-  "jieba_tokenizer": [
-    "{DEEPPAVLOV_PATH}/requirements/jieba.txt"
-  ],
   "joint_tagger_parser": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
