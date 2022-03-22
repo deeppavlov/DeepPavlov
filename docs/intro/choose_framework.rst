@@ -23,8 +23,8 @@ The full list of available models is :doc:`here </features/overview>`.
 
             python -m deeppavlov install -d <config_path>
 
-        where ``<config_path>`` is path to the chosen model's config file (e.g. ``deeppavlov/configs/ner/slotfill_dstc2.json``)
-        or just the file name without the `.json` extension (e.g. ``slotfill_dstc2``);
+        where ``<config_path>`` is path to the chosen model's config file (e.g. ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``)
+        or just the file name without the `.json` extension (e.g. ``insults_kaggle_bert``);
         ``-d`` downloads required data -- pretrained model files and embeddings (optional).
 
 Trainer

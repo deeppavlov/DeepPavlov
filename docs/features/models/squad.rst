@@ -225,7 +225,7 @@ Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1
 +========================================================================+================+=================+
 | :config:`DeepPavlov RuBERT <squad/squad_ru_rubert_infer.json>`         |   66.30+-0.24  |    84.60+-0.11  |
 +------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|   64.35+-0.39  |    83.39+-0.08  |
+| :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|     66.24      |     84.71       |
 +------------------------------------------------------------------------+----------------+-----------------+
 | :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |     60.62      |     80.04       |
 +------------------------------------------------------------------------+----------------+-----------------+

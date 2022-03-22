@@ -55,21 +55,6 @@ class Model(Chainer):
             out: Names of pipeline inference outputs.
             y: Names of additional inputs (targets) for pipeline training and evaluation.
             pipe: List of pipeline elements.
-
-
-        Example:
-            .. code:: python
-
-                >>> from deeppavlov.models.nemo.asr import NeMoASR
-                >>> from deeppavlov import Element, Model
-                >>> asr = NeMoASR(nemo_params_path="~/.deeppavlov/models/nemo/quartznet15x5/quartznet15x5.yaml",
-                                  load_path="~/.deeppavlov/models/nemo/quartznet15x5")
-                >>> upper = lambda batch: list(map(str.upper, batch))
-                >>> model = Model(x=["speech"],
-                                  out=["upper_text"],
-                                  pipe=[Element(asr, "speech", "text"), Element(upper, "text", "upper_text")])
-                >>> model(["8088-284756-0037.wav"])
-                ['I WALKED ALONG BRISKLY FOR PERHAPS FIVE MINUTES']
         """
         super().__init__(in_x=x, out_params=out, in_y=y)
         if pipe is not None:
