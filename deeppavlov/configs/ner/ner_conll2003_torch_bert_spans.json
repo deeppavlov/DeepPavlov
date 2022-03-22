@@ -1,0 +1,131 @@
+{
+  "dataset_reader": {
+    "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/conll2003/",
+    "dataset_name": "conll2003",
+    "provide_pos": false
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_ner_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_masking_prob": 0.0,
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask"]
+      },
+      {
+        "class_name": "split_markups_start_end",
+        "in": ["y"],
+        "out": ["y_types", "y_starts", "y_ends"]
+      },
+      {
+        "id": "tag_vocab_types",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{MODEL_PATH}/tag_types.dict",
+        "load_path": "{MODEL_PATH}/tag_types.dict",
+        "fit_on": ["y_types"],
+        "in": ["y_types"],
+        "out": ["y_types_ind"]
+      },
+      {
+        "class_name": "torch_transformers_sequence_tagger_spans",
+        "pretrained_bert": "{TRANSFORMER}",
+        "attention_probs_keep_prob": 0.5,
+        "num_classes_tags": "#tag_vocab_types.len",
+        "return_probas_tag": true,
+        "return_probas_span": false,
+        "encoder_layer_ids": [-1],
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 1.8e-05,
+          "weight_decay": 1e-06,
+          "betas": [0.9, 0.999],
+          "eps": 1e-06
+        },
+        "head_lr": 2e-05,
+        "init_lr": 1.8e-05,
+        "clip_norm": 1.0,
+        "min_learning_rate": 1e-07,
+        "learning_rate_drop_patience": 4,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "use_o_tag": true,
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in_y": ["y_types_ind", "y_starts", "y_ends"],
+        "out": ["y_types_pred_ind", "y_starts_pred_ind", "y_ends_pred_ind"]
+      },
+      {
+        "class_name": "bio_from_spans",
+        "use_o_tag": true,
+        "start_thres": 0.5,
+        "end_thres": 0.35,
+        "min_end_thres": 0.1,
+        "ent_conf_thres": 0.16,
+        "min_ent_conf_thres": 0.35,
+        "in": ["y_starts_pred_ind", "y_ends_pred_ind", "y_types_pred_ind"],
+        "out": ["y_spans_pred"]
+      },
+      {
+        "class_name": "merge_markups",
+        "tags_file": "{MODEL_PATH}/tag_types.dict",
+        "use_o_tag": true,
+        "long_ent_thres": 0.4,
+        "ent_thres": 0.6,
+        "in": ["y_types_pred_ind", "y_spans_pred"],
+        "out": ["y_pred"]
+      }
+    ],
+    "out": ["x_tokens", "y_pred"]
+  },
+  "train": {
+    "epochs": 30,
+    "batch_size": 32,
+    "valid_batch_size": 64,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": ["y", "y_pred"]
+      },
+      {
+        "name": "ner_token_f1",
+        "inputs": ["y", "y_pred"]
+      }
+    ],
+    "validation_patience": 15,
+    "val_every_n_batches": 100,
+    "log_every_n_batches": 25,
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": ["valid", "test"],
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "TRANSFORMER": "bert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert/spans/{TRANSFORMER}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert_spans.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

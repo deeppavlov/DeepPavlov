@@ -416,6 +416,204 @@ class TorchTransformersNerPreprocessor(Component):
         return tokens_subword, startofword_markers, tags_subword
 
 
+@register('split_markups')
+class SplitMarkups:
+    def __init__(self, **kwargs):
+        pass
+    def __call__(self, y_batch):
+        y_types_batch, y_spans_batch = [], []
+        for y_list in y_batch:
+            y_types_list, y_spans_list = [], []
+            for i in range(len(y_list)):
+                if y_list[i].startswith("B-"):
+                    label = y_list[i].split("-")[1]
+                    y_types_list.append(label)
+                    y_spans_list.append("B-ENT")
+                elif y_list[i].startswith("I-"):
+                    label = y_list[i].split("-")[1]
+                    y_types_list.append(label)
+                    y_spans_list.append("I-ENT")
+                else:
+                    y_types_list.append("O")
+                    y_spans_list.append("O")
+            y_types_batch.append(y_types_list)
+            y_spans_batch.append(y_spans_list)
+        return y_types_batch, y_spans_batch
+
+
+@register('split_markups_start_end')
+class SplitMarkupsStartEnd:
+    def __init__(self, **kwargs):
+        self.number = 0
+    def __call__(self, y_batch):
+        y_types_batch, y_starts_batch, y_ends_batch = [], [], []
+        for y_list in y_batch:
+            y_types_list, y_starts_list, y_ends_list = [], [], []
+            for i in range(len(y_list)):
+                if y_list[i].startswith("B-"):
+                    label = y_list[i].split("-")[1]
+                    y_types_list.append(label)
+                    y_starts_list.append(1)
+                    if i == len(y_list) - 1 or y_list[i + 1].startswith("B-") or y_list[i + 1] == "O":
+                        y_ends_list.append(1)
+                    else:
+                        y_ends_list.append(0)
+                elif y_list[i].startswith("I-"):
+                    label = y_list[i].split("-")[1]
+                    y_types_list.append(label)
+                    if i == len(y_list) - 1 or y_list[i + 1].startswith("B-") or y_list[i + 1] == "O":
+                        y_ends_list.append(1)
+                    else:
+                        y_ends_list.append(0)
+                    y_starts_list.append(0)
+                else:
+                    y_types_list.append("O")
+                    y_starts_list.append(0)
+                    y_ends_list.append(0)
+            y_types_batch.append(y_types_list)
+            y_starts_batch.append(y_starts_list)
+            y_ends_batch.append(y_ends_list)
+            if self.number < 100:
+                out = open("start_end_log.txt", 'a')
+                out.write(f"y_list {y_list}"+'\n')
+                out.write(f"start {y_starts_list}"+'\n')
+                out.write(f"end {y_ends_list}"+'\n')
+                out.write("_"*60+'\n')
+                out.close()
+                self.number += 1
+        return y_types_batch, y_starts_batch, y_ends_batch
+
+
+@register('merge_markups')
+class MergeMarkups:
+    def __init__(self, tags_file: str, use_o_tag: bool = False, long_ent_thres: float = 0.4,
+                       ent_thres: float = 0.4, **kwargs):
+        tags_file = str(expand_path(tags_file))
+        self.tags_list = []
+        with open(tags_file, 'r') as fl:
+            lines = fl.readlines()
+            for line in lines:
+                tag, score = line.strip().split()
+                if tag != "O":
+                    self.tags_list.append(tag)
+        self.use_o_tag = use_o_tag
+        self.ent_thres = ent_thres
+        self.long_ent_thres = long_ent_thres
+    def __call__(self, y_types_batch, y_spans_batch):
+        y_batch = []
+        for y_types_list, y_spans_list in zip(y_types_batch, y_spans_batch):
+            y_types_list = y_types_list.tolist()
+            y_list = []
+            tags_with_probas_list = []
+            label = ""
+            conf = 0.0
+            for i in range(len(y_types_list)):
+                if y_spans_list[i].startswith("B-") or (y_spans_list[i].startswith("I-") and \
+                        (i == 0 or (i > 0 and y_spans_list[i - 1] == "O"))):
+                    tags_with_probas = {tag: 0.0 for tag in self.tags_list}
+                    num_words = 0
+                    if self.use_o_tag:
+                        for k in range(1, len(y_types_list[i])):
+                            tags_with_probas[self.tags_list[k - 1]] += y_types_list[i][k]
+                    else:
+                        for k in range(len(y_types_list[i])):
+                            tags_with_probas[self.tags_list[k]] += y_types_list[i][k]
+                    num_words += 1
+                    for j in range(i + 1, len(y_types_list)):
+                        if y_spans_list[j].startswith("I-"):
+                            if self.use_o_tag:
+                                for k in range(1, len(y_types_list[j])):
+                                    tags_with_probas[self.tags_list[k - 1]] += y_types_list[j][k]
+                            else:
+                                for k in range(len(y_types_list[j])):
+                                    tags_with_probas[self.tags_list[k]] += y_types_list[j][k]
+                            num_words += 1
+                        else:
+                            break
+                    tags_with_probas = list(tags_with_probas.items())
+                    tags_with_probas = [(tag, round(proba_sum / num_words, 3)) for tag, proba_sum in tags_with_probas]
+                    tags_with_probas = sorted(tags_with_probas, key=lambda x: x[1], reverse=True)
+                    tags_with_probas_list.append(tags_with_probas)
+                    label = tags_with_probas[0][0]
+                    conf = tags_with_probas[0][1]
+                    if conf > self.long_ent_thres or (num_words <= 2 and conf > self.ent_thres):
+                        y_list.append(f"B-{label}")
+                    else:
+                        y_list.append("O")
+                elif y_spans_list[i].startswith("I-"):
+                    if conf > self.long_ent_thres or (num_words <= 2 and conf > self.ent_thres):
+                        y_list.append(f"I-{label}")
+                    else:
+                        y_list.append("O")
+                else:
+                    y_list.append("O")
+                    label = ""
+                    conf = 0.0
+            y_batch.append(y_list)
+        return y_batch
+
+
+@register('bio_from_spans')
+class BIOFromSpans:
+    def __init__(self, use_o_tag: bool = False, start_thres: float = 0.5, end_thres: float = 0.5,
+                       ent_conf_thres: bool = 0.0, min_end_thres: float = 0.5,
+                       min_ent_conf_thres: float = 0.1, add_ent_thres: float=  0.98, **kwargs):
+        self.start_thres = start_thres
+        self.end_thres = end_thres
+        self.min_end_thres = min_end_thres
+        self.ent_conf_thres = ent_conf_thres
+        self.min_ent_conf_thres = min_ent_conf_thres
+        self.add_ent_thres = add_ent_thres
+        self.use_o_tag = use_o_tag
+    def __call__(self, start_pred_batch, end_pred_batch, y_types_batch=None):
+        tags_batch = []
+        if y_types_batch is None:
+            y_types_batch = [[] for _ in start_pred_batch]
+        for start_pred_list, end_pred_list, y_types_list in zip(start_pred_batch, end_pred_batch, y_types_batch):
+            tags_list = []
+            fnd = 0
+            if self.use_o_tag:
+                ent_conf_list = [1.0 - y_types_list[j][0] for j in range(len(y_types_list))]
+            else:
+                ent_conf_list = [1.0 for _ in start_pred_list]
+            for n, (start_pred, end_pred, ent_conf) in enumerate(zip(start_pred_list, end_pred_list, ent_conf_list)):
+                if start_pred < self.start_thres and end_pred < self.end_thres:
+                    if fnd > 0 and fnd < 15 and ent_conf > self.ent_conf_thres \
+                            and not (n > 0 and end_pred_list[n - 1] > self.min_end_thres \
+                                     and ent_conf < self.min_ent_conf_thres):
+                        tags_list.append("I-ENT")
+                        fnd += 1
+                    else:
+                        tags_list.append("O")
+                        fnd = 0
+                elif start_pred >= self.start_thres:
+                    if ent_conf > self.ent_conf_thres:
+                        if fnd == 0:
+                            tags_list.append("B-ENT")
+                        else:
+                            tags_list.append("I-ENT")
+                    else:
+                        tags_list.append("O")
+                    if end_pred < self.end_thres:
+                        fnd += 1
+                elif end_pred >= self.end_thres:
+                    if fnd > 0 and ent_conf > self.ent_conf_thres:
+                        tags_list.append("I-ENT")
+                    else:
+                        tags_list.append("O")
+                    fnd = 0
+            if self.use_o_tag:
+                for i in range(len(ent_conf_list)):
+                    if ent_conf_list[i] > self.add_ent_thres:
+                        if tags_list[i] == "O":
+                            if i == 0 or (i > 0 and tags_list[i - 1] == "O"):
+                                tags_list[i] = "B-ENT"
+                            elif i > 0 and tags_list[i - 1] in {"B-ENT", "I-ENT"}:
+                                tags_list[i] = "I-ENT"
+            tags_batch.append(tags_list)
+        return tags_batch
+
+
 @register('torch_bert_ranker_preprocessor')
 class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
     """Tokenize text to sub-tokens, encode sub-tokens with their indices, create tokens and segment masks for ranking.

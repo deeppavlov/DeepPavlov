@@ -90,6 +90,7 @@ class NNTrainer(FitTrainer):
 
     def __init__(self, chainer_config: dict, *, 
                  batch_size: int = 1,
+                 valid_batch_size: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
                  max_batches: int = -1,
@@ -104,9 +105,9 @@ class NNTrainer(FitTrainer):
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
                  log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1,
                  **kwargs) -> None:
-        super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
-                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir,
-                         max_test_batches=max_test_batches, **kwargs)
+        super().__init__(chainer_config, batch_size=batch_size, valid_batch_size=valid_batch_size, metrics=metrics,
+                         evaluation_targets=evaluation_targets, show_examples=show_examples,
+                         tensorboard_log_dir=tensorboard_log_dir, max_test_batches=max_test_batches, **kwargs)
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
@@ -165,7 +166,7 @@ class NNTrainer(FitTrainer):
     def _validate(self, iterator: DataLearningIterator,
                   tensorboard_tag: Optional[str] = None, tensorboard_index: Optional[int] = None) -> None:
         self._send_event(event_name='before_validation')
-        report = self.test(iterator.gen_batches(self.batch_size, data_type='valid', shuffle=False),
+        report = self.test(iterator.gen_batches(self.valid_batch_size, data_type='valid', shuffle=False),
                            start_time=self.start_time)
 
         report['epochs_done'] = self.epoch
@@ -228,7 +229,7 @@ class NNTrainer(FitTrainer):
                 'time_spent': str(datetime.timedelta(seconds=round(time.time() - self.start_time + 0.5)))
             }
         else:
-            data = islice(iterator.gen_batches(self.batch_size, data_type='train', shuffle=True),
+            data = islice(iterator.gen_batches(self.valid_batch_size, data_type='train', shuffle=True),
                           self.log_on_k_batches)
             report = self.test(data, self.train_metrics, start_time=self.start_time)
 
