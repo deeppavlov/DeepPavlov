@@ -27,7 +27,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/master/features/models/slot_filling.html)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html)
 
 [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
 
@@ -38,8 +38,6 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 [Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Syntactic parsing](http://docs.deeppavlov.ai/en/master/features/models/syntaxparser.html)
 
 [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
-
-[Speech recognition and synthesis (ASR and TTS)](http://docs.deeppavlov.ai/en/master/features/models/nemo.html) based on [NVIDIA NeMo](https://nvidia.github.io/NeMo/index.html)
 
 [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html) | [Multitask BERT](http://docs.deeppavlov.ai/en/master/features/models/multitask_bert.html)
 
@@ -132,8 +130,8 @@ python -m deeppavlov install <config_path>
 ```
 
 * where `<config_path>` is path to the chosen model's config file (e.g.
-  `deeppavlov/configs/ner/slotfill_dstc2.json`) or just name without
-  *.json* extension (e.g. `slotfill_dstc2`)
+  `deeppavlov/configs/classifiers/insults_kaggle_bert.json`) or just name without
+  *.json* extension (e.g. `insults_kaggle_bert`)
 
 
 ### Command line interface (CLI)

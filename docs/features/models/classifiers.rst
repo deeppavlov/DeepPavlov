@@ -6,7 +6,7 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [8]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
+* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [5]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
 
 * **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
 
@@ -27,18 +27,18 @@ Command line
     python -m deeppavlov install <path_to_config>
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above)
-or provide flag ``-d`` for commands like ``interact``, ``telegram``, ``train``, ``evaluate``.:
+or provide flag ``-d`` for commands like ``interact``, ``telegram``, ``train``, ``evaluate``:
 
 .. code:: bash
 
     python -m deeppavlov download  <path_to_config>
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
 
 When using KerasClassificationModel for **Windows** platforms one have to set `KERAS_BACKEND` to `tensorflow`:
 
@@ -53,7 +53,7 @@ When using KerasClassificationModel for **Windows** platforms one have to set `K
     python -m deeppavlov interact <path_to_config> [-d]
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
 With the optional ``-d`` parameter all the data required to run selected pipeline will be **downloaded**.
 
 **TRAIN** After preparing the config file (including change of dataset, pipeline elements or parameters)
@@ -73,7 +73,7 @@ Then training can be run in the following way:
     python -m deeppavlov train <path_to_config>
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
-or its name without an extension, for example :config:`"intents_snips" <classifiers/intents_snips.json>`.
+or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
 With the optional ``-d`` parameter all the data required to run selected pipeline will be **downloaded**.
 
 Python code
@@ -94,34 +94,30 @@ Then one can build and interact a model from configuration file:
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
+    from deeppavlov import build_model
 
-    CONFIG_PATH = configs.classifiers.intents_snips  # could also be configuration dictionary or string path or `pathlib.Path` instance
+    model = build_model('insults_kaggle_bert', download=True)  # in case of necessity to download some data
 
-    model = build_model(CONFIG_PATH, download=True)  # in case of necessity to download some data
+    model = build_model('insults_kaggle_bert', download=False)  # otherwise
 
-    model = build_model(CONFIG_PATH, download=False)  # otherwise
+    print(model(["You are dumb", "He lay flat on the brown, pine-needled floor of the forest"]))
 
-    print(model(["What is the weather in Boston today?"]))
-
-    >>> [['GetWeather']]
+    >>> ['Insult', 'Not Insult']
 
 **TRAIN** Also training can be run in the following way:
 
 .. code:: python
 
-    from deeppavlov import train_model, configs
+    from deeppavlov import train_model
 
-    CONFIG_PATH = configs.classifiers.intents_snips  # could also be configuration dictionary or string path or `pathlib.Path` instance
+    model = train_model('insults_kaggle_bert', download=True)  # in case of necessity to download some data
 
-    model = train_model(CONFIG_PATH, download=True)  # in case of necessity to download some data
-
-    model = train_model(CONFIG_PATH, download=False)  # otherwise
+    model = train_model('insults_kaggle_bert', download=False)  # otherwise
 
 BERT models
 -----------
 
-BERT (Bidirectional Encoder Representations from Transformers) [8]_ is a Transformer pre-trained on masked language model
+BERT (Bidirectional Encoder Representations from Transformers) [5]_ is a Transformer pre-trained on masked language model
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
@@ -188,7 +184,7 @@ Therefore, for sklearn component classifier one should set ``ensure_list_output`
 Pre-trained models
 ------------------
 
-We also provide with **pre-trained models** for classification on DSTC 2 dataset, SNIPS dataset, "AG News" dataset,
+We also provide with **pre-trained models** for classification on DSTC 2 dataset, "AG News" dataset,
 "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
 
 `DSTC 2 dataset <http://camdial.org/~mh521/dstc/>`__ does not initially contain information about **intents**,
@@ -225,24 +221,6 @@ In the original dataset this user reply has characteristics
 
 This message contains two intents ``(thankyou, bye)``. Train, valid and
 test division is the same as on web-site.
-
-`SNIPS dataset <https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines>`__
-contains **intent classification** task for 7 intents (approximately 2.4
-samples per intent):
-
--  GetWeather
--  BookRestaurant
--  PlayMusic
--  AddToPlaylist
--  RateBook
--  SearchScreeningEvent
--  SearchCreativeWork
-
-Initially, classification model on SNIPS dataset [7]_ was trained only as an
-example of usage that is why we provide pre-trained model for SNIPS with
-embeddings trained on DSTC-2 dataset that is not the best choice for
-this task. Train set is divided to train and validation sets to
-illustrate ``basic_classification_iterator`` work.
 
 `Detecting Insults in Social Commentary dataset <https://www.kaggle.com/c/detecting-insults-in-social-commentary>`__
 contains binary classification task for **detecting insults** for
@@ -291,69 +269,24 @@ of sentences. Each sentence were initially labelled with floating point value fr
 the floating point labels are converted to integer labels according to the intervals `[0, 0.2], (0.2, 0.4], (0.4, 0.6], (0.6, 0.8], (0.8, 1.0]`
 corresponding to `very negative`, `negative`, `neutral`, `positive`, `very positive` classes.
 
-`Yelp Reviews <https://www.yelp.com/dataset>`__ contains 5-classes **sentiment classification** of product reviews.
-The labels are `1`, `2`, `3`, `4`, `5` corresponding to `very negative`, `negative`, `neutral`, `positive`, `very positive` classes.
-The reviews are long enough (cut up to 200 subtokens).
-
 
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Task             | Dataset            | Lang | Model                                                                                           | Metric      | Valid  | Test   | Downloads |
 +==================+====================+======+=================================================================================================+=============+========+========+===========+
-| 28 intents       | `DSTC 2`_          | En   | :config:`DSTC 2 emb <classifiers/intents_dstc2.json>`                                           | Accuracy    | 0.7613 | 0.7733 |  800 Mb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Wiki emb <classifiers/intents_dstc2_big.json>`                                         |             | 0.9629 | 0.9617 |  8.5 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`BERT <classifiers/intents_dstc2_bert.json>`                                            |             | 0.9673 | 0.9636 |  800 Mb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| 7 intents        | `SNIPS-2017`_ [7]_ |      | :config:`DSTC 2 emb <classifiers/intents_snips.json>`                                           | F1-macro    | 0.8591 |    --  |  800 Mb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Wiki emb <classifiers/intents_snips_big.json>`                                         |             | 0.9820 |    --  |  8.5 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Tfidf + SelectKBest + PCA + Wiki emb <classifiers/intents_snips_sklearn.json>`         |             | 0.9673 |    --  |  8.6 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Wiki emb weighted by Tfidf <classifiers/intents_snips_tfidf_weighted.json>`            |             | 0.9786 |    --  |  8.5 Gb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Insult detection | `Insults`_         |      | :config:`Reddit emb <classifiers/insults_kaggle.json>`                                          | ROC-AUC     | 0.9263 | 0.8556 |  6.2 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   |             | 0.9255 | 0.8612 |  1200 Mb  |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`English Conversational BERT <classifiers/insults_kaggle_conv_bert.json>`               |             | 0.9389 | 0.8941 |  1200 Mb  |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`English BERT on PyTorch <classifiers/insults_kaggle_bert_torch.json>`                  |             | 0.9329 | 0.877  |  1.1 Gb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| 5 topics         | `AG News`_         |      | :config:`Wiki emb <classifiers/topic_ag_news.json>`                                             | Accuracy    | 0.8922 | 0.9059 |  8.5 Gb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Intent           |`Yahoo-L31`_        |      | :config:`Yahoo-L31 on conversational BERT <classifiers/yahoo_convers_vs_info_bert.json>`        | ROC-AUC     | 0.9436 |   --   |  1200 Mb  |
+| Insult detection | `Insults`_         | En   | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   | ROC-AUC     | 0.9327 | 0.8602 |  1.1 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`5-classes SST on multilingual BERT <classifiers/sentiment_sst_multi_bert.json>`        |             | 0.5738 | 0.6024 |  660 Mb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`3-classes SST SWCNN on PyTorch <classifiers/sst_torch_swcnn.json>`                     |             | 0.7379 | 0.6312 |  4.3 Mb   |
-+                  +--------------------+      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |`Yelp`_             |      | :config:`5-classes Yelp on conversational BERT <classifiers/sentiment_yelp_conv_bert.json>`     |             | 0.6925 | 0.6842 |  400 Mb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`5-classes Yelp on multilingual BERT <classifiers/sentiment_yelp_multi_bert.json>`      |             | 0.5896 | 0.5874 |  660 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               |             | 0.9965 | 0.9961 |  6.2 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`RuWiki+Lenta emb with preprocessing <classifiers/sentiment_twitter_preproc.json>`      |             | 0.7823 | 0.7759 |  6.2 Gb   |
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-|                  |`RuSentiment`_      |      | :config:`RuWiki+Lenta emb <classifiers/rusentiment_cnn.json>`                                   | F1-weighted | 0.6541 | 0.7016 |  6.2 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Twitter emb super-convergence <classifiers/rusentiment_bigru_superconv.json>` [6]_     |             | 0.7301 | 0.7576 |  3.4 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                  |             | 0.7519 | 0.7875 |  700 Mb   |
+|                  |`RuSentiment`_      |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                  | F1-weighted | 0.7519 | 0.7875 |  700 Mb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               |             | 0.6809 | 0.7193 |  1900 Mb  |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.7548 | 0.7742 |  657 Mb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Intent           |Ru like`Yahoo-L31`_ |      | :config:`Conversational vs Informational on ELMo <classifiers/yahoo_convers_vs_info.json>`      | ROC-AUC     | 0.9412 |   --   |  700 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
-.. _`SNIPS-2017`: https://github.com/snipsco/nlu-benchmark/tree/master/2017-06-custom-intent-engines
 .. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
 .. _`AG News`: https://www.di.unipi.it/~gulli/AG_corpus_of_news_articles.html
 .. _`Twitter mokoron`: http://study.mokoron.com/
@@ -362,7 +295,6 @@ The reviews are long enough (cut up to 200 subtokens).
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`SST`: https://nlp.stanford.edu/sentiment/index.html
-.. _`Yelp`: https://www.yelp.com/dataset
 
 GLUE Benchmark
 --------------
@@ -422,43 +354,13 @@ Then training process can be run in the same way:
 
     python -m deeppavlov train <path_to_config>
 
-Comparison
-----------
-
-The comparison of the presented model is given on **SNIPS** dataset [7]_. The
-evaluation of model scores was conducted in the same way as in [3]_ to
-compare with the results from the report of the authors of the dataset.
-The results were achieved with tuning of parameters and embeddings
-trained on Reddit dataset.
-
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| Model                  | AddToPlaylist   | BookRestaurant   | GetWheather   | PlayMusic    | RateBook     | SearchCreativeWork   | SearchScreeningEvent   |
-+========================+=================+==================+===============+==============+==============+======================+========================+
-| api.ai                 | 0.9931          | 0.9949           | 0.9935        | 0.9811       | 0.9992       | 0.9659               | 0.9801                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| ibm.watson             | 0.9931          | 0.9950           | 0.9950        | 0.9822       | 0.9996       | 0.9643               | 0.9750                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| microsoft.luis         | 0.9943          | 0.9935           | 0.9925        | 0.9815       | 0.9988       | 0.9620               | 0.9749                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| wit.ai                 | 0.9877          | 0.9913           | 0.9921        | 0.9766       | 0.9977       | 0.9458               | 0.9673                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| snips.ai               | 0.9873          |       0.9921     | 0.9939        | 0.9729       | 0.9985       | 0.9455               | 0.9613                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| recast.ai              | 0.9894          | 0.9943           | 0.9910        | 0.9660       | 0.9981       | 0.9424               | 0.9539                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| amazon.lex             | 0.9930          | 0.9862           | 0.9825        | 0.9709       | 0.9981       | 0.9427               | 0.9581                 |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-| Shallow-and-wide CNN   | **0.9956**      | **0.9973**       | **0.9968**    | **0.9871**   | **0.9998**   | **0.9752**           | **0.9854**             |
-+------------------------+-----------------+------------------+---------------+--------------+--------------+----------------------+------------------------+
-
 How to improve the performance
 ------------------------------
 
--  One can use FastText [4]_ to train embeddings that are better suited
+-  One can use FastText [3]_ to train embeddings that are better suited
    for considered datasets.
 -  One can use some custom preprocessing to clean texts.
--  One can use ELMo [5]_ or BERT [8]_.
+-  One can use ELMo [4]_ or BERT [5]_.
 -  All the parameters should be tuned on the validation set.
 
 References
@@ -468,14 +370,8 @@ References
 
 .. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
 
-.. [3] https://www.slideshare.net/KonstantinSavenkov/nlu-intent-detection-benchmark-by-intento-august-2017
+.. [3] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
-.. [4] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
+.. [4] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
 
-.. [5] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
-
-.. [6] Smith L. N., Topin N. Super-convergence: Very fast training of residual networks using large learning rates. – 2018.
-
-.. [7] Coucke A. et al. Snips voice platform: an embedded spoken language understanding system for private-by-design voice interfaces //arXiv preprint arXiv:1805.10190. – 2018.
-
-.. [8] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.
+.. [5] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.

@@ -60,7 +60,6 @@ and then get the probability that the response is proper continuation of the dia
     :: & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  & look with fdisk -l & hello there & fdisk is all you need
     >> [0.9776373  0.05753616 0.9642599 ]
 
-
 Paraphrase identification
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -71,15 +70,15 @@ Before using the model make sure that all required packages are installed runnin
 
 .. code:: bash
 
-    python -m deeppavlov install paraphrase_ident_paraphraser
+    python -m deeppavlov install paraphraser_bert
 
-To train the model on the `paraphraser.ru`_ dataset with fasttext embeddings one can use the following code in python:
+To train the model on the `paraphraser.ru`_ dataset one can use the following code in python:
 
 .. code:: python
 
     from deeppavlov import configs, train_model
 
-    para_model = train_model(configs.ranking.paraphrase_ident_paraphraser, download=True)
+    para_model = train_model('paraphraser_bert', download=True)
 
 
 Paraphrase identification
