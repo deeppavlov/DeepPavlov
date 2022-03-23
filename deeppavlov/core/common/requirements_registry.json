@@ -27,18 +27,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
   ],
-  "bert_sep_ranker_predictor": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "bert_sep_ranker_predictor_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bert_sep_ranker_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "bert_sequence_network": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -143,9 +131,6 @@
   "siamese_predictor": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "smn_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "squad_bert_infer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -165,9 +150,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "two_sentences_emb": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bilstm_gru_nn": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "wiki_parser": [

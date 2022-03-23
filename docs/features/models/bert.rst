@@ -161,25 +161,6 @@ and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </features/models/squad>`.
 
-BERT for Ranking
-----------------
-There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
-works slow and the second one is representation-based which is less accurate but faster [3]_.
-The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor` on TensorFlow
-(:class:`~deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertRankerPreprocessor` on PyTorch)
-and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel` on TensorFlow
-(:class:`~deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel` on PyTorch)
-and the representation-based ranking with components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerModel` on TensorFlow.
-Additional components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` (on TensorFlow) are for usage in the ``interact`` mode
-where the task for ranking is to retrieve the best possible response from some provided response base with the help of
-the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
-Statistics are available :doc:`here </features/overview>`.
-
 Using custom BERT in DeepPavlov
 -------------------------------
 
@@ -195,7 +176,6 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] Arkhipov M., Trofimova M., Kuratov Y., Sorokin A. (2019). `Tuning Multilingual Transformers for Language-Specific Named Entity Recognition <https://www.aclweb.org/anthology/W19-3712/>`__ . ACL anthology W19-3712.
-.. [3] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
 .. [4] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
 .. [5] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
 .. [6] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
