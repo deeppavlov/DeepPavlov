@@ -84,14 +84,14 @@
       "MODEL_PATH": "{MODELS_PATH}/ubuntu_v2_uncased_torch_bert_model"
     },
     "download": [
-{
-	        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
-		        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
-			      },
-			            {
-					            "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v0.tar.gz",
-						            "subdir": "{MODELS_PATH}"
-							          }
+      {
+        "url": "http://files.deeppavlov.ai/datasets/ubuntu_v2_data.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v0.tar.gz",
+        "subdir": "{MODELS_PATH}"
+      }
     ]
   }
 }
