@@ -24,6 +24,7 @@ from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -36,6 +37,8 @@ download_path = tests_dir / "download"
 cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
+
+SKIP_TF = os.getenv('SKIP_TF', False)
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
 if api_port is not None:
@@ -299,6 +302,16 @@ def _override_with_test_values(item: Union[dict, list]) -> None:
             _override_with_test_values(child)
 
 
+def skip_tf_config(config_path):
+    src_file = src_dir / config_path
+    if not src_file.is_file():
+        src_file = test_src_dir / config_path
+    requirements = {Path(req).name for req in get_config_requirements(src_file)}
+    config_uses_tf = bool(requirements & {'tf.txt', 'tf-gpu.txt', 'tf-hub.txt'})
+    if config_uses_tf and SKIP_TF:
+        pytest.skip("Skipping test as config requires tensorflow")
+
+
 def download_config(config_path):
     src_file = src_dir / config_path
     if not src_file.is_file():
@@ -519,6 +532,7 @@ class TestQuickStart(object):
             p.wait()
 
     def test_inferring_pretrained_model(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             install_config(config_file_path)
@@ -529,12 +543,14 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_api(test_configs_path / conf_file)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
@@ -544,6 +560,7 @@ class TestQuickStart(object):
             pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'SR' not in mode:
             return pytest.skip("Unsupported mode: {}".format(mode))
 
@@ -567,6 +584,7 @@ class TestQuickStart(object):
             raise exc
 
     def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'TI' in mode:
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
