@@ -47,7 +47,7 @@ class TorchBertRankerModel(TorchModel):
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
     """
 
-    def __init__(self, pretrained_bert: str,
+    def __init__(self, pretrained_bert: str = None,
                  bert_config_file: Optional[str] = None,
                  n_classes: int = 2,
                  return_probas: bool = True,
@@ -97,7 +97,7 @@ class TorchBertRankerModel(TorchModel):
         self.optimizer.zero_grad()
 
         loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
-                                  labels=b_labels)
+                                  labels=b_labels, return_dict=False)
         loss.backward()
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
@@ -162,10 +162,13 @@ class TorchBertRankerModel(TorchModel):
 
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
+            if Path(expand_path(self.pretrained_bert)).exists():
+                self.pretrained_bert = str(expand_path(self.pretrained_bert))
             config = AutoConfig.from_pretrained(self.pretrained_bert,
                                                 # num_labels=self.n_classes,
                                                 output_attentions=False,
                                                 output_hidden_states=False)
+                            
 
             self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
@@ -190,13 +193,10 @@ class TorchBertRankerModel(TorchModel):
                     self.model.num_labels = self.n_classes
 
 
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
+        elif self.bert_config_file and expand_path(self.bert_config_file).is_file():
+            self.bert_config = AutoConfig.from_pretrained(str(expand_path(self.bert_config_file)))
             self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
+
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
