@@ -1,0 +1,77 @@
+{
+  "dataset_reader": {
+    "class_name": "sq_reader",
+    "valid_size": 1000,
+    "data_path": "{DOWNLOADS_PATH}/wizard_of_wikipedia/wizard_of_wikipedia.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["question", "contexts"],
+    "in_y": ["target"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_generative_qa_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "max_seq_length": 384,
+        "in": ["question", "contexts", "target"],
+        "out": ["input_ids", "attention_mask", "target_ids"]
+      },
+      {
+        "class_name": "torch_generative_qa",
+        "pretrained_transformer": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05,
+          "weight_decay": 0.01,
+          "betas": [0.9, 0.999],
+          "eps": 1e-06
+        },
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "in": ["input_ids", "attention_mask"],
+        "in_y": ["target_ids"],
+        "out": ["answer"]
+      }
+    ],
+    "out": ["answer"]
+  },
+  "train": {
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid"
+    ],
+    "log_every_n_batches": 50,
+    "val_every_n_batches": 500,
+    "batch_size": 10,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 5,
+    "validation_patience": 10,
+    "metrics": [
+      {
+        "name": "squad_v1_f1",
+        "inputs": ["target", "answer"]
+      }
+    ],
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "LOWERCASE": false,
+      "TRANSFORMER": "t5-base",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/generative_qa/{TRANSFORMER}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wizard_of_wikipedia.json",
+        "subdir": "{DOWNLOADS_PATH}/wizard_of_wikipedia"
+      }
+    ]
+  }
+}

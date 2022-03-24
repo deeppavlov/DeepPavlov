@@ -181,6 +181,56 @@ class TorchTransformersPreprocessor(Component):
         return input_features
 
 
+@register('torch_transformers_generative_qa_preprocessor')
+class TorchTransformersGenerativeQAPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 512,
+                 return_tokens: bool = False,
+                 answer_maxlength: int = 20,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+        self.return_tokens = return_tokens
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.answer_maxlength = answer_maxlength
+
+    def __call__(self, questions_batch: List[str], contexts_batch: List[List[str]], targets_batch: List[str] = None):
+        input_ids_batch, attention_mask_batch, lengths = [], [], []
+        for question, contexts in zip(questions_batch, contexts_batch):
+            input_ids_list, attention_mask_list = [], []
+            for context in contexts:
+                encoded_dict = self.tokenizer.encode_plus(question, context)
+                input_ids_list += encoded_dict["input_ids"]
+                attention_mask_list += encoded_dict["attention_mask"]
+            lengths.append(len(input_ids_list))
+            input_ids_batch.append(input_ids_list)
+            attention_mask_batch.append(attention_mask_list)
+        max_length = min(max(lengths), self.max_seq_length)
+        for i in range(len(input_ids_batch)):
+            for j in range(max_length - len(input_ids_batch[i])):
+                input_ids_batch[i].append(0)
+                attention_mask_batch[i].append(0)
+        
+        target_ids_batch = None
+        if targets_batch is not None:
+            targets_batch = list(targets_batch)
+            target_encoding = self.tokenizer.batch_encode_plus(
+                targets_batch,
+                max_length=self.answer_maxlength if self.answer_maxlength > 0 else None,
+                pad_to_max_length=True,
+                truncation=True if self.answer_maxlength > 0 else False,
+            )
+            target_ids_batch = target_encoding["input_ids"]
+        
+        return input_ids_batch, attention_mask_batch, target_ids_batch
+
+
 @register('torch_squad_transformers_preprocessor')
 class TorchSquadTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
