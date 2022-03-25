@@ -54,9 +54,6 @@ The download links are:
 ELMo
 ----
 
-License
-~~~~~~~
-
 Downloads
 ~~~~~~~~~
 
