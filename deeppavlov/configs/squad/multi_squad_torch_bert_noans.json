@@ -1,12 +1,14 @@
 {
   "dataset_reader": {
     "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
+    "dataset": "MultiSQuAD",
+    "data_path": "{DOWNLOADS_PATH}/multi_squad/"
   },
   "dataset_iterator": {
-    "class_name": "squad_iterator",
+    "class_name": "multi_squad_iterator",
     "seed": 1337,
-    "shuffle": true
+    "shuffle": true,
+    "with_answer_rate": 0.666
   },
   "chainer": {
     "in": [
@@ -75,6 +77,7 @@
           ],
           "eps": 1e-06
         },
+        "random_seed": 1,
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
         "in": [
@@ -118,9 +121,10 @@
     "evaluation_targets": [
       "valid"
     ],
-    "log_every_n_batches": 250,
+    "log_every_n_batches": 50,
     "val_every_n_batches": 500,
-    "batch_size": 10,
+    "batch_size": 20,
+    "valid_batch_size": 32,
     "pytest_max_batches": 2,
     "pytest_batch_size": 5,
     "validation_patience": 10,
@@ -163,11 +167,11 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/cased/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/multi_squad_torch_bert_noans/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert_cased.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/squad/multi_squad_torch_bert_noans.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

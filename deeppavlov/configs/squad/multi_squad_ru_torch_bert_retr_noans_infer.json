@@ -1,0 +1,32 @@
+{
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "in_y": ["ans_raw", "ans_raw_start"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_squad_infer",
+        "batch_size": 10,
+        "squad_model_config": "{CONFIGS_PATH}/squad/multi_squad_ru_torch_bert_retr_noans.json",
+        "vocab_file": "DeepPavlov/rubert-base-cased",
+        "do_lower_case": false,
+        "max_seq_length": 384,
+        "in": ["context_raw", "question_raw"],
+        "out": ["ans_predicted", "ans_start_predicted", "logits"]
+      }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/multi_squad_ru_torch_bert_retr_noans/{TRANSFORMER}",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+    ]
+  }
+}
+

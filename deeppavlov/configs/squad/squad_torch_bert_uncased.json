@@ -158,17 +158,17 @@
   },
   "metadata": {
     "variables": {
-      "LOWERCASE": false,
-      "TRANSFORMER": "bert-base-cased",
+      "LOWERCASE": true,
+      "TRANSFORMER": "bert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/cased/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert_cased.tar.gz",
-        "subdir": "{MODEL_PATH}"
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
+        "subdir": "{ROOT_PATH}/models"
       }
     ]
   }
