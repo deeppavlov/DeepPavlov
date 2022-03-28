@@ -54,6 +54,29 @@ The download links are:
 ELMo
 ----
 
+The ELMo can used via Python code as following:
+
+.. code:: python
+
+   import tensorflow as tf
+   import tensorflow_hub as hub
+   elmo = hub.Module("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz", trainable=True)
+   sess = tf.Session()
+   sess.run(tf.global_variables_initializer())
+   embeddings = elmo(["это предложение", "word"], signature="default", as_dict=True)["elmo"]
+   sess.run(embeddings)
+
+
+TensorFlow Hub module also supports tokenized sentences in the following format.
+
+.. code:: python
+
+   tokens_input = [["мама", "мыла", "раму"], ["рама", "", ""]]
+   tokens_length = [3, 1]
+   embeddings = elmo(inputs={"tokens": tokens_input,"sequence_len": tokens_length},signature="tokens",as_dict=True)["elmo"]
+   sess.run(embeddings)
+
+
 Downloads
 ~~~~~~~~~
 
