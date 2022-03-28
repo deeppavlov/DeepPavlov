@@ -281,10 +281,6 @@ R-Net model is based on `R-NET: Machine Reading Comprehension with Self-matching
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 | `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L_infer.json>`  |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-|    `DRCD`_     | :config:`DeepPavlov multilingual BERT <squad/squad_zh_bert_mult.json>`                      |  ch   |     84.86      |     89.03       |     630Mb       |
-+----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-|    `DRCD`_     | :config:`DeepPavlov Chinese BERT <squad/squad_zh_bert_zh.json>`                             |  ch   |     84.19      |     89.23       |     362Mb       |
-+----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
@@ -432,4 +428,3 @@ goal-oriented bot and a slot-filling model with Telegram UI.
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 .. _`SDSJ Task B`: https://arxiv.org/abs/1912.09723
-.. _`DRCD`: https://arxiv.org/abs/1806.00920

@@ -53,8 +53,8 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v3.pkl",
-        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v3.pkl",
+        "save_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v4.pkl",
+        "load_path": "{MODELS_PATH}/faq/tfidf_logreg_classifier_v4.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict",
         "C": {
@@ -94,7 +94,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v3.pkl",
+        "url": "http://files.deeppavlov.ai/faq/school/tfidf_logreg_classifier_v4.pkl",
         "subdir": "{MODELS_PATH}/faq"
       },
       {

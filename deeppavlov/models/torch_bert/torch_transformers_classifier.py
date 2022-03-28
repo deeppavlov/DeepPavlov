@@ -210,7 +210,8 @@ class TorchTransformersClassifierModel(TorchModel):
             else:
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
-                # TODO need a better solution here
+                # TODO need a better solution here and at
+                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
                 try:
                     hidden_size = self.model.classifier.out_proj.in_features
 
@@ -221,7 +222,7 @@ class TorchTransformersClassifierModel(TorchModel):
                         self.model.classifier.out_proj.out_features = self.n_classes
                         self.model.num_labels = self.n_classes
 
-                except torch.nn.modules.module.ModuleAttributeError:
+                except AttributeError:
                     hidden_size = self.model.classifier.in_features
 
                     if self.n_classes != self.model.num_labels:
