@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 pip install .[tests,docs]
 
 if [ $(python -c 'import sys; print(sys.version_info[1])') -le 7 ]
