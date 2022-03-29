@@ -1,5 +1,5 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
-![Python 3.6, 3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-green.svg)
+![Python 3.6, 3.7, 3.8, 3.9](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
 
@@ -69,7 +69,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 ## Installation
 
-0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
+0. We support `Linux` platform, `Python 3.6`, `3.7`, `3.8` and `3.9`
     * **`Python 3.5` is not supported!**
     * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
 

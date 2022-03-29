@@ -2,7 +2,7 @@ QuickStart
 ------------
 
 First, follow instructions on :doc:`Installation page </intro/installation>`
-to install ``deeppavlov`` package for Python 3.6/3.7.
+to install ``deeppavlov`` package for Python 3.6/3.7/3.8/3.9.
 
 DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
 determined by its config file. List of models is available on
