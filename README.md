@@ -303,10 +303,7 @@ into the `"class_name"` field.
 
 DeepPavlov is Apache 2.0 - licensed.
 
-## The Team
-
-DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://www.facebook.com/deepmipt/)
-at [MIPT](https://mipt.ru/english/).
+##
 
 <p align="center">
 <img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
