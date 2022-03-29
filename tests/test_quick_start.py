@@ -117,7 +117,6 @@ PARAMS = {
         ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
@@ -225,9 +224,6 @@ PARAMS = {
                 ("Чем питаются коалы?", ("Эвкалипт",)),
                 ("абв", ("Not Found",))
             ]
-    },
-    "elmo_embedder": {
-        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
     },
     "ranking": {
         ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
