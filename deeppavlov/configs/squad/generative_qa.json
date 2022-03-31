@@ -34,7 +34,7 @@
         "learning_rate_drop_div": 2.0,
         "in": ["input_ids", "attention_mask"],
         "in_y": ["target_ids"],
-        "out": ["answer"]
+        "out": ["answer", "ppl"]
       }
     ],
     "out": ["answer"]
@@ -52,6 +52,10 @@
     "validation_patience": 10,
     "metrics": [
       {
+        "name": "ppl",
+        "inputs": ["ppl"]
+      },
+      {
         "name": "squad_v1_f1",
         "inputs": ["target", "answer"]
       }
@@ -62,7 +66,7 @@
     "variables": {
       "LOWERCASE": false,
       "TRANSFORMER": "t5-base",
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/generative_qa/{TRANSFORMER}"

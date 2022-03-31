@@ -18,6 +18,7 @@ from logging import getLogger
 from types import FunctionType
 from typing import Union, Tuple, List, Optional, Hashable, Reversible
 
+import deeppavlov
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.nn_model import NNModel
@@ -224,6 +225,8 @@ class Chainer(Component):
 
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
+            if isinstance(component, deeppavlov.models.torch_bert.torch_generative_qa.TorchGenerativeQA):
+                x += [mem["target_ids"]]
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:

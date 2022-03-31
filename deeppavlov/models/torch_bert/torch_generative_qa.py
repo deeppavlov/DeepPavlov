@@ -108,7 +108,7 @@ class TorchGenerativeQA(TorchModel):
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
-    def __call__(self, input_ids_batch, attention_mask_batch):
+    def __call__(self, input_ids_batch, attention_mask_batch, target_ids_batch=None):
         input_ids_batch = torch.LongTensor(input_ids_batch).to(self.device)
         attention_mask_batch = torch.LongTensor(attention_mask_batch).to(self.device)
         
@@ -116,16 +116,22 @@ class TorchGenerativeQA(TorchModel):
             'input_ids': input_ids_batch,
             'attention_mask': attention_mask_batch,
         }
-
+        
+        ppl = 0.0
         with torch.no_grad():
             answer_ids_batch = self.model.generate(**input_)
-        
+            if target_ids_batch is not None:
+                target_ids_batch = torch.LongTensor(target_ids_batch).to(self.device)
+                loss = self.model(input_ids=input_ids_batch, attention_mask=attention_mask_batch,
+                                  labels=target_ids_batch).loss
+                ppl = torch.exp(loss)
+                ppl = [ppl.detach().cpu().numpy().tolist()]
         answers_batch = []
         for answer_ids in answer_ids_batch:
             answer = self.tokenizer.decode(answer_ids)
             answers_batch.append(answer)
 
-        return answers_batch
+        return answers_batch, ppl
 
     @overrides
     def load(self, fname=None):
