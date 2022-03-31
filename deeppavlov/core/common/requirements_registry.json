@@ -22,10 +22,6 @@
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "bert_sep_ranker": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
   "bert_sequence_network": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"

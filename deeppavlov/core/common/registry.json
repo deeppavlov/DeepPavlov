@@ -9,7 +9,6 @@
   "bert_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertPreprocessor",
   "bert_ranker": "deeppavlov.models.bert.bert_ranker:BertRankerModel",
   "bert_ranker_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertRankerPreprocessor",
-  "bert_sep_ranker": "deeppavlov.models.bert.bert_ranker:BertSepRankerModel",
   "bert_sequence_network": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceNetwork",
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
