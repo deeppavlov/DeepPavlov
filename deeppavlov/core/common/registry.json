@@ -173,7 +173,6 @@
   "torch_bert_ranker": "deeppavlov.models.torch_bert.torch_bert_ranker:TorchBertRankerModel",
   "torch_bert_ranker_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchBertRankerPreprocessor",
   "torch_transformers_sequence_tagger": "deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger",
-  "torch_transformers_squad_infer": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquadInfer",
   "torch_transformers_squad": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad",
   "torch_text_classification_model": "deeppavlov.models.classifiers.torch_classification_model:TorchTextClassificationModel",
   "torch_record_postprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchRecordPostprocessor",
