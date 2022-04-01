@@ -104,7 +104,8 @@ class TorchTransformersSquad(TorchModel):
                          min_learning_rate=min_learning_rate,
                          **kwargs)
 
-    def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
+    def train_on_batch(self, features: List[List[InputFeatures]],
+                       y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and labels from y_st and y_end
 
@@ -130,7 +131,7 @@ class TorchTransformersSquad(TorchModel):
         y_end = [x[0] for x in y_end]
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
-        
+
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,
@@ -169,7 +170,8 @@ class TorchTransformersSquad(TorchModel):
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
-    def __call__(self, features_batch: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
+    def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
+        List[int], List[int], List[float], List[float]]:
         """get predictions using features as input
 
         Args:
@@ -187,13 +189,14 @@ class TorchTransformersSquad(TorchModel):
                 input_masks.append(f.attention_mask)
                 input_type_ids.append(f.token_type_ids)
                 indices.append(n)
-        
+
         num_batches = len(indices) // self.batch_size + int(len(indices) % self.batch_size > 0)
         for i in range(num_batches):
-            b_input_ids = torch.cat(input_ids[i*self.batch_size:(i + 1)*self.batch_size], dim=0).to(self.device)
-            b_input_masks = torch.cat(input_masks[i*self.batch_size:(i + 1)*self.batch_size], dim=0).to(self.device)
-            b_input_type_ids = torch.cat(input_type_ids[i*self.batch_size:(i + 1)*self.batch_size], dim=0).to(self.device)
-            
+            b_input_ids = torch.cat(input_ids[i * self.batch_size:(i + 1) * self.batch_size], dim=0).to(self.device)
+            b_input_masks = torch.cat(input_masks[i * self.batch_size:(i + 1) * self.batch_size], dim=0).to(self.device)
+            b_input_type_ids = torch.cat(input_type_ids[i * self.batch_size:(i + 1) * self.batch_size],
+                                         dim=0).to(self.device)
+
             input_ = {
                 'input_ids': b_input_ids,
                 'attention_mask': b_input_masks,
@@ -202,7 +205,8 @@ class TorchTransformersSquad(TorchModel):
             }
 
             with torch.no_grad():
-                input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
+                input_ = {arg_name: arg_value for arg_name, arg_value in input_.items()
+                          if arg_name in self.accepted_keys}
                 # Forward pass, calculate logit predictions
                 outputs = self.model(**input_)
 
@@ -243,7 +247,7 @@ class TorchTransformersSquad(TorchModel):
             end_pred = end_pred.detach().cpu().numpy()
             logits = logits.detach().cpu().numpy().tolist()
             scores = scores.detach().cpu().numpy().tolist()
-            
+
             for j, (start_pred_elem, end_pred_elem, logits_elem, scores_elem) in \
                     enumerate(zip(start_pred, end_pred, logits, scores)):
                 ind = indices[i * self.batch_size + j]
@@ -251,7 +255,7 @@ class TorchTransformersSquad(TorchModel):
                     predictions[ind] += [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
                 else:
                     predictions[ind] = [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
-        
+
         start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch = [], [], [], [], []
         for ind in sorted(predictions.keys()):
             prediction = predictions[ind]

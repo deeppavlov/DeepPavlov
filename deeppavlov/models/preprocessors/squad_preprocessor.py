@@ -118,7 +118,7 @@ class SquadBertAnsPostprocessor(Component):
         pass
 
     def __call__(self, answers_start_batch, answers_end_batch, contexts_batch,
-                       subtok2chars_batch, subtokens_batch, ind_batch, *args, **kwargs):
+                 subtok2chars_batch, subtokens_batch, ind_batch, *args, **kwargs):
         answers = []
         starts = []
         ends = []
@@ -136,7 +136,7 @@ class SquadBertAnsPostprocessor(Component):
             else:
                 st = self.get_char_position(sub2c, answer_st)
                 end = self.get_char_position(sub2c, answer_end)
-                
+
                 subtok = subtok[2:] if subtok.startswith('##') else subtok
                 answer = context[st:end + len(subtok)]
                 answers += [answer]

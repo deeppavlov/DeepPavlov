@@ -31,7 +31,7 @@
       {
         "class_name": "logit_ranker",
         "batch_size": 64,
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_noans_infer.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/multi_squad_bert_noans.json"},
         "sort_noans": true,
         "in": ["chunks", "questions"],
         "out": ["answer", "answer_score", "answer_place"]

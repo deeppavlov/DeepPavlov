@@ -44,7 +44,7 @@
       {
         "class_name": "logit_ranker",
         "batch_size": 10000,
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad_ru_rubert_infer.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/squad_ru_bert.json"},
         "sort_noans": true,
         "in": [
           "chunks",

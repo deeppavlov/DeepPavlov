@@ -227,9 +227,10 @@ class TorchSquadTransformersPreprocessor(Component):
         else:
             raise RuntimeError('en and ru languages are supported only')
 
-    def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[List[InputFeatures],
-                                                                                         Tuple[List[InputFeatures],
-                                                                                               List[List[str]]]]:
+    def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[
+        List[InputFeatures],
+        Tuple[List[InputFeatures],
+              List[List[str]]]]:
         """Tokenize and create masks.
 
         texts_a_batch and texts_b_batch are separated by [SEP] token
@@ -240,7 +241,8 @@ class TorchSquadTransformersPreprocessor(Component):
 
         Returns:
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
-                subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
+                subtoken mask, segment mask, or tuple of batch of InputFeatures, batch of subtokens and batch of
+                split paragraphs
         """
 
         if context_batch is None:
@@ -261,7 +263,7 @@ class TorchSquadTransformersPreprocessor(Component):
             else:
                 context_list += [context]
                 question_list += [question]
-            
+
             input_features_list, tokens_list = [], []
             for question_elem, context_elem in zip(question_list, context_list):
                 encoded_dict = self.tokenizer.encode_plus(
@@ -291,7 +293,7 @@ class TorchSquadTransformersPreprocessor(Component):
                 input_features_list.append(curr_features)
                 if self.return_tokens:
                     tokens_list.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
-            
+
             input_features_batch.append(input_features_list)
             tokens_batch.append(tokens_list)
             split_context_batch.append(context_list)
