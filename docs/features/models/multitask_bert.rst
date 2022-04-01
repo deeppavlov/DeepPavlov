@@ -25,7 +25,6 @@ insults, analyzes sentiment, and recognises named entities. Multi-task BERT conf
 :config:`mt_bert_train_tutorial.json <tutorials/mt_bert/mt_bert_train_tutorial.json>` and for inference
 :config:`mt_bert_inference_tutorial.json <tutorials/mt_bert/mt_bert_inference_tutorial.json>` are based on configs
 :config:`insults_kaggle_bert.json <classifiers/insults_kaggle_bert.json>`,
-:config:`sentiment_sst_multi_bert.json <classifiers/sentiment_sst_multi_bert.json>`,
 :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`.
 
 We start with the ``metadata`` field of the configuration file. Multi-task BERT model is saved in
