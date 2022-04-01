@@ -44,8 +44,3 @@ deeppavlov.models.bert
 
     .. automethod:: __call__
     .. automethod:: train_on_batch
-
-.. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerModel
-
-    .. automethod:: __call__
-    .. automethod:: train_on_batch
