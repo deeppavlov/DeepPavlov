@@ -2,7 +2,7 @@ QuickStart
 ------------
 
 First, follow instructions on :doc:`Installation page </intro/installation>`
-to install ``deeppavlov`` package for Python 3.6/3.7.
+to install ``deeppavlov`` package for Python 3.6/3.7/3.8/3.9.
 
 DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
 determined by its config file. List of models is available on
@@ -253,21 +253,6 @@ related to.
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
     | En       | :config:`insults_kaggle_bert <classifiers/insults_kaggle_bert.json>`                           | https://demo.deeppavlov.ai/#/en/insult    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-
-
-Sentiment Analysis
-==================
-
-Classify text according to a prevailing emotion (positive, negative, etc.) in it.
-
-.. table::
-    :widths: auto
-
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Ru       | :config:`rusentiment_elmo_twitter_cnn <classifiers/rusentiment_elmo_twitter_cnn.json>`         | https://demo.deeppavlov.ai/#/ru/sentiment |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
 
 

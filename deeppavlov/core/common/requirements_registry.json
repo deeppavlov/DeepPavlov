@@ -66,10 +66,6 @@
   "dstc_slotfilling": [
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
   ],
-  "elmo_embedder": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
-  ],
   "fasttext": [
     "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
   ],
@@ -87,9 +83,6 @@
   "input_splitter": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "jieba_tokenizer": [
-    "{DEEPPAVLOV_PATH}/requirements/jieba.txt"
   ],
   "joint_tagger_parser": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -203,7 +196,7 @@
   ],
   "torch_bert_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -226,7 +219,7 @@
   ],
   "torch_bert_ranker_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers28.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "transformers_bert_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"

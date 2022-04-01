@@ -61,9 +61,7 @@ Several pre-trained models are available and presented in Table below.
 +------------------+---------------------+------+----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
 | Sentiment        | `Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`                  |             | 0.9965           | 0.9961          |  6.2 Gb   |
 +                  +---------------------+      +----------------------------------------------------------------------------------------------------+-------------+------------------+-----------------+-----------+
-|                  | `RuSentiment`_      |      | :config:`ELMo <classifiers/rusentiment_elmo_twitter_cnn.json>`                                     | F1-weighted | 0.7519           | 0.7875          |  700 Mb   |
-+                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
-|                  |                     |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                                  |             | 0.6809           | 0.7193          |  1900 Mb  |
+|                  | `RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                                  | F1-weighted | 0.6809           | 0.7193          |  1900 Mb  |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
 |                  |                     |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                        |             | 0.7548           | 0.7742          |  657 Mb   |
 +                  +                     +      +----------------------------------------------------------------------------------------------------+             +------------------+-----------------+-----------+
@@ -283,10 +281,6 @@ R-Net model is based on `R-NET: Machine Reading Comprehension with Self-matching
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 | `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L_infer.json>`  |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
 +----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-|    `DRCD`_     | :config:`DeepPavlov multilingual BERT <squad/squad_zh_bert_mult.json>`                      |  ch   |     84.86      |     89.03       |     630Mb       |
-+----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-|    `DRCD`_     | :config:`DeepPavlov Chinese BERT <squad/squad_zh_bert_zh.json>`                             |  ch   |     84.19      |     89.23       |     362Mb       |
-+----------------+---------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
@@ -434,4 +428,3 @@ goal-oriented bot and a slot-filling model with Telegram UI.
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 .. _`SDSJ Task B`: https://arxiv.org/abs/1912.09723
-.. _`DRCD`: https://arxiv.org/abs/1806.00920

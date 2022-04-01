@@ -24,6 +24,7 @@ from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -36,6 +37,8 @@ download_path = tests_dir / "download"
 cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
+
+SKIP_TF = os.getenv('SKIP_TF', False)
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
 if api_port is not None:
@@ -114,7 +117,6 @@ PARAMS = {
         ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
@@ -223,9 +225,6 @@ PARAMS = {
                 ("абв", ("Not Found",))
             ]
     },
-    "elmo_embedder": {
-        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    },
     "ranking": {
         ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
@@ -254,8 +253,6 @@ PARAMS = {
         ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
@@ -297,6 +294,16 @@ def _override_with_test_values(item: Union[dict, list]) -> None:
     for child in item:
         if isinstance(child, (dict, list)):
             _override_with_test_values(child)
+
+
+def skip_tf_config(config_path):
+    src_file = src_dir / config_path
+    if not src_file.is_file():
+        src_file = test_src_dir / config_path
+    requirements = {Path(req).name for req in get_config_requirements(src_file)}
+    config_uses_tf = bool(requirements & {'tf.txt', 'tf-gpu.txt', 'tf-hub.txt'})
+    if config_uses_tf and SKIP_TF:
+        pytest.skip("Skipping test as config requires tensorflow")
 
 
 def download_config(config_path):
@@ -519,6 +526,7 @@ class TestQuickStart(object):
             p.wait()
 
     def test_inferring_pretrained_model(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             install_config(config_file_path)
@@ -529,12 +537,14 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_api(test_configs_path / conf_file)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
@@ -544,6 +554,7 @@ class TestQuickStart(object):
             pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'SR' not in mode:
             return pytest.skip("Unsupported mode: {}".format(mode))
 
@@ -567,6 +578,7 @@ class TestQuickStart(object):
             raise exc
 
     def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'TI' in mode:
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
