@@ -34,7 +34,7 @@ Here is the list of all available configs:
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
     | Model                                                                  | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
     +========================================================================+====================+==========+=================+============+============+
-    | :config:`ner_rus_bert_torch <ner/ner_rus_bert_torch.json>`             | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.7**   |
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.7**   |
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_collection3_m1 <ner/ner_collection3_m1.json>`             |                    |          | 1.1 GB          |    1 GB    |   97.8     |
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
@@ -43,8 +43,6 @@ Here is the list of all available configs:
     | :config:`<ner/ner_ontonotes_bert_mult_torch.json>`                     | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **87.2**   |
     +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
     | :config:`ner_ontonotes_bert_torch <ner/ner_ontonotes_bert_torch.json>` |                    | En       | 400 MB          |   1.3 GB   |   87.9     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_ontonotes_m1 <ner/ner_ontonotes_m1.json>`                 |                    |          | 347 MB          |  379.4 MB  |   87.7     |
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                       |                    |          | 331 MB          |   7.8 MB   |   86.7     |
     +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
@@ -55,10 +53,6 @@ Here is the list of all available configs:
     | :config:`ner_conll2003 <ner/ner_conll2003.json>`                       |                    |          | 331 MB          |   3.1 MB   |   89.9     |
     +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
     | :config:`conll2003_m1 <ner/conll2003_m1.json>`                         |                    |          | 339 MB          |  359.7 MB  | **91.9**   |
-    +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_dstc2 <ner/ner_dstc2.json>`                               | DSTC2              |          | ---             |   626 KB   |   97.1     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`vlsp2016_full <ner/vlsp2016_full.json>`                       | VLSP-2016          | Vi       | 520 MB          |   37.2 MB  |   93.4     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
@@ -263,81 +257,6 @@ descent. The validation set is used for monitoring learning progress and
 early stopping. The test set is used for final evaluation of model
 quality. Typical partition of a dataset into train, validation, and test
 are 80%, 10%, 10%, respectively.
-
-
-
-Few-shot Language-Model based
------------------------------
-
-It is possible to get a cold-start baseline from just a few samples of labeled data in a couple of seconds. The solution
-is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
-possible to start from as few as 10 sentences containing entities of interest.
-
-The data for training this model should be collected in the following way. Given a collection of `N` sentences without
-markup, sequentially markup sentences until the total number of sentences with entity of interest become equal
-`K`. During the training both sentences with and without markup are used.
-
-
-Mean chunk-wise F1 scores for Russian language on 10 sentences with entities :
-
-+---------+-------+
-|PER      | 84.85 |
-+---------+-------+
-|LOC      | 68.41 |
-+---------+-------+
-|ORG      | 32.63 |
-+---------+-------+
-
-(the total number of training sentences is bigger and defined by the distribution of sentences with / without entities).
-
-The model can be trained using CLI:
-
-.. code:: bash
-
-    python -m deeppavlov train ner_few_shot_ru
-
-you have to provide the `train.txt`, `valid.txt`, and `test.txt` files in the format described in the `Training data`_
-section. The files must be in the `ner_few_shot_data` folder as described in the `dataset_reader` part of the config
-:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru.json>` .
-
-To train and use the model from python code the following snippet can be used:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    ner_model = train_model(configs.ner.ner_few_shot_ru, download=True)
-
-    ner_model(['Example sentence'])
-
-Warning! This model can take a lot of time and memory if the number of sentences is greater than 1000!
-
-If a lot of data is available the few-shot setting can be simulated with special `dataset_iterator`. For this purpose
-the config
-:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru_simulate.json>` . The following code can be used for this
-simulation:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    ner_model = train_model(configs.ner.ner_few_shot_ru_simulate, download=True)
-
-In this config the `Collection dataset <http://labinform.ru/pub/named_entities/descr_ne.htm>`__ is used. However, if
-there are files `train.txt`, `valid.txt`, and `test.txt` in the `ner_few_shot_data` folder they will be used instead.
-
-
-To use existing few-shot model use the following python interface can be used:
-
-.. code:: python
-
-    from deeppavlov import configs, build_model
-
-    ner_model = build_model(configs.ner.ner_few_shot_ru)
-
-    ner_model([['Example', 'sentence']])
-    ner_model(['Example sentence'])
-
 
 
 NER-based Model for Sentence Boundary Detection Task
