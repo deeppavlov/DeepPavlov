@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import re
-import json
-import math
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
@@ -25,7 +23,6 @@ from overrides import overrides
 from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
-from deeppavlov import build_model
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -171,7 +168,7 @@ class TorchTransformersSquad(TorchModel):
         return isinstance(self.model, torch.nn.DataParallel)
 
     def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
-        List[int], List[int], List[float], List[float]]:
+            List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
         """get predictions using features as input
 
         Args:
@@ -196,7 +193,6 @@ class TorchTransformersSquad(TorchModel):
             b_input_masks = torch.cat(input_masks[i * self.batch_size:(i + 1) * self.batch_size], dim=0).to(self.device)
             b_input_type_ids = torch.cat(input_type_ids[i * self.batch_size:(i + 1) * self.batch_size],
                                          dim=0).to(self.device)
-
             input_ = {
                 'input_ids': b_input_ids,
                 'attention_mask': b_input_masks,
