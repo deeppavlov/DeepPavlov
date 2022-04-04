@@ -20,7 +20,7 @@ from typing import List, Tuple, Optional, Dict
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoTokenizer
+from transformers import AutoModelForQuestionAnswering, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.common.errors import ConfigError
