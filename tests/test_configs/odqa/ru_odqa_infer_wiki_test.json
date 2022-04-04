@@ -52,7 +52,7 @@
       {
         "class_name": "logit_ranker",
         "squad_model": {
-          "config_path": "{CONFIGS_PATH}/squad/squad_ru.json"
+          "config_path": "{CONFIGS_PATH}/squad/squad_ru_bert.json"
         },
         "in": [
           "chunks",
