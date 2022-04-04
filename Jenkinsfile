@@ -16,8 +16,9 @@ node('cuda-module') {
             stage('Tests') {
                 sh """
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG up py36 py37
+                    docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG ps | grep Exit | grep -v 'Exit 0' && exit 1
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG up py38 py39
-                    docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG rm -f
+                    docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG ps | grep Exit | grep -v 'Exit 0' && exit 1
                 """
                 currentBuild.result = 'SUCCESS'
             }
@@ -27,6 +28,7 @@ node('cuda-module') {
             throw e
         }
         finally {
+            sh "docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG rm -f"
             emailext to: "\${DEFAULT_RECIPIENTS}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
