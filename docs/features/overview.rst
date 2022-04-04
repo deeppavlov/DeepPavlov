@@ -145,46 +145,6 @@ on Automatic Spelling Correction for Russian:
 Ranking model :doc:`[docs] </features/models/neural_ranking>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The main neural ranking model based on `LSTM-based deep learning models for non-factoid answer selection
-<https://arxiv.org/abs/1511.04108>`__. The model performs ranking of responses or contexts from some database by their
-relevance for the given context.
-
-There are 3 alternative neural architectures available as well:
-
-Sequential Matching Network (SMN)
-   Based on the work `Wu, Yu, et al. "Sequential Matching Network: A New Architecture for Multi-turn Response Selection in Retrieval-based Chatbots". ACL. 2017. <https://arxiv.org/abs/1612.01627>`__
-
-Deep Attention Matching Network (DAM)
-   Based on the work `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
-
-Deep Attention Matching Network + Universal Sentence Encoder v3 (DAM-USE-T)
-   Our new proposed architecture based on the works: `Xiangyang Zhou, et al. "Multi-Turn Response Selection for Chatbots with Deep Attention Matching Network". Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers). 2018 <http://aclweb.org/anthology/P18-1103>`__
-   and `Daniel Cer, Yinfei Yang, Sheng-yi Kong, Nan Hua, Nicole Limtiaco, Rhomni St. John, Noah Constant, Mario Guajardo-Cespedes, Steve Yuan, Chris Tar, Brian Strope, Ray Kurzweil. 2018a. Universal Sentence Encoder for English. <https://arxiv.org/abs/1803.11175>`__
-
-
-Available pre-trained models for ranking:
-
-.. table::
-   :widths: auto
-
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-----------------------------------+
-   |    Dataset        |   Model config                                                                                                       |    Val    |   Test                            |
-   |                   |                                                                                                                      +-----------+-------+-------+-------+-----------+
-   |                   |                                                                                                                      |   R10@1   | R10@1 | R10@2 | R10@5 | Downloads |
-   +===================+======================================================================================================================+===========+=======+=======+=======+===========+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>` |   74.32   | 74.46 | 86.77 | 97.38 |  2457 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_mt_word2vec_smn <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`                         |   68.56   | 67.91 | 81.49 | 95.63 |  1609 MB  |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_bert_uncased <ranking/ranking_ubuntu_v2_bert_uncased.json>`                               |   66.5    | 66.6  | --    | --    |  396 MB   |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_bert_uncased on PyTorch <ranking/ranking_ubuntu_v2_torch_bert_uncased.json>`              |   65.73   | 65.74 | --    | --    |  1.1 Gb   |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-   | `Ubuntu V2`_      | :config:`ranking_ubuntu_v2_bert_sep <ranking/ranking_ubuntu_v2_bert_sep.json>`                                       |   66.5    | 66.5  | --    | --    |  396 MB   |
-   +-------------------+----------------------------------------------------------------------------------------------------------------------+-----------+-------+-------+-------+-----------+
-
-.. _`Ubuntu V2`: https://github.com/rkadlec/ubuntu-ranking-dataset-creator
-
 Available pre-trained models for paraphrase identification:
 
 .. table::
@@ -203,27 +163,6 @@ Available pre-trained models for paraphrase identification:
    +------------------------+------------------------------------------------------------------------------------------------------+----------------+-----------------+------------+------------+----------------+-----------------+-----------+
 
 .. _`paraphraser.ru`: https://paraphraser.ru/
-
-
-Comparison with other models on the `Ubuntu Dialogue Corpus v2 <http://www.cs.toronto.edu/~lcharlin/papers/ubuntu_dialogue_dd17.pdf>`__ (test):
-
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| Model                                                                                                                                       | R@1       | R@2       | R@5       |
-+=============================================================================================================================================+===========+===========+===========+
-| SMN last [`Wu et al., 2017 <https://www.aclweb.org/anthology/P17-1046>`_]                                                                   | --        | --        | --        |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| SMN last [DeepPavlov :config:`ranking_ubuntu_v2_mt_word2vec_smn <ranking/ranking_ubuntu_v2_mt_word2vec_smn.json>`]                          | 0.6791    | 0.8149    | 0.9563    |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| DAM [`Zhou et al., 2018 <http://aclweb.org/anthology/P18-1103>`_]                                                                           | --        | --        | --        |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| MRFN-FLS [`Tao et al., 2019 <https://dl.acm.org/citation.cfm?id=3290985>`_]                                                                 | --        | --        | --        |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| IMN [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                                 | 0.771     | 0.886     | 0.979     |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| IMN Ensemble [`Gu et al., 2019 <https://arxiv.org/abs/1901.01824>`_]                                                                        | **0.791** | **0.899** | **0.982** |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
-| DAM-USE-T [DeepPavlov :config:`ranking_ubuntu_v2_mt_word2vec_dam_transformer <ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json>`] | 0.7446    | 0.8677    | 0.9738    |
-+---------------------------------------------------------------------------------------------------------------------------------------------+-----------+-----------+-----------+
 
 
 References:

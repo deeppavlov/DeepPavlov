@@ -25,8 +25,6 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.sanitizer.Sanitizer
 
-.. autoclass:: deeppavlov.models.preprocessors.siamese_preprocessor.SiamesePreprocessor
-
 .. autofunction:: deeppavlov.models.preprocessors.str_lower.str_lower
 
 .. autoclass:: deeppavlov.models.preprocessors.str_token_reverser.StrTokenReverser

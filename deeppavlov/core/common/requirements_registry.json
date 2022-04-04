@@ -14,14 +14,6 @@
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "bert_ranker": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "bert_ranker_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "bert_sequence_network": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -36,10 +28,6 @@
   ],
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
-  ],
-  "dam_nn_use_transformer": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt"
   ],
   "dependency_output_prettifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -113,8 +101,6 @@
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "rel_ranking_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "squad_bert_infer": [
