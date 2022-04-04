@@ -117,7 +117,8 @@
     "out": [
       "ans_predicted",
       "ans_start_predicted",
-      "logits"
+      "logits",
+      "scores"
     ]
   },
   "train": {

@@ -116,7 +116,8 @@
     "out": [
       "ans_predicted",
       "ans_start_predicted",
-      "logits"
+      "logits",
+      "scores"
     ]
   },
   "train": {
@@ -164,7 +165,7 @@
     "variables": {
       "LOWERCASE": false,
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_ru_torch_bert/{TRANSFORMER}"
