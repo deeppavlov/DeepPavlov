@@ -27,20 +27,22 @@
         "do_lower_case": "{lowercase}",
         "max_seq_length": 384,
         "return_tokens": true,
+        "lang": "ru",
         "in": [
           "question_raw",
           "context_raw"
         ],
         "out": [
           "bert_features",
-          "subtokens"
+          "subtokens",
+          "split_context"
         ]
       },
       {
         "class_name": "squad_bert_mapping",
         "do_lower_case": "{lowercase}",
         "in": [
-          "context_raw",
+          "split_context",
           "bert_features",
           "subtokens"
         ],
@@ -86,7 +88,9 @@
         "out": [
           "ans_start_predicted",
           "ans_end_predicted",
-          "logits"
+          "logits",
+          "scores",
+          "inds"
         ]
       },
       {
@@ -94,10 +98,10 @@
         "in": [
           "ans_start_predicted",
           "ans_end_predicted",
-          "context_raw",
-          "bert_features",
+          "split_context",
           "subtok2chars",
-          "subtokens"
+          "subtokens",
+          "inds"
         ],
         "out": [
           "ans_predicted",
