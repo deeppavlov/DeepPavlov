@@ -31,7 +31,7 @@ Before using the model make sure that all required packages are installed runnin
 
     python -m deeppavlov install paraphraser_bert
 
-To train the model on the `paraphraser.ru`_ dataset one can use the following code in python:
+To train the model on the `paraphraser.ru`_ dataset one can use the following code in Python:
 
 .. code:: python
 
