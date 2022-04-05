@@ -52,7 +52,7 @@ English cased version of BERT-base as initialization for English Conversational 
 Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [8]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
 
-Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [13]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
+Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [3]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
 
 1. Masked language modeling loss (between student output logits for tokens and its true labels)
 2. Kullback-Leibler divergence (between student and teacher output logits)
@@ -176,6 +176,7 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] Arkhipov M., Trofimova M., Kuratov Y., Sorokin A. (2019). `Tuning Multilingual Transformers for Language-Specific Named Entity Recognition <https://www.aclweb.org/anthology/W19-3712/>`__ . ACL anthology W19-3712.
+.. [3] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.
 .. [4] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
 .. [5] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
 .. [6] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
@@ -185,4 +186,3 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [10] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
 .. [11] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
 .. [12] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
-.. [13] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.
