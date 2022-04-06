@@ -47,19 +47,7 @@ Pretrained BERT can be used for Question Answering on SQuAD dataset just by appl
 BERT outputs for each subtoken. First/second linear transformation is used for prediction of probability that current
 subtoken is start/end position of an answer.
 
-BERT for SQuAD model documentation on TensorFlow :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel`
-and on PyTorch :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
-
-R-Net
-~~~~~
-
-Question Answering Model is based on R-Net, proposed by Microsoft
-Research Asia (`"R-NET: Machine Reading Comprehension with Self-matching
-Networks" <https://www.microsoft.com/en-us/research/publication/mcr/>`__)
-and its `implementation <https://github.com/HKUST-KnowComp/R-Net>`__ by
-Wenxuan Zhou.
-
-R-Net for SQuAD model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
+BERT for SQuAD model documentation on PyTorch :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
 
 Configuration
 -------------
@@ -69,22 +57,15 @@ Default configs could be found in :config:`deeppavlov/configs/squad/ <squad/>` f
 Prerequisites
 -------------
 
-Before using the model make sure that all required packages are installed running the command for TensorFlow:
+Before using the model make sure that all required packages are installed running the command:
 
 .. code:: bash
 
     python -m deeppavlov install squad_bert
 
-and for PyTorch
-
-.. code:: bash
-
-    python -m deeppavlov install squad_torch_bert
-
 
 By running this command we will install requirements for
 :config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>` or for
-:config:`deeppavlov/configs/squad/squad_torch_bert.json <squad/squad_torch_bert.json>`
 
 Model usage from Python
 -----------------------
@@ -147,11 +128,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 +---------------------------------------------------------+----------------+-----------------+
 | Model (single model)                                    |    EM (dev)    |    F-1 (dev)    |
 +=========================================================+================+=================+
-| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
-+---------------------------------------------------------+----------------+-----------------+
-| :config:`BERT on PyTorch <squad/squad_torch_bert.json>` |     78.8       |     86.7        |
-+---------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov R-Net <squad/squad.json>`           |     71.49      |     80.34       |
+| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     81.49      |     88.86       |
 +---------------------------------------------------------+----------------+-----------------+
 | `BiDAF + Self Attention + ELMo`_                        |       --       |     85.6        |
 +---------------------------------------------------------+----------------+-----------------+

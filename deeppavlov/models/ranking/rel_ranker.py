@@ -9,7 +9,7 @@ from deeppavlov.core.layers.tf_layers import variational_dropout
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.tf_model import LRScheduledTFModel
 from deeppavlov.models.embedders.abstract_embedder import Embedder
-from deeppavlov.models.squad.utils import CudnnGRU, CudnnCompatibleGRU, softmax_mask
+from deeppavlov.core.models.gru import CudnnGRU, CudnnCompatibleGRU, softmax_mask
 
 
 @register('two_sentences_emb')
