@@ -39,6 +39,8 @@
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
         "return_probas": false,
+        "use_crf_train": true,
+        "use_crf_infer": true,
         "encoder_layer_ids": [-1],
         "optimizer": "AdamW",
         "optimizer_parameters": {
@@ -68,7 +70,7 @@
   },
   "train": {
     "epochs": 30,
-    "batch_size": 10,
+    "batch_size": 60,
     "metrics": [
       {
         "name": "ner_f1",
@@ -94,12 +96,12 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch_crf"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_torch.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_torch_crf.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }

@@ -59,6 +59,8 @@
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
         "return_probas": false,
+        "use_crf_train": true,
+        "use_crf_infer": true,
         "encoder_layer_ids": [
           -1
         ],
@@ -143,12 +145,12 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert_crf"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/0.16/ner/ner_conll2003_torch_bert.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_bert_torch_crf.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }

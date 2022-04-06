@@ -25,6 +25,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.models.torch_bert.crf import CRF
 
 log = getLogger(__name__)
 
@@ -230,6 +231,8 @@ class TorchTransformersSequenceTagger(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-07,
+                 use_crf_train: bool = False,
+                 use_crf_infer: bool = False,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
@@ -240,6 +243,8 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.use_crf_train = use_crf_train
+        self.use_crf_infer = use_crf_infer
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -281,6 +286,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
         loss.backward()
+        self.crf(y, y_masks)
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
@@ -321,8 +327,12 @@ class TorchTransformersSequenceTagger(TorchModel):
             pred = torch.nn.functional.softmax(logits, dim=-1)
             pred = pred.detach().cpu().numpy()
         else:
-            logits = logits.detach().cpu().numpy()
-            pred = np.argmax(logits, axis=-1)
+            if self.use_crf_infer:
+                logits = logits.transpose(1, 0).to(self.device)
+                pred = self.crf.decode(logits)
+            else:
+                logits = logits.detach().cpu().numpy()
+                pred = np.argmax(logits, axis=-1)
             seq_lengths = np.sum(y_masks, axis=1)
             pred = [p[:l] for l, p in zip(seq_lengths, pred)]
 
@@ -349,6 +359,8 @@ class TorchTransformersSequenceTagger(TorchModel):
             raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
+        if self.use_crf_train or self.use_crf_infer:
+            self.crf = CRF(self.n_classes).to(self.device)
 
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
@@ -361,7 +373,7 @@ class TorchTransformersSequenceTagger(TorchModel):
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
                 raise ConfigError("Provided load path is incorrect!")
 
-            weights_path = Path(self.load_path.resolve())
+            weights_path = Path(self.load_path).resolve()
             weights_path = weights_path.with_suffix(f".pth.tar")
             if weights_path.exists():
                 log.info(f"Load path {weights_path} exists.")
@@ -375,3 +387,32 @@ class TorchTransformersSequenceTagger(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+            if self.use_crf_train or self.use_crf_infer:
+                weights_path_crf = Path(f"{self.load_path}_crf").resolve()
+                weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
+                if weights_path_crf.exists():
+                    checkpoint = torch.load(weights_path_crf, map_location=self.device)
+                    self.crf.load_state_dict(checkpoint["model_state_dict"])
+
+    @overrides
+    def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
+        if fname is None:
+            fname = self.save_path
+
+        if not fname.parent.is_dir():
+            raise ConfigError("Provided save path is incorrect!")
+
+        weights_path = Path(fname).with_suffix(f".pth.tar")
+        log.info(f"Saving model to {weights_path}.")
+        # move the model to `cpu` before saving to provide consistency
+        torch.save({
+            "model_state_dict": self.model.cpu().state_dict(),
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "epochs_done": self.epochs_done
+        }, weights_path)
+        # return it back to device (necessary if it was on `cuda`)
+        self.model.to(self.device)
+        if self.use_crf_train or self.use_crf_infer:
+            weights_path_crf = Path(fname).with_suffix(f"_crf.pth.tar")
+            torch.save({"model_state_dict": self.crf.cpu().state_dict()}, weights_path_crf)
+            self.crf.to(self.device)
