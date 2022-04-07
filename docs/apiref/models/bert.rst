@@ -12,18 +12,6 @@ deeppavlov.models.bert
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor
-
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor
-
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor
-
-    .. automethod:: __call__
-
 .. autoclass:: deeppavlov.models.bert.bert_classifier.BertClassifierModel
 
     .. automethod:: __call__
