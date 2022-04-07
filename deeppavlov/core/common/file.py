@@ -21,16 +21,33 @@ from typing import Union, Any
 
 from ruamel.yaml import YAML
 
+from deeppavlov.core.common.aliases import ALIASES
+
 log = getLogger(__name__)
+
+_red_text, _reset_text_color, _sharp_line = "\x1b[31;20m", "\x1b[0m", '#'*80
+DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
+                  "# The model '{0}' has been removed from the DeepPavlov configs.\n" \
+                  "# The model '{1}' is starting instead.\n" \
+                  "# To disable this message please switch to '{1}'.\n" \
+                  "# Automatic name resolving will be disabled in the next release,\n" \
+                  "# and if you try to use '{0}' you will get an ERROR.\n" \
+                  f"{_sharp_line}{_reset_text_color}\n"
 
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
+    if pipeline_config_path in ALIASES:
+        new_pipeline_config_path = ALIASES[pipeline_config_path]
+        log.warning(DEPRECATOIN_MSG.format(pipeline_config_path, new_pipeline_config_path))
+        pipeline_config_path = new_pipeline_config_path
+
     if not Path(pipeline_config_path).is_file():
         configs = [c for c in Path(__file__).parent.parent.parent.glob(f'configs/**/{pipeline_config_path}.json')
                    if str(c.with_suffix('')).endswith(pipeline_config_path)]  # a simple way to not allow * and ?
         if configs:
-            log.info(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
+            log.debug(f"Interpreting '{pipeline_config_path}' as '{configs[0]}'")
             pipeline_config_path = configs[0]
+
     return Path(pipeline_config_path)
 
 
