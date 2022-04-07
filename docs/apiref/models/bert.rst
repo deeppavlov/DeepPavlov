@@ -26,17 +26,3 @@ deeppavlov.models.bert
 .. autoclass:: deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger
 
     .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.bert.bert_ranker.BertRankerModel
-
-    .. automethod:: __call__
-    .. automethod:: train_on_batch
-
-.. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerModel
-
-    .. automethod:: __call__
-    .. automethod:: train_on_batch
-
-.. autoclass:: deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor
-
-    .. automethod:: __call__
