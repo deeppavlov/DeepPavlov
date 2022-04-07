@@ -1,9 +1,11 @@
 {
   "dataset_reader": {
     "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/total_rus/",
-    "dataset_name": "collection_rus",
-    "provide_pos": false
+    "data_path": "{DOWNLOADS_PATH}/collection3/",
+    "dataset_name": "collection3",
+    "provide_pos": false,
+    "provide_chunk": false,
+    "iobes": true
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
@@ -143,11 +145,11 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_rus_bert_torch"
+      "MODEL_PATH": "{MODELS_PATH}/ner_rus_bert_coll3_torch"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_bert_torch_new.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_bert_coll3_torch.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
