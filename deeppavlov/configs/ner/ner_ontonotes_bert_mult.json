@@ -39,8 +39,7 @@
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
         "return_probas": false,
-        "use_crf_train": true,
-        "use_crf_infer": true,
+        "use_crf": true,
         "encoder_layer_ids": [-1],
         "optimizer": "AdamW",
         "optimizer_parameters": {

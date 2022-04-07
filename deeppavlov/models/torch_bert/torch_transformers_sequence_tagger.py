@@ -231,8 +231,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-07,
-                 use_crf_train: bool = False,
-                 use_crf_infer: bool = False,
+                 use_crf: bool = False,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
@@ -243,8 +242,7 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
-        self.use_crf_train = use_crf_train
-        self.use_crf_infer = use_crf_infer
+        self.use_crf = use_crf
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -327,7 +325,7 @@ class TorchTransformersSequenceTagger(TorchModel):
             pred = torch.nn.functional.softmax(logits, dim=-1)
             pred = pred.detach().cpu().numpy()
         else:
-            if self.use_crf_infer:
+            if self.use_crf:
                 logits = logits.transpose(1, 0).to(self.device)
                 pred = self.crf.decode(logits)
             else:
@@ -359,7 +357,7 @@ class TorchTransformersSequenceTagger(TorchModel):
             raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
-        if self.use_crf_train or self.use_crf_infer:
+        if self.use_crf:
             self.crf = CRF(self.n_classes).to(self.device)
 
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
@@ -387,7 +385,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
-            if self.use_crf_train or self.use_crf_infer:
+            if self.use_crf:
                 weights_path_crf = Path(f"{self.load_path}_crf").resolve()
                 weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
                 if weights_path_crf.exists():
@@ -412,7 +410,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         }, weights_path)
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
-        if self.use_crf_train or self.use_crf_infer:
+        if self.use_crf:
             weights_path_crf = Path(fname).with_suffix(f"_crf.pth.tar")
             torch.save({"model_state_dict": self.crf.cpu().state_dict()}, weights_path_crf)
             self.crf.to(self.device)
