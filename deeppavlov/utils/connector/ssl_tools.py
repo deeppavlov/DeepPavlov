@@ -26,37 +26,6 @@ from OpenSSL import crypto
 log = getLogger(__name__)
 
 
-def verify_sc_url(url: str) -> bool:
-    """Verify signature certificate URL against Amazon Alexa requirements.
-
-    Batch of dialog IDs can be provided, in other case utterances indexes in
-    incoming batch are used as dialog IDs.
-
-    Args:
-        url: Signature certificate URL from SignatureCertChainUrl HTTP header.
-
-    Returns:
-        result: True if verification was successful, False if not.
-    """
-    parsed = urlsplit(url)
-
-    scheme: str = parsed.scheme
-    netloc: str = parsed.netloc
-    path: str = parsed.path
-
-    try:
-        port = parsed.port
-    except ValueError:
-        port = None
-
-    result = (scheme.lower() == 'https' and
-              netloc.lower().split(':')[0] == 's3.amazonaws.com' and
-              path.startswith('/echo.api/') and
-              (port == 443 or port is None))
-
-    return result
-
-
 def extract_certs(certs_txt: str) -> List[crypto.X509]:
     """Extracts pycrypto X509 objects from SSL certificates chain string.
 
@@ -149,68 +118,3 @@ def verify_certs_chain(certs_chain: List[crypto.X509], amazon_cert: crypto.X509)
         result = False
 
     return result
-
-
-def verify_signature(amazon_cert: crypto.X509, signature: str, request_body: bytes) -> bool:
-    """Verifies Alexa request signature.
-
-    Args:
-        amazon_cert: Pycrypto X509 Amazon certificate.
-        signature: Base64 decoded Alexa request signature from Signature HTTP header.
-        request_body: full HTTPS request body
-    Returns:
-        result: True if verification was successful, False if not.
-    """
-    signature = base64.b64decode(signature)
-
-    try:
-        crypto.verify(amazon_cert, signature, request_body, 'sha1')
-        result = True
-    except crypto.Error:
-        result = False
-
-    return result
-
-
-def verify_cert(signature_chain_url: str) -> Optional[crypto.X509]:
-    """Conducts series of Alexa SSL certificate verifications against Amazon Alexa requirements.
-
-    Args:
-        signature_chain_url: Signature certificate URL from SignatureCertChainUrl HTTP header.
-    Returns:
-        result: Amazon certificate if verification was successful, None if not.
-    """
-    try:
-        certs_chain_get = requests.get(signature_chain_url)
-    except requests.exceptions.ConnectionError as e:
-        log.error(f'Amazon signature chain get error: {e}')
-        return None
-
-    certs_chain_txt = certs_chain_get.text
-    certs_chain = extract_certs(certs_chain_txt)
-
-    amazon_cert: crypto.X509 = certs_chain.pop(0)
-
-    # verify signature chain url
-    sc_url_verification = verify_sc_url(signature_chain_url)
-    if not sc_url_verification:
-        log.error(f'Amazon signature url {signature_chain_url} was not verified')
-
-    # verify not expired
-    expired_verification = not amazon_cert.has_expired()
-    if not expired_verification:
-        log.error(f'Amazon certificate ({signature_chain_url}) expired')
-
-    # verify subject alternative names
-    sans_verification = verify_sans(amazon_cert)
-    if not sans_verification:
-        log.error(f'Subject alternative names verification for ({signature_chain_url}) certificate failed')
-
-    # verify certs chain
-    chain_verification = verify_certs_chain(certs_chain, amazon_cert)
-    if not chain_verification:
-        log.error(f'Certificates chain verification for ({signature_chain_url}) certificate failed')
-
-    result = (sc_url_verification and expired_verification and sans_verification and chain_verification)
-
-    return amazon_cert if result else None

@@ -61,10 +61,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Integrations**
 
-[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html) | [Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
-
-
-[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html) | [Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
+[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
 
 ## Installation
 
@@ -169,8 +166,6 @@ python -m deeppavlov <action> <config_path> [-d]
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-    * `msbot` to run a Miscrosoft Bot Framework server (see
-    [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
       *<file_path>* if `-f <file_path>` is specified.
 * `<config_path>` specifies path (or name) of model's config file
@@ -237,9 +232,6 @@ model = evaluate_model(<config_path>, download=True)
 - Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated)
 - [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
   [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
-  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
-  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
-  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
 - [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
 - [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
   [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
@@ -271,7 +263,7 @@ was changed from `MODELS_PATH` to `MODEL_PATH`.
 
 **Breaking changes in version 0.2.0!**
 - `utils` module was moved from repository root in to `deeppavlov` module
-- `ms_bot_framework_utils`,`server_utils` modules was renamed to `ms_bot_framework`, `server` correspondingly
+- `server_utils` modules was renamed to `server`
 - rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
 - replace dashes in configs name with underscores
 
