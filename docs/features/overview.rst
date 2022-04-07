@@ -9,39 +9,26 @@ Models
 NER model :doc:`[docs] </features/models/ner>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There are two models for Named Entity Recognition task in DeepPavlov:
-BERT-based and Bi-LSTM+CRF. The models predict tags (in BIO format) for tokens
-in input.
+Named Entity Recognition task in DeepPavlov is solved with BERT-based model.
+The models predict tags (in BIO format) for tokens in input.
 
 BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding
 <https://arxiv.org/abs/1810.04805>`__.
 
-The second model reproduces architecture from the paper `Application
-of a Hybrid Bi-LSTM-CRF model to the task of Russian Named Entity Recognition <https://arxiv.org/pdf/1709.09686.pdf>`__
-which is inspired by Bi-LSTM+CRF architecture from https://arxiv.org/pdf/1603.01360.pdf.
-
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
 | Dataset                                                 | Lang  | Model                                                                                      |   Test F1   |
 +=========================================================+=======+============================================================================================+=============+
-| Persons-1000 dataset with additional LOC and ORG markup | Ru    | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`                                        |    97.7     |
+| Persons-1000 dataset with additional LOC and ORG markup | Ru    | :config:`ner_rus_bert.json <ner/ner_rus_bert.json>`                                        |    97.9     |
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-| (Collection 3)                                          |       | :config:`ner_rus.json <ner/ner_rus.json>`                                                  |    95.1     |
-+                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-|                                                         |       | :config:`ner_rus_convers_distilrubert_2L.json  <ner/ner_rus_convers_distilrubert_2L.json>` |  88.4 ± 0.5 |
+| (Collection 3)                                          |       | :config:`ner_rus_convers_distilrubert_2L.json  <ner/ner_rus_convers_distilrubert_2L.json>` |  88.4 ± 0.5 |
 +                                                         +       +--------------------------------------------------------------------------------------------+-------------+
 |                                                         |       | :config:`ner_rus_convers_distilrubert_6L.json  <ner/ner_rus_convers_distilrubert_6L.json>` |  93.3 ± 0.3 |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
-| Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>`                  |    88.8     |
+| Ontonotes                                               | Multi | :config:`ner_ontonotes_bert_mult.json <ner/ner_ontonotes_bert_mult.json>`                  |    88.9     |
 +                                                         +-------+--------------------------------------------------------------------------------------------+-------------+
-|                                                         | En    | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`                            |    88.6     |
-+                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-|                                                         |       | :config:`ner_ontonotes.json <ner/ner_ontonotes.json>`                                      |    87.1     |
+|                                                         | En    | :config:`ner_ontonotes_bert.json <ner/ner_ontonotes_bert.json>`                            |    89.2     |
 +---------------------------------------------------------+       +--------------------------------------------------------------------------------------------+-------------+
 | ConLL-2003                                              |       | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`                            |    91.7     |
-+                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-|                                                         |       | :config:`ner_conll2003_torch_bert.json <ner/ner_conll2003_torch_bert.json>`                |    88.6     |
-+                                                         +       +--------------------------------------------------------------------------------------------+-------------+
-|                                                         |       | :config:`ner_conll2003.json <ner/ner_conll2003.json>`                                      |    89.9     |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
 
 Classification model :doc:`[docs] </features/models/classifiers>`

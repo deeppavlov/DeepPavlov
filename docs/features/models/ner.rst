@@ -4,23 +4,22 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
-There are three main types of models available: Standard RNN-based model, BERT-based model (on TensorFlow and PyTorch), and the hybrid model.
-To see details about BERT based models see :doc:`here </features/models/bert>`. The last one, the hybrid model, reproduces the architecture proposed
-in the paper `A Deep Neural Network Model for the Task of Named Entity Recognition <http://www.ijmlc.org/show-83-881-1.html>`__.
+Entity recognition is based on BERT model on PyTorch.
+To see details about BERT based models see :doc:`here </features/models/bert>`.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
-    python -m deeppavlov install ner_ontonotes_bert_torch
+    python -m deeppavlov install ner_ontonotes_bert
 
 To use a pre-trained model from CLI use the following command:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact ner_ontonotes_bert_torch [-d]
+    python deeppavlov/deep.py interact ner_ontonotes_bert [-d]
 
-where ``ner_ontonotes_bert_torch`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
+where ``ner_ontonotes_bert`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. Other possible
 commands are ``train``, ``evaluate``, and ``download``,
 
@@ -34,25 +33,13 @@ Here is the list of all available configs:
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
     | Model                                                                  | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
     +========================================================================+====================+==========+=================+============+============+
-    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.7**   |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_collection3_m1 <ner/ner_collection3_m1.json>`             |                    |          | 1.1 GB          |    1 GB    |   97.8     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_rus <ner/ner_rus.json>`                                   |                    |          | 1.0 GB          |   5.6 MB   |   95.1     |
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`<ner/ner_ontonotes_bert_mult_torch.json>`                     | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **87.2**   |
+    | :config:`<ner/ner_ontonotes_bert_mult.json>`                           | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
     +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_torch <ner/ner_ontonotes_bert_torch.json>` |                    | En       | 400 MB          |   1.3 GB   |   87.9     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                       |                    |          | 331 MB          |   7.8 MB   |   86.7     |
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`             |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
     +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   850 MB   |   91.7     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_conll2003_torch_bert <ner/ner_conll2003_torch_bert.json>` |                    |          | ---             |   1.3 GB   |   90.7     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_conll2003 <ner/ner_conll2003.json>`                       |                    |          | 331 MB          |   3.1 MB   |   89.9     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`conll2003_m1 <ner/conll2003_m1.json>`                         |                    |          | 339 MB          |  359.7 MB  | **91.9**   |
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
@@ -61,7 +48,7 @@ Models can be used from Python using the following code:
 
     from deeppavlov import configs, build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_torch, download=True)
+    ner_model = build_model(configs.ner.ner_ontonotes_bert, download=True)
 
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
@@ -72,7 +59,7 @@ The model also can be trained from the Python:
 
     from deeppavlov import configs, train_model
 
-    ner_model = train_model(configs.ner.ner_ontonotes_bert_torch)
+    ner_model = train_model(configs.ner.ner_ontonotes_bert)
 
 The data for training should be placed in the folder provided in the config:
 
@@ -81,7 +68,7 @@ The data for training should be placed in the folder provided in the config:
     from deeppavlov import configs, train_model
     from deeppavlov.core.commands.utils import parse_config
     
-    config_dict = parse_config(configs.ner.ner_ontonotes_bert_torch)
+    config_dict = parse_config(configs.ner.ner_ontonotes_bert)
 
     print(config_dict['dataset_reader']['data_path'])
     >>> '~/.deeppavlov/downloads/ontonotes'
@@ -117,7 +104,7 @@ The following Python code can be used to infer the model:
 
     from deeppavlov import configs, build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult_torch, download=True)
+    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
 
     ner_model(['Curling World Championship will be held in Antananarivo'])
     >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
@@ -284,14 +271,14 @@ dataset generated from the DailyDialog dataset [2]_:
 +----------------------+---------+
 
 Here is the achieved result of training the hybrid model on the above dataset using
-the config file :config:`sentseg_dailydialog <sentence_segmentation/sentseg_dailydialog.json>`:
+the config file :config:`sentseg_dailydialog <sentence_segmentation/sentseg_dailydialog_bert.json>`:
 
 +-----------+-----------+--------+-------+
 | Tag       | Precision | Recall |  F1   |
 +-----------+-----------+--------+-------+
-| Question  |   96.48   | 93.49  | 94.96 |
+| Question  |   96.56   | 96.78  | 96.67 |
 +-----------+-----------+--------+-------+
-| Statement |   96.24   | 96.69  | 96.47 |
+| Statement |   96.83   | 97.37  | 97.10 |
 +-----------+-----------+--------+-------+
 | Overall   |   96.30   | 95.89  | 96.10 |
 +-----------+-----------+--------+-------+
@@ -300,13 +287,13 @@ The command below is used to download and use the pre-trained model in the CLI:
 
 .. code:: bash
 
-    python -m deeppavlov interact sentseg_dailydialog -d
+    python -m deeppavlov interact sentseg_dailydialog_bert -d
 
 The model also can be trained from scratch by using the command:
 
 .. code:: bash
 
-    python -m deeppavlov train sentseg_dailydialog
+    python -m deeppavlov train sentseg_dailydialog_bert
 
 
 
