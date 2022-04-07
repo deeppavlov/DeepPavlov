@@ -46,8 +46,6 @@
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
   "go_bot": "deeppavlov.models.go_bot.go_bot:GoalOrientedBot",
-  "gobot_json_nlg_manager": "deeppavlov.models.go_bot.nlg.mock_json_nlg_manager:MockJSONNLGManager",
-  "gobot_nlg_manager": "deeppavlov.models.go_bot.nlg.nlg_manager:NLGManager",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
   "huggingface_dataset_iterator": "deeppavlov.dataset_iterators.huggingface_dataset_iterator:HuggingFaceDatasetIterator",
   "huggingface_dataset_reader": "deeppavlov.dataset_readers.huggingface_dataset_reader:HuggingFaceDatasetReader",

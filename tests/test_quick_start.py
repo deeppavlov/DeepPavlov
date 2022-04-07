@@ -107,10 +107,6 @@ PARAMS = {
                 ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
             ]
     },
-    "go_bot": {
-        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)],
-        ("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
-    },
     "classifiers": {
         ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -262,7 +258,7 @@ PARAMS = {
     }
 }
 
-MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
+MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "squad"]}  # marks defined in pytest.ini
 
 TEST_GRID = []
 for model in PARAMS.keys():
