@@ -1,4 +1,3 @@
-import pickle
 from typing import List, Optional
 
 import numpy as np
@@ -20,16 +19,16 @@ class CRF(nn.Module):
         tr = torch.Tensor(tr)
         self.transitions = nn.Parameter(tr)
 
-    def forward(self, tags_batch: torch.LongTensor, mask: np.ndarray):
+    def forward(self, tags_batch: torch.LongTensor, y_masks: np.ndarray):
         seq_lengths = np.sum(y_masks, axis=1)
         for seq_len, tags_list in zip(seq_lengths, tags_batch):
             if seq_len > 1:
                 for i in range(seq_len - 1):
                     self.stats[tags_list[i]][tags_list[i + 1]] += 1
         tr = [[0.0 for _ in range(self.tags_num)] for _ in range(self.tags_num)]
-        for i in range(len(stats)):
-            for j in range(len(stats[i])):
-                if stats[i][j] > 0:
+        for i in range(len(self.stats)):
+            for j in range(len(self.stats[i])):
+                if self.stats[i][j] > 0:
                     tr[i][j] = 0.0
                 else:
                     tr[i][j] = -1000.0
