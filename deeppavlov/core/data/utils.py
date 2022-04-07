@@ -465,7 +465,7 @@ def flatten_str_batch(batch: Union[str, Iterable]) -> Union[list, chain]:
         ['a', 'b', 'c', 'd']
 
     """
-    if isinstance(batch, str) or isinstance(batch, str) or isinstance(batch, int) or isinstance(batch, float):
+    if isinstance(batch, str) or isinstance(batch, int) or isinstance(batch, float):
         return [batch]
     else:
         return chain(*[flatten_str_batch(sample) for sample in batch])
