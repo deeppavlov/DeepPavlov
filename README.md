@@ -63,7 +63,6 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html) | [Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
 
-[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html) | [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
 
 [Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html) | [Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
 
@@ -170,8 +169,6 @@ python -m deeppavlov <action> <config_path> [-d]
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-    * `telegram` to run as a Telegram bot (see
-    [doc](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)),
     * `msbot` to run a Miscrosoft Bot Framework server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
@@ -226,9 +223,6 @@ from deeppavlov import evaluate_model
 model = evaluate_model(<config_path>, download=True)
 ```
 
-There are also available integrations with various messengers, see
-[Telegram Bot doc page](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)
-and others in the Integrations section for more info.
 
 
 ## Breaking Changes
@@ -246,8 +240,6 @@ and others in the Integrations section for more info.
   [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
   [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
   [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
-  [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
-- `/start` and `/help` Telegram messages were moved from `models_info.json` to [server_config.json](deeppavlov/utils/settings/server_config.json)
 - [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
 - [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
   [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
@@ -279,7 +271,7 @@ was changed from `MODELS_PATH` to `MODEL_PATH`.
 
 **Breaking changes in version 0.2.0!**
 - `utils` module was moved from repository root in to `deeppavlov` module
-- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
+- `ms_bot_framework_utils`,`server_utils` modules was renamed to `ms_bot_framework`, `server` correspondingly
 - rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
 - replace dashes in configs name with underscores
 

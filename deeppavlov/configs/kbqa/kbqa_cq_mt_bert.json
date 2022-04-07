@@ -220,7 +220,6 @@
       "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa"
     },
     "labels": {
-      "telegram_utils": "KBQA_MT_BERT_MODEL",
       "server_utils": "KBQA"
     },
     "download": [

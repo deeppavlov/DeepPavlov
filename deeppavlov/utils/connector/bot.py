@@ -31,7 +31,7 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.paths import get_settings_path
 from deeppavlov.utils.connector.conversation import AlexaConversation, AliceConversation, BaseConversation
-from deeppavlov.utils.connector.conversation import MSConversation, TelegramConversation
+from deeppavlov.utils.connector.conversation import MSConversation
 from deeppavlov.utils.connector.ssl_tools import verify_cert, verify_signature
 
 CONNECTOR_CONFIG_FILENAME = 'server_config.json'
@@ -468,77 +468,5 @@ class MSBot(BaseBot):
         conversation.handle_request(request)
 
     def _send_response(self, response: dict) -> None:
-        """Dummy method to match ``run`` method body."""
-        pass
-
-
-class TelegramBot(BaseBot):
-    """Routes messages from Telegram to conversations, sends responses back."""
-    _conversation_config: dict
-    _token: str
-
-    def __init__(self, model_config: Union[str, Path, dict], token: Optional[str]) -> None:
-        """Initiates and validates class attributes.
-
-        Args:
-            model_config: Path to DeepPavlov model config file.
-            token: Telegram bot token.
-
-        Raises:
-            ValueError: If telegram token was not set neither in config file nor in method arguments.
-
-        """
-        super(TelegramBot, self).__init__(model_config, Queue())
-        connector_config: dict = self._get_connector_params()
-        bot_config: dict = connector_config['bot_defaults']
-        self._conversation_config = connector_config['conversation_defaults']
-        self._token = token or bot_config['token']
-
-        if not self._token:
-            e = ValueError('Telegram token required: initiate -t param or telegram_defaults/token '
-                           'in server configuration file')
-            log.error(e)
-            raise e
-
-    def start(self) -> None:
-        """Starts polling messages from Telegram, routes messages to handlers."""
-        bot = telebot.TeleBot(self._token)
-        bot.remove_webhook()
-
-        @bot.message_handler(commands=['start'])
-        def send_start_message(message: telebot.types.Message) -> None:
-            chat_id = message.chat.id
-            out_message = self._conversation_config['start_message']
-            bot.send_message(chat_id, out_message)
-
-        @bot.message_handler(commands=['help'])
-        def send_help_message(message: telebot.types.Message) -> None:
-            chat_id = message.chat.id
-            out_message = self._conversation_config['help_message']
-            bot.send_message(chat_id, out_message)
-
-        @bot.message_handler()
-        def handle_inference(message: telebot.types.Message) -> None:
-            chat_id = message.chat.id
-            context = message.text
-
-            if chat_id not in self._conversations:
-                self._conversations[chat_id] = \
-                    TelegramConversation(config=self._conversation_config,
-                                         model=self._model,
-                                         self_destruct_callback=self._del_conversation,
-                                         conversation_id=chat_id)
-
-            conversation = self._conversations[chat_id]
-            response = conversation.handle_request(context)
-            bot.send_message(chat_id, response)
-
-        bot.polling()
-
-    def _handle_request(self, request: dict) -> None:
-        """Dummy method to match ``run`` method body."""
-        pass
-
-    def _send_response(self, response: Optional[dict]) -> None:
         """Dummy method to match ``run`` method body."""
         pass

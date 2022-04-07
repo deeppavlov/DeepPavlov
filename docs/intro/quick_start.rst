@@ -71,8 +71,6 @@ There are even more actions you can perform with configs:
           </integrations/rest_api>`),
         * ``risesocket`` to run a socket API server (see :doc:`docs
           </integrations/socket_api>`),
-        * ``telegram`` to run as a Telegram bot (see :doc:`docs
-          </integrations/telegram>`),
         * ``msbot`` to run a Miscrosoft Bot Framework server (see
           :doc:`docs </integrations/ms_bot>`),
         * ``predict`` to get prediction for samples from `stdin` or from
@@ -128,9 +126,6 @@ You can also calculate metrics on the dataset specified in your config file:
 
         model = evaluate_model(<config_path>, download=True)
 
-There are also available integrations with various messengers, see
-:doc:`Telegram Bot doc page </integrations/telegram>` and others in the
-Integrations section for more info.
 
 
 Using GPU

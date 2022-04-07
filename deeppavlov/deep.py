@@ -27,14 +27,13 @@ from deeppavlov.utils.ms_bot_framework import start_ms_bf_server
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server import start_model_server
 from deeppavlov.utils.socket import start_socket_server
-from deeppavlov.utils.telegram import interact_model_by_telegram
 
 log = getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict', 'telegram', 'msbot', 'alexa', 'alice',
+                    choices={'train', 'evaluate', 'interact', 'predict', 'msbot', 'alexa', 'alice',
                              'riseapi', 'risesocket', 'agent-rabbit', 'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
@@ -47,8 +46,6 @@ parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
-
-parser.add_argument("-t", "--token", default=None, help="telegram bot token", type=str)
 
 parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
 parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
@@ -87,8 +84,6 @@ def main():
         train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
-    elif args.mode == 'telegram':
-        interact_model_by_telegram(model_config=pipeline_config_path, token=args.token)
     elif args.mode == 'msbot':
         start_ms_bf_server(model_config=pipeline_config_path,
                            app_id=args.ms_id,

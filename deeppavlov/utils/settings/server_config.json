@@ -10,14 +10,6 @@
     "unix_socket_file": "/tmp/deeppavlov_socket.s",
     "socket_launch_message": "launching socket server at"
   },
-  "telegram": {
-    "token": "",
-    "conversation_lifetime": 3600,
-    "start_message": "Welcome to DeepPavlov inference bot!",
-    "help_message": "Welcome to DeepPavlov inference bot!",
-    "next_argument_message": "Please enter an argument '{}'",
-    "unsupported_message": "Unsupported message received."
-  },
   "agent-rabbit": {
     "service_name": "",
     "agent_namespace": "deeppavlov_agent",

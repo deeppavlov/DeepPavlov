@@ -97,7 +97,6 @@
       "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type"
     },
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [

@@ -28,7 +28,6 @@ DIALOG_LOGGER_NAME_MAPPING = {
     'AlexaConversation': 'alexa',
     'AliceConversation': 'alice',
     'MSConversation': 'ms_bot_framework',
-    'TelegramConversation': 'telegram',
     '_unsupported': 'new_conversation'
 }
 
@@ -443,23 +442,3 @@ class MSConversation(BaseConversation):
         log.debug(f'Sent activity to the MSBotFramework server. '
                   f'Response code: {response.status_code}, response contents: {response_json_str}')
 
-
-class TelegramConversation(BaseConversation):
-    """Receives requests from Telegram bot and generates responses."""
-    def _handle_request(self, message: str) -> str:
-        """Handles raw text message from Telegram bot.
-
-        Args:
-            message: Message from Telegram bot.
-
-        Returns:
-            response: Response to a ``message``.
-
-        """
-        response = self._act(message)
-
-        return response
-
-    def _generate_response(self, message: str, request: dict) -> None:
-        """Does nothing."""
-        pass
