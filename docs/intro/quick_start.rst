@@ -2,7 +2,7 @@ QuickStart
 ------------
 
 First, follow instructions on :doc:`Installation page </intro/installation>`
-to install ``deeppavlov`` package for Python 3.6/3.7.
+to install ``deeppavlov`` package for Python 3.6/3.7/3.8/3.9.
 
 DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
 determined by its config file. List of models is available on
@@ -27,8 +27,8 @@ Before making choice of an interface, install model's package requirements
         python -m deeppavlov install <config_path>
 
     * where ``<config_path>`` is path to the chosen model's config file (e.g.
-      ``deeppavlov/configs/ner/slotfill_dstc2.json``) or just name without
-      `.json` extension (e.g. ``slotfill_dstc2``)
+      ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``) or just name without
+      `.json` extension (e.g. ``insults_kaggle_bert``)
 
 
 Command line interface (CLI)
@@ -111,7 +111,7 @@ You can train it in the same simple way:
         model = train_model(<config_path>, download=True)
 
     * ``download=True`` downloads pretrained model, therefore the pretrained
-      model will be, first, loaded and then train (optional).
+      model will be, first, loaded and then trained (optional).
 
     Dataset will be downloaded regardless of whether there was ``-d`` flag or
     not.
@@ -252,22 +252,7 @@ related to.
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
-    | En       | :config:`insults_kaggle_conv_bert <classifiers/insults_kaggle_conv_bert.json>`                 | https://demo.deeppavlov.ai/#/en/insult    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-
-
-Sentiment Analysis
-==================
-
-Classify text according to a prevailing emotion (positive, negative, etc.) in it.
-
-.. table::
-    :widths: auto
-
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Ru       | :config:`rusentiment_elmo_twitter_cnn <classifiers/rusentiment_elmo_twitter_cnn.json>`         | https://demo.deeppavlov.ai/#/ru/sentiment |
+    | En       | :config:`insults_kaggle_bert <classifiers/insults_kaggle_bert.json>`                           | https://demo.deeppavlov.ai/#/en/insult    |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
 
 

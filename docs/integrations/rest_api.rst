@@ -72,7 +72,7 @@ to the model by ``server_utils`` label in ``metadata`` section of the model
 config. Value of ``server_utils`` label from model config should match with
 properties key from ``model_defaults`` section of ``server_config.json``.
 
-For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2.json``
+For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2_minimal.json``
 with value *GoalOrientedBot* will initiate the search of *GoalOrientedBot* tag
 at ``model_defaults`` section of ``server_config.json``. Therefore, if this
 section is present, all parameters with non empty (i.e. not ``""``,

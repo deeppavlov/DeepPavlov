@@ -28,57 +28,71 @@ The ``TensorFlow`` models can be run with the original `BERT repo <https://githu
 while the ``PyTorch`` models can be run with the `HuggingFace's Transformers <https://github.com/huggingface/transformers>`__ library.
 The download links are:
 
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Description                | Model parameters                      | Download links                                                                                                     |
-+============================+=======================================+====================================================================================================================+
-| RuBERT                     | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__,         |
-|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz>`__             |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Slavic BERT                | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__,    |
-|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__        |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Conversational BERT        | vocab size = 30K, parameters = 110M,  | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__, |
-|                            | size = 385MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__     |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Conversational RuBERT      | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__, |
-|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__  |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Sentence Multilingual BERT | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,    |
-|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__     |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
-| Sentence RuBERT            | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,       |
-|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__        |
-+----------------------------+---------------------------------------+--------------------------------------------------------------------------------------------------------------------+
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Description                | Model parameters                      | Download links                                                                                                       |
++============================+=======================================+======================================================================================================================+
+| RuBERT                     | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__,           |
+|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__            |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Slavic BERT                | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__,      |
+|                            | size = 632MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__       |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Conversational BERT        | vocab size = 30K, parameters = 110M,  | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__,   |
+|                            | size = 385MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__    |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Conversational RuBERT      | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__,   |
+|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__ |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Sentence Multilingual BERT | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,      |
+|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__    |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
+| Sentence RuBERT            | vocab size = 120K, parameters = 180M, | `[tensorflow] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,         |
+|                            | size = 630MB                          | `[pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__       |
++----------------------------+---------------------------------------+----------------------------------------------------------------------------------------------------------------------+
 
 
 ELMo
 ----
 
-| We are publishing :class:`Russian language ELMo embeddings model <deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder>` for tensorflow-hub and :class:`LM model <deeppavlov.models.elmo.elmo.ELMo>` for training and fine-tuning ELMo as LM model.
-| ELMo (Embeddings from Language Models) representations are pre-trained contextual representations from
-  large-scale bidirectional language models. See a paper `Deep contextualized word representations
-  <https://arxiv.org/abs/1802.05365>`__ for more information about the algorithm and a detailed analysis.
+The ELMo can used via Python code as following:
 
-License
-~~~~~~~
+.. code:: python
 
-The pre-trained models are distributed under the `License Apache
-2.0 <https://www.apache.org/licenses/LICENSE-2.0>`__.
+   import tensorflow as tf
+   import tensorflow_hub as hub
+   elmo = hub.Module("http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz", trainable=True)
+   sess = tf.Session()
+   sess.run(tf.global_variables_initializer())
+   embeddings = elmo(["это предложение", "word"], signature="default", as_dict=True)["elmo"]
+   sess.run(embeddings)
+
+
+TensorFlow Hub module also supports tokenized sentences in the following format.
+
+.. code:: python
+
+   tokens_input = [["мама", "мыла", "раму"], ["рама", "", ""]]
+   tokens_length = [3, 1]
+   embeddings = elmo(inputs={"tokens": tokens_input,"sequence_len": tokens_length},signature="tokens",as_dict=True)["elmo"]
+   sess.run(embeddings)
+
 
 Downloads
 ~~~~~~~~~
 
-The models can be downloaded and run by configuration file or tensorflow hub module from:
+The models can be downloaded and run by tensorflow hub module from:
+
 
 +--------------------------------------------------------------------+---------------------------------------------+------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Description                                                        | Dataset parameters                          | Perplexity       | Configuration file and tensorflow hub module                                                                                                                                                                                          |
+| Description                                                        | Dataset parameters                          | Perplexity       | Tensorflow hub module                                                                                                                                                                                                                 |
 +====================================================================+=============================================+==================+=======================================================================================================================================================================================================================================+
-| ELMo on  `Russian Wikipedia <https://ru.wikipedia.org/>`__         | lines = 1M, tokens = 386M, size = 5GB       | 43.692           | `config_file <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/embedder/elmo_ru_wiki.json>`__, `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz>`__                       |
+| ELMo on  `Russian Wikipedia <https://ru.wikipedia.org/>`__         | lines = 1M, tokens = 386M, size = 5GB       | 43.692           | `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-wiki_600k_steps.tar.gz>`__                                                                                                                                           |
 +--------------------------------------------------------------------+---------------------------------------------+------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ELMo on  `Russian WMT News <http://www.statmt.org/>`__             | lines = 63M, tokens = 946M, size = 12GB     | 49.876           | `config_file <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/embedder/elmo_ru_news.json>`__, `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz>`__              |
+| ELMo on  `Russian WMT News <http://www.statmt.org/>`__             | lines = 63M, tokens = 946M, size = 12GB     | 49.876           | `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-news_wmt11-16_1.5M_steps.tar.gz>`__                                                                                                                                  |
 +--------------------------------------------------------------------+---------------------------------------------+------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| ELMo on  `Russian Twitter <https://twitter.com/>`__                | lines = 104M, tokens = 810M, size = 8.5GB   | 94.145           | `config_file <https://github.com/deepmipt/DeepPavlov/blob/master/deeppavlov/configs/embedder/elmo_ru_twitter.json>`__, `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz>`__ |
+| ELMo on  `Russian Twitter <https://twitter.com/>`__                | lines = 104M, tokens = 810M, size = 8.5GB   | 94.145           | `module_spec <http://files.deeppavlov.ai/deeppavlov_data/elmo_ru-twitter_2013-01_2018-04_600k_steps.tar.gz>`__                                                                                                                        |
 +--------------------------------------------------------------------+---------------------------------------------+------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
 
 fastText
 --------

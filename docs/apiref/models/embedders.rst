@@ -8,11 +8,6 @@ deeppavlov.models.embedders
    .. automethod:: __call__
    .. automethod:: __iter__
 
-.. autoclass:: deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder
-
-   .. automethod:: __call__
-   .. automethod:: __iter__
-
 .. autoclass:: deeppavlov.models.embedders.glove_embedder.GloVeEmbedder
 
    .. automethod:: __call__

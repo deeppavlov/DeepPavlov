@@ -83,7 +83,7 @@ from ``metadata.variables`` element:
           {
             "in": ["x"],
             "out": ["y_predicted"],
-            "config_path": "{CONFIGS_PATH}/classifiers/intents_snips.json"
+            "config_path": "{CONFIGS_PATH}/classifiers/insults_kaggle_bert.json"
           }
         ],
         "out": ["y_predicted"]
@@ -177,10 +177,7 @@ and ``train``:
 
 
 Simplified version of training pipeline contains two elements: ``dataset`` and ``train``. The ``dataset`` element
-currently can be used for train from classification data in ``csv`` and ``json`` formats. You can find complete examples
-of how to use simplified training pipeline in
-:config:`intents_sample_csv.json <classifiers/intents_sample_csv.json>` and
-:config:`intents_sample_json.json <classifiers/intents_sample_json.json>` config files.
+currently can be used for train from classification data in ``csv`` and ``json`` formats.
 
 
 Train Parameters
@@ -384,11 +381,6 @@ sample).
       vectorizer or counter vocabulary, optionally accepts tags vocabulary (to
       assign additional multiplcative weights to particular tags). If ``mean``
       returns one vector per sample - mean of embedding vectors of tokens.
-
-    - :class:`~deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder`
-      (registered as ``elmo``) converts tokens to pre-trained contextual
-      representations from large-scale bidirectional language models. See
-      examples `here <https://www.tensorflow.org/hub/modules/google/elmo/2>`__.
 
 Vectorizers
 ~~~~~~~~~~~

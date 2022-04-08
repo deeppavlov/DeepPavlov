@@ -1,5 +1,5 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
-![Python 3.6, 3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-green.svg)
+![Python 3.6, 3.7, 3.8, 3.9](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
 
@@ -27,7 +27,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Slot filling](http://docs.deeppavlov.ai/en/master/features/models/slot_filling.html)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html)
 
 [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
 
@@ -37,9 +37,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Syntactic parsing](http://docs.deeppavlov.ai/en/master/features/models/syntaxparser.html)
 
-[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [ELMo training and fine-tuning](http://docs.deeppavlov.ai/en/master/apiref/models/elmo.html)
-
-[Speech recognition and synthesis (ASR and TTS)](http://docs.deeppavlov.ai/en/master/features/models/nemo.html) based on [NVIDIA NeMo](https://nvidia.github.io/NeMo/index.html)
+[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)
 
 [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html) | [Multitask BERT](http://docs.deeppavlov.ai/en/master/features/models/multitask_bert.html)
 
@@ -71,7 +69,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 ## Installation
 
-0. We support `Linux` and `Windows` platforms, `Python 3.6` and `Python 3.7`
+0. We support `Linux` platform, `Python 3.6`, `3.7`, `3.8` and `3.9`
     * **`Python 3.5` is not supported!**
     * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
 
@@ -132,8 +130,8 @@ python -m deeppavlov install <config_path>
 ```
 
 * where `<config_path>` is path to the chosen model's config file (e.g.
-  `deeppavlov/configs/ner/slotfill_dstc2.json`) or just name without
-  *.json* extension (e.g. `slotfill_dstc2`)
+  `deeppavlov/configs/classifiers/insults_kaggle_bert.json`) or just name without
+  *.json* extension (e.g. `insults_kaggle_bert`)
 
 
 ### Command line interface (CLI)
@@ -305,10 +303,7 @@ into the `"class_name"` field.
 
 DeepPavlov is Apache 2.0 - licensed.
 
-## The Team
-
-DeepPavlov is built and maintained by [Neural Networks and Deep Learning Lab](https://www.facebook.com/deepmipt/)
-at [MIPT](https://mipt.ru/english/).
+##
 
 <p align="center">
 <img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
