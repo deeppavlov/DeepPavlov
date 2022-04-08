@@ -63,6 +63,8 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
 
+[Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
+
 ## Installation
 
 0. We support `Linux` platform, `Python 3.6`, `3.7`, `3.8` and `3.9`
@@ -232,6 +234,11 @@ model = evaluate_model(<config_path>, download=True)
 - Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated)
 - [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
   [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
+  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
+  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
+  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
+  [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
+- `/start` and `/help` Telegram messages were moved from `models_info.json` to [server_config.json](deeppavlov/utils/settings/server_config.json)
 - [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
 - [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
   [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
@@ -263,7 +270,7 @@ was changed from `MODELS_PATH` to `MODEL_PATH`.
 
 **Breaking changes in version 0.2.0!**
 - `utils` module was moved from repository root in to `deeppavlov` module
-- `server_utils` modules was renamed to `server`
+- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
 - rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
 - replace dashes in configs name with underscores
 

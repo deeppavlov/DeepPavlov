@@ -20,7 +20,5 @@
     "rabbit_login": "guest",
     "rabbit_password": "guest",
     "rabbit_virtualhost": "/"
-  },
-  "deprecated": {
   }
 }

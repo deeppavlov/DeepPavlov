@@ -356,7 +356,5 @@ Examples of some models
       python -m deeppavlov predict insults_kaggle_bert -d --batch-size 15 < /data/in.txt > /data/out.txt
 
 
-
-
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250
 .. _`SDSJ Task B`: https://arxiv.org/abs/1912.09723
