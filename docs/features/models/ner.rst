@@ -83,7 +83,7 @@ Multilingual BERT Zero-Shot Transfer
 ------------------------------------
 
 Multilingual BERT models allow to perform zero-shot transfer from one language to another. The model
-:config:`ner_ontonotes_bert_mult_torch <ner/ner_ontonotes_bert_mult_torch.json>` was trained on OntoNotes corpus which has 19 types
+:config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>` was trained on OntoNotes corpus which has 19 types
 in the markup schema. The model performance was evaluated on Russian corpus Collection 3 [1]_. Results of the
 transfer are presented in the table below.
 

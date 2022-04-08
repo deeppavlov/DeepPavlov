@@ -47,11 +47,6 @@
   "go_bot": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "hybrid_ner_model": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
-    "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
-  ],
   "input_splitter": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
@@ -83,9 +78,6 @@
   "mt_bert_seq_tagging_task": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "ner": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "pymorphy_vectorizer": [
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
@@ -173,7 +165,8 @@
   ],
   "torch_transformers_sequence_tagger": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+    "{DEEPPAVLOV_PATH}/requirements/allennlp.txt"
   ],
   "ru_adj_to_noun": [
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt"

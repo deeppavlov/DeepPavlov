@@ -215,6 +215,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        use_crf: whether to use Conditional Ramdom Field to decode tags
     """
 
     def __init__(self,
@@ -326,8 +327,9 @@ class TorchTransformersSequenceTagger(TorchModel):
             pred = pred.detach().cpu().numpy()
         else:
             if self.use_crf:
-                logits = logits.transpose(1, 0).to(self.device)
-                pred = self.crf.decode(logits)
+                logits = logits.to(self.device)
+                pred = self.crf.viterbi_tags(logits)
+                pred = [elem[0] for elem in pred]
             else:
                 logits = logits.detach().cpu().numpy()
                 pred = np.argmax(logits, axis=-1)
@@ -390,7 +392,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                 weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
                 if weights_path_crf.exists():
                     checkpoint = torch.load(weights_path_crf, map_location=self.device)
-                    self.crf.load_state_dict(checkpoint["model_state_dict"])
+                    self.crf.load_state_dict(checkpoint["model_state_dict"], strict=False)
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
