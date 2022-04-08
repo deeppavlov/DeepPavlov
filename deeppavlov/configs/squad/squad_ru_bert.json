@@ -165,7 +165,7 @@
     "variables": {
       "LOWERCASE": false,
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_ru_torch_bert/{TRANSFORMER}"
