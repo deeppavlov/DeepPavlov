@@ -62,6 +62,7 @@ class TorchTransformersSquad(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        batch_size: batch size for inference of squad model
     """
 
     def __init__(self,
@@ -171,13 +172,18 @@ class TorchTransformersSquad(TorchModel):
         """get predictions using features as input
 
         Args:
-            features: batch of InputFeatures instances
+            features_batch: batch of InputFeatures instances
 
         Returns:
-            predictions: start, end positions, start, end logits positions
+            start_pred_batch: answer start positions
+            end_pred_batch: answer end positions
+            logits_batch: answer logits
+            scores_batch: answer confidences
+            ind_batch: indices of paragraph pieces where the answer was found
 
         """
         predictions = {}
+        # TODO: refactor batchification
         indices, input_ids, input_masks, input_type_ids = [], [], [], []
         for n, features_list in enumerate(features_batch):
             for f in features_list:

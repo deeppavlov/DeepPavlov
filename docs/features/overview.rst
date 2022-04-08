@@ -214,9 +214,9 @@ RuBERT-based model is described in  `Adaptation of Deep Bidirectional Multilingu
 +----------------+-----------------------------------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 | `SDSJ Task B`_ | :config:`DeepPavlov RuBERT, trained with tfidf-retrieved negative samples <squad/multi_squad_ru_bert_retr_noans.json>`|  ru   |     66.24      |     84.71       |     1.6 Gb      |
 +----------------+-----------------------------------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-tiny <squad/squad_ru_convers_distilrubert_2L_infer.json>`                            |  ru   |  44.2 ± 0.46   |  65.1 ± 0.36    |     867Mb       |
+| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-tiny <squad/squad_ru_convers_distilrubert_2L.json>`                                  |  ru   |  44.2 ± 0.46   |  65.1 ± 0.36    |     867Mb       |
 +----------------+-----------------------------------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
-| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L_infer.json>`                            |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
+| `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L.json>`                                  |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
 +----------------+-----------------------------------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
 In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_bert_noans.json>`

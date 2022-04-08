@@ -37,7 +37,7 @@ Datasets, which follow this task format:
 Models
 ------
 
-There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
+SQuAD model in DeepPavlov is based on BERT. The model predicts answer start and end
 position in a given context.
 Their performance is compared in :ref:`pretrained models <pretrained_models>` section of this documentation.
 
@@ -65,7 +65,7 @@ Before using the model make sure that all required packages are installed runnin
 
 
 By running this command we will install requirements for
-:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>` or for
+:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>`.
 
 Model usage from Python
 -----------------------
@@ -74,7 +74,7 @@ Model usage from Python
 
     from deeppavlov import build_model, configs
 
-    model = build_model(configs.squad.squad, download=True)
+    model = build_model(configs.squad.squad_bert, download=True)
     model(['DeepPavlov is library for NLP and dialog systems.'], ['What is DeepPavlov?'])
 
 
@@ -165,7 +165,7 @@ We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the sam
 +---------------+-----------------------------------------------+----------------+-----------------+
 | Model config                                                  |    EM (dev)    |    F-1 (dev)    |
 +===============================================================+================+=================+
-| :config:`DeepPavlov <squad/multi_squad_noans.json>`           |     57.88      |     65.91       |
+| :config:`DeepPavlov <squad/multi_squad_noans_bert.json>`      |     75.71      |     80.72       |
 +---------------------------------------------------------------+----------------+-----------------+
 | `Simple and Effective Multi-Paragraph Reading Comprehension`_ |     59.14      |     67.34       |
 +---------------------------------------------------------------+----------------+-----------------+
@@ -176,7 +176,7 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/multi_squad_noans.json
+    python -m deeppavlov download deeppavlov/configs/squad/multi_squad_bert_noans.json
 
 
 .. _`DrQA`: https://arxiv.org/abs/1704.00051
@@ -185,25 +185,17 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained models are available and can be downloaded:
+Pretrained model is available and can be downloaded:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru.json
-
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_rubert_infer.json
-
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert_infer.json
+    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert.json
 
 Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz
 
 +------------------------------------------------------------------------+----------------+-----------------+
 | Model config                                                           |    EM (dev)    |    F-1 (dev)    |
 +========================================================================+================+=================+
-| :config:`DeepPavlov RuBERT <squad/squad_ru_rubert_infer.json>`         |   66.30+-0.24  |    84.60+-0.11  |
-+------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|     66.24      |     84.71       |
-+------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |     60.62      |     80.04       |
+| :config:`DeepPavlov RuBERT <squad/squad_ru_bert.json>`                 |      66.21     |      84.71      |
 +------------------------------------------------------------------------+----------------+-----------------+
 

@@ -21,8 +21,11 @@ from logging import getLogger
 from pathlib import Path
 import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
+from typing_extensions import Literal
 
 import numpy as np
+from nltk import sent_tokenize
+from ru_sent_tokenize import ru_sent_tokenize
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
@@ -190,6 +193,7 @@ class TorchSquadTransformersPreprocessor(Component):
 
     Args:
         vocab_file: path to vocabulary
+        lang: language of questions and contexts
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         return_tokens: whether to return tuple of input features and tokens, or only input features
@@ -203,7 +207,7 @@ class TorchSquadTransformersPreprocessor(Component):
 
     def __init__(self,
                  vocab_file: str,
-                 lang: str,
+                 lang: Literal['en', 'ru'],
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
@@ -219,13 +223,11 @@ class TorchSquadTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         if lang == 'en':
-            from nltk import sent_tokenize
             self.sent_tokenizer = sent_tokenize
         elif lang == 'ru':
-            from ru_sent_tokenize import ru_sent_tokenize
             self.sent_tokenizer = ru_sent_tokenize
         else:
-            raise RuntimeError('en and ru languages are supported only')
+            raise RuntimeError('Only English and Russian languages are supported.')
 
     def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[
         List[InputFeatures],
