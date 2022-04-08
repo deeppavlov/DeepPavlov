@@ -162,7 +162,10 @@ class TorchModel(NNModel):
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"], strict=False)
+                if torch.cuda.device_count() > 1:
+                    self.model.module.load_state_dict(checkpoint["model_state_dict"], strict=False)
+                else:
+                    self.model.load_state_dict(checkpoint["model_state_dict"], strict=False)
                 self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
@@ -194,11 +197,18 @@ class TorchModel(NNModel):
         weights_path = Path(fname).with_suffix(f".pth.tar")
         log.info(f"Saving model to {weights_path}.")
         # move the model to `cpu` before saving to provide consistency
-        torch.save({
-            "model_state_dict": self.model.cpu().state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "epochs_done": self.epochs_done
-        }, weights_path)
+        if torch.cuda.device_count() > 1:
+            torch.save({
+                "model_state_dict": self.model.module.cpu().state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "epochs_done": self.epochs_done
+            }, weights_path)
+        else:
+            torch.save({
+                "model_state_dict": self.model.cpu().state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "epochs_done": self.epochs_done
+            }, weights_path)
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 
