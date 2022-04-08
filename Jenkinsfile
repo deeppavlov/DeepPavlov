@@ -28,8 +28,10 @@ node('cuda-module') {
             throw e
         }
         finally {
-            sh "docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG rm -f"
-            sh "docker network rm ${BUILD_TAG}_default"
+            sh """
+                docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG rm -f
+                docker network rm \$(echo $BUILD_TAG | awk '{print tolower(\$0)}')_default
+            """
             emailext to: "\${DEFAULT_RECIPIENTS}",
                 subject: "${env.JOB_NAME} - Build # ${currentBuild.number} - ${currentBuild.result}!",
                 body: '${BRANCH_NAME} - ${BUILD_URL}',
