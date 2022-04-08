@@ -66,16 +66,17 @@ class TFModel(NNModel, metaclass=TfModelMeta):
             feed_dict[assign_placeholder] = value
         self.sess.run(assign_ops, feed_dict=feed_dict)
 
-    def save(self, exclude_scopes: tuple = ('Optimizer',)) -> None:
+    def save(self, exclude_scopes: tuple = ('Optimizer',), fname: Optional[Union[str, Path]] = None) -> None:
         """Save model parameters to self.save_path"""
         if not hasattr(self, 'sess'):
             raise RuntimeError('Your TensorFlow model {} must'
                                ' have sess attribute!'.format(self.__class__.__name__))
-        path = str(self.save_path.resolve())
-        log.info('[saving model to {}]'.format(path))
+        if fname is None:
+            fname = str(self.save_path.resolve())
+        log.info('[saving model to {}]'.format(fname))
         var_list = self._get_saveable_variables(exclude_scopes)
         saver = tf.train.Saver(var_list)
-        saver.save(self.sess, path)
+        saver.save(self.sess, fname)
 
     def serialize(self) -> Tuple[Tuple[str, np.ndarray], ...]:
         tf_vars = tf.global_variables()
