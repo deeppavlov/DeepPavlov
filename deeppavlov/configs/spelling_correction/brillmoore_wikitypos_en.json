@@ -73,6 +73,10 @@
       {
         "url": "http://files.deeppavlov.ai/lang_models/en_wiki_no_punkt.arpa.binary.gz",
         "subdir": "{DOWNLOADS_PATH}/language_models"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wiktionary/wikipedia_100K_vocab.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/vocabs"
       }
     ]
   }
