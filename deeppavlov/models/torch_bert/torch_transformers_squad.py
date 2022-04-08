@@ -258,7 +258,7 @@ class TorchTransformersSquad(TorchModel):
             start_pred_batch.append(prediction[max_ind][0])
             end_pred_batch.append(prediction[max_ind][1])
             logits_batch.append(prediction[max_ind][2])
-            scores_batch.append(prediction[max_ind][2])
+            scores_batch.append(prediction[max_ind][3])
             ind_batch.append(max_ind)
 
         return start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch
