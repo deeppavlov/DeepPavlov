@@ -324,7 +324,10 @@ class TorchTransformersSquad(TorchModel):
 
                 strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
                                          if key.endswith("embeddings.position_ids")])
-                self.model.load_state_dict(model_state, strict=strict_load_flag)
+                if torch.cuda.device_count() > 1:
+                    self.model.module.load_state_dict(model_state, strict=strict_load_flag)
+                else:
+                    self.model.load_state_dict(model_state, strict=strict_load_flag)
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
