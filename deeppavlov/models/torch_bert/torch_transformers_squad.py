@@ -23,10 +23,9 @@ from overrides import overrides
 from transformers import AutoModelForQuestionAnswering, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.models.torch_model import TorchModel
 
 logger = getLogger(__name__)

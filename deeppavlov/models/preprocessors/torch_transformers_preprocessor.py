@@ -13,17 +13,17 @@
 # limitations under the License.
 
 import math
-import re
 import random
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-import torch
 from typing import Tuple, List, Optional, Union, Dict, Set
 from typing_extensions import Literal
 
 import numpy as np
+import torch
 from nltk import sent_tokenize
 from ru_sent_tokenize import ru_sent_tokenize
 from transformers import AutoTokenizer
