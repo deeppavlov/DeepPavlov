@@ -51,6 +51,12 @@ How to contribute:
 
         git checkout -b what_my_code_does_branch
 
+   To make any changes in files reflect directly in your environment, install the library in editable mode using ``pip install -e .``
+   inside `DeepPavlov` folder. Therefore, no need to run ``pip install .`` again and again after each change.
+   To install the requirements for building the documentation, run ``pip install -e .[docs]``. After editing docs, 
+   move to docs folder using ``cd docs`` and run ``make html`` to build the html documentation. The built documentation will be added to `docs/_build`
+   folder. Finally, open html pages with browser and see your changes.
+
 #. **Write readable code** and keep it
    `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_-ed, **add docstrings**
    and keep them consistent with the
