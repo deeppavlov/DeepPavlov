@@ -327,9 +327,8 @@ class TorchTransformersSequenceTagger(TorchModel):
             pred = pred.detach().cpu().numpy()
         else:
             if self.use_crf:
-                logits = logits.to(self.device)
-                pred = self.crf.viterbi_tags(logits)
-                pred = [elem[0] for elem in pred]
+                logits = logits.transpose(1, 0).to(self.device)
+                pred = self.crf.decode(logits)
             else:
                 logits = logits.detach().cpu().numpy()
                 pred = np.argmax(logits, axis=-1)

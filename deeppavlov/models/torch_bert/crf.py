@@ -1,18 +1,20 @@
 import numpy as np
 import torch
 from torch import nn
-from allennlp.modules import ConditionalRandomField
+from torchcrf import CRF as CRFbase
 
 
-class CRF(ConditionalRandomField):
+class CRF(CRFbase):
     """Class with Conditional Random Field from https://github.com/allenai/allennlp
        with modified training function
     """
     
     def __init__(self, num_tags: int, batch_first: bool = False) -> None:
-        super().__init__(num_tags=num_tags, include_start_end_transitions=False)
+        super().__init__(num_tags=num_tags, batch_first=batch_first)
         self.num_tags = num_tags
         nn.init.zeros_(self.transitions)
+        nn.init.zeros_(self.start_transitions)
+        nn.init.zeros_(self.end_transitions)
         self.stats = torch.zeros(num_tags, num_tags)
         self.zeros = torch.zeros(num_tags, num_tags)
         self.neg = torch.full((num_tags, num_tags), -1000)
