@@ -35,7 +35,7 @@ Here is the list of all available configs:
     +========================================================================+====================+==========+=================+============+============+
     | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`<ner/ner_ontonotes_bert_mult.json>`                           | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
+    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`   | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
     +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
     | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`             |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
     +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
@@ -271,7 +271,7 @@ dataset generated from the DailyDialog dataset [2]_:
 +----------------------+---------+
 
 Here is the achieved result of training the hybrid model on the above dataset using
-the config file :config:`sentseg_dailydialog <sentence_segmentation/sentseg_dailydialog_bert.json>`:
+the config file :config:`sentseg_dailydialog_bert <sentence_segmentation/sentseg_dailydialog_bert.json>`:
 
 +-----------+-----------+--------+-------+
 | Tag       | Precision | Recall |  F1   |
