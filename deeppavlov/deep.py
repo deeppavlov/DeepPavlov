@@ -30,8 +30,8 @@ log = getLogger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict',
-                             'riseapi', 'risesocket', 'agent-rabbit', 'download', 'install', 'crossval'})
+                    choices={'train', 'evaluate', 'interact', 'predict', 'riseapi', 'risesocket', 'agent-rabbit',
+                             'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,

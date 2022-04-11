@@ -336,7 +336,6 @@ Word vectors for the Russian language trained on joint `Russian Wikipedia <https
 Examples of some models
 ---------------------------
 
-
 -  Run insults detection model with console interface:
 
    .. code-block:: bash

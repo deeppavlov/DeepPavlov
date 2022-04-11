@@ -125,7 +125,6 @@ You can also calculate metrics on the dataset specified in your config file:
         model = evaluate_model(<config_path>, download=True)
 
 
-
 Using GPU
 ~~~~~~~~~
 
