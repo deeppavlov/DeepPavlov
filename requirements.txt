@@ -24,4 +24,4 @@ click==7.1.2
 uvicorn==0.11.7
 sacremoses==0.0.35
 uvloop==0.14.0
-bitsandbytes-cuda100==0.25.0
+bitsandbytes-cuda113==0.25.0

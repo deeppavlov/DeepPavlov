@@ -221,7 +221,7 @@ class TorchTransformersClassifierModel(TorchModel):
                         self.model.classifier.out_proj.out_features = self.n_classes
                         self.model.num_labels = self.n_classes
 
-                except torch.nn.modules.module.ModuleAttributeError:
+                except AttributeError or torch.nn.modules.module.ModuleAttributeError:
                     hidden_size = self.model.classifier.in_features
 
                     if self.n_classes != self.model.num_labels:

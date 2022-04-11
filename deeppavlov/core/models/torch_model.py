@@ -108,13 +108,19 @@ class TorchModel(NNModel):
         try:
             # Import BNB opt
             import bitsandbytes as bnb
-            if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
-                opt_name = self.optimizer_name + '8bit'
+            if 'AdamW' in self.optimizer_name:
+                log.info('No weight decay supported in bitsandbytes yet')
+                opt_name = self.optimizer_name.replace('AdamW','Adam')
             else:
                 opt_name = self.optimizer_name
+            #if self.optimizer_name[-4:] != '8bit':  # backwards compatibility
+            #    opt_name = opt_name + '8bit'
+            log.info(f'Using bitsandbytes optimizer {opt_name}')
             optimizer = getattr(bnb.optim, opt_name)(
                 self.model.parameters(), **self.optimizer_parameters)
-        except:
+        except Exception as e:
+            print(e)
+            breakpoint()
             log.info('Not imported 8bit optimizer - resorting to torch optimizer')
             optimizer = getattr(torch.optim, self.optimizer_name)(
                 self.model.parameters(), **self.optimizer_parameters)
