@@ -323,12 +323,6 @@ Word vectors for the Russian language trained on joint `Russian Wikipedia <https
 Examples of some models
 ---------------------------
 
--  Run insults detection model with Telegram interface:
-
-   .. code-block:: bash
-
-      python -m deeppavlov telegram insults_kaggle_bert -d -t <TELEGRAM_TOKEN>
-
 -  Run insults detection model with console interface:
 
    .. code-block:: bash
@@ -346,10 +340,6 @@ Examples of some models
    .. code-block:: bash
 
       python -m deeppavlov predict insults_kaggle_bert -d --batch-size 15 < /data/in.txt > /data/out.txt
-
-
-View `video demo <https://youtu.be/yzoiCa_sMuY>`__ of deployment of a
-goal-oriented bot and a slot-filling model with Telegram UI.
 
 
 .. _`SQuAD-v1.1`: https://arxiv.org/abs/1606.05250

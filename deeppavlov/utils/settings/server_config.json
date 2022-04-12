@@ -10,14 +10,6 @@
     "unix_socket_file": "/tmp/deeppavlov_socket.s",
     "socket_launch_message": "launching socket server at"
   },
-  "telegram": {
-    "token": "",
-    "conversation_lifetime": 3600,
-    "start_message": "Welcome to DeepPavlov inference bot!",
-    "help_message": "Welcome to DeepPavlov inference bot!",
-    "next_argument_message": "Please enter an argument '{}'",
-    "unsupported_message": "Unsupported message received."
-  },
   "agent-rabbit": {
     "service_name": "",
     "agent_namespace": "deeppavlov_agent",
@@ -28,28 +20,5 @@
     "rabbit_login": "guest",
     "rabbit_password": "guest",
     "rabbit_virtualhost": "/"
-  },
-  "deprecated": {
-    "AlexaBot": {
-      "amazon_cert_lifetime_secs": 3600,
-      "request_timestamp_tolerance_secs": 150,
-      "refresh_valid_certs_period_secs": 120,
-      "intent_name": "AskDeepPavlov",
-      "slot_name": "raw_input"
-    },
-    "MSBot": {
-      "auth_polling_interval": 3500,
-      "auth_url": "https://login.microsoftonline.com/botframework.com/oauth2/v2.0/token",
-      "auth_headers": {
-        "Host": "login.microsoftonline.com",
-        "Content-Type": "application/x-www-form-urlencoded"
-      },
-      "auth_payload": {
-        "grant_type": "client_credentials",
-        "scope": "https://api.botframework.com/.default",
-        "client_id": "",
-        "client_secret": ""
-      }
-    }
   }
 }

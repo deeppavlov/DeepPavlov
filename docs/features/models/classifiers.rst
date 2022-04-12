@@ -31,7 +31,7 @@ or its name without an extension, for example :config:`"insults_kaggle_bert" <cl
 
 To download pre-trained models, vocabs, embeddings on the dataset of interest one should run the following command
 providing corresponding name of the config file (see above)
-or provide flag ``-d`` for commands like ``interact``, ``telegram``, ``train``, ``evaluate``:
+or provide flag ``-d`` for commands like ``interact``,  ``train``, ``evaluate``:
 
 .. code:: bash
 

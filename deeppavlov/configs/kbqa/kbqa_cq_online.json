@@ -129,7 +129,6 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [
