@@ -5,10 +5,10 @@ from torchcrf import CRF as CRFbase
 
 
 class CRF(CRFbase):
-    """Class with Conditional Random Field from https://github.com/allenai/allennlp
+    """Class with Conditional Random Field from PyTorch-CRF library
        with modified training function
     """
-    
+
     def __init__(self, num_tags: int, batch_first: bool = False) -> None:
         super().__init__(num_tags=num_tags, batch_first=batch_first)
         nn.init.zeros_(self.transitions)
