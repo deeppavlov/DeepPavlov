@@ -14,21 +14,11 @@
 
 
 import bisect
-import pickle
-import unicodedata
-from collections import Counter
 from logging import getLogger
-from pathlib import Path
-from typing import Tuple, List, Union, Dict
+from typing import List, Dict
 
-import numpy as np
-from nltk import word_tokenize
-from tqdm import tqdm
-
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.models.estimator import Estimator
 
 logger = getLogger(__name__)
 
