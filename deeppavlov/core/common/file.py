@@ -28,7 +28,7 @@ log = getLogger(__name__)
 _red_text, _reset_text_color, _sharp_line = "\x1b[31;20m", "\x1b[0m", '#'*80
 DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
                   "# The model '{0}' has been removed from the DeepPavlov configs.\n" \
-                  "# The model '{1}' is starting instead.\n" \
+                  "# The model '{1}' is used instead.\n" \
                   "# To disable this message please switch to '{1}'.\n" \
                   "# Automatic name resolving will be disabled in the next release,\n" \
                   "# and if you try to use '{0}' you will get an ERROR.\n" \
