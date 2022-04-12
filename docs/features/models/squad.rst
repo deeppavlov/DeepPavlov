@@ -74,7 +74,7 @@ Model usage from Python
 
     from deeppavlov import build_model, configs
 
-    model = build_model(configs.squad.squad_bert, download=True)
+    model = build_model('squad_bert', download=True)
     model(['DeepPavlov is library for NLP and dialog systems.'], ['What is DeepPavlov?'])
 
 

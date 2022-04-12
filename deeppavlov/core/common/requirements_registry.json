@@ -96,9 +96,6 @@
   "rel_ranking_infer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "smn_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "stream_spacy_tokenizer": [
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"

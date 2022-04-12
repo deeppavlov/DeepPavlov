@@ -219,7 +219,7 @@ RuBERT-based model is described in  `Adaptation of Deep Bidirectional Multilingu
 | `SDSJ Task B`_ | :config:`DeepPavlov DistilRuBERT-base <squad/squad_ru_convers_distilrubert_6L.json>`                                  |  ru   |  61.23 ± 0.42  |  80.36 ± 0.28   |     1.18Gb      |
 +----------------+-----------------------------------------------------------------------------------------------------------------------+-------+----------------+-----------------+-----------------+
 
-In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_bert_noans.json>`
+In the case when answer is not necessary present in given context we have :config:`multi_squad_bert_noans <squad/multi_squad_bert_noans.json>`
 model. This model outputs empty string in case if there is no answer in context.
 
 
