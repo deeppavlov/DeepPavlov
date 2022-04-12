@@ -11,7 +11,6 @@ class CRF(CRFbase):
     
     def __init__(self, num_tags: int, batch_first: bool = False) -> None:
         super().__init__(num_tags=num_tags, batch_first=batch_first)
-        self.num_tags = num_tags
         nn.init.zeros_(self.transitions)
         nn.init.zeros_(self.start_transitions)
         nn.init.zeros_(self.end_transitions)

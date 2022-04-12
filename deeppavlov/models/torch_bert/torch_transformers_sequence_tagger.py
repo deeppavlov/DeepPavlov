@@ -285,7 +285,8 @@ class TorchTransformersSequenceTagger(TorchModel):
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
         loss.backward()
-        self.crf(y, y_masks)
+        if self.use_crf:
+            self.crf(y, y_masks)
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
@@ -392,6 +393,8 @@ class TorchTransformersSequenceTagger(TorchModel):
                 if weights_path_crf.exists():
                     checkpoint = torch.load(weights_path_crf, map_location=self.device)
                     self.crf.load_state_dict(checkpoint["model_state_dict"], strict=False)
+                else:
+                    log.info(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
