@@ -113,7 +113,6 @@
     "out": [
       "ans_predicted",
       "ans_start_predicted",
-      "logits",
       "scores"
     ]
   },

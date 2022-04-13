@@ -92,8 +92,8 @@ class LogitRanker(Component):
                 results_sort = sorted(results, key=itemgetter(2), reverse=True)
             best_answers = [x[0] for x in results_sort[:self.top_n]]
             best_answers_place = [x[1] for x in results_sort[:self.top_n]]
-            best_answers_score = [x[3] for x in results_sort[:self.top_n]]
-            best_answers_contexts = [x[4] for x in results_sort[:self.top_n]]
+            best_answers_score = [x[2] for x in results_sort[:self.top_n]]
+            best_answers_contexts = [x[3] for x in results_sort[:self.top_n]]
             batch_best_answers.append(best_answers)
             batch_best_answers_place.append(best_answers_place)
             batch_best_answers_score.append(best_answers_score)
