@@ -30,7 +30,7 @@ Training (if you have your own data)
     from deeppavlov import configs, train_evaluate_model_from_config
 
     train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
-    train_evaluate_model_from_config(configs.squad.multi_squad_noans, download=True)
+    train_evaluate_model_from_config(configs.squad.qa_squad2_bert, download=True)
 
 Building
 
@@ -73,7 +73,7 @@ Running ODQA
 
 .. note::
 
-    About **24 GB of RAM** required.
+    About **22 GB of RAM** required.
     It is possible to run on a 16 GB machine, but than swap size should be at least 8 GB.
 
 Training
@@ -141,20 +141,14 @@ Scores for **ODQA** skill:
 |                                                                                                                                  |      |                      |                +----------+----------+-----------+---------+
 | Model                                                                                                                            | Lang |    Dataset           |   WikiDump     |  F1      |   EM     |   F1      |   EM    |
 +----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |      |                      | enwiki20180211 |  35.89   |  29.21   |  39.96    |  32.64  |
+|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |  En  |                      | enwiki20180211 |  46.24   |  38.85   |  52.05    |  43.97  |
 +----------------------------------------------------------------------------------------------------------------------------------+      +                      +----------------+----------+----------+-----------+---------+
-|`DeepPavlov <https://github.com/deepmipt/DeepPavlov/blob/0.17.1/deeppavlov/configs/odqa/en_odqa_infer_enwiki20161221.json>`_ [*]_ |  En  |   SQuAD (dev)        |                | **37.83**|**31.26** |  41.86    |  34.73  |
-+----------------------------------------------------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
 |`DrQA`_                                                                                                                           |      |                      |                |   \-     |  27.1    |   \-      |   \-    |
 +----------------------------------------------------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
 |`R3`_                                                                                                                             |      |                      | enwiki20161221 |  37.5    |  29.1    |   \-      |   \-    |
 +----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki_rubert.json>`                                                     |      |                      |                | **42.02**|**29.56** |   \-      |   \-    |
-+----------------------------------------------------------------------------------------------------------------------------------+  Ru  +  SDSJ Task B (dev)   + ruwiki20180401 +----------+----------+-----------+---------+
-|:config:`DeepPavlov <odqa/ru_odqa_infer_wiki.json>`                                                                               |      |                      |                |  28.56   |  18.17   |   \-      |   \-    |
+|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki.json>`                                                            |  Ru  |  SDSJ Task B (dev)   | ruwiki20180401 | **42.02**|**29.56** |   \-      |   \-    |  
 +----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-
-.. [*] Model is removed in DeepPavlov 0.18.0. Use older library versions to run the model.
 
 EM stands for "exact-match accuracy". Metrics are counted for top 5 and top 25 documents returned by retrieval module.
 
