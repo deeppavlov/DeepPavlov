@@ -13,26 +13,17 @@
 # limitations under the License.
 
 import re
-import time
 from logging import getLogger
 from string import punctuation
-from typing import List, Dict, Tuple, Any
-from collections import defaultdict
+from typing import List, Tuple
 
-import numpy as np
-import pymorphy2
-from nltk.corpus import stopwords
 from nltk import sent_tokenize
 from transformers import AutoTokenizer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import load_pickle, save_pickle
 from deeppavlov.models.entity_extraction.entity_detection_parser import EntityDetectionParser
-from deeppavlov.models.tokenizers.utils import detokenize
 
 log = getLogger(__name__)
 
@@ -56,7 +47,7 @@ class NerChunker(Component):
         self.batch_size = batch_size
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
-                                       do_lower_case=True)
+                                                       do_lower_case=True)
         self.punct_ext = punctuation + " " + "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
         self.lowercase = lowercase
@@ -77,7 +68,7 @@ class NerChunker(Component):
         text = ""
         cur_len = 0
         cur_chunk_len = 0
-        
+
         for n, doc in enumerate(docs_batch):
             if self.lowercase:
                 doc = doc.lower()
@@ -94,9 +85,8 @@ class NerChunker(Component):
                 for doc_piece in doc_pieces:
                     sentences += sent_tokenize(doc_piece)
                 for sentence in sentences:
-                    cur_chunk_len = 0
                     sentence_tokens = re.findall(self.re_tokenizer, sentence)
-                    sentence_len = sum([len(self.tokenizer.encode_plus(token, add_special_tokens = False)["input_ids"])
+                    sentence_len = sum([len(self.tokenizer.encode_plus(token, add_special_tokens=False)["input_ids"])
                                         for token in sentence_tokens])
                     if cur_len + sentence_len < self.max_seq_len:
                         text += f"{sentence} "
@@ -112,7 +102,7 @@ class NerChunker(Component):
                             sentences_offsets_batch.append(sentences_offsets_list)
                             sentences_batch.append(sentences_list)
                             nums_batch.append(n)
-                        
+
                         if sentence_len < self.max_seq_len:
                             text = f"{sentence} "
                             cur_len = sentence_len
@@ -127,7 +117,8 @@ class NerChunker(Component):
                             for chunk in sentence_chunks:
                                 chunk_tokens = re.findall(self.re_tokenizer, chunk)
                                 chunk_len = sum([len(self.tokenizer.encode_plus(token,
-                                                 add_special_tokens = False)["input_ids"]) for token in chunk_tokens])
+                                                                                add_special_tokens=False)["input_ids"])
+                                                 for token in chunk_tokens])
                                 if cur_len + chunk_len < self.max_seq_len:
                                     text += f"{chunk} "
                                     cur_len += chunk_len + 1
@@ -142,7 +133,7 @@ class NerChunker(Component):
                                         sentences_offsets_batch.append(sentences_offsets_list)
                                         sentences_batch.append(sentences_list)
                                         nums_batch.append(n)
-                                    
+
                                     text = f"{chunk} "
                                     cur_len = chunk_len
                                     start = 0
@@ -150,8 +141,8 @@ class NerChunker(Component):
                                     sentences_offsets_list = [(start, end)]
                                     sentences_list = [chunk]
                                     start = end + 1
-                    
-                text = text.strip().strip(",")                
+
+                text = text.strip().strip(",")
                 if text:
                     text_batch.append(text)
                     nums_batch.append(n)
@@ -162,19 +153,20 @@ class NerChunker(Component):
                 nums_batch.append(n)
                 sentences_offsets_batch.append([(0, len(doc))])
                 sentences_batch.append([doc])
-                        
+
         num_batches = len(text_batch) // self.batch_size + int(len(text_batch) % self.batch_size > 0)
         for jj in range(num_batches):
-            text_batch_list.append(text_batch[jj*self.batch_size:(jj+1)*self.batch_size])
-            nums_batch_list.append(nums_batch[jj*self.batch_size:(jj+1)*self.batch_size])
-            sentences_offsets_batch_list.append(sentences_offsets_batch[jj*self.batch_size:(jj+1)*self.batch_size])
-            sentences_batch_list.append(sentences_batch[jj*self.batch_size:(jj+1)*self.batch_size])
+            text_batch_list.append(text_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
+            nums_batch_list.append(nums_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
+            sentences_offsets_batch_list.append(
+                sentences_offsets_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
+            sentences_batch_list.append(sentences_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
 
         return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list
 
     def sanitize(self, text):
         text_len = len(text)
-        
+
         if text_len > 0 and text[text_len - 1] not in {'.', '!', '?'}:
             i = text_len - 1
             while text[i] in self.punct_ext and i > 0:
@@ -197,7 +189,6 @@ class NerChunkModel(Component):
 
     def __init__(self, ner: Chainer,
                  ner_parser: EntityDetectionParser,
-                 lemmatize: bool = False,
                  **kwargs) -> None:
         """
         Args:
@@ -227,15 +218,15 @@ class NerChunkModel(Component):
             doc_sentences_batch: list of sentences from texts
         """
         entity_substr_batch_list, entity_offsets_batch_list, entity_positions_batch_list, tags_batch_list, \
-            entity_probas_batch_list, text_len_batch_list, text_tokens_len_batch_list = [], [], [], [], [], [], []
+        entity_probas_batch_list, text_len_batch_list, text_tokens_len_batch_list = [], [], [], [], [], [], []
         for text_batch, sentences_offsets_batch, sentences_batch in \
                 zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
             text_batch = [text.replace("\xad", " ") for text in text_batch]
-            
+
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch, probas_batch = self.ner(text_batch)
             entity_substr_batch, entity_positions_batch, entity_probas_batch = \
                 self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch)
-            
+
             entity_pos_tags_probas_batch = [[(entity_substr.lower(), entity_substr_positions, tag, entity_proba)
                                              for tag, entity_substr_list in entity_substr_dict.items()
                                              for entity_substr, entity_substr_positions, entity_proba in
@@ -243,9 +234,9 @@ class NerChunkModel(Component):
                                                  entity_probas_dict[tag])]
                                             for entity_substr_dict, entity_positions_dict, entity_probas_dict in
                                             zip(entity_substr_batch, entity_positions_batch, entity_probas_batch)]
-            
+
             entity_substr_batch, entity_offsets_batch, entity_positions_batch, tags_batch, \
-                probas_batch = [], [], [], [], []
+            probas_batch = [], [], [], [], []
             for entity_pos_tags_probas, ner_tokens_offsets_list in \
                     zip(entity_pos_tags_probas_batch, ner_tokens_offsets_batch):
                 if entity_pos_tags_probas:
@@ -256,7 +247,8 @@ class NerChunkModel(Component):
                         end_offset = ner_tokens_offsets_list[entity_positions[-1]][1]
                         entity_offsets_list.append((start_offset, end_offset))
                 else:
-                    entity_substr_list, entity_offsets_list, entity_positions_list, tags_list, probas_list = [], [], [], [], []
+                    entity_substr_list, entity_offsets_list, entity_positions_list = [], [], []
+                    tags_list, probas_list = [], []
                 entity_substr_batch.append(list(entity_substr_list))
                 entity_offsets_batch.append(list(entity_offsets_list))
                 entity_positions_batch.append(list(entity_positions_list))
@@ -317,7 +309,7 @@ class NerChunkModel(Component):
                     cur_doc_num = doc_num
                     text_len_sum = text_len + 1
                     text_tokens_len_sum = text_tokens_len
-        
+
         doc_entity_substr_batch.append(doc_entity_substr)
         doc_tags_batch.append(doc_tags)
         doc_probas_batch.append(doc_probas)

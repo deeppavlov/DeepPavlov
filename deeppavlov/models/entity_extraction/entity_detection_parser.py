@@ -67,7 +67,8 @@ class EntityDetectionParser(Component):
         with open(str(expand_path(tags_file))) as fl:
             tags = [line.split('\t')[0] for line in fl.readlines()]
             if self.entity_tags is None:
-                self.entity_tags = list({tag.split('-')[1] for tag in tags if len(tag.split('-')) > 1}.difference({self.o_tag}))
+                self.entity_tags = list(
+                    {tag.split('-')[1] for tag in tags if len(tag.split('-')) > 1}.difference({self.o_tag}))
 
             self.entity_prob_ind = {entity_tag: [i for i, tag in enumerate(tags) if entity_tag in tag]
                                     for entity_tag in self.entity_tags}
@@ -79,7 +80,7 @@ class EntityDetectionParser(Component):
             self.tag_ind_dict[0] = self.o_tag
 
     def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]],
-                       tokens_probas_batch: np.ndarray) -> \
+                 tokens_probas_batch: np.ndarray) -> \
             Tuple[List[Union[List[str], Dict[str, List[str]]]], List[List[str]],
                   List[Union[List[int], Dict[str, List[List[int]]]]]]:
         """
@@ -160,11 +161,11 @@ class EntityDetectionParser(Component):
                             entities_dict[c_tag].append(entity)
                             entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
                             cur_probas = entity_probas_dict[c_tag]
-                            entities_probas_dict[c_tag].append(round(sum(cur_probas)/len(cur_probas), 4))
+                            entities_probas_dict[c_tag].append(round(sum(cur_probas) / len(cur_probas), 4))
                         entity_dict[c_tag] = []
                         entity_positions_dict[c_tag] = []
                         entity_probas_dict[c_tag] = []
-                
+
                 entity_dict[f_tag].append(tok)
                 entity_positions_dict[f_tag].append(cnt)
                 entity_probas_dict[f_tag].append(probas[self.tags_ind[tag]])
@@ -179,8 +180,8 @@ class EntityDetectionParser(Component):
                         entities_dict[c_tag].append(entity)
                         entities_positions_dict[c_tag].append(entity_positions_dict[c_tag])
                         cur_probas = entity_probas_dict[c_tag]
-                        entities_probas_dict[c_tag].append(round(sum(cur_probas)/len(cur_probas), 4))
-                        
+                        entities_probas_dict[c_tag].append(round(sum(cur_probas) / len(cur_probas), 4))
+
                     entity_dict[c_tag] = []
                     entity_positions_dict[c_tag] = []
                     entity_probas_dict[c_tag] = []
@@ -189,8 +190,8 @@ class EntityDetectionParser(Component):
         entities_list = [entity for tag, entities in entities_dict.items() for entity in entities]
         entities_positions_list = [position for tag, positions in entities_positions_dict.items()
                                    for position in positions]
-        entities_probas_list = [proba for tag, proba  in entities_probas_dict.items() for proba in probas]
-        
+        entities_probas_list = [proba for tag, probas in entities_probas_dict.items() for proba in probas]
+
         entities_dict = dict(entities_dict)
         entities_positions_dict = dict(entities_positions_dict)
         entities_probas_dict = dict(entities_probas_dict)

@@ -10,7 +10,7 @@ from deeppavlov.core.common.registry import register
 @register('answer_types_extractor')
 class AnswerTypesExtractor:
     def __init__(self, lang: str, types_filename: str, types_sets_filename: str,
-                       num_types_to_return: int = 15, **kwargs):
+                 num_types_to_return: int = 15, **kwargs):
         self.lang = lang
         self.types_filename = str(expand_path(types_filename))
         self.types_sets_filename = str(expand_path(types_sets_filename))
@@ -28,9 +28,9 @@ class AnswerTypesExtractor:
             self.types_dict = pickle.load(fl)
         with open(self.types_sets_filename, 'rb') as fl:
             self.types_sets = pickle.load(fl)
-    
+
     def __call__(self, questions_batch: List[str], entity_substr_batch: List[List[str]],
-                       tags_batch: List[List[str]], types_substr_batch: List[List[str]] = None):
+                 tags_batch: List[List[str]], types_substr_batch: List[List[str]] = None):
         types_sets_batch = []
         if types_substr_batch is None:
             types_substr_batch = []
@@ -51,13 +51,14 @@ class AnswerTypesExtractor:
                     for token in doc:
                         if token.head.text == type_noun and token.dep_ in ["amod", "compound"]:
                             type_adj = token.text
-                            if not any([type_adj.lower() in entity_substr.lower() for entity_substr in entity_substr_list]):
+                            if not any([type_adj.lower() in entity_substr.lower() for entity_substr in
+                                        entity_substr_list]):
                                 types_substr.append(type_adj)
                             break
                         elif token.head.text == type_noun and token.dep_ == "prep":
                             if len(list(token.children)) == 1 \
                                     and not any([list(token.children)[0] in entity_substr.lower()
-                                              for entity_substr in entity_substr_list]):
+                                                 for entity_substr in entity_substr_list]):
                                 types_substr += [token.text, list(token.children)[0]]
                 elif any([word in question for word in self.pronouns]):
                     for token in doc:
@@ -86,12 +87,12 @@ class AnswerTypesExtractor:
                     else:
                         inters = types_substr_tokens.intersection(set(label_tokens))
                         cur_cnts.append(len(inters) / max(len(types_substr_tokens), len(label_tokens)))
-                
+
                 types_scores.append([entity, max(cur_cnts), cnt])
             types_scores = sorted(types_scores, key=lambda x: (x[1], x[2]), reverse=True)
             cur_types = [elem[0] for elem in types_scores if elem[1] > 0][:self.num_types_to_return]
             types_sets_batch.append(cur_types)
-        
+
         for n, (question, types_sets) in enumerate(zip(questions_batch, types_sets_batch)):
             question = question.lower()
             if not types_sets:
@@ -105,7 +106,7 @@ class AnswerTypesExtractor:
                         types_sets_batch[n] = self.types_sets["PER"]
                     elif question.startswith("where"):
                         types_sets_batch[n] = self.types_sets["LOC"]
-        
+
         new_entity_substr_batch, new_entity_offsets_batch, new_tags_batch = [], [], []
         for question, entity_substr_list, tags_list in zip(questions_batch, entity_substr_batch, tags_batch):
             new_entity_substr, new_tags = [], []
@@ -121,5 +122,5 @@ class AnswerTypesExtractor:
             else:
                 new_entity_substr_batch.append(entity_substr_list)
                 new_tags_batch.append(tags_list)
-                    
+
         return types_sets_batch, new_entity_substr_batch, new_tags_batch

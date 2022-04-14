@@ -32,8 +32,8 @@ class RelRankerInfer(Component, Serializable):
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
-                 ranker = None,
-                 bert_preprocessor = None,
+                 ranker=None,
+                 bert_preprocessor=None,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40,
@@ -87,9 +87,9 @@ class RelRankerInfer(Component, Serializable):
         pass
 
     def __call__(self, questions_list: List[str],
-                       candidate_answers_list: List[List[Tuple[str]]],
-                       entities_list: List[List[str]] = None,
-                       template_answers_list: List[str] = None) -> List[str]:
+                 candidate_answers_list: List[List[Tuple[str]]],
+                 entities_list: List[List[str]] = None,
+                 template_answers_list: List[str] = None) -> List[str]:
         answers = []
         confidence = 0.0
         if entities_list is None:
@@ -101,7 +101,8 @@ class RelRankerInfer(Component, Serializable):
             answers_with_scores = []
             answer = "Not Found"
             if self.rank:
-                n_batches = len(candidate_answers) // self.batch_size + int(len(candidate_answers) % self.batch_size > 0)
+                n_batches = len(candidate_answers) // self.batch_size + int(
+                    len(candidate_answers) % self.batch_size > 0)
                 for i in range(n_batches):
                     questions_batch = []
                     rels_batch = []
@@ -118,8 +119,8 @@ class RelRankerInfer(Component, Serializable):
                             candidate_entities = candidate_ans_and_rels["entities"]
                             candidate_confidence = candidate_ans_and_rels["rel_conf"]
                             candidate_rels_str = " # ".join([self.rel_q2name[candidate_rel] \
-                                                         for candidate_rel in candidate_rels if
-                                                         candidate_rel in self.rel_q2name])
+                                                             for candidate_rel in candidate_rels if
+                                                             candidate_rel in self.rel_q2name])
                         if candidate_rels_str:
                             questions_batch.append(question)
                             rels_batch.append(candidate_rels)
@@ -136,13 +137,15 @@ class RelRankerInfer(Component, Serializable):
                             probas = self.ranker(questions_batch, rels_labels_batch)
                         probas = [proba[1] for proba in probas]
                         for j, (answer, entities, confidence, rels_ids, rels_labels) in \
-                                enumerate(zip(answers_batch, entities_batch, confidences_batch, rels_batch, rels_labels_batch)):
-                            answers_with_scores.append((answer, entities, rels_labels, rels_ids, max(probas[j], confidence)))
+                                enumerate(zip(answers_batch, entities_batch, confidences_batch, rels_batch,
+                                              rels_labels_batch)):
+                            answers_with_scores.append(
+                                (answer, entities, rels_labels, rels_ids, max(probas[j], confidence)))
 
                 answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1], reverse=True)
             else:
                 answers_with_scores = [(answer, rels, conf) for *rels, answer, conf in candidate_answers]
-            
+
             answer_ids = tuple()
             if answers_with_scores:
                 log.debug(f"answers: {answers_with_scores[0]}")
@@ -211,8 +214,8 @@ class RelRankerInfer(Component, Serializable):
             if self.softmax:
                 scores = [score for rel, score in rels_with_scores]
                 softmax_scores = softmax(scores)
-                rels_with_scores = [(rel, softmax_score) for (rel, score), softmax_score in 
-                                                                  zip(rels_with_scores, softmax_scores)]
+                rels_with_scores = [(rel, softmax_score) for (rel, score), softmax_score in
+                                    zip(rels_with_scores, softmax_scores)]
             rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
         return rels_with_scores[:self.rels_to_leave]

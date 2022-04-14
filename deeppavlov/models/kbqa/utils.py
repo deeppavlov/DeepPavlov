@@ -15,8 +15,6 @@
 import re
 import itertools
 from typing import List, Tuple
-from deeppavlov.core.common.file import load_pickle
-from deeppavlov.core.commands.utils import expand_path
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:

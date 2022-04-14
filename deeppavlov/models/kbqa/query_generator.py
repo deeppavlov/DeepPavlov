@@ -82,8 +82,6 @@ class QueryGenerator(QueryGeneratorBase):
         template_answers_batch = []
         templates_nums_batch = []
         qg_tm1 = time.time()
-        candidate_outputs = []
-        template_answer = ""
         log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch} {template_type_batch} {entity_tags_batch}")
         for question, question_sanitized, template_type, entities_from_ner, entity_tags_list, answer_types in \
                 zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
@@ -97,7 +95,7 @@ class QueryGenerator(QueryGeneratorBase):
             template_answers_batch.append(template_answer)
             templates_nums_batch.append(templates_nums)
         qg_tm2 = time.time()
-        log.debug(f"--------query generator time {qg_tm2-qg_tm1}")
+        log.debug(f"--------query generator time {qg_tm2 - qg_tm1}")
         if self.return_answers:
             answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
                                       template_answers_batch)
@@ -147,10 +145,10 @@ class QueryGenerator(QueryGeneratorBase):
                     for triplet_info in triplet_info_list]
         rels = [[rel for rel in rel_list] for rel_list in rels]
         rel_tm2 = time.time()
-        log.debug(f"--------rels find time: {rel_tm2-rel_tm1}")
+        log.debug(f"--------rels find time: {rel_tm2 - rel_tm1}")
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
-        answer_ent = re.findall("select [\(]?([\S]+) ", query)
+        answer_ent = re.findall(r"select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
         order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
         if order_variable:
@@ -206,10 +204,11 @@ class QueryGenerator(QueryGeneratorBase):
             if comb_num == 0:
                 log.debug(f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
             if comb_num > 0:
-                 answer_types = []
-            queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types, rel_types,
-                                 return_if_found))
-            
+                answer_types = []
+            queries_list.append(
+                (rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types, rel_types,
+                 return_if_found))
+
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
                 break
@@ -227,7 +226,7 @@ class QueryGenerator(QueryGeneratorBase):
             for combs, confidence, candidate_output in zip(all_combs_list, confidences_list, candidate_outputs_list):
                 candidate_outputs += [[combs[0]] + [rel for rel, score in combs[2][:-1]] + output + [confidence]
                                       for output in candidate_output]
-            
+
             if self.return_all_possible_answers:
                 candidate_outputs_dict = OrderedDict()
                 for candidate_output in candidate_outputs:
@@ -241,15 +240,15 @@ class QueryGenerator(QueryGeneratorBase):
                                               "relations": list(candidate_rel_comb),
                                               "answers": tuple([ans for ans, conf in candidate_output]),
                                               "rel_conf": candidate_output[0][1]
-                                             })
+                                              })
             else:
                 candidate_outputs = [{"entities": f_entities,
                                       "relations": f_relations,
                                       "answers": f_answers,
                                       "rel_conf": f_rel_conf
-                                     } for f_entities, *f_relations, f_answers, f_rel_conf in candidate_outputs]
+                                      } for f_entities, *f_relations, f_answers, f_rel_conf in candidate_outputs]
         query_tm2 = time.time()
-        log.debug(f"--------queries execution time: {query_tm2-query_tm1}")
+        log.debug(f"--------queries execution time: {query_tm2 - query_tm1}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs

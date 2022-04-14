@@ -48,7 +48,6 @@ class QueryGeneratorBase(Component, Serializable):
                  wiki_file_format: str = "hdt",
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
-                 answer_types_filename: str = None,
                  syntax_structure_known: bool = False,
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
@@ -124,17 +123,19 @@ class QueryGeneratorBase(Component, Serializable):
                           (')', ''), ('–', '-')]
         for old, new in replace_tokens:
             question = question.replace(old, new)
-    
+
         temp_tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
-        entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized, entities_from_ner)
+        entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized,
+                                                                                            entities_from_ner)
         temp_tm2 = time.time()
-        log.debug(f"--------template matching time: {temp_tm2-temp_tm1}")
+        log.debug(f"--------template matching time: {temp_tm2 - temp_tm1}")
         self.template_nums = [query_type_template]
         templates_nums = []
 
-        log.debug(f"question: {question} entities_from_template {entities_from_template} template_type {self.template_nums} "
-                  f"types from template {types_from_template} rels_from_template {rels_from_template}")
+        log.debug(
+            f"question: {question} entities_from_template {entities_from_template} template_type {self.template_nums} "
+            f"types from template {types_from_template} rels_from_template {rels_from_template}")
 
         if entities_from_template or types_from_template:
             if rels_from_template[0][0] == "PHOW":
@@ -144,7 +145,7 @@ class QueryGeneratorBase(Component, Serializable):
                 el_tm1 = time.time()
                 entity_ids = self.get_entity_ids(entities_from_template, entity_tags, question)
                 el_tm2 = time.time()
-                log.debug(f"--------entity linking time: {el_tm2-el_tm1}")
+                log.debug(f"--------entity linking time: {el_tm2 - el_tm1}")
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"entity_types {entity_types}")
                 log.debug(f"types_from_template {types_from_template}")
@@ -159,13 +160,14 @@ class QueryGeneratorBase(Component, Serializable):
             el_tm1 = time.time()
             entity_ids = self.get_entity_ids(entities_from_ner, entity_tags, question)
             el_tm2 = time.time()
-            log.debug(f"--------entity linking time: {el_tm2-el_tm1}")
+            log.debug(f"--------entity linking time: {el_tm2 - el_tm1}")
             log.debug(f"(__call__)entity_ids: {entity_ids}")
             self.template_nums = template_types
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
             if not self.syntax_structure_known:
                 entity_ids = entity_ids[:3]
-            candidate_outputs, templates_nums = self.sparql_template_parser(question_sanitized, entity_ids, [], answer_types)
+            candidate_outputs, templates_nums = self.sparql_template_parser(question_sanitized, entity_ids, [],
+                                                                            answer_types)
         return candidate_outputs, template_answer, templates_nums
 
     def get_entity_ids(self, entities: List[str], tags: List[str], question: str) -> List[List[str]]:
@@ -208,13 +210,14 @@ class QueryGeneratorBase(Component, Serializable):
         new_templates = []
         new_templates_nums = []
         for template, template_num in zip(templates, templates_nums):
-            if (not self.syntax_structure_known and [len(entity_ids), len(type_ids)] == template["entities_and_types_num"]) or self.syntax_structure_known:
+            if (not self.syntax_structure_known and [len(entity_ids), len(type_ids)] == template[
+                "entities_and_types_num"]) or self.syntax_structure_known:
                 new_templates.append(template)
                 new_templates_nums.append(template_num)
-            
+
         templates = new_templates
         templates_nums = new_templates_nums
-        
+
         templates_string = '\n'.join([template["query_template"] for template in templates])
         log.debug(f"{templates_string}")
         if not templates:
@@ -237,7 +240,8 @@ class QueryGeneratorBase(Component, Serializable):
                 templates_nums += additional_templates
                 for add_template_num in additional_templates:
                     candidate_outputs += self.query_parser(question, self.template_queries[add_template_num],
-                                    entities_and_types_select, entity_ids, type_ids, answer_types, rels_from_template)
+                                                           entities_and_types_select, entity_ids, type_ids,
+                                                           answer_types, rels_from_template)
                 if candidate_outputs:
                     templates_nums = list(set(templates_nums))
                     return candidate_outputs, templates_nums

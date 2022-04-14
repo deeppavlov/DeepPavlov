@@ -18,20 +18,15 @@ from logging import getLogger
 from typing import List, Dict, Tuple, Union
 from collections import defaultdict
 
-import numpy as np
 import pymorphy2
 from hdt import HDTDocument
 from nltk.corpus import stopwords
-from nltk import sent_tokenize
 from rapidfuzz import fuzz
-from sklearn.feature_extraction.text import TfidfVectorizer
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.core.common.file import load_pickle, save_pickle
 
 log = getLogger(__name__)
 
@@ -43,22 +38,21 @@ class EntityLinker(Component, Serializable):
     """
 
     def __init__(
-        self,
-        load_path: str,
-        entities_database_filename: str,
-        entity_ranker=None,
-        num_entities_for_bert_ranking: int = 50,
-        wikidata_file: str = None,
-        ngram_range: List[int] = None,
-        num_entities_to_return: int = 10,
-        max_text_len: int = 300,
-        lang: str = "en",
-        use_descriptions: bool = True,
-        use_tags: bool = False,
-        lemmatize: bool = False,
-        full_paragraph: bool = False,
-        use_connections: bool = False,
-        **kwargs,
+            self,
+            load_path: str,
+            entities_database_filename: str,
+            entity_ranker=None,
+            num_entities_for_bert_ranking: int = 50,
+            wikidata_file: str = None,
+            num_entities_to_return: int = 10,
+            max_text_len: int = 300,
+            lang: str = "en",
+            use_descriptions: bool = True,
+            use_tags: bool = False,
+            lemmatize: bool = False,
+            full_paragraph: bool = False,
+            use_connections: bool = False,
+            **kwargs,
     ) -> None:
         """
 
@@ -106,12 +100,12 @@ class EntityLinker(Component, Serializable):
         pass
 
     def __call__(
-        self,
-        entity_substr_batch: List[List[str]],
-        entity_tags_batch: List[List[str]] = None,
-        sentences_batch: List[List[str]] = None,
-        entity_offsets_batch: List[List[List[int]]] = None,
-        sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
+            self,
+            entity_substr_batch: List[List[str]],
+            entity_tags_batch: List[List[str]] = None,
+            sentences_batch: List[List[str]] = None,
+            entity_offsets_batch: List[List[List[int]]] = None,
+            sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
     ):
         if sentences_offsets_batch is None and sentences_batch is not None:
             sentences_offsets_batch = []
@@ -148,11 +142,11 @@ class EntityLinker(Component, Serializable):
 
         entity_ids_batch, entity_conf_batch, entity_pages_batch = [], [], []
         for (entity_substr_list, entity_offsets_list, entity_tags_list, sentences_list, sentences_offsets_list,) in zip(
-            entity_substr_batch,
-            entity_offsets_batch,
-            entity_tags_batch,
-            sentences_batch,
-            sentences_offsets_batch,
+                entity_substr_batch,
+                entity_offsets_batch,
+                entity_tags_batch,
+                sentences_batch,
+                sentences_offsets_batch,
         ):
             entity_ids_list, entity_conf_list, entity_pages_list = self.link_entities(
                 entity_substr_list,
@@ -168,12 +162,12 @@ class EntityLinker(Component, Serializable):
         return entity_ids_batch, entity_conf_batch, entity_pages_batch
 
     def link_entities(
-        self,
-        entity_substr_list: List[str],
-        entity_offsets_list: List[List[int]],
-        entity_tags_list: List[str],
-        sentences_list: List[str],
-        sentences_offsets_list: List[List[int]],
+            self,
+            entity_substr_list: List[str],
+            entity_offsets_list: List[List[int]],
+            entity_tags_list: List[str],
+            sentences_list: List[str],
+            sentences_offsets_list: List[List[int]],
     ) -> List[List[str]]:
         log.debug(
             f"entity_substr_list {entity_substr_list} entity_tags_list {entity_tags_list} "
@@ -188,7 +182,7 @@ class EntityLinker(Component, Serializable):
                 for entity_substr in entity_substr_list
             ]
             for entity_substr, entity_substr_split, tag in zip(
-                entity_substr_list, entity_substr_split_list, entity_tags_list
+                    entity_substr_list, entity_substr_split_list, entity_tags_list
             ):
                 cand_ent_init = self.find_exact_match(entity_substr, tag)
                 if not cand_ent_init:
@@ -252,22 +246,22 @@ class EntityLinker(Component, Serializable):
     def process_cand_ent(self, cand_ent_init, entities_and_ids, entity_substr_split, tag):
         if self.use_tags:
             for (
-                cand_entity_title,
-                cand_entity_id,
-                cand_entity_rels,
-                cand_tag,
-                cand_types
+                    cand_entity_title,
+                    cand_entity_id,
+                    cand_entity_rels,
+                    cand_tag,
+                    cand_types
             ) in entities_and_ids:
                 if tag == cand_tag:
                     substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
             if not cand_ent_init:
                 for (
-                    cand_entity_title,
-                    cand_entity_id,
-                    cand_entity_rels,
-                    cand_tag,
-                    cand_types
+                        cand_entity_title,
+                        cand_entity_id,
+                        cand_entity_rels,
+                        cand_tag,
+                        cand_types
                 ) in entities_and_ids:
                     substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
@@ -423,30 +417,30 @@ class EntityLinker(Component, Serializable):
         return entities_with_conn_scores_list
 
     def rank_by_description(
-        self,
-        entity_substr_list: List[str],
-        entity_offsets_list: List[List[int]],
-        cand_ent_list: List[List[str]],
-        cand_ent_descr_list: List[List[str]],
-        entities_scores_list: List[Dict[str, Tuple[int, float]]],
-        sentences_list: List[str],
-        sentences_offsets_list: List[Tuple[int, int]],
-        substr_lens: List[int],
+            self,
+            entity_substr_list: List[str],
+            entity_offsets_list: List[List[int]],
+            cand_ent_list: List[List[str]],
+            cand_ent_descr_list: List[List[str]],
+            entities_scores_list: List[Dict[str, Tuple[int, float]]],
+            sentences_list: List[str],
+            sentences_offsets_list: List[Tuple[int, int]],
+            substr_lens: List[int],
     ) -> List[List[str]]:
         entity_ids_list = []
         conf_list = []
         contexts = []
         for (
-            entity_substr,
-            (entity_start_offset, entity_end_offset),
-            candidate_entities,
+                entity_substr,
+                (entity_start_offset, entity_end_offset),
+                candidate_entities,
         ) in zip(entity_substr_list, entity_offsets_list, cand_ent_list):
             sentence = ""
             rel_start_offset = 0
             rel_end_offset = 0
             found_sentence_num = 0
             for num, (sent, (sent_start_offset, sent_end_offset)) in enumerate(
-                zip(sentences_list, sentences_offsets_list)
+                    zip(sentences_list, sentences_offsets_list)
             ):
                 if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
                     sentence = sent
@@ -462,7 +456,8 @@ class EntityLinker(Component, Serializable):
                     start_of_sentence = max(rel_start_offset - self.max_text_len // 2, 0)
                     end_of_sentence = min(rel_end_offset + self.max_text_len // 2, len(sentence))
                 context = (
-                    sentence[start_of_sentence:rel_start_offset] + "[ENT]" + sentence[rel_end_offset:end_of_sentence]
+                        sentence[start_of_sentence:rel_start_offset] + "[ENT]" + sentence[
+                                                                                 rel_end_offset:end_of_sentence]
                 )
                 if self.full_paragraph:
                     cur_sent_len = len(re.findall(self.re_tokenizer, context))
@@ -505,11 +500,11 @@ class EntityLinker(Component, Serializable):
         scores_list = self.entity_ranker(contexts, cand_ent_list, cand_ent_descr_list)
 
         for (entity_substr, candidate_entities, substr_len, entities_scores, scores,) in zip(
-            entity_substr_list,
-            cand_ent_list,
-            substr_lens,
-            entities_scores_list,
-            scores_list,
+                entity_substr_list,
+                cand_ent_list,
+                substr_lens,
+                entities_scores_list,
+                scores_list,
         ):
             log.debug(f"len candidate entities {len(candidate_entities)}")
             entities_with_scores = [
@@ -532,10 +527,10 @@ class EntityLinker(Component, Serializable):
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]
             elif entities_with_scores and (
-                entities_with_scores[0][1] < 0.3
-                or (entities_with_scores[0][3] < 0.13 and entities_with_scores[0][2] < 20)
-                or (entities_with_scores[0][3] < 0.3 and entities_with_scores[0][2] < 4)
-                or entities_with_scores[0][1] < 0.6
+                    entities_with_scores[0][1] < 0.3
+                    or (entities_with_scores[0][3] < 0.13 and entities_with_scores[0][2] < 20)
+                    or (entities_with_scores[0][3] < 0.3 and entities_with_scores[0][2] < 4)
+                    or entities_with_scores[0][1] < 0.6
             ):
                 top_entities = [self.not_found_str]
                 top_conf = [(0.0, 0, 0.0)]

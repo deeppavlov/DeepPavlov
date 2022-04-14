@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import datetime
-import random
 import re
-import time
 from logging import getLogger
 from typing import List, Tuple, Dict, Any, Union
 from collections import namedtuple
@@ -34,21 +32,21 @@ class WikiParser:
     """This class extract relations, objects or triplets from Wikidata HDT file"""
 
     def __init__(self, wiki_filename: str,
-                       file_format: str = "hdt",
-                       prefixes: Dict[str, Union[str, Dict[str, str]]] = {
-                           "entity": "http://we",
-                           "label": "http://wl",
-                           "alias": "http://wal",
-                           "description": "http://wd",
-                           "rels": {"direct": "http://wpd",
-                                    "no_type": "http://wp",
-                                    "statement": "http://wps",
-                                    "qualifier": "http://wpq"
-                                   },
-                           "statement": "http://ws"
-                       },
-                       max_comb_num: int = 1e6,
-                       lang: str = "@en", **kwargs) -> None:
+                 file_format: str = "hdt",
+                 prefixes: Dict[str, Union[str, Dict[str, str]]] = {
+                     "entity": "http://we",
+                     "label": "http://wl",
+                     "alias": "http://wal",
+                     "description": "http://wd",
+                     "rels": {"direct": "http://wpd",
+                              "no_type": "http://wp",
+                              "statement": "http://wps",
+                              "qualifier": "http://wpq"
+                              },
+                     "statement": "http://ws"
+                 },
+                 max_comb_num: int = 1e6,
+                 lang: str = "@en", **kwargs) -> None:
         """
 
         Args:
@@ -57,7 +55,7 @@ class WikiParser:
             lang: Russian or English language
             **kwargs:
         """
-        
+
         self.prefixes = prefixes
         self.file_format = file_format
         self.wiki_filename = str(expand_path(wiki_filename))
@@ -68,14 +66,14 @@ class WikiParser:
             self.parsed_document = {}
         else:
             raise ValueError("Unsupported file format")
-        
+
         self.max_comb_num = max_comb_num
         self.lang = lang
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = self.execute_queries_list(parser_info_list, queries_list)
         return wiki_parser_output
-    
+
     def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any]):
         wiki_parser_output = []
         query_answer_types = []
@@ -87,7 +85,7 @@ class WikiParser:
                     if answer_types:
                         query_answer_types = answer_types
                     candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
-                                                                 query_answer_types, rel_types)
+                                                    query_answer_types, rel_types)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
@@ -139,10 +137,10 @@ class WikiParser:
                     try:
                         triplets_forw, c = self.document.search_triples(f"{self.prefixes['entity']}/{query}", "", "")
                         triplets.extend([triplet for triplet in triplets_forw
-                                             if not triplet[2].startswith(self.prefixes["statement"])])
+                                         if not triplet[2].startswith(self.prefixes["statement"])])
                         triplets_backw, c = self.document.search_triples("", "", f"{self.prefixes['entity']}/{query}")
                         triplets.extend([triplet for triplet in triplets_forw
-                                             if not triplet[0].startswith(self.prefixes["statement"])])
+                                         if not triplet[0].startswith(self.prefixes["statement"])])
                     except:
                         log.info("Wrong arguments are passed to wiki_parser")
                     wiki_parser_output.append(list(triplets))
@@ -162,7 +160,8 @@ class WikiParser:
             elif parser_info == "find_triplets_for_rel":
                 triplets = []
                 try:
-                    found_triplets, c = self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}", "")
+                    found_triplets, c = self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}",
+                                                                     "")
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(list(found_triplets))
@@ -172,7 +171,7 @@ class WikiParser:
                 wiki_parser_output.append("ok")
             else:
                 raise ValueError("Unsupported query type")
-                
+
         return wiki_parser_output
 
     def execute(self, what_return: List[str],
@@ -196,7 +195,7 @@ class WikiParser:
         """
         extended_combs = []
         combs = []
-        
+
         for n, (query, rel_type) in enumerate(zip(query_seq, rel_types)):
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             """
@@ -272,15 +271,15 @@ class WikiParser:
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
                 combs = [[elem[key] for key in what_return] for elem in combs]
-            
+
             if answer_types:
                 if answer_types == ["date"]:
                     combs = [[entity for entity in comb
-                                  if re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for comb in combs]
+                              if re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for comb in combs]
                 else:
                     answer_types = set(answer_types)
                     combs = [[entity for entity in comb
-                                  if answer_types.intersection(self.find_types(entity))] for comb in combs]
+                              if answer_types.intersection(self.find_types(entity))] for comb in combs]
                 combs = [comb for comb in combs if any([entity for entity in comb])]
 
         return combs
@@ -297,7 +296,7 @@ class WikiParser:
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
                 else:
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
-                          if triplet[1].startswith(self.prefixes["rels"][rel_type])]
+                             if triplet[1].startswith(self.prefixes["rels"][rel_type])]
             else:
                 log.debug("max comb num exceede")
         else:
@@ -314,7 +313,7 @@ class WikiParser:
                     rel = rel.split('/')[-1]
                     triplets = [triplet for triplet in triplets if triplet[1] == rel]
             combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
-        
+
         return combs
 
     def find_label(self, entity: str, question: str) -> str:
@@ -353,13 +352,13 @@ class WikiParser:
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('$', '')
-                
+
                 return entity
 
             elif entity.isdigit():
                 entity = str(entity).replace('.', ',')
                 return entity
-        
+
         if self.file_format == "pickle":
             if entity:
                 if entity.startswith("Q") or entity.startswith("P"):
@@ -376,7 +375,8 @@ class WikiParser:
 
     def format_date(self, entity, question):
         dates_dict = {"January": "января", "February": "февраля", "March": "марта", "April": "апреля", "May": "мая",
-                      "June": "июня", "July": "июля", "August": "августа", "September": "сентября", "October": "октября",
+                      "June": "июня", "July": "июля", "August": "августа", "September": "сентября",
+                      "October": "октября",
                       "November": "ноября", "December": "декабря"}
         date_info = re.findall("([\d]{3,4})-([\d]{1,2})-([\d]{1,2})", entity)
         if date_info:
@@ -424,7 +424,7 @@ class WikiParser:
             triplets = self.uncompress(triplets)
             rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
         return rels
-        
+
     def find_object(self, entity: str, rel: str, direction: str) -> List[str]:
         objects = []
         if not direction:
@@ -438,7 +438,7 @@ class WikiParser:
                     objects.extend([triplet[2].split('/')[-1] for triplet in triplets])
             else:
                 triplets, cnt = self.document.search_triples("", rel, entity)
-                #if cnt < self.max_comb_num:
+                # if cnt < self.max_comb_num:
                 objects.extend([triplet[0].split('/')[-1] for triplet in triplets])
         else:
             entity = entity.split('/')[-1]
@@ -449,7 +449,7 @@ class WikiParser:
                 if rel == found_rel:
                     objects.extend(objects)
         return objects
-        
+
     def check_triplet(self, subj: str, rel: str, obj: str) -> bool:
         if self.file_format == "hdt":
             subj = f"{self.prefixes['entity']}/{subj}"
@@ -471,8 +471,8 @@ class WikiParser:
                     for found_obj in objects:
                         if found_obj == obj:
                             return True
-            return False    
-        
+            return False
+
     def find_types(self, entity: str):
         types = []
         if self.file_format == "hdt":
@@ -492,7 +492,7 @@ class WikiParser:
                     types = triplet[1:]
         types = set(types)
         return types
-        
+
     def find_subclasses(self, entity: str):
         types = []
         if self.file_format == "hdt":
@@ -509,9 +509,10 @@ class WikiParser:
                     types = triplet[1:]
         types = set(types)
         return types
-        
-    def find_type_labels(self, entities_list: Union[str, Tuple[str]], entities: List[str], question: str, answer: str, rels: str,
-                               rels_ids, conf: float) -> List[str]:
+
+    def find_type_labels(self, entities_list: Union[str, Tuple[str]], entities: List[str], question: str, answer: str,
+                         rels: str,
+                         rels_ids, conf: float) -> List[str]:
         type_labels = []
         if isinstance(entities_list, str):
             types = self.find_types(entities_list)
@@ -542,7 +543,7 @@ class WikiParser:
             type_labels_list = list(set(type_labels_list))
             for type_label in type_labels_list:
                 type_labels.append((entity, entities, type_label, answer, rels, rels_ids, conf))
-        
+
         return type_labels
 
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
