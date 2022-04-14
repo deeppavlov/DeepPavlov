@@ -55,11 +55,13 @@ class RelRankerInfer(Component, Serializable):
             wiki_parser: component deeppavlov.models.wiki_parser
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
+            softmax: whether to process relation scores with softmax function
             return_all_possible_answers: whether to return all found answers
             return_answer_ids: whether to return answer ids from Wikidata
             use_api_requester: whether wiki parser will be used as external api
             use_mt_bert: whether multitask bert is used for ranking
             return_sentence_answer: whether to return answer as a sentence
+            rank: whether to rank relations or simple copy input
             return_confidences: whether to return confidences of candidate answers
             **kwargs:
         """

@@ -51,6 +51,8 @@ class TorchTransformersClassifierModel(TorchModel):
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
+        is_binary: whether classification task is binary or multi-class
+        num_special_tokens: number of special tokens used by classification model
     """
 
     def __init__(self, n_classes,

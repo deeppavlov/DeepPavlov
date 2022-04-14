@@ -52,7 +52,6 @@ class QueryGeneratorBase(Component, Serializable):
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
                  use_alt_templates: bool = True,
-                 use_add_templates: bool = False,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -64,13 +63,16 @@ class QueryGeneratorBase(Component, Serializable):
             rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
             sparql_queries_filename: file with sparql query templates
-            wiki_file_format: format of wikidata file
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
+            wiki_file_format: format of wikidata file
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
             syntax_structure_known: if syntax tree parser was used to define query template type
-            use_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
-                Entity Linking and Wiki Parser
+            use_wp_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
+                Wiki Parser
+            use_el_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
+                Entity Linking
+            use_alt_templates: whether to use alternative templates if no answer was found for default query template
             return_answers: whether to return answers or candidate answers
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -89,7 +91,6 @@ class QueryGeneratorBase(Component, Serializable):
         self.use_wp_api_requester = use_wp_api_requester
         self.use_el_api_requester = use_el_api_requester
         self.use_alt_templates = use_alt_templates
-        self.use_add_templates = use_add_templates
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
 

@@ -9,8 +9,19 @@ from deeppavlov.core.common.registry import register
 
 @register('answer_types_extractor')
 class AnswerTypesExtractor:
+    """Class which defines answer types for the question"""
     def __init__(self, lang: str, types_filename: str, types_sets_filename: str,
                  num_types_to_return: int = 15, **kwargs):
+        """
+
+        Args:
+            lang: Russian or English
+            types_filename: filename with dictionary where keys are type ids and values are type labels
+            types_sets_filename: filename with dictionary where keys are NER tags and values are Wikidata types
+                corresponding to tags
+            num_types_to_return: how many answer types to return for each question
+            **kwargs:
+        """
         self.lang = lang
         self.types_filename = str(expand_path(types_filename))
         self.types_sets_filename = str(expand_path(types_sets_filename))
