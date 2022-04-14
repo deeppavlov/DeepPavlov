@@ -39,7 +39,7 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
-        "return_probas": true,
+        "return_tags_and_probas": true,
         "encoder_layer_ids": [-1],
         "optimizer": "AdamW",
         "optimizer_parameters": {
@@ -91,7 +91,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-cased",
