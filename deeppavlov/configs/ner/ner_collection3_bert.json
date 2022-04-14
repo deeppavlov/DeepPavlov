@@ -1,9 +1,11 @@
 {
   "dataset_reader": {
     "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/conll2003/",
-    "dataset_name": "conll2003",
-    "provide_pos": false
+    "data_path": "{DOWNLOADS_PATH}/collection3/",
+    "dataset_name": "collection3",
+    "provide_pos": false,
+    "provide_chunk": false,
+    "iobes": true
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
@@ -108,7 +110,7 @@
   },
   "train": {
     "epochs": 30,
-    "batch_size": 16,
+    "batch_size": 10,
     "metrics": [
       {
         "name": "ner_f1",
@@ -142,13 +144,13 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "bert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_torch_bert/{TRANSFORMER}"
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/ner_rus_bert_coll3_torch"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/0.16/ner/ner_conll2003_torch_bert.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_rus_bert_coll3_torch.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
