@@ -22,6 +22,7 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
 from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
@@ -226,15 +227,6 @@ PARAMS = {
             ]
     },
     "ranking": {
-        ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
-            [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
-              '& look with fdisk -l & hello there & fdisk is all you need',
-              None)],
         ("ranking/ranking_ubuntu_v2_torch_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "doc_retrieval": {
@@ -671,3 +663,18 @@ def test_hashes_existence():
             messages.append(f'got status_code {status} for {url}')
     if messages:
         raise RuntimeError('\n'.join(messages))
+
+
+def test_aliases():
+    configs = list(src_dir.glob('**/*.json'))
+    config_names = [c.stem for c in configs]
+
+    assert len(config_names) == len(set(config_names)), 'Some model names are duplicated'
+
+    aliases_in_configs = set(ALIASES.keys()) & set(config_names)
+    assert aliases_in_configs == set(), f'Following model(s) marked as deprecated but still present in configs list: ' \
+                                        f'{", ".join(aliases_in_configs)}.'
+
+    alias_targets_not_in_configs = set(ALIASES.values()) - set(config_names)
+    assert alias_targets_not_in_configs == set(), f'Following model(s) marked as alias targets but there is no such ' \
+                                                  f'config in the library: {", ".join(alias_targets_not_in_configs)}'

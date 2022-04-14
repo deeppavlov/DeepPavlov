@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
-from typing import Optional, Union
-
-from deeppavlov.utils.connector import TelegramBot
-
-
-def interact_model_by_telegram(model_config: Union[str, Path, dict], token: Optional[str] = None) -> None:
-    bot = TelegramBot(model_config, token)
-    bot.start()
+ALIASES = {
+    'ner_ontonotes_m1': 'ner_conll2003_bert',
+}
