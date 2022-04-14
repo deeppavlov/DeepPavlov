@@ -75,41 +75,12 @@
     ],
     "out": ["answers"]
   },
-  "train": {
-    "epochs": 30,
-    "batch_size": 16,
-    "metrics": [
-      {
-        "name": "ner_f1",
-        "inputs": ["y", "y_pred"]
-      },
-      {
-        "name": "ner_token_f1",
-        "inputs": ["y", "y_pred"]
-      }
-    ],
-    "validation_patience": 10,
-    "val_every_n_batches": 400,
-
-    "log_every_n_batches": 400,
-    "tensorboard_log_dir": "{NER_PATH}/logs",
-    "show_examples": false,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 8,
-    "evaluation_targets": ["valid", "test"],
-    "class_name": "nn_trainer"
-  },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "NER_PATH": "{MODELS_PATH}/ner_lcquad_ent_and_type",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
-    },
-    "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
-      "server_utils": "NER"
     },
     "download": [
       {

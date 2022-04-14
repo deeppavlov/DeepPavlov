@@ -9,7 +9,6 @@
         "encoder_weights_path": "{MODELS_PATH}/entity_linking_rus/encoder.pth.tar",
         "bilinear_weights_path": "{MODELS_PATH}/entity_linking_rus/bilinear.pth.tar",
         "special_token_id": 30522,
-        "device": "cpu",
         "emb_size": 264,
         "block_size": 6
       },
@@ -36,7 +35,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1",

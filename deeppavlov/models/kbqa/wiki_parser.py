@@ -98,47 +98,10 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
-            elif parser_info == "find_top_triplets":
-                triplets_info = {}
-                try:
-                    for entity in query:
-                        if entity.startswith("Q"):
-                            triplets = {}
-                            entity_label = self.find_label(entity, "")
-                            for rel_id, rel_label in [("P31", "instance of"),
-                                                      ("P279", "subclass of"),
-                                                      ("P131", "located in"),
-                                                      ("P106", "occupation"),
-                                                      ("P361", "part of"),
-                                                      ("P17", "country"),
-                                                      ("P27", "country of sitizenship"),
-                                                      ("P569", "date of birth"),
-                                                      ("P1542", "has effect"),
-                                                      ("P580", "start time"),
-                                                      ("P1552", "has quality")]:
-                                objects = self.find_object(entity, rel_id, "")
-                                objects_info = []
-                                for obj in objects[:5]:
-                                    obj_label = self.find_label(obj, "")
-                                    if obj_label:
-                                        objects_info.append((obj, obj_label))
-                                if objects_info:
-                                    triplets[rel_label] = objects_info
-                            triplets_info[entity_label] = triplets
-                except:
-                    log.info("Wrong arguments are passed to wiki_parser")
-                wiki_parser_output.append(triplets_info)
             elif parser_info == "find_object":
                 objects = []
                 try:
                     objects = self.find_object(*query)
-                except:
-                    log.info("Wrong arguments are passed to wiki_parser")
-                wiki_parser_output.append(objects)
-            elif parser_info == "find_object_date_filter":
-                objects = []
-                try:
-                    objects = self.find_object_date_filter(*query)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(objects)
@@ -165,58 +128,11 @@ class WikiParser:
                 wiki_parser_output.append(types)
             elif parser_info == "find_type_labels":
                 type_labels = []
-                #try:
-                type_labels = self.find_type_labels(*query)
-                #except:
-                #    log.info("Wrong arguments are passed to wiki parser")
-                wiki_parser_output.append(type_labels)
-            elif parser_info == "retrieve_paths":
-                paths = []
-                rels = []
                 try:
-                    paths, rels = self.retrieve_paths(*query)
+                    type_labels = self.find_type_labels(*query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
-                wiki_parser_output.append((paths, rels))
-            elif parser_info == "add_entities_to_dialogue_subgraph":
-                log.debug(f"adding entities to dialogue subgraph, {query}")
-                for entity in query:
-                    self.grounded_entities_set.add(entity)
-                    if self.file_format == "hdt":
-                        tr, cnt = self.document.search_triples(f"{self.prefixes['entity']}/{entity}", "", "")
-                        if cnt < 10000:
-                            for triplet in tr:
-                                obj = triplet[2].split('/')[-1].split("^^")[0].strip('"')
-                                if re.findall("Q[\d]+", obj):
-                                    self.connected_entities_set.add(obj)
-                        tr, cnt = self.document.search_triples("", "", f"{self.prefixes['entity']}/{entity}")
-                        if cnt < 10000:
-                            for triplet in tr:
-                                obj = triplet[0].split('/')[-1].split("^^")[0].strip('"')
-                                if re.findall("Q[\d]+", obj):
-                                    self.connected_entities_set.add(obj)
-                    if self.file_format == "pickle":
-                        triplets = self.document.get(entity, {})
-                        if triplets:
-                            if "forw" in triplets:
-                                uncompressed_triplets = self.uncompress(triplets["forw"])
-                                for triplet in uncompressed_triplets:
-                                    for obj in triplet[1:]:
-                                        self.connected_entities_set.add(obj)
-                            if "backw" in triplets:
-                                uncompressed_triplets = self.uncompress(triplets["backw"])
-                                for triplet in uncompressed_triplets:
-                                    for obj in triplet[1:]:
-                                        self.connected_entities_set.add(obj)
-            elif parser_info == "find_entities_in_subgraph":
-                entities = set(query).intersection(self.connected_entities_set)
-                if not entities:
-                    entities = query
-                log.debug(f"found intersection with subgraph, {entities}")
-                wiki_parser_output.append(list(entities))
-            elif parser_info == "retrieve_grounded_entities":
-                log.debug(f"retrieve grounded entities, {self.grounded_entities_set}")
-                wiki_parser_output.append(list(self.grounded_entities_set))
+                    log.info("Wrong arguments are passed to wiki parser")
+                wiki_parser_output.append(type_labels)
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
                     triplets = []
@@ -532,59 +448,6 @@ class WikiParser:
             for found_rel, *objects in triplets:
                 if rel == found_rel:
                     objects.extend(objects)
-        return objects
-    
-    def find_object_date_filter(self, entity: str, rel: str, direction: str, obj_type: str = None) -> List[str]:
-        objects = []
-        if not direction:
-            direction = "forw"
-        if self.file_format == "hdt":
-            entity = f"{self.prefixes['entity']}/{entity.split('/')[-1]}"
-            st_rel = f"{self.prefixes['rels']['no_type']}/{rel}"
-            rel = f"{self.prefixes['rels']['direct']}/{rel}"
-            if direction == "forw":
-                st_triplets, cnt = self.document.search_triples(entity, st_rel, "")
-                st_triplets = list(st_triplets)
-                triplets_with_dates = []
-                if len(st_triplets) > 0:
-                    triplets_with_dates = []
-                    for st_triplet in st_triplets:
-                        obj = st_triplet[2]
-                        q_triplets, cnt = self.document.search_triples(obj, "", "")
-                        date = tuple()
-                        statement = ""
-                        for q_triplet in q_triplets:
-                            f_date = re.findall(r"([\d]{3,4})-([\d]{2})-([\d]{2})", q_triplet[2])
-                            if not date and f_date and not "P582" in q_triplet[1]:
-                                date = tuple([float(elem) for elem in f_date[0]])
-                            if q_triplet[1].startswith("http://wps/"):
-                                statement = q_triplet[2]
-                        if date:
-                            triplets_with_dates.append((statement, date))
-                    if triplets_with_dates:
-                        triplets_with_dates = sorted(triplets_with_dates, key=lambda x: (x[1][0], x[1][1], x[1][2]), reverse=True)
-                        triplets_with_dates = [elem[0] for elem in triplets_with_dates]
-                
-                if triplets_with_dates:
-                    objects = []
-                    if obj_type:
-                        for elem in triplets_with_dates:
-                            type_triplets, type_cnt = self.document.search_triples(elem, "http://wpd/P31", "")
-                            types = [type_triplet[2].split('/')[-1] for type_triplet in list(type_triplets)]
-                            if obj_type in types:
-                                objects.append(elem)
-                        if objects:
-                            objects = [objects[0].split('/')[-1]]
-                    else:
-                        objects = [triplets_with_dates[0].split('/')[-1]]
-                else:
-                    triplets, cnt = self.document.search_triples(entity, rel, "")
-                    if cnt < self.max_comb_num:
-                        objects.extend([triplet[2].split('/')[-1] for triplet in triplets])
-            else:
-                triplets, cnt = self.document.search_triples("", rel, entity)
-                objects.extend([triplet[0].split('/')[-1] for triplet in triplets])
-        
         return objects
         
     def check_triplet(self, subj: str, rel: str, obj: str) -> bool:
