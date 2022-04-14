@@ -1,6 +1,6 @@
 {
   "chainer": {
-    "in": ["entity_substr", "entity_offsets", "sentences"],
+    "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
     "pipe": [
       {
         "class_name": "torch_transformers_entity_ranker_infer",
@@ -14,8 +14,8 @@
       },
       {
         "class_name": "entity_linker",
-        "in": ["entity_substr", "entity_offsets", "sentences"],
-        "out": ["entity_ids"],
+        "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
+        "out": ["entity_ids", "entity_conf", "entity_pages"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_rus",
         "entities_database_filename": "el_rus.db",
         "entity_ranker": "#entity_descr_ranking",
@@ -26,12 +26,13 @@
         "num_entities_to_return": 5,
         "lemmatize": true,
         "use_descriptions": true,
+        "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
         "full_paragraph": true,
         "return_confidences": true,
         "lang": "ru"
       }
     ],
-    "out": ["entity_ids"]
+    "out": ["entity_ids", "entity_conf", "entity_pages"]
   },
   "metadata": {
     "variables": {

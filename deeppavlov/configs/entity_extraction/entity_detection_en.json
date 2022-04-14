@@ -21,7 +21,7 @@
       },
       {
         "class_name": "ner_chunk_model",
-        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_torch.json"},
+        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_probas.json"},
         "ner_parser": "#edp",
         "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]

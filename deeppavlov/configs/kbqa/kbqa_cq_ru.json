@@ -9,7 +9,7 @@
         "out": ["x"]
       },
       {
-        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_rus.json",
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_ru.json",
         "in": ["x"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       },
@@ -22,7 +22,7 @@
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
       {
-        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_rus.json",
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_ru.json",
         "id": "entity_linker"
       },
       {
@@ -59,7 +59,7 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_rus_torch.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "return_all_possible_answers": true,
