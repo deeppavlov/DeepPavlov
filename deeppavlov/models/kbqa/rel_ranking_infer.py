@@ -154,8 +154,10 @@ class RelRankerInfer(Component, Serializable):
                 answer_ids = answers_with_scores[0][0]
                 if self.return_all_possible_answers and isinstance(answer_ids, tuple):
                     answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
+                    answer_ids = [answer_id.split("/")[-1] for answer_id in answer_ids]
                 else:
                     answer_ids_input = [(answer_ids, question)]
+                    answer_ids = answer_ids.split("/")[-1]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 log.info(f"answer_labels {answer_labels}")
@@ -175,11 +177,12 @@ class RelRankerInfer(Component, Serializable):
                     except:
                         log.info("Error in sentence answer")
                 confidence = answers_with_scores[0][2]
-
             if self.return_confidences:
                 answers.append((answer, confidence))
             else:
                 if self.return_answer_ids:
+                    if not answer_ids:
+                        answer_ids = "Not found"
                     answers.append((answer, answer_ids))
                 else:
                     answers.append(answer)

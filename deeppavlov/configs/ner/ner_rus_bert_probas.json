@@ -1,9 +1,7 @@
 {
   "dataset_reader": {
-    "class_name": "conll2003_reader",
-    "data_path": "{DOWNLOADS_PATH}/total_rus/",
-    "dataset_name": "collection_rus",
-    "provide_pos": false
+    "class_name": "sq_reader",
+    "data_path": "{DOWNLOADS_PATH}/wiki_ner_rus/wikipedia_dataset.pickle"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
@@ -107,12 +105,12 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_rus_bert_torch"
+      "MODEL_PATH": "{MODELS_PATH}/wiki_ner_rus_bert"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/0.16/ner/ner_rus_bert_torch.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/rus_dream_entity_detection/wiki_ner_rus_bert.tar.gz",
+        "subdir": "{MODELS_PATH}/wiki_ner_rus_bert"
       }
     ]
   }

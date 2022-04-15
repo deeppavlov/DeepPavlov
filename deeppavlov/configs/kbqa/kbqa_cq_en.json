@@ -50,7 +50,7 @@
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "return_all_possible_answers": true,
-        "return_answer_ids": true,
+        "return_answer_ids": false,
         "rank_answers": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties.pickle"

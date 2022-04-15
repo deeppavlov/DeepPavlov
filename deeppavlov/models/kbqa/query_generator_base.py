@@ -52,6 +52,7 @@ class QueryGeneratorBase(Component, Serializable):
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
                  use_alt_templates: bool = True,
+                 use_add_templates: bool = False,
                  return_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -91,6 +92,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.use_wp_api_requester = use_wp_api_requester
         self.use_el_api_requester = use_el_api_requester
         self.use_alt_templates = use_alt_templates
+        self.use_add_templates = use_add_templates
         self.sparql_queries_filename = sparql_queries_filename
         self.return_answers = return_answers
 
@@ -175,7 +177,7 @@ class QueryGeneratorBase(Component, Serializable):
         entity_ids = []
         el_output = []
         try:
-            el_output = self.entity_linker([entities], [tags], [[question]])
+            el_output = self.entity_linker([entities], [tags], [[question]], [None], [None])
         except json.decoder.JSONDecodeError:
             log.info("not received output from entity linking")
         if el_output:
@@ -237,12 +239,13 @@ class QueryGeneratorBase(Component, Serializable):
                 entities_and_types_select = template["entities_and_types_select"]
                 candidate_outputs = self.query_parser(question, template, entities_and_types_select,
                                                       entity_ids, type_ids, answer_types, rels_from_template)
-                additional_templates = template.get("additional_templates", [])
-                templates_nums += additional_templates
-                for add_template_num in additional_templates:
-                    candidate_outputs += self.query_parser(question, self.template_queries[add_template_num],
-                                                           entities_and_types_select, entity_ids, type_ids,
-                                                           answer_types, rels_from_template)
+                if self.use_add_templates:
+                    additional_templates = template.get("additional_templates", [])
+                    templates_nums += additional_templates
+                    for add_template_num in additional_templates:
+                        candidate_outputs += self.query_parser(question, self.template_queries[add_template_num],
+                                                               entities_and_types_select, entity_ids, type_ids,
+                                                               answer_types, rels_from_template)
                 if candidate_outputs:
                     templates_nums = list(set(templates_nums))
                     return candidate_outputs, templates_nums

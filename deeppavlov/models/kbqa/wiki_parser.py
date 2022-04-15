@@ -392,8 +392,9 @@ class WikiParser:
                 entity = date.strftime("%d %B %Y")
             else:
                 entity = year
-            for mnth, mnth_replace in dates_dict.items():
-                entity = entity.replace(mnth, mnth_replace)
+            if self.lang == "@ru":
+                for mnth, mnth_replace in dates_dict.items():
+                    entity = entity.replace(mnth, mnth_replace)
             return str(entity)
         entity = entity.lstrip('+-')
         return entity

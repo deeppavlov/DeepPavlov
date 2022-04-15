@@ -58,13 +58,18 @@ class EntityLinker(Component, Serializable):
 
         Args:
             load_path: path to folder with inverted index files
+            entities_database_filename: file with sqlite database with Wikidata entities index
             entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert
             num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
-            ngram_range: char ngrams range for TfidfVectorizer
+            wikidata_file: .hdt file with Wikidata graph
             num_entities_to_return: number of candidate entities for the substring which are returned
+            max_text_len: max length of context for entity ranking by description
             lang: russian or english
             use_description: whether to perform entity ranking by context and description
+            use_tags: whether to use ner tags for entity filtering
             lemmatize: whether to lemmatize tokens
+            full_paragraph: whether to use full paragraph for entity ranking by context and description
+            use_connections: whether to ranking entities by number of connections in Wikidata
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -86,6 +91,7 @@ class EntityLinker(Component, Serializable):
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self.not_found_str = "not in wiki"
 
         self.load()
 
@@ -107,7 +113,7 @@ class EntityLinker(Component, Serializable):
             entity_offsets_batch: List[List[List[int]]] = None,
             sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
     ):
-        if sentences_offsets_batch is None and sentences_batch is not None:
+        if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None:
             sentences_offsets_batch = []
             for sentences_list in sentences_batch:
                 sentences_offsets_list = []
@@ -128,7 +134,7 @@ class EntityLinker(Component, Serializable):
             sentences_offsets_batch = [[] for _ in entity_substr_batch]
 
         log.debug(f"sentences_batch {sentences_batch}")
-        if entity_offsets_batch is None and sentences_batch is not None:
+        if (not entity_offsets_batch and sentences_batch) or entity_offsets_batch[0] is None:
             entity_offsets_batch = []
             for entity_substr_list, sentences_list in zip(entity_substr_batch, sentences_batch):
                 text = " ".join(sentences_list).lower()
@@ -184,8 +190,9 @@ class EntityLinker(Component, Serializable):
             for entity_substr, entity_substr_split, tag in zip(
                     entity_substr_list, entity_substr_split_list, entity_tags_list
             ):
+                entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
                 cand_ent_init = self.find_exact_match(entity_substr, tag)
-                if not cand_ent_init:
+                if not cand_ent_init or entity_substr_split != entity_substr_split_lemm:
                     cand_ent_init = self.find_fuzzy_match(entity_substr_split, tag)
 
                 cand_ent_scores = []
@@ -195,7 +202,10 @@ class EntityLinker(Component, Serializable):
                     cand_ent_scores.append((entity, entities_scores[0]))
 
                 cand_ent_scores = sorted(cand_ent_scores, key=lambda x: (x[1][0], x[1][1]), reverse=True)
-                cand_ent_scores = cand_ent_scores[: self.num_entities_for_bert_ranking]
+                out = open("log.txt", 'a')
+                out.write(f"{tag} --- {entity_substr} --- {cand_ent_scores}"+'\n\n')
+                out.close()
+                cand_ent_scores = cand_ent_scores[:self.num_entities_for_bert_ranking]
                 cand_ent_scores_list.append(cand_ent_scores)
                 entity_ids = [elem[0] for elem in cand_ent_scores]
                 entities_scores_list.append({ent: score for ent, score in cand_ent_scores})
@@ -245,28 +255,16 @@ class EntityLinker(Component, Serializable):
 
     def process_cand_ent(self, cand_ent_init, entities_and_ids, entity_substr_split, tag):
         if self.use_tags:
-            for (
-                    cand_entity_title,
-                    cand_entity_id,
-                    cand_entity_rels,
-                    cand_tag,
-                    cand_types
-            ) in entities_and_ids:
+            for cand_entity_title, cand_entity_id, cand_entity_rels, cand_tag, *_ in entities_and_ids:
                 if tag == cand_tag:
                     substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
             if not cand_ent_init:
-                for (
-                        cand_entity_title,
-                        cand_entity_id,
-                        cand_entity_rels,
-                        cand_tag,
-                        cand_types
-                ) in entities_and_ids:
+                for cand_entity_title, cand_entity_id, cand_entity_rels, cand_tag, *_ in entities_and_ids:
                     substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
         else:
-            for cand_entity_title, cand_entity_id, cand_entity_rels, cand_types in entities_and_ids:
+            for cand_entity_title, cand_entity_id, cand_entity_rels, *_ in entities_and_ids:
                 substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
                 cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
         return cand_ent_init
@@ -309,7 +307,7 @@ class EntityLinker(Component, Serializable):
                         cand_ent_init,
                         part_entities_and_ids,
                         entity_substr_split_lemm,
-                        tag,
+                        tag
                     )
         return cand_ent_init
 
