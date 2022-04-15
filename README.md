@@ -61,11 +61,9 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Integrations**
 
-[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html) | [Yandex Alice](http://docs.deeppavlov.ai/en/master/integrations/yandex_alice.html)
+[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
 
-[Telegram](http://docs.deeppavlov.ai/en/master/integrations/telegram.html) | [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)
-
-[Amazon Alexa](http://docs.deeppavlov.ai/en/master/integrations/amazon_alexa.html) | [Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
+[Amazon AWS](http://docs.deeppavlov.ai/en/master/integrations/aws_ec2.html)
 
 ## Installation
 
@@ -170,10 +168,6 @@ python -m deeppavlov <action> <config_path> [-d]
     * `interact` to interact via CLI,
     * `riseapi` to run a REST API server (see
     [doc](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html)),
-    * `telegram` to run as a Telegram bot (see
-    [doc](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)),
-    * `msbot` to run a Miscrosoft Bot Framework server (see
-    [doc](http://docs.deeppavlov.ai/en/master/integrations/ms_bot.html)),
     * `predict` to get prediction for samples from *stdin* or from
       *<file_path>* if `-f <file_path>` is specified.
 * `<config_path>` specifies path (or name) of model's config file
@@ -226,78 +220,6 @@ from deeppavlov import evaluate_model
 model = evaluate_model(<config_path>, download=True)
 ```
 
-There are also available integrations with various messengers, see
-[Telegram Bot doc page](http://docs.deeppavlov.ai/en/master/integrations/telegram.html)
-and others in the Integrations section for more info.
-
-
-## Breaking Changes
-
-**Breaking changes in version 0.15.0**
-- [bert_as_summarizer](https://github.com/deepmipt/DeepPavlov/pull/1391), [seq2seq_go_bot](https://github.com/deepmipt/DeepPavlov/pull/1434) and all deeppavlov.deprecated components were removed
-- hyperparameter optimization by neural evolution was [removed](https://github.com/deepmipt/DeepPavlov/pull/1436)
-
-**Breaking changes in version 0.7.0**
-- in dialog logger config file [dialog_logger_config.json](deeppavlov/utils/settings/dialog_logger_config.json) `agent_name` parameter was renamed to `logger_name`,
-  the default value was changed
-- Agent, Skill, eCommerce Bot and Pattern Matching classes were moved to [deeppavlov.deprecated](deeppavlov/deprecated)
-- [AIML Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/aiml_skill.html),
-  [RASA Skill](http://docs.deeppavlov.ai/en/0.7.0/features/skills/rasa_skill.html),
-  [Yandex Alice](http://docs.deeppavlov.ai/en/0.7.0/integrations/yandex_alice.html),
-  [Amazon Alexa](http://docs.deeppavlov.ai/en/0.7.0/integrations/amazon_alexa.html),
-  [Microsoft Bot Framework](http://docs.deeppavlov.ai/en/0.7.0/integrations/ms_bot.html) and
-  [Telegram integration](http://docs.deeppavlov.ai/en/0.7.0/integrations/telegram.html) interfaces were changed
-- `/start` and `/help` Telegram messages were moved from `models_info.json` to [server_config.json](deeppavlov/utils/settings/server_config.json)
-- [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html) request and response format was changed
-- [riseapi](http://docs.deeppavlov.ai/en/0.7.0/integrations/rest_api.html#advanced-configuration) and
-  [risesocket](http://docs.deeppavlov.ai/en/0.7.0/integrations/socket_api.html#advanced-configuration) model-specific
-  properties parametrization was changed
-
-**Breaking changes in version 0.6.0**
-- [REST API](http://docs.deeppavlov.ai/en/0.6.0/integrations/rest_api.html):
-  - all models default endpoints were renamed to `/model`
-  - by default model arguments names are taken from `chainer.in`
-    [configuration parameter](http://docs.deeppavlov.ai/en/0.6.0/intro/configuration.html) instead of pre-set names
-    from a [settings file](http://docs.deeppavlov.ai/en/0.6.0/integrations/settings.html)
-  - swagger api endpoint moved from `/apidocs` to `/docs`
-- when using `"max_proba": true` in
-  a [`proba2labels` component](http://docs.deeppavlov.ai/en/0.6.0/apiref/models/classifiers.html) for classification,
-  it will return single label for every batch element instead of a list. One can set `"top_n": 1`
-  to get batches of single item lists as before
-
-**Breaking changes in version 0.5.0**
-- dependencies have to be reinstalled for most pipeline configurations
-- models depending on `tensorflow` require `CUDA 10.0` to run on GPU instead of `CUDA 9.0`
-- scikit-learn models have to be redownloaded or retrained
-
-**Breaking changes in version 0.4.0!**
-- default target variable name for [neural evolution](https://docs.deeppavlov.ai/en/0.4.0/intro/hypersearch.html#parameters-evolution-for-deeppavlov-models)
-was changed from `MODELS_PATH` to `MODEL_PATH`.
-
-**Breaking changes in version 0.3.0!**
-- component option `fit_on_batch` in configuration files was removed and replaced with adaptive usage of the `fit_on` parameter.
-
-**Breaking changes in version 0.2.0!**
-- `utils` module was moved from repository root in to `deeppavlov` module
-- `ms_bot_framework_utils`,`server_utils`, `telegram utils` modules was renamed to `ms_bot_framework`, `server` and `telegram` correspondingly
-- rename metric functions `exact_match` to `squad_v2_em` and  `squad_f1` to `squad_v2_f1`
-- replace dashes in configs name with underscores
-
-**Breaking changes in version 0.1.0!**
-- As of `version 0.1.0` all models, embeddings and other downloaded data for provided configurations are
- by default downloaded to the `.deeppavlov` directory in current user's home directory.
- This can be changed on per-model basis by modifying
- a `ROOT_PATH` [variable](http://docs.deeppavlov.ai/en/master/intro/configuration.html#variables)
- or related fields one by one in model's configuration file.
- 
-- In configuration files, for all features/models, dataset readers and iterators `"name"` and `"class"` fields are combined
-into the `"class_name"` field.
-
-- `deeppavlov.core.commands.infer.build_model_from_config()` was renamed to `build_model` and can be imported from the
- `deeppavlov` module directly.
-
-- The way arguments are passed to metrics functions during training and evaluation was changed and
- [documented](http://docs.deeppavlov.ai/en/0.4.0/intro/config_description.html#metrics).
 
 ## License
 
