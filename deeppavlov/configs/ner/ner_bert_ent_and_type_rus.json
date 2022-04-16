@@ -97,7 +97,6 @@
       "NER_PATH": "{MODELS_PATH}/ner_ent_and_type_rus"
     },
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [

@@ -61,10 +61,6 @@ Welcome to DeepPavlov's documentation!
    REST API <integrations/rest_api>
    Socket API <integrations/socket_api>
    DeepPavlov Agent RabbitMQ integration <integrations/dp_agent>
-   Telegram integration <integrations/telegram>
-   Yandex Alice integration <integrations/yandex_alice>
-   Amazon Alexa integration <integrations/amazon_alexa>
-   Microsoft Bot Framework integration <integrations/ms_bot>
    Amazon AWS deployment <integrations/aws_ec2>
    DeepPavlov settings <integrations/settings>
 

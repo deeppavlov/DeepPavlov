@@ -96,7 +96,6 @@
       "MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction"
     },
     "labels": {
-      "telegram_utils": "IntentModel",
       "server_utils": "KerasIntentModel"
     },
     "download": [

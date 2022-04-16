@@ -225,7 +225,6 @@
       "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_kbqa"
     },
     "labels": {
-      "telegram_utils": "NERCoNLL2003Model",
       "server_utils": "NER"
     },
     "download": [

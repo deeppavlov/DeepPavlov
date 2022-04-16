@@ -21,21 +21,17 @@ from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
 from deeppavlov.utils.agent import start_rabbit_service
-from deeppavlov.utils.alexa import start_alexa_server
-from deeppavlov.utils.alice import start_alice_server
-from deeppavlov.utils.ms_bot_framework import start_ms_bf_server
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server import start_model_server
 from deeppavlov.utils.socket import start_socket_server
-from deeppavlov.utils.telegram import interact_model_by_telegram
 
 log = getLogger(__name__)
 
 parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
-                    choices={'train', 'evaluate', 'interact', 'predict', 'telegram', 'msbot', 'alexa', 'alice',
-                             'riseapi', 'risesocket', 'agent-rabbit', 'download', 'install', 'crossval'})
+                    choices={'train', 'evaluate', 'interact', 'predict', 'riseapi', 'risesocket', 'agent-rabbit',
+                             'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -47,11 +43,6 @@ parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
-
-parser.add_argument("-t", "--token", default=None, help="telegram bot token", type=str)
-
-parser.add_argument("-i", "--ms-id", default=None, help="microsoft bot framework app id", type=str)
-parser.add_argument("-s", "--ms-secret", default=None, help="microsoft bot framework app secret", type=str)
 
 parser.add_argument("--https", action="store_true", default=None, help="run model in https mode")
 parser.add_argument("--key", default=None, help="ssl key", type=str)
@@ -87,28 +78,6 @@ def main():
         train_evaluate_model_from_config(pipeline_config_path, to_train=False, start_epoch_num=args.start_epoch_num)
     elif args.mode == 'interact':
         interact_model(pipeline_config_path)
-    elif args.mode == 'telegram':
-        interact_model_by_telegram(model_config=pipeline_config_path, token=args.token)
-    elif args.mode == 'msbot':
-        start_ms_bf_server(model_config=pipeline_config_path,
-                           app_id=args.ms_id,
-                           app_secret=args.ms_secret,
-                           port=args.port,
-                           https=args.https,
-                           ssl_key=args.key,
-                           ssl_cert=args.cert)
-    elif args.mode == 'alexa':
-        start_alexa_server(model_config=pipeline_config_path,
-                           port=args.port,
-                           https=args.https,
-                           ssl_key=args.key,
-                           ssl_cert=args.cert)
-    elif args.mode == 'alice':
-        start_alice_server(model_config=pipeline_config_path,
-                           port=args.port,
-                           https=args.https,
-                           ssl_key=args.key,
-                           ssl_cert=args.cert)
     elif args.mode == 'riseapi':
         start_model_server(pipeline_config_path, args.https, args.key, args.cert, port=args.port)
     elif args.mode == 'risesocket':

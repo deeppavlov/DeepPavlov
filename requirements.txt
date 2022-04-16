@@ -13,7 +13,6 @@ pydantic<=1.9.0
 pymorphy2<=0.9.1
 pymorphy2-dicts-ru
 pyopenssl<=22.0.0
-pytelegrambotapi<=4.4.0
 requests<=2.27.1
 ruamel.yaml<=0.17.20
 rusenttokenize<=0.0.5
