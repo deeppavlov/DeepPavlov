@@ -306,7 +306,3 @@ into the `"class_name"` field.
 DeepPavlov is Apache 2.0 - licensed.
 
 ##
-
-<p align="center">
-<img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
-</p>
