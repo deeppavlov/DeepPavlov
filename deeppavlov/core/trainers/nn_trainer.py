@@ -155,11 +155,10 @@ class NNTrainer(FitTrainer):
             self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
             self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
 
-    def save(self) -> None:
+    def save(self, fname: Optional[Union[str, Path]] = None) -> None:
         if self._loaded:
             raise RuntimeError('Cannot save already finalized chainer')
-
-        self._chainer.save()
+        self._chainer.save(fname)
 
     def _is_initial_validation(self):
         return self.validation_number == 0
@@ -304,12 +303,8 @@ class NNTrainer(FitTrainer):
                                    tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
                 
                 if self.save_every_n_batches > 0 and self.train_batches_seen % self.save_every_n_batches == 0:
-                    # can't specify save path for chainer from here!
-                    # have to duplicate code from chainer.save
-                    main_component = self._chainer.get_main_component()
-                    if isinstance(main_component, Serializable) and hasattr(main_component, 'save_path'):
-                        log.info(f'Saving model at step: {self.train_batches_seen}')
-                        main_component.save(fname = f'{main_component.save_path}_{self.train_batches_seen}')
+                    log.info(f'Saving model at step: {self.train_batches_seen}')
+                    self.save(fname = f'_{self.train_batches_seen}' )
 
                 self._send_event(event_name='after_batch')
 

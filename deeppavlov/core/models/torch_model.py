@@ -190,7 +190,8 @@ class TorchModel(NNModel):
         """
         if fname is None:
             fname = self.save_path
-
+        else:
+            fname = str(self.save_path) + fname
         fname = Path(fname)
         if not fname.parent.is_dir():
             raise ConfigError("Provided save path is incorrect!")
