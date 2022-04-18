@@ -44,9 +44,6 @@
   "glove": [
     "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
   ],
-  "go_bot": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "input_splitter": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"

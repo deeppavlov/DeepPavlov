@@ -273,15 +273,6 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 Skills
 ------
 
-Goal-oriented bot :doc:`[docs] </features/skills/go_bot>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Based on Hybrid Code Networks (HCNs) architecture from `Jason D. Williams, Kavosh Asadi,
-Geoffrey Zweig, Hybrid Code Networks: practical and efficient end-to-end dialog control
-with supervised and reinforcement learning – 2017 <https://arxiv.org/abs/1702.03274>`__.
-It allows to predict responses in a goal-oriented dialog. The model is
-customizable: embeddings, slot filler and intent classifier can be switched on and off on demand.
-
 ODQA :doc:`[docs] </features/skills/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
