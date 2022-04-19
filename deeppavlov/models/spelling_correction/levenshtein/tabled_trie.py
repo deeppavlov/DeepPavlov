@@ -25,28 +25,55 @@ class Trie:
     Атрибуты
     --------
     alphabet: list, алфавит
+
     alphabet_codes: dict, словарь символ:код
+
     compressed: bool, индикатор сжатия
+
     cashed: bool, индикатор кэширования запросов к функции descend
+
     root: int, индекс корня
+
     graph: array, type=int, shape=(число вершин, размер алфавита), матрица потомков
+
     graph[i][j] = k <-> вершина k --- потомок вершины i по ребру, помеченному символом alphabet[j]
+
     data: array, type=object, shape=(число вершин), массив с данными, хранящямися в вершинах
+
     final: array, type=bool, shape=(число вершин), массив индикаторов
+
     final[i] = True <-> i --- финальная вершина
+
     """
+
     NO_NODE = -1
     SPACE_CODE = -1
 
-    ATTRS = ['is_numpied', 'precompute_symbols', 'allow_spaces',
-             'is_terminated', 'to_make_cashed']
+    ATTRS = [
+        "is_numpied",
+        "precompute_symbols",
+        "allow_spaces",
+        "is_terminated",
+        "to_make_cashed",
+    ]
 
-    def __init__(self, alphabet, make_sorted=True, make_alphabet_codes=True,
-                 is_numpied=False, to_make_cashed=False,
-                 precompute_symbols=None, allow_spaces=False, dict_storage=False):
+    def __init__(
+        self,
+        alphabet,
+        make_sorted=True,
+        make_alphabet_codes=True,
+        is_numpied=False,
+        to_make_cashed=False,
+        precompute_symbols=None,
+        allow_spaces=False,
+        dict_storage=False,
+    ):
         self.alphabet = sorted(alphabet) if make_sorted else alphabet
-        self.alphabet_codes = ({a: i for i, a in enumerate(self.alphabet)}
-                               if make_alphabet_codes else self.alphabet)
+        self.alphabet_codes = (
+            {a: i for i, a in enumerate(self.alphabet)}
+            if make_alphabet_codes
+            else self.alphabet
+        )
         self.alphabet_codes[" "] = Trie.SPACE_CODE
         self.is_numpied = is_numpied
         self.to_make_cashed = to_make_cashed
@@ -67,8 +94,9 @@ class Trie:
         if self.dict_storage:
             return defaultdict(lambda: -1)
         elif self.is_numpied:
-            return np.full(shape=(len(self.alphabet),),
-                           fill_value=Trie.NO_NODE, dtype=int)
+            return np.full(
+                shape=(len(self.alphabet),), fill_value=Trie.NO_NODE, dtype=int
+            )
         else:
             return [Trie.NO_NODE] * len(self.alphabet)
 
@@ -79,20 +107,30 @@ class Trie:
         with open(outfile, "w", encoding="utf8") as fout:
             attr_values = [getattr(self, attr) for attr in Trie.ATTRS]
             attr_values.append(any(x is not None for x in self.data))
-            fout.write("{}\n{}\t{}\n".format(
-                " ".join("T" if x else "F" for x in attr_values),
-                self.nodes_number, self.root))
+            fout.write(
+                "{}\n{}\t{}\n".format(
+                    " ".join("T" if x else "F" for x in attr_values),
+                    self.nodes_number,
+                    self.root,
+                )
+            )
             fout.write(" ".join(str(a) for a in self.alphabet) + "\n")
             for index, label in enumerate(self.final):
                 letters = self._get_letters(index, return_indexes=True)
                 children = self._get_children(index)
-                fout.write("{}\t{}\n".format(
-                    "T" if label else "F", " ".join("{}:{}".format(*elem)
-                                                    for elem in zip(letters, children))))
+                fout.write(
+                    "{}\t{}\n".format(
+                        "T" if label else "F",
+                        " ".join(
+                            "{}:{}".format(*elem) for elem in zip(letters, children)
+                        ),
+                    )
+                )
             if self.precompute_symbols is not None:
                 for elem in self.data:
-                    fout.write(":".join(",".join(
-                        map(str, symbols)) for symbols in elem) + "\n")
+                    fout.write(
+                        ":".join(",".join(map(str, symbols)) for symbols in elem) + "\n"
+                    )
         return
 
     def make_cashed(self):
@@ -138,8 +176,9 @@ class Trie:
             self.make_numpied()
         self.terminated = True
         if self.precompute_symbols is not None:
-            precompute_future_symbols(self, self.precompute_symbols,
-                                      allow_spaces=self.allow_spaces)
+            precompute_future_symbols(
+                self, self.precompute_symbols, allow_spaces=self.allow_spaces
+            )
         if self.to_make_cashed:
             self.make_cashed()
 
@@ -208,7 +247,9 @@ class Trie:
         for curr, borders, cost in curr_agenda:
             if curr == self.root:
                 borders = [0] + borders
-                answer.append([s[left:borders[i + 1]] for i, left in enumerate(borders[:-1])])
+                answer.append(
+                    [s[left: borders[i + 1]] for i, left in enumerate(borders[:-1])]
+                )
         return answer
 
     def __len__(self):
@@ -225,7 +266,9 @@ class Trie:
                 answer += " {0}:{1}".format(a, index)
             answer += "\n"
             if data is not None:
-                answer += "data:{0} {1}\n".format(len(data), " ".join(str(elem) for elem in data))
+                answer += "data:{0} {1}\n".format(
+                    len(data), " ".join(str(elem) for elem in data)
+                )
         return answer
 
     def _add_descendant(self, parent, s, final=False):
@@ -243,7 +286,7 @@ class Trie:
         self.data.append(None)
         self.final.append(final)
         self.nodes_number += 1
-        return (self.nodes_number - 1)
+        return self.nodes_number - 1
 
     def _descend_simple(self, curr, s):
         """
@@ -288,8 +331,9 @@ class Trie:
         if self.dict_storage:
             answer = list(self.graph[index].keys())
         else:
-            answer = [i for i, elem in enumerate(self.graph[index])
-                      if elem != Trie.NO_NODE]
+            answer = [
+                i for i, elem in enumerate(self.graph[index]) if elem != Trie.NO_NODE
+            ]
         if not return_indexes:
             answer = [(self.alphabet[i] if i >= 0 else " ") for i in answer]
         return answer
@@ -298,8 +342,9 @@ class Trie:
         if self.dict_storage:
             answer = list(self.graph[index].items())
         else:
-            answer = [elem for elem in enumerate(self.graph[index])
-                      if elem[1] != Trie.NO_NODE]
+            answer = [
+                elem for elem in enumerate(self.graph[index]) if elem[1] != Trie.NO_NODE
+            ]
         if not return_indexes:
             for i, (letter_index, child) in enumerate(answer):
                 answer[i] = (self.alphabet[letter_index], child)
@@ -319,8 +364,16 @@ class TrieMinimizer:
     def __init__(self):
         pass
 
-    def minimize(self, trie, dict_storage=False, make_cashed=False, make_numpied=False,
-                 precompute_symbols=None, allow_spaces=False, return_groups=False):
+    def minimize(
+        self,
+        trie,
+        dict_storage=False,
+        make_cashed=False,
+        make_numpied=False,
+        precompute_symbols=None,
+        allow_spaces=False,
+        return_groups=False,
+    ):
         N = len(trie)
         if N == 0:
             raise ValueError("Trie should be non-empty")
@@ -348,21 +401,27 @@ class TrieMinimizer:
                 class_representatives.append(curr_index)
                 curr_index += 1
         # построение нового дерева
-        compressed = Trie(trie.alphabet, is_numpied=make_numpied,
-                          dict_storage=dict_storage, allow_spaces=allow_spaces,
-                          precompute_symbols=precompute_symbols)
+        compressed = Trie(
+            trie.alphabet,
+            is_numpied=make_numpied,
+            dict_storage=dict_storage,
+            allow_spaces=allow_spaces,
+            precompute_symbols=precompute_symbols,
+        )
         L = len(classes)
         new_final = [elem[2] for elem in class_keys[::-1]]
         if dict_storage:
             new_graph = [defaultdict(int) for _ in range(L)]
         elif make_numpied:
-            new_graph = np.full(shape=(L, len(trie.alphabet)),
-                                fill_value=Trie.NO_NODE, dtype=int)
+            new_graph = np.full(
+                shape=(L, len(trie.alphabet)), fill_value=Trie.NO_NODE, dtype=int
+            )
             new_final = np.array(new_final, dtype=bool)
         else:
             new_graph = [[Trie.NO_NODE for a in trie.alphabet] for i in range(L)]
-        for (indexes, children, final), class_index in \
-                sorted(classes.items(), key=(lambda x: x[1])):
+        for (indexes, children, final), class_index in sorted(
+            classes.items(), key=(lambda x: x[1])
+        ):
             row = new_graph[L - class_index - 1]
             for i, child_index in zip(indexes, children):
                 row[i] = L - child_index - 1
@@ -374,8 +433,11 @@ class TrieMinimizer:
         if make_cashed:
             compressed.make_cashed()
         if precompute_symbols is not None:
-            if (trie.is_terminated and trie.precompute_symbols
-                    and trie.allow_spaces == allow_spaces):
+            if (
+                trie.is_terminated
+                and trie.precompute_symbols
+                and trie.allow_spaces == allow_spaces
+            ):
                 # копируем будущие символы из исходного дерева
                 # нужно, чтобы возврат из финальных состояний в начальное был одинаковым в обоих деревьях
                 for i, node_index in enumerate(class_representatives[::-1]):
@@ -395,19 +457,19 @@ class TrieMinimizer:
         """
         order, stack = [], []
         stack.append(trie.root)
-        colors = ['white'] * len(trie)
+        colors = ["white"] * len(trie)
         while len(stack) > 0:
             index = stack[-1]
             color = colors[index]
-            if color == 'white':  # вершина ещё не обрабатывалась
-                colors[index] = 'grey'
+            if color == "white":  # вершина ещё не обрабатывалась
+                colors[index] = "grey"
                 for child in trie._get_children(index):
                     # проверяем, посещали ли мы ребёнка раньше
-                    if child != Trie.NO_NODE and colors[child] == 'white':
+                    if child != Trie.NO_NODE and colors[child] == "white":
                         stack.append(child)
             else:
-                if color == 'grey':
-                    colors[index] = 'black'
+                if color == "grey":
+                    colors[index] = "black"
                     order.append(index)
                 stack = stack[:-1]
         return order
@@ -416,7 +478,7 @@ class TrieMinimizer:
 def load_trie(infile):
     with open(infile, "r", encoding="utf8") as fin:
         line = fin.readline().strip()
-        flags = [x == 'T' for x in line.split()]
+        flags = [x == "T" for x in line.split()]
         if len(flags) != len(Trie.ATTRS) + 1:
             raise ValueError("Wrong file format")
         nodes_number, root = map(int, fin.readline().strip().split())
@@ -431,18 +493,19 @@ def load_trie(infile):
             graph = [defaultdict(lambda: -1) for _ in range(nodes_number)]
         elif trie.is_numpied:
             final = np.array(final)
-            graph = np.full(shape=(nodes_number, len(alphabet)),
-                            fill_value=Trie.NO_NODE, dtype=int)
+            graph = np.full(
+                shape=(nodes_number, len(alphabet)), fill_value=Trie.NO_NODE, dtype=int
+            )
         else:
             graph = [[Trie.NO_NODE for a in alphabet] for i in range(nodes_number)]
         for i in range(nodes_number):
             line = fin.readline().strip()
             if "\t" in line:
                 label, transitions = line.split("\t")
-                final[i] = (label == "T")
+                final[i] = label == "T"
             else:
                 label = line
-                final[i] = (label == "T")
+                final[i] = label == "T"
                 continue
             transitions = [x.split(":") for x in transitions.split()]
             for code, value in transitions:
@@ -461,17 +524,34 @@ def load_trie(infile):
         return trie
 
 
-def make_trie(alphabet, words, compressed=True, is_numpied=False,
-              make_cashed=False, precompute_symbols=False,
-              allow_spaces=False, dict_storage=False):
-    trie = Trie(alphabet, is_numpied=is_numpied, to_make_cashed=make_cashed,
-                precompute_symbols=precompute_symbols, dict_storage=dict_storage)
+def make_trie(
+    alphabet,
+    words,
+    compressed=True,
+    is_numpied=False,
+    make_cashed=False,
+    precompute_symbols=False,
+    allow_spaces=False,
+    dict_storage=False,
+):
+    trie = Trie(
+        alphabet,
+        is_numpied=is_numpied,
+        to_make_cashed=make_cashed,
+        precompute_symbols=precompute_symbols,
+        dict_storage=dict_storage,
+    )
     trie.fit(words)
     if compressed:
         tm = TrieMinimizer()
-        trie = tm.minimize(trie, dict_storage=dict_storage, make_cashed=make_cashed,
-                           make_numpied=is_numpied, precompute_symbols=precompute_symbols,
-                           allow_spaces=allow_spaces)
+        trie = tm.minimize(
+            trie,
+            dict_storage=dict_storage,
+            make_cashed=make_cashed,
+            make_numpied=is_numpied,
+            precompute_symbols=precompute_symbols,
+            allow_spaces=allow_spaces,
+        )
     return trie
 
 
