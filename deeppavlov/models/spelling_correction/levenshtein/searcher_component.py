@@ -49,7 +49,7 @@ class LevenshteinSearcherComponent(Component):
         self.max_distance = max_distance
         self.error_probability = log10(error_probability)
         self.vocab_penalty = self.error_probability if vocab_penalty is None else log10(vocab_penalty)
-        self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
+        self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, heuristics=2)
 
     def _infer_instance(self, tokens: Iterable[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
