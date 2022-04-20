@@ -150,13 +150,13 @@ class TextEncoder(nn.Module):
         self.load()
         self.tokenizer = AutoTokenizer.from_pretrained(self.pretrained_bert)
         self.encoder.resize_token_embeddings(len(self.tokenizer) + 1)
+        self.encoder.to(self.device)
 
     def forward(self,
                 input_ids: Tensor,
                 attention_mask: Tensor,
                 entity_tokens_pos: List[int] = None
                 ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
-
         if entity_tokens_pos is not None:
             q_outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
             q_hidden_states = q_outputs.last_hidden_state
@@ -166,7 +166,7 @@ class TextEncoder(nn.Module):
                 pos = entity_tokens_pos[i]
                 entity_emb.append(q_hidden_states[i, pos])
 
-            entity_emb = torch.stack(entity_emb, dim=0)
+            entity_emb = torch.stack(entity_emb, dim=0).to(self.device)
             return entity_emb
         else:
             c_outputs = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
@@ -279,7 +279,7 @@ class TorchTransformersEntityRankerInfer:
                  batch_size: int = 5,
                  emb_size: int = 300,
                  block_size: int = 8,
-                 device: str = "cpu", **kwargs):
+                 device: str = "gpu", **kwargs):
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
         self.pretrained_bert = pretrained_bert
         self.preprocessor = TorchTransformersEntityRankerPreprocessor(vocab_file=self.pretrained_bert,
@@ -311,8 +311,8 @@ class TorchTransformersEntityRankerInfer:
         for ii in range(num_batches):
             contexts_list = contexts_batch[ii * self.batch_size:(ii + 1) * self.batch_size]
             context_features = self.preprocessor(contexts_list)
-            context_input_ids = context_features["input_ids"]
-            context_attention_mask = context_features["attention_mask"]
+            context_input_ids = context_features["input_ids"].to(self.device)
+            context_attention_mask = context_features["attention_mask"].to(self.device)
             special_tokens_pos = []
             for input_ids_list in context_input_ids:
                 found_n = -1
@@ -337,8 +337,8 @@ class TorchTransformersEntityRankerInfer:
                 entity_emb = [entity_emb for _ in candidate_entities_list]
                 entity_emb = torch.Tensor(entity_emb).to(self.device)
                 descr_features = self.preprocessor(candidate_entities_descr_list)
-                descr_input_ids = descr_features["input_ids"]
-                descr_attention_mask = descr_features["attention_mask"]
+                descr_input_ids = descr_features["input_ids"].to(self.device)
+                descr_attention_mask = descr_features["attention_mask"].to(self.device)
                 candidate_entities_emb = self.encoder(input_ids=descr_input_ids,
                                                       attention_mask=descr_attention_mask)
                 scores_list, _ = self.bilinear_ranking(entity_emb, candidate_entities_emb)

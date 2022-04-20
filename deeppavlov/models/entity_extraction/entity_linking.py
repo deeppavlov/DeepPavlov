@@ -249,7 +249,11 @@ class EntityLinker(Component, Serializable):
                     sentences_offsets_list,
                     substr_lens,
                 )
-            pages_list = [[pages_dict.get(entity_id, "") for entity_id in entity_ids] for entity_ids in entity_ids_list]
+            if self.num_entities_to_return == 1:
+                pages_list = [pages_dict.get(entity_ids, "") for entity_ids in entity_ids_list]
+            else:
+                pages_list = [[pages_dict.get(entity_id, "") for entity_id in entity_ids]
+                              for entity_ids in entity_ids_list]
 
         return entity_ids_list, conf_list, pages_list
 

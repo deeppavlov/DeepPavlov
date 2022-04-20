@@ -31,7 +31,7 @@ Welcome to DeepPavlov's documentation!
    Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
-   Entity Linking <features/models/entity_linking>
+   Entity Extraction <features/models/entity_extraction>
    Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>

@@ -20,18 +20,13 @@ The question answerer:
 Built-In Models
 ------------------
 
-Currently, we provide three built-in models for KBQA in DeepPavlov library:
+Currently, we provide two built-in models for KBQA in DeepPavlov library:
 
-* :config:`kbqa_cq <kbqa/kbqa_cq.json>` - for answering complex questions over Wikidata in English,
+* :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` - for answering complex questions over Wikidata in English,
 
-* :config:`kbqa_rus <kbqa/kbqa_cq_rus.json>` - for answering complex questions over Wikidata in Russian,
+* :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian,
 
-* :config:`kbqa_cq_online <kbqa/kbqa_cq_online.json>` - for answering complex questions in English over Wikidata using Wikidata Query Service.
-
-The first two models are very similar to each other, and they allow you to deploy them together with local copy of Wikidata on-premises or in the cloud. The third model is lightweight as it allows you to skip downloading entire Wikidata and use the existing Wikidata APIs instead. 
-
-.. note:: 
-   We recommend you to use the lightweight model for quick experiments as well as academic research, and full models in production to avoid dependencies on the public Wikidata APIs.
+These configs use local Wikidata dump in hdt format (3.7 Gb on disk). :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` requires 3.5 Gb RAM and 4.3 Gb GPU, :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - 6.9 Gb RAM and 6.5 Gb GPU.
 
 The Knowledge Base Question Answering model uses Wikidata to answer complex questions. Here are some of the most popular types of questions supported by the model:
 
@@ -61,9 +56,7 @@ The following models are used to find the answer:
   title. The result of the matching procedure is a set of candidate entities. The reset is search of the
   entity among this set with one of the top-k relations predicted by classification model,
 
-* BiGRU model for ranking of candidate relations,
-
-* BERT model for ranking of candidate relation paths,
+* BERT model for ranking of candidate relations and candidate relation paths,
 
 * Query generator model is used to fill query template with candidate entities and relations (to find valid combinations of entities and relations for query template). Query Generation model uses Wikidata HDT file. Query Generation Online model uses Wikidata Query Service.
 
@@ -74,17 +67,15 @@ Any pre-trained model in DeepPavlov Library can be used for inference from both 
 
 .. code:: bash
 
-    python -m deeppavlov install kbqa_cq
-    python -m deeppavlov install kbqa_cq_online
-    python -m deeppavlov install kbqa_cq_rus
+    python -m deeppavlov install kbqa_cq_en
+    python -m deeppavlov install kbqa_cq_ru
 
 To use a pre-trained model from CLI use the following command:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact kbqa_сq [-d]
-    python deeppavlov/deep.py interact kbqa_cq_online [-d]
-    python deeppavlov/deep.py interact kbqa_cq_rus [-d]
+    python deeppavlov/deep.py interact kbqa_сq_en [-d]
+    python deeppavlov/deep.py interact kbqa_cq_ru [-d]
 
 where ``kbqa_cq`` and others are the names of configs and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. You can also use command ``download``.
@@ -95,21 +86,13 @@ KBQA model for complex question answering can be used from Python using the foll
 
     from deeppavlov import configs, build_model
 
-    kbqa_model = build_model(configs.kbqa.kbqa_cq, download=True)
-    kbqa_model(['What is in the village of Negev that has diplomatic relations with the Czech Republic?'])
-    >>> ["Israel"]
+    kbqa_model = build_model(configs.kbqa.kbqa_cq_en, download=True)
+    kbqa_model(['What is the currency of Sweden?'])
+    >>> ["Swedish krona"]
     kbqa_model(['Magnus Carlsen is a part of what sport?'])
     >>> ["chess"]
     kbqa_model(['How many sponsors are for Juventus F.C.?'])
     >>> [4]
-
-In the models mentioned above lite version of Wikidata is used. Full version of Wikidata can be downloaded from http://www.rdfhdt.org/datasets/. Examples of questions which the model can answer with the following version of Wikidata:
-
-.. code:: python
-
-    from deeppavlov import configs, build_model
-
-    kbqa_model = build_model(configs.kbqa.kbqa_cq, download=True)
     kbqa_model(['When did Jean-Paul Sartre move to Le Havre?'])
     >>> ["1931-01-01"]
     kbqa_model(['What position did Angela Merkel hold on November 10, 1994?'])
@@ -121,7 +104,7 @@ KBQA model for complex question answering in Russian can be used from Python usi
 
     from deeppavlov import configs, build_model
 
-    kbqa_model = build_model(configs.kbqa.kbqa_cq_rus, download=True)
+    kbqa_model = build_model(configs.kbqa.kbqa_cq_ru, download=True)
     kbqa_model(['Когда родился Пушкин?'])
     >>> ["1799-05-26"]
 
@@ -131,16 +114,14 @@ Here are the models we've trained for complex question answering:
 
 * :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type,
 
-* :config:`entity_detection <ner/ner_lcquad_bert_ent_and_type.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
+* :config:`entity_detection <ner/ner_ontonotes_bert_probas.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
 
-* :config:`rel_ranking <ranking/rel_ranking.json>` - model for ranking of candidate relations for the question,
-
-* :config:`rel_ranking_bert <classifiers/rel_ranking_bert.json>` - model for ranking of candidate relation paths for the question.
+* :config:`rel_ranking <ranking/rel_ranking_bert_en.json>` - model for ranking of candidate relations and candidate_relation_paths for the question,
 
 How Do I: Train Query Prediction Model
 --------------------------------------
 
-The dataset consists of three csv files: train.csv, valid.csv and test.csv. Each line in this file contains question and corresponding query template type, for example::
+The dataset (in pickle format) is a dict of three keys: "train", "valid" and "test". The value by each key is the list of samples, an example of a sample:
 
 "What is the longest river in the UK?", 6
 
@@ -150,32 +131,18 @@ How Do I: Train Entity Detection Model
 The dataset is a pickle file. The dataset must be split into three parts: train, test, and validation. Each part is a list of tuples of question tokens and tags for each token. An example of training sample::
 
  (['What', 'is', 'the', 'complete', 'list', 'of', 'records', 'released', 'by', 'Jerry', 'Lee', 'Lewis', '?'],
-  ['O-TAG', 'O-TAG', 'O-TAG', 'O-TAG', 'T-TAG', 'T-TAG', 'T-TAG', 'O-TAG', 'O-TAG', 'E-TAG', 'E-TAG', 'E-TAG', 'O-TAG'])
+  ['O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'O', 'B-PER', 'I-PER', 'I-PER', 'O'])
 
-``T-TAG`` corresponds to tokens of entity types, ``E-TAG`` - for entities, ``O-TAG`` - for other tokens.
+The tags of tokens correspond to BIO-markup.
 
 How Do I: Train Relation and Path Ranking Models
 ------------------------------------------------
 
-The dataset for relation ranking consists of two xml files (train and test sets). Each sample contains a question, a relation title and a label (1 if the relation corresponds to the question and 0 otherwise). An example of training sample:
+The dataset (in pickle format) is a dict of three keys: "train", "valid" and "test". The value by each key is the list of samples, an example of a sample::
 
-.. code:: xml
-
-    <paraphrase>
-       <value name="text_1">Is it true that the total shots in career of Rick Adduono is equal to 1?</value>
-       <value name="text_2">total shots in career</value>
-       <value name="class">1</value>
-    </paraphrase>
-
-The dataset for path ranking is similar to the dataset for relation ranking. If the path from the grounded entity in the question and the answer consists of two relations, relation titles are separated with "#":
-
-.. code:: xml
-
-    <paraphrase>
-       <value name="text_1">When did Thomas Cromwell end his position as Lord Privy Seal?</value>
-       <value name="text_2">position held # end time</value>
-       <value name="class">1</value>
-    </paraphrase>
+ (['What is the Main St. Exile label, which Nik Powell co-founded?', ['record label', 'founded by']], '1')
+ 
+The sample contains the question, relations in the question and label (1 - if the relations correspond to the question, 0 - otherwise).
 
 How Do I: Adding Templates For New SPARQL Queries
 -------------------------------------------------
@@ -213,33 +180,11 @@ An example of a template::
 * ``template_num`` - the number of template,
 * alternative_templates - numbers of alternative templates to use if the answer was not found with the current template.
 
-Advanced: Using Entity Linking and Wiki Parser As Standalone Services For KBQA
+Advanced: Using Wiki Parser As Standalone Service For KBQA
 ------------------------------------------------------------------------------
 Default configuration for KBQA was designed to use all of the supporting models together as a part of the KBQA pipeline. However, there might be a case when you want to work with some of these models in addition to KBQA.
 
-For example, you might want to use Entity Linking as an annotator in your `Deepy-based <https://github.com/deepmipt/assistant-base>`_ multiskill AI Assistant. Or, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.
-
-Config :config:`kbqa_entity_linking <kbqa/kbqa_entity_linking.json>` can be used as service with the following command:
-
-.. code:: bash
-
-    python -m deeppavlov riseapi kbqa_entity_linking [-d] [-p <port>]
-    
-Arguments:
-
-* ``entity_substr`` - batch of lists of entity substrings for which we want to find ids in Wikidata,
-* ``template`` - template of the sentence (if the sentence with the entity matches of one of templates),
-* ``context`` - text with the entity.
-
-.. code:: python
-
-    import requests
-
-    payload = {"entity_substr": [["Forrest Gump"]], "template": [""], "context": ["Who directed Forrest Gump?"]}
-    response = requests.post(entity_linking_url, json=payload).json()
-    print(response)
-
-    
+For example, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.    
     
 Config :config:`wiki_parser <kbqa/wiki_parser.json>` can be used as service with the following command:
 
