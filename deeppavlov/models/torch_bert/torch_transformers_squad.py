@@ -162,10 +162,6 @@ class TorchTransformersSquad(TorchModel):
             accepted_keys = self.model.forward.__code__.co_varnames
         return accepted_keys
 
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
     def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
             List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
         """get predictions using features as input
@@ -301,38 +297,4 @@ class TorchTransformersSquad(TorchModel):
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
-
-        if self.load_path:
-            logger.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                logger.info(f"Load path {weights_path} exists.")
-                logger.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                logger.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                model_state = checkpoint["model_state_dict"]
-                optimizer_state = checkpoint["optimizer_state_dict"]
-
-                # load a multi-gpu model on a single device
-                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
-                    tmp_model_state = {}
-                    for key, value in model_state.items():
-                        tmp_model_state[re.sub("module.", "", key)] = value
-                    model_state = tmp_model_state
-
-                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
-                                         if key.endswith("embeddings.position_ids")])
-                if torch.cuda.device_count() > 1:
-                    self.model.module.load_state_dict(model_state, strict=strict_load_flag)
-                else:
-                    self.model.load_state_dict(model_state, strict=strict_load_flag)
-                self.optimizer.load_state_dict(optimizer_state)
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
+        super().load()

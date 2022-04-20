@@ -369,24 +369,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                 self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path).resolve()
-            weights_path = weights_path.with_suffix(".pth.tar")
-            if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+            super().load()
             if self.use_crf:
                 weights_path_crf = Path(f"{self.load_path}_crf").resolve()
                 weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
@@ -398,22 +381,7 @@ class TorchTransformersSequenceTagger(TorchModel):
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
-        if fname is None:
-            fname = self.save_path
-
-        if not fname.parent.is_dir():
-            raise ConfigError("Provided save path is incorrect!")
-
-        weights_path = Path(fname).with_suffix(".pth.tar")
-        log.info(f"Saving model to {weights_path}.")
-        # move the model to `cpu` before saving to provide consistency
-        torch.save({
-            "model_state_dict": self.model.cpu().state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "epochs_done": self.epochs_done
-        }, weights_path)
-        # return it back to device (necessary if it was on `cuda`)
-        self.model.to(self.device)
+        super().save()
         if self.use_crf:
             weights_path_crf = Path(f"{fname}_crf").resolve()
             weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
