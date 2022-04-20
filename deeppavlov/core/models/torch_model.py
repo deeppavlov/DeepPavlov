@@ -171,14 +171,11 @@ class TorchModel(NNModel):
                 optimizer_state = checkpoint["optimizer_state_dict"]
 
                 # load a multi-gpu model on a single device
-                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
-                    tmp_model_state = {}
-                    for key, value in model_state.items():
-                        tmp_model_state[re.sub("module.", "", key)] = value
-                    model_state = tmp_model_state
+                if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
+                    model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
 
-                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
-                                         if key.endswith("embeddings.position_ids")])
+                strict_load_flag = any([key.endswith("embeddings.position_ids")
+                                        for key in checkpoint['model_state_dict']])
                 if torch.cuda.device_count() > 1:
                     self.model.module.load_state_dict(model_state, strict=strict_load_flag)
                 else:
