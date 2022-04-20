@@ -10,6 +10,7 @@ from deeppavlov.core.common.registry import register
 @register('answer_types_extractor')
 class AnswerTypesExtractor:
     """Class which defines answer types for the question"""
+
     def __init__(self, lang: str, types_filename: str, types_sets_filename: str,
                  num_types_to_return: int = 15, **kwargs):
         """

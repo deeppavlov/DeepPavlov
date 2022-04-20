@@ -14,7 +14,7 @@
 
 import re
 import itertools
-from typing import List, Tuple
+from typing import List
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:

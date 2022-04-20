@@ -124,13 +124,6 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(types)
-            elif parser_info == "find_type_labels":
-                type_labels = []
-                try:
-                    type_labels = self.find_type_labels(*query)
-                except:
-                    log.info("Wrong arguments are passed to wiki parser")
-                wiki_parser_output.append(type_labels)
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
                     triplets = []
@@ -139,7 +132,7 @@ class WikiParser:
                         triplets.extend([triplet for triplet in triplets_forw
                                          if not triplet[2].startswith(self.prefixes["statement"])])
                         triplets_backw, c = self.document.search_triples("", "", f"{self.prefixes['entity']}/{query}")
-                        triplets.extend([triplet for triplet in triplets_forw
+                        triplets.extend([triplet for triplet in triplets_backw
                                          if not triplet[0].startswith(self.prefixes["statement"])])
                     except:
                         log.info("Wrong arguments are passed to wiki_parser")
@@ -158,10 +151,10 @@ class WikiParser:
                             uncompressed_triplets["backw"] = self.uncompress(triplets["backw"])
                     wiki_parser_output.append(uncompressed_triplets)
             elif parser_info == "find_triplets_for_rel":
-                triplets = []
+                found_triplets = []
                 try:
-                    found_triplets, c = self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}",
-                                                                     "")
+                    found_triplets, c = \
+                        self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}", "")
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(list(found_triplets))
@@ -259,7 +252,7 @@ class WikiParser:
                 sort_elem = order_info.variable
                 for i in range(len(combs)):
                     value_str = combs[i][sort_elem].split('^^')[0].strip('"')
-                    fnd = re.findall("[\d]{3,4}-[\d]{1,2}-[\d]{1,2}")
+                    fnd = re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", value_str)
                     if fnd:
                         combs[i][sort_elem] = fnd[0]
                     else:
@@ -300,6 +293,7 @@ class WikiParser:
             else:
                 log.debug("max comb num exceede")
         else:
+            triplets = []
             if subj:
                 subj, triplets = self.find_triplets(subj, "forw")
                 triplets = [[subj, triplet[0], obj] for triplet in triplets for obj in triplet[1:]]
@@ -439,7 +433,6 @@ class WikiParser:
                     objects.extend([triplet[2].split('/')[-1] for triplet in triplets])
             else:
                 triplets, cnt = self.document.search_triples("", rel, entity)
-                # if cnt < self.max_comb_num:
                 objects.extend([triplet[0].split('/')[-1] for triplet in triplets])
         else:
             entity = entity.split('/')[-1]
@@ -462,10 +455,10 @@ class WikiParser:
             else:
                 return False
         else:
-            entity = entity.split('/')[-1]
+            subj = subj.split('/')[-1]
             rel = rel.split('/')[-1]
             obj = obj.split('/')[-1]
-            triplets = self.document.get(entity, {}).get("forw", [])
+            triplets = self.document.get(subj, {}).get("forw", [])
             triplets = self.uncompress(triplets)
             for found_rel, *objects in triplets:
                 if found_rel == rel:
@@ -510,42 +503,6 @@ class WikiParser:
                     types = triplet[1:]
         types = set(types)
         return types
-
-    def find_type_labels(self, entities_list: Union[str, Tuple[str]], entities: List[str], question: str, answer: str,
-                         rels: str,
-                         rels_ids, conf: float) -> List[str]:
-        type_labels = []
-        if isinstance(entities_list, str):
-            types = self.find_types(entities_list)
-            for tp in types:
-                type_label = self.find_label(tp, question)
-                if type_label and type_label.lower() != "not found":
-                    type_labels.append((entity, entities, type_label, answer, rels, rels_ids, conf))
-                if len(type_label.split()) > 3:
-                    subclasses = self.find_subclasses(tp)
-                    for subcls in subclasses:
-                        subcls_label = self.find_label(subcls, question)
-                        if subcls_label and subcls_label.lower() != "not found":
-                            type_labels.append((entity, entities, subcls_label, answer, rels, rels_ids, conf))
-        else:
-            type_labels_list = []
-            for entity in entities_list:
-                types = self.find_types(entity)
-                for tp in types:
-                    type_label = self.find_label(tp, question)
-                    if type_label and type_label.lower() != "not found":
-                        type_labels_list.append(type_label)
-                    if len(type_label.split()) > 3:
-                        subclasses = self.find_subclasses(tp)
-                        for subcls in subclasses:
-                            subcls_label = self.find_label(subcls, question)
-                            if subcls_label and subcls_label.lower() != "not found":
-                                type_labels_list.append(subcls_label)
-            type_labels_list = list(set(type_labels_list))
-            for type_label in type_labels_list:
-                type_labels.append((entity, entities, type_label, answer, rels, rels_ids, conf))
-
-        return type_labels
 
     def uncompress(self, triplets: Union[str, List[List[str]]]) -> List[List[str]]:
         if isinstance(triplets, str):
