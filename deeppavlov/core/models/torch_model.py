@@ -161,7 +161,7 @@ class TorchModel(NNModel):
                 log.info(f"Initializing `{self.__class__.__name__}` from saved.")
 
                 # firstly, initialize with random weights and previously saved parameters
-                if model_func is not None:
+                if model_func:
                     self.init_from_opt(model_func)
 
                 # now load the weights, optimizer from saved
@@ -182,10 +182,10 @@ class TorchModel(NNModel):
                     self.model.load_state_dict(model_state, strict=strict_load_flag)
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
+            elif model_func:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
                 self.init_from_opt(model_func)
-        else:
+        elif model_func:
             log.info(f"Init from scratch. Load path {self.load_path} is not provided.")
             self.init_from_opt(model_func)
 
