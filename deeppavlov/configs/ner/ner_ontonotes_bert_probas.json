@@ -95,12 +95,12 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-cased",
-      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch_crf"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_torch.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_torch_crf.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
