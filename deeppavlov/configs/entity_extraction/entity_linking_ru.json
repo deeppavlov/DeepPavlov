@@ -44,10 +44,6 @@
       "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_db_rus.tar.gz",
@@ -56,6 +52,14 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_ranker_rus.tar.gz",
         "subdir": "{MODELS_PATH}/entity_linking_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt.index.v1-1",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }

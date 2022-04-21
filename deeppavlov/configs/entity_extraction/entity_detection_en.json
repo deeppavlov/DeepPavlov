@@ -38,10 +38,6 @@
       "TRANSFORMER": "bert-base-cased",
       "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch_crf"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_bert_torch_crf.tar.gz",

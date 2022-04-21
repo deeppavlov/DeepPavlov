@@ -38,10 +38,6 @@
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "NER_PATH": "{MODELS_PATH}/wiki_ner_rus_bert"
     },
-    "requirements": [
-      "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
-      "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt"
-    ],
     "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/rus_dream_entity_detection/wiki_ner_rus_bert.tar.gz",

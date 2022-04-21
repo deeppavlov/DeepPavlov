@@ -514,7 +514,7 @@ class EntityLinker(Component, Serializable):
                     entity,
                     round(entities_scores.get(entity, (0.0, 0))[0], 2),
                     entities_scores.get(entity, (0.0, 0))[1],
-                    round(score, 2),
+                    round(float(score), 2),
                 )
                 for entity, score in scores
             ]

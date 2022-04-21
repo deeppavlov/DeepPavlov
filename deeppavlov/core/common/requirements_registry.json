@@ -249,10 +249,8 @@
     "{DEEPPAVLOV_PATH}/requirements/xeger.txt"
   ],
   "entity_linker": [
-    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
+    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
   ],
@@ -262,6 +260,10 @@
   ],
   "re_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/opt_einsum.txt"
+  ],
+  "torch_transformers_entity_ranker_infer": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_squad_infer": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
