@@ -16,8 +16,8 @@
       {
         "class_name": "answer_types_extractor",
         "lang": "@en",
-        "types_filename": "{DOWNLOADS_PATH}/wikidata/types_labels_dict_en.pickle",
-        "types_sets_filename": "{DOWNLOADS_PATH}/wikidata/answer_types.pickle",
+        "types_filename": "{DOWNLOADS_PATH}/wikidata_eng/types_labels_dict_en.pickle",
+        "types_sets_filename": "{DOWNLOADS_PATH}/wikidata_eng/answer_types.pickle",
         "in": ["x", "entity_substr", "tags"],
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
@@ -92,8 +92,8 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/answer_types.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/answer_types_en.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",

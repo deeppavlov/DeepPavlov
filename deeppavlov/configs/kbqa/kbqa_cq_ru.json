@@ -17,7 +17,7 @@
         "class_name": "answer_types_extractor",
         "lang": "@ru",
         "types_filename": "{DOWNLOADS_PATH}/wikidata_rus/types_labels_dict_ru.pickle",
-        "types_sets_filename": "{DOWNLOADS_PATH}/wikidata/answer_types.pickle",
+        "types_sets_filename": "{DOWNLOADS_PATH}/wikidata_rus/answer_types.pickle",
         "in": ["x", "entity_substr", "tags"],
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
@@ -108,6 +108,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/rels.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/answer_types_ru.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",
