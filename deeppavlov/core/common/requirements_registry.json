@@ -261,6 +261,10 @@
   "re_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/opt_einsum.txt"
   ],
+  "torch_transformers_entity_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "torch_transformers_entity_ranker_infer": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
