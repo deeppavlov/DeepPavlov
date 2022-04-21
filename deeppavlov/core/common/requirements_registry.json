@@ -107,7 +107,7 @@
   "stream_spacy_tokenizer": [
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "tag_output_prettifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -222,7 +222,7 @@
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "ner_chunker": [
     "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
@@ -231,7 +231,7 @@
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "intent_catcher": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -243,7 +243,7 @@
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "re_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",

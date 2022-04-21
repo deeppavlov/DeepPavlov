@@ -283,6 +283,12 @@ class EntityLinker(Component, Serializable):
         entities_and_ids = res.fetchall()
         if entities_and_ids:
             cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split, tag)
+        if entity_substr.startswith("the "):
+            entity_substr = entity_substr.split("the ")[1]
+            entity_substr_split = entity_substr_split[1:]
+            res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr))
+            entities_and_ids = res.fetchall()
+            cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split, tag)
         if self.lang == "@ru":
             entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
             entity_substr_lemm = " ".join(entity_substr_split_lemm)

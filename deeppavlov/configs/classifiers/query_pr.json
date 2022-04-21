@@ -128,7 +128,7 @@
   "metadata": {
     "variables": {
       "TRANSFORMER": "haisongzhang/roberta-tiny-cased",
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction_eng"
