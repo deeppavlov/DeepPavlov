@@ -52,6 +52,7 @@ class EntityLinker(Component, Serializable):
             lemmatize: bool = False,
             full_paragraph: bool = False,
             use_connections: bool = False,
+            max_paragraph_len: int = 250,
             **kwargs,
     ) -> None:
         """
@@ -70,6 +71,7 @@ class EntityLinker(Component, Serializable):
             lemmatize: whether to lemmatize tokens
             full_paragraph: whether to use full paragraph for entity ranking by context and description
             use_connections: whether to ranking entities by number of connections in Wikidata
+            max_paragraph_len: maximum length of paragraph for ranking by context and description
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -88,6 +90,7 @@ class EntityLinker(Component, Serializable):
             self.stopwords = set(stopwords.words("russian"))
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
+        self.max_paragraph_len = max_paragraph_len
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
@@ -113,7 +116,8 @@ class EntityLinker(Component, Serializable):
             entity_offsets_batch: List[List[List[int]]] = None,
             sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
     ):
-        if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None:
+        if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None \
+                or not isinstance(sentences_offsets_batch[0][0], (list, tuple)):
             sentences_offsets_batch = []
             for sentences_list in sentences_batch:
                 sentences_offsets_list = []
@@ -134,7 +138,8 @@ class EntityLinker(Component, Serializable):
             sentences_offsets_batch = [[] for _ in entity_substr_batch]
 
         log.debug(f"sentences_batch {sentences_batch}")
-        if (not entity_offsets_batch and sentences_batch) or entity_offsets_batch[0] is None:
+        if (not entity_offsets_batch and sentences_batch) or not entity_offsets_batch[0] \
+                or not isinstance(entity_offsets_batch[0][0], (list, tuple)):
             entity_offsets_batch = []
             for entity_substr_list, sentences_list in zip(entity_substr_batch, sentences_batch):
                 text = " ".join(sentences_list).lower()
@@ -190,21 +195,19 @@ class EntityLinker(Component, Serializable):
             for entity_substr, entity_substr_split, tag in zip(
                     entity_substr_list, entity_substr_split_list, entity_tags_list
             ):
-                entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
-                cand_ent_init = self.find_exact_match(entity_substr, tag)
-                if not cand_ent_init or entity_substr_split != entity_substr_split_lemm:
-                    cand_ent_init = self.find_fuzzy_match(entity_substr_split, tag)
-
                 cand_ent_scores = []
-                for entity in cand_ent_init:
-                    entities_scores = list(cand_ent_init[entity])
-                    entities_scores = sorted(entities_scores, key=lambda x: (x[0], x[1]), reverse=True)
-                    cand_ent_scores.append((entity, entities_scores[0]))
+                if len(entity_substr) > 1:
+                    entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
+                    cand_ent_init = self.find_exact_match(entity_substr, tag)
+                    if not cand_ent_init or entity_substr_split != entity_substr_split_lemm:
+                        cand_ent_init = self.find_fuzzy_match(entity_substr_split, tag)
 
-                cand_ent_scores = sorted(cand_ent_scores, key=lambda x: (x[1][0], x[1][1]), reverse=True)
-                out = open("log.txt", 'a')
-                out.write(f"{tag} --- {entity_substr} --- {cand_ent_scores}"+'\n\n')
-                out.close()
+                    for entity in cand_ent_init:
+                        entities_scores = list(cand_ent_init[entity])
+                        entities_scores = sorted(entities_scores, key=lambda x: (x[0], x[1]), reverse=True)
+                        cand_ent_scores.append((entity, entities_scores[0]))
+                    cand_ent_scores = sorted(cand_ent_scores, key=lambda x: (x[1][0], x[1][1]), reverse=True)
+
                 cand_ent_scores = cand_ent_scores[:self.num_entities_for_bert_ranking]
                 cand_ent_scores_list.append(cand_ent_scores)
                 entity_ids = [elem[0] for elem in cand_ent_scores]
