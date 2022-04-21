@@ -110,7 +110,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/answer_types_ru.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_ru.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {

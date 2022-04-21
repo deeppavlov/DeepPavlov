@@ -53,7 +53,7 @@
         "return_answer_ids": false,
         "rank_answers": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
-        "rel_q2name_filename": "wiki_dict_properties.pickle"
+        "rel_q2name_filename": "wiki_dict_properties_eng.pickle"
       },
       {
         "class_name": "query_generator",
@@ -92,7 +92,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/answer_types_en.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_en.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       },
       {
