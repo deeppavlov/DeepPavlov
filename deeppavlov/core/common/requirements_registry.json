@@ -2,6 +2,11 @@
   "UD_pymorphy_lemmatizer": [
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
+  "answer_types_extractor": [
+    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
+  ],
   "bert_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
