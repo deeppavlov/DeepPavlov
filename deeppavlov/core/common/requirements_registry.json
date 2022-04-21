@@ -106,7 +106,8 @@
   ],
   "stream_spacy_tokenizer": [
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
   ],
   "tag_output_prettifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
@@ -215,30 +216,13 @@
     "{DEEPPAVLOV_PATH}/requirements/whapi.txt",
     "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
   ],
-  "kbqa_entity_linker": [
-    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-    "{DEEPPAVLOV_PATH}/requirements/sortedcontainers.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
-  ],
-  "rel_ranking_bert_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
-  ],
-  "query_generator_online": [
+  "rel_ranking_infer": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/whapi.txt",
-    "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
   ],
   "ner_chunker": [
     "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
@@ -246,7 +230,8 @@
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
   ],
   "intent_catcher": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt",
@@ -257,7 +242,8 @@
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt
   ],
   "re_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
@@ -271,10 +257,6 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_entity_ranker_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-  ],
-  "torch_transformers_squad_infer": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
