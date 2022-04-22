@@ -191,7 +191,6 @@ class TorchSquadTransformersPreprocessor(Component):
 
     Args:
         vocab_file: path to vocabulary
-        lang: language of questions and contexts
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         return_tokens: whether to return tuple of input features and tokens, or only input features
@@ -205,7 +204,6 @@ class TorchSquadTransformersPreprocessor(Component):
 
     def __init__(self,
                  vocab_file: str,
-                 lang: Literal['en', 'ru'],
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
