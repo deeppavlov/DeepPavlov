@@ -24,8 +24,6 @@ from typing_extensions import Literal
 
 import numpy as np
 import torch
-from nltk import sent_tokenize
-from ru_sent_tokenize import ru_sent_tokenize
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 
@@ -222,12 +220,6 @@ class TorchSquadTransformersPreprocessor(Component):
                                            do_lower_case=do_lower_case)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
-        if lang == 'en':
-            self.sent_tokenizer = sent_tokenize
-        elif lang == 'ru':
-            self.sent_tokenizer = ru_sent_tokenize
-        else:
-            raise RuntimeError('Only English and Russian languages are supported.')
 
     def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[
         List[InputFeatures],
@@ -258,7 +250,8 @@ class TorchSquadTransformersPreprocessor(Component):
             max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
             if 0 < max_chunk_len < len(context_subtokens):
                 number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
-                sentences = self.sent_tokenizer(context)
+                sentences = context.split(". ")
+                sentences = [f"{sentence}." for sentence in sentences if not sentence.endswith(".")]
                 for chunk in np.array_split(sentences, number_of_chunks):
                     context_list += [' '.join(chunk)]
                     question_list += [question]

@@ -27,7 +27,6 @@
         "do_lower_case": "{LOWERCASE}",
         "max_seq_length": 384,
         "return_tokens": true,
-        "lang": "ru",
         "in": [
           "question_raw",
           "context_raw"
