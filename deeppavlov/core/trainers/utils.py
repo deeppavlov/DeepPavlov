@@ -31,6 +31,7 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
 
         metric_name = metric['name']
         alias = metric.get('alias', metric_name)
+        kwargs = {k:metric[k] for k in set(metric)-{metric_name,alias}}
 
         f = get_metric_by_name(metric_name)
 
@@ -38,7 +39,8 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        metrics_functions.append(Metric(metric_name, f, inputs, alias))
+        metrics_functions.append(Metric(metric_name, partial(f,**kwargs), inputs, alias))
+        
     return metrics_functions
 
 
