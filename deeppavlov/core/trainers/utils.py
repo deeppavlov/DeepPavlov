@@ -39,7 +39,7 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        metrics_functions.append(Metric(metric_name, partial(f,**metrics), inputs, alias))
+        metrics_functions.append(Metric(metric_name, partial(f,**metric), inputs, alias))
         
     return metrics_functions
 
