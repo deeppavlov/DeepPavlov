@@ -15,6 +15,7 @@
 from collections import OrderedDict, namedtuple
 from json import JSONEncoder
 from typing import List, Tuple, Union, Iterable
+from functools import partial
 
 import numpy
 
@@ -29,17 +30,16 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
         if isinstance(metric, str):
             metric = {'name': metric, 'alias': metric}
 
-        metric_name = metric['name']
-        alias = metric.get('alias', metric_name)
-        kwargs = {k:metric[k] for k in set(metric)-{metric_name,alias}}
-
+        metric_name = metric.pop('name')
+        alias = metric.pop('alias', metric_name)
+        
         f = get_metric_by_name(metric_name)
-
-        inputs = metric.get('inputs', in_y + out_vars)
+        
+        inputs = metric.pop('inputs', in_y + out_vars)
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        metrics_functions.append(Metric(metric_name, partial(f,**kwargs), inputs, alias))
+        metrics_functions.append(Metric(metric_name, partial(f,**metrics), inputs, alias))
         
     return metrics_functions
 
