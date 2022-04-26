@@ -49,10 +49,9 @@ class EntityDetectionParser(Component):
                  return_entities_with_tags: bool = False, thres_proba: float = 0.8, **kwargs):
         """
         Args:
-            entity_tags: tags for entities
-            type_tag: tag for types
             o_tag: tag for tokens which are neither entities nor types
             tags_file: filename with NER tags
+            entity_tags: tags for entities
             ignore_points: whether to consider points as separate symbols
             return_entities_with_tags: whether to return a dict of tags (keys) and list of entity substrings (values)
                 or simply a list of entity substrings
@@ -106,6 +105,7 @@ class EntityDetectionParser(Component):
         """
         This method makes a list of tags from a list of probas for tags
         Args:
+            tokens: text tokens list
             probas: probabilities for tokens to belong to particular tags
         Returns:
             list of tags for tokens

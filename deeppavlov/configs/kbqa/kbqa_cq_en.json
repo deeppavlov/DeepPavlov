@@ -68,7 +68,6 @@
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
         "entities_to_leave": 5,
         "rels_to_leave": 10,
-        "return_answers": true,
         "in": ["x_punct", "x_punct", "template_type", "f_entity_substr", "f_tags", "answer_types"],
         "out": ["answers"]
       }
@@ -93,14 +92,6 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_en.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt.index.v1-1",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }

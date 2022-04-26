@@ -193,7 +193,7 @@ class NerChunkModel(Component):
         """
         Args:
             ner: config for entity detection
-            ner_parser: component deeppavlov.models.kbqa.entity_detection_parser
+            ner_parser: component deeppavlov.models.entity_extraction.entity_detection_parser
             **kwargs:
         """
         self.ner = ner

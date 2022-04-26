@@ -74,10 +74,7 @@
     "metrics": [
       {
         "name": "roc_auc",
-        "inputs": [
-          "y_onehot",
-          "y_pred_probas"
-        ]
+        "inputs": ["y_onehot", "y_pred_probas"]
       },
       "accuracy",
       "f1_macro"
@@ -86,11 +83,7 @@
     "val_every_n_batches": 100,
     "log_every_n_batches": 100,
     "show_examples": false,
-    "evaluation_targets": [
-      "train",
-      "valid",
-      "test"
-    ],
+    "evaluation_targets": ["train", "valid", "test"],
     "class_name": "torch_trainer"
   },
   "metadata": {
@@ -104,7 +97,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/rel_ranking_bert_eng_torch.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_eng_torch"
+        "subdir": "{MODEL_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/lcquad_rel_ranking.pickle",

@@ -44,8 +44,7 @@ class QueryGenerator(QueryGeneratorBase):
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
-                 return_all_possible_answers: bool = False,
-                 return_answers: bool = False, *args, **kwargs) -> None:
+                 return_all_possible_answers: bool = False, *args, **kwargs) -> None:
         """
 
         Args:
@@ -55,7 +54,6 @@ class QueryGenerator(QueryGeneratorBase):
             rels_to_leave: how many relations to leave after relation ranking
             max_comb_num: the maximum number of combinations of candidate entities and relations
             return_all_possible_answers: whether to return all found answers
-            return_answers: whether to return answers or candidate answers
             **kwargs:
         """
         self.wiki_parser = wiki_parser
@@ -81,7 +79,6 @@ class QueryGenerator(QueryGeneratorBase):
         candidate_outputs_batch = []
         template_answers_batch = []
         templates_nums_batch = []
-        qg_tm1 = time.time()
         log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch} {template_type_batch} {entity_tags_batch}")
         for question, question_sanitized, template_type, entities_from_ner, entity_tags_list, answer_types in \
                 zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
@@ -94,18 +91,13 @@ class QueryGenerator(QueryGeneratorBase):
             candidate_outputs_batch.append(candidate_outputs)
             template_answers_batch.append(template_answer)
             templates_nums_batch.append(templates_nums)
-        qg_tm2 = time.time()
-        log.debug(f"--------query generator time {qg_tm2 - qg_tm1}")
-        if self.return_answers:
-            answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
-                                      template_answers_batch)
-            log.debug(f"(__call__)answers: {answers}")
-            if not answers:
-                answers = ["Not Found"]
-            return answers
-        else:
-            log.debug(f"(__call__)candidate_outputs_batch: {[output[:5] for output in candidate_outputs_batch]}")
-            return candidate_outputs_batch, entities_from_ner_batch, template_answers_batch
+
+        answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
+                                  template_answers_batch)
+        log.debug(f"(__call__)answers: {answers}")
+        if not answers:
+            answers = ["Not Found"]
+        return answers
 
     def query_parser(self, question: str, query_info: Dict[str, str],
                      entities_and_types_select: List[str],
@@ -137,15 +129,12 @@ class QueryGenerator(QueryGeneratorBase):
                              search_source != "do_not_rank"]
         log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
         entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
-        rel_tm1 = time.time()
         if rels_from_template is not None:
             rels = [[(rel, 1.0) for rel in rel_list] for rel_list in rels_from_template]
         else:
             rels = [self.find_top_rels(question, entity_ids, triplet_info)
                     for triplet_info in triplet_info_list]
         rels = [[rel for rel in rel_list] for rel_list in rels]
-        rel_tm2 = time.time()
-        log.debug(f"--------rels find time: {rel_tm2 - rel_tm1}")
         log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall(r"select [\(]?([\S]+) ", query)
@@ -192,10 +181,9 @@ class QueryGenerator(QueryGeneratorBase):
             total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
                                   list(itertools.chain.from_iterable(selected_type_ids))
             try:
-                parse_res = self.wiki_parser(["parse_triplets"], [total_entities_list])
+                self.wiki_parser(["parse_triplets"], [total_entities_list])
             except json.decoder.JSONDecodeError:
                 log.info("parse triplets, not received output from wiki parser")
-        query_tm1 = time.time()
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             confidences_list.append(confidence)
@@ -214,7 +202,6 @@ class QueryGenerator(QueryGeneratorBase):
                 break
 
         candidate_outputs = []
-        candidate_outputs_list = []
         candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         if self.use_wp_api_requester and isinstance(candidate_outputs_list, list) and candidate_outputs_list:
             candidate_outputs_list = candidate_outputs_list[0]
@@ -247,8 +234,6 @@ class QueryGenerator(QueryGeneratorBase):
                                       "answers": f_answers,
                                       "rel_conf": f_rel_conf
                                       } for f_entities, *f_relations, f_answers, f_rel_conf in candidate_outputs]
-        query_tm2 = time.time()
-        log.debug(f"--------queries execution time: {query_tm2 - query_tm1}")
         log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs

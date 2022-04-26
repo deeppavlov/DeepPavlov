@@ -58,7 +58,7 @@ class QueryGeneratorBase(Component, Serializable):
 
         Args:
             template_matcher: component deeppavlov.models.kbqa.template_matcher
-            entity_linker: component deeppavlov.models.kbqa.entity_linking for linking of entities
+            entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             load_path: path to folder with wikidata files
             rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
@@ -127,12 +127,9 @@ class QueryGeneratorBase(Component, Serializable):
         for old, new in replace_tokens:
             question = question.replace(old, new)
 
-        temp_tm1 = time.time()
         entities_from_template, types_from_template, rels_from_template, rel_dirs_from_template, query_type_template, \
         entity_types, template_answer, answer_types, template_found = self.template_matcher(question_sanitized,
                                                                                             entities_from_ner)
-        temp_tm2 = time.time()
-        log.debug(f"--------template matching time: {temp_tm2 - temp_tm1}")
         self.template_nums = [query_type_template]
         templates_nums = []
 
@@ -145,10 +142,7 @@ class QueryGeneratorBase(Component, Serializable):
                 how_to_content = self.find_answer_wikihow(entities_from_template[0])
                 candidate_outputs = [["PHOW", how_to_content, 1.0]]
             else:
-                el_tm1 = time.time()
                 entity_ids = self.get_entity_ids(entities_from_template, entity_tags, question)
-                el_tm2 = time.time()
-                log.debug(f"--------entity linking time: {el_tm2 - el_tm1}")
                 log.debug(f"entities_from_template {entities_from_template}")
                 log.debug(f"entity_types {entity_types}")
                 log.debug(f"types_from_template {types_from_template}")
@@ -160,10 +154,7 @@ class QueryGeneratorBase(Component, Serializable):
 
         if not candidate_outputs and entities_from_ner:
             log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
-            el_tm1 = time.time()
             entity_ids = self.get_entity_ids(entities_from_ner, entity_tags, question)
-            el_tm2 = time.time()
-            log.debug(f"--------entity linking time: {el_tm2 - el_tm1}")
             log.debug(f"(__call__)entity_ids: {entity_ids}")
             self.template_nums = template_types
             log.debug(f"(__call__)self.template_nums: {self.template_nums}")
