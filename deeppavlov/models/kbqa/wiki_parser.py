@@ -378,10 +378,9 @@ class WikiParser:
                     triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
                 else:
-                    log.info(f"search, triplets {self.prefixes['rels'][rel_type]} unknown_elem_positions {unknown_elem_positions} {[triplet for triplet in triplets]}")
                     combs = []
                     for triplet in triplets:
-                        log.info(f"search, startswith {self.prefixes['rels'][rel_type]} {triplet[1].startswith(self.prefixes['rels'][rel_type])}")
+                        log.info(f"search, startswith {self.prefixes['rels'][rel_type]} {triplet[1].startswith(self.prefixes['rels'][rel_type])} triplet {triplet}")
                         if triplet[1].startswith(self.prefixes["rels"][rel_type]):
                             combs.append({elem: triplet[pos] for pos, elem in unknown_elem_positions})
                     log.info(f"search, combs {combs}")
