@@ -325,7 +325,7 @@ class WikiParser:
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
-
+        log.info(f"------------- init combs {combs}")
         if combs:
             log.info(f"combs {combs}")
             log.info(f"filter_info {filter_info}")
