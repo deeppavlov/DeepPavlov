@@ -213,7 +213,7 @@ class QueryGenerator(QueryGeneratorBase):
             if comb_num > 0:
                  answer_types = []
             queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info, answer_types,
-                                 return_if_found))
+                                 rel_types, return_if_found))
             
             parser_info_list.append("query_execute")
             if comb_num == self.max_comb_num:
