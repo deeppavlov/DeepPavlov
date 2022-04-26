@@ -83,11 +83,12 @@ class WikiParser:
             if parser_info == "query_execute":
                 candidate_output = []
                 #try:
-                what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
+                #what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
+                what_return, query_seq, filter_info, order_info, answer_types, return_if_found = query
                 if answer_types:
                     query_answer_types = answer_types
                 candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
-                                                                 query_answer_types, rel_types)
+                                                                 query_answer_types)
                 #except:
                 #    log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
