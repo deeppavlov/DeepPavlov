@@ -327,6 +327,8 @@ class WikiParser:
                 combs = extended_combs
 
         if combs:
+            log.info(f"combs {combs}")
+            log.info(f"filter_info {filter_info}")
             if filter_info:
                 for filter_elem, filter_value in filter_info:
                     if filter_value == "qualifier":
