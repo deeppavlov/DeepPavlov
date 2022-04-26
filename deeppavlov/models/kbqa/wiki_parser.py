@@ -85,8 +85,7 @@ class WikiParser:
                 #try:
                 what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
                 if answer_types:
-                    query_answer_types = answer_types        
-                log.info(f"wp, query {query}")
+                    query_answer_types = answer_types
                 candidate_output = self.execute(what_return, query_seq, filter_info, order_info, query_answer_types,
                                                                  rel_types)
                 #except:
@@ -274,10 +273,8 @@ class WikiParser:
         """
         extended_combs = []
         combs = []
-        log.info(f"execute, query_seq {query_seq} rel_types {rel_types}")
         for n, (query, rel_type) in enumerate(zip(query_seq, rel_types)):
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
-            log.info(f"execute, query {query} rel_type {rel_type} unknown_elem_positions {unknown_elem_positions}")
             """
                 n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
                                                                             "http://www.wikidata.org/entity/Q159"]
@@ -326,10 +323,7 @@ class WikiParser:
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
-        log.info(f"------------- init combs {combs}")
         if combs:
-            log.info(f"combs {combs}")
-            log.info(f"filter_info {filter_info}")
             if filter_info:
                 for filter_elem, filter_value in filter_info:
                     if filter_value == "qualifier":
@@ -369,7 +363,6 @@ class WikiParser:
     def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
-        log.info(f"search, file format {self.file_format} subj {subj} rel {rel} obj {obj}")
         if self.file_format == "hdt":
             combs = []
             triplets, cnt = self.document.search_triples(subj, rel, obj)
@@ -380,10 +373,8 @@ class WikiParser:
                 else:
                     combs = []
                     for triplet in triplets:
-                        log.info(f"search, startswith {self.prefixes['rels'][rel_type]} {triplet[1].startswith(self.prefixes['rels'][rel_type])} triplet {triplet}")
                         if triplet[1].startswith(self.prefixes["rels"][rel_type]):
                             combs.append({elem: triplet[pos] for pos, elem in unknown_elem_positions})
-                    log.info(f"search, combs {combs}")
             else:
                 log.debug("max comb num exceede")
         else:
