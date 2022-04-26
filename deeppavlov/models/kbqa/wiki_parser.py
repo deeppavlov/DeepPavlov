@@ -381,6 +381,7 @@ class WikiParser:
                     log.info(f"search, triplets {self.prefixes['rels'][rel_type]} {[triplet for triplet in triplets]}")
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
                           if triplet[1].startswith(self.prefixes["rels"][rel_type])]
+                    log.info(f"search, combs {combs}")
             else:
                 log.debug("max comb num exceede")
         else:
