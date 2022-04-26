@@ -85,7 +85,7 @@ class WikiParser:
                 #try:
                 what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
                 if answer_types:
-                    query_answer_types = answer_types
+                    query_answer_types = answer_types        
                 log.info(f"wp, query {query}")
                 candidate_output = self.execute(what_return, query_seq, filter_info, order_info, rel_types,
                                                                  query_answer_types)
@@ -376,6 +376,7 @@ class WikiParser:
                     triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
                 else:
+                    log.info(f"search, triplets {self.prefixes['rels'][rel_type]} {[triplet for triplet in triplets]}")
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
                           if triplet[1].startswith(self.prefixes["rels"][rel_type])]
             else:
