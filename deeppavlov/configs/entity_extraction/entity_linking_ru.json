@@ -41,8 +41,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1"
     },
     "download": [
       {
@@ -54,11 +53,7 @@
         "subdir": "{MODELS_PATH}/entity_linking_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.hdt.index.v1-1",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]

@@ -1,16 +1,16 @@
 {
   "chainer": {
-    "in": ["x_init"],
+    "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
-        "in": ["x_init"],
-        "out": ["x"]
+        "in": ["x"],
+        "out": ["x_punct"]
       },
       {
         "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_en.json",
-        "in": ["x"],
+        "in": ["x_punct"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       },
       {
@@ -18,7 +18,7 @@
         "lang": "@en",
         "types_filename": "{DOWNLOADS_PATH}/wikidata_eng/types_labels_dict_en.pickle",
         "types_sets_filename": "{DOWNLOADS_PATH}/wikidata_eng/answer_types.pickle",
-        "in": ["x", "entity_substr", "tags"],
+        "in": ["x_punct", "entity_substr", "tags"],
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
       {
@@ -40,7 +40,7 @@
       },
       {
         "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
-        "in": ["x"],
+        "in": ["x_punct"],
         "out": ["template_type"]
       },
       {
@@ -69,7 +69,7 @@
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "return_answers": true,
-        "in": ["x", "x", "template_type", "f_entity_substr", "f_tags", "answer_types"],
+        "in": ["x_punct", "x_punct", "template_type", "f_entity_substr", "f_tags", "answer_types"],
         "out": ["answers"]
       }
     ],
@@ -79,7 +79,6 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [

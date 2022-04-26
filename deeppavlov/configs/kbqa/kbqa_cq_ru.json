@@ -1,16 +1,16 @@
 {
   "chainer": {
-    "in": ["x_init"],
+    "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
-        "in": ["x_init"],
-        "out": ["x"]
+        "in": ["x"],
+        "out": ["x_punct"]
       },
       {
         "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_ru.json",
-        "in": ["x"],
+        "in": ["x_punct"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       },
       {
@@ -18,7 +18,7 @@
         "lang": "@ru",
         "types_filename": "{DOWNLOADS_PATH}/wikidata_rus/types_labels_dict_ru.pickle",
         "types_sets_filename": "{DOWNLOADS_PATH}/wikidata_rus/answer_types.pickle",
-        "in": ["x", "entity_substr", "tags"],
+        "in": ["x_punct", "entity_substr", "tags"],
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
       {
@@ -33,7 +33,7 @@
       },
       {
         "config_path": "{CONFIGS_PATH}/syntax/syntax_ru_syntagrus_bert.json",
-        "in": ["x"],
+        "in": ["x_punct"],
         "out": ["syntax_info"]
       },
       {
@@ -83,7 +83,7 @@
         "return_answers": true,
         "return_all_possible_answers": false,
         "syntax_structure_known": true,
-        "in": ["x", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
+        "in": ["x_punct", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
         "out": ["answers"]
       }
     ],
@@ -97,10 +97,6 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/syntax_ru_syntagrus_bert.tar.gz",
-        "subdir": "{MODELS_PATH}/syntax_ru_syntagrus"
-      },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
         "subdir": "{DOWNLOADS_PATH}/wikidata"

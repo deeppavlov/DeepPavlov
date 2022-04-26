@@ -32,17 +32,10 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "NER_PATH": "{MODELS_PATH}/wiki_ner_rus_bert"
-    },
-    "download": [
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/rus_dream_entity_detection/wiki_ner_rus_bert.tar.gz",
-        "subdir": "{NER_PATH}"
-      }
-    ]
+    }
   }
 }

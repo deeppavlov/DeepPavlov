@@ -77,7 +77,7 @@ To use a pre-trained model from CLI use the following command:
     python deeppavlov/deep.py interact kbqa_сq_en [-d]
     python deeppavlov/deep.py interact kbqa_cq_ru [-d]
 
-where ``kbqa_cq`` and others are the names of configs and ``-d`` is an optional download key. The key ``-d`` is used
+where ``kbqa_cq_en`` and others are the names of configs and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. You can also use command ``download``.
 
 KBQA model for complex question answering can be used from Python using the following code:
@@ -236,21 +236,17 @@ To find labels for entities ids, the ``query`` argument should be the list of en
 
 In the example in the list ["Q159", ""] the second element which is an empty string can be the string with the sentence.
 
-To use Entity Linking service in KBQA, in the :config:`kbqa_cq_sep <kbqa/kbqa_cq_sep.json>` you should use add to ``pipe`` API Requester component::
+To use Entity Linking service in KBQA, in the :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` you should replace :config:`entity linking component <kbqa/kbqa_cq_en.json#L24>` with API Requester component in the following way::
 
     {
         "class_name": "api_requester",
-        "id": "linker_entities",
+        "id": "entity_linker",
         "url": "entity_linking_url",
         "out": ["entity_ids"],
         "param_names": ["entity_substr", "template_found"]
      }
-
-and replace ``linker_entities`` parameter value of the :config:`query_generator <kbqa/kbqa_cq_sep.json#L71>` component with ``#linker_entities``::
-
-    "linker_entities": "#linker_entities",
     
-To use Wiki Parser service in KBQA, in the :config:`kbqa_cq_sep <kbqa/kbqa_cq_sep.json>` you should add to ``pipe`` API Requester component::
+To use Wiki Parser service in KBQA, in the :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` you should replace :config:`wiki parser component <kbqa/kbqa_cq_en.json#L28>` with API Requester component in the following way::
 
     {
         "class_name": "api_requester",
@@ -259,10 +255,6 @@ To use Wiki Parser service in KBQA, in the :config:`kbqa_cq_sep <kbqa/kbqa_cq_se
         "out": ["wiki_parser_output"],
         "param_names": ["parser_info", "query"]
      }
-
-and replace ``wiki_parser`` parameter value of the :config:`query_generator <kbqa/kbqa_cq_sep.json#L75>` and :config:`rel_ranking_bert_infer <kbqa/kbqa_cq_sep.json#L88>` components with ``#wiki_p``::
-
-    "wiki_parser": "#wiki_p",
 
 .. warning::
     Don't forget to replace the ``url`` parameter values in the above examples with correct URLs
