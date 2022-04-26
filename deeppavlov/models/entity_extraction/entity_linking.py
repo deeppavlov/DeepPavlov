@@ -15,7 +15,7 @@
 import re
 import sqlite3
 from logging import getLogger
-from typing import List, Dict, Tuple, Union
+from typing import List, Dict, Tuple, Union, Any
 from collections import defaultdict
 
 import pymorphy2
@@ -115,7 +115,8 @@ class EntityLinker(Component, Serializable):
             sentences_batch: List[List[str]] = None,
             entity_offsets_batch: List[List[List[int]]] = None,
             sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
-    ):
+    ) -> Tuple[Union[List[List[List[str]]], List[List[str]]], Union[List[List[List[Any]]], List[List[Any]]],
+               Union[List[List[List[str]]], List[List[str]]]]:
         if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None \
                 or not isinstance(sentences_offsets_batch[0][0], (list, tuple)):
             sentences_offsets_batch = []
@@ -179,7 +180,7 @@ class EntityLinker(Component, Serializable):
             entity_tags_list: List[str],
             sentences_list: List[str],
             sentences_offsets_list: List[List[int]],
-    ) -> List[List[str]]:
+    ) -> Tuple[Union[List[List[str]], List[str]], Union[List[List[Any]], List[Any]], Union[List[List[str]], List[str]]]:
         log.debug(
             f"entity_substr_list {entity_substr_list} entity_tags_list {entity_tags_list} "
             f"entity_offsets_list {entity_offsets_list}"
@@ -329,7 +330,7 @@ class EntityLinker(Component, Serializable):
         normal_form = morph_parse_tok.normal_form
         return normal_form
 
-    def calc_substr_score(self, cand_entity_id, cand_entity_title, entity_substr_split):
+    def calc_substr_score(self, cand_entity_title, entity_substr_split):
         label_tokens = cand_entity_title.split()
         cnt = 0.0
         for ent_tok in entity_substr_split:
@@ -346,7 +347,6 @@ class EntityLinker(Component, Serializable):
                         fuzz_score = fuzz.ratio(label_tok, ent_tok)
                         if fuzz_score >= 80.0 and not found:
                             cnt += fuzz_score * 0.01
-                            found = True
                             break
         substr_score = round(cnt / max(len(label_tokens), len(entity_substr_split)), 3)
         if len(label_tokens) == 2 and len(entity_substr_split) == 1:
@@ -437,7 +437,7 @@ class EntityLinker(Component, Serializable):
             sentences_list: List[str],
             sentences_offsets_list: List[Tuple[int, int]],
             substr_lens: List[int],
-    ) -> List[List[str]]:
+    ) -> Tuple[Union[List[List[str]], List[str]], Union[List[List[Any]], List[Any]]]:
         entity_ids_list = []
         conf_list = []
         contexts = []

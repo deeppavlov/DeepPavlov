@@ -52,7 +52,8 @@ class NerChunker(Component):
         self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
         self.lowercase = lowercase
 
-    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
+    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]],
+                                                       List[List[List[Tuple[int, int]]]], List[List[List[str]]]]:
         """
         This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
  
@@ -64,11 +65,6 @@ class NerChunker(Component):
         """
         text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list = [], [], [], []
         text_batch, nums_batch, sentences_offsets_batch, sentences_batch = [], [], [], []
-        sentences_offsets_list, sentences_list = [], []
-        text = ""
-        cur_len = 0
-        cur_chunk_len = 0
-
         for n, doc in enumerate(docs_batch):
             if self.lowercase:
                 doc = doc.lower()

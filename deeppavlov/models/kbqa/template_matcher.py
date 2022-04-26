@@ -69,8 +69,8 @@ class TemplateMatcher(Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str, entities_from_ner: List[str]) -> \
-            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Any, Union[
-                str, Any]]:
+            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Union[list, Any],
+                  Union[str, Any], Union[list, Any], Union[str, Any]]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
