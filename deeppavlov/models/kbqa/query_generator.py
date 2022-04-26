@@ -149,10 +149,10 @@ class QueryGenerator(QueryGeneratorBase):
         else:
             rels = [self.find_top_rels(question, entity_ids, triplet_info)
                     for triplet_info in triplet_info_list]
+        log.info(f"(query_parser)rels: {rels}")
         rels = [[rel for rel in rel_list if rel[1] > 0.95] for rel_list in rels]
         rel_tm2 = time.time()
         log.debug(f"--------rels find time: {rel_tm2-rel_tm1}")
-        log.debug(f"(query_parser)rels: {rels}")
         rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
         answer_ent = re.findall("select [\(]?([\S]+) ", query)
         order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
