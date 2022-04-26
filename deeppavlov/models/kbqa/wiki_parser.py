@@ -274,8 +274,9 @@ class WikiParser:
         """
         extended_combs = []
         combs = []
-        
+        log.info(f"execute, query_seq {query_seq} rel_types {rel_types}")
         for n, (query, rel_type) in enumerate(zip(query_seq, rel_types)):
+            log.info(f"execute, query {query} rel_type {rel_type}")
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             """
                 n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
