@@ -368,6 +368,7 @@ class WikiParser:
     def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
+        log.info(f"search, file format {self.file_format} subj {subj} rel {rel} obj {obj}")
         if self.file_format == "hdt":
             combs = []
             triplets, cnt = self.document.search_triples(subj, rel, obj)
