@@ -87,8 +87,8 @@ class WikiParser:
                 if answer_types:
                     query_answer_types = answer_types        
                 log.info(f"wp, query {query}")
-                candidate_output = self.execute(what_return, query_seq, filter_info, order_info, rel_types,
-                                                                 query_answer_types)
+                candidate_output = self.execute(what_return, query_seq, filter_info, order_info, query_answer_types,
+                                                                 rel_types)
                 #except:
                 #    log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
