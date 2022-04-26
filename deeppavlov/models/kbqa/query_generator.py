@@ -250,6 +250,6 @@ class QueryGenerator(QueryGeneratorBase):
                 candidate_outputs = [output[1:] for output in candidate_outputs]
         query_tm2 = time.time()
         log.debug(f"--------queries execution time: {query_tm2-query_tm1}")
-        log.debug(f"(query_parser)final outputs: {candidate_outputs[:3]}")
+        log.info(f"(query_parser)final outputs: {candidate_outputs[:3]}")
 
         return candidate_outputs
