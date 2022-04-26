@@ -86,6 +86,7 @@ class WikiParser:
                 what_return, query_seq, filter_info, order_info, answer_types, rel_types, return_if_found = query
                 if answer_types:
                     query_answer_types = answer_types
+                log.info(f"wp, query {query}")
                 candidate_output = self.execute(what_return, query_seq, filter_info, order_info, rel_types,
                                                                  query_answer_types)
                 #except:
