@@ -265,15 +265,15 @@ class EntityLinker(Component, Serializable):
         if self.use_tags:
             for cand_entity_title, cand_entity_id, cand_entity_rels, cand_tag, *_ in entities_and_ids:
                 if tag == cand_tag:
-                    substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
+                    substr_score = self.calc_substr_score(cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
             if not cand_ent_init:
                 for cand_entity_title, cand_entity_id, cand_entity_rels, cand_tag, *_ in entities_and_ids:
-                    substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
+                    substr_score = self.calc_substr_score(cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
         else:
             for cand_entity_title, cand_entity_id, cand_entity_rels, *_ in entities_and_ids:
-                substr_score = self.calc_substr_score(cand_entity_id, cand_entity_title, entity_substr_split)
+                substr_score = self.calc_substr_score(cand_entity_title, entity_substr_split)
                 cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
         return cand_ent_init
 
@@ -307,6 +307,8 @@ class EntityLinker(Component, Serializable):
     def find_fuzzy_match(self, entity_substr_split, tag):
         if self.lang == "@ru":
             entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
+        else:
+            entity_substr_split_lemm = entity_substr_split
         cand_ent_init = defaultdict(set)
         for word in entity_substr_split:
             res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(word))
@@ -435,7 +437,7 @@ class EntityLinker(Component, Serializable):
             cand_ent_descr_list: List[List[str]],
             entities_scores_list: List[Dict[str, Tuple[int, float]]],
             sentences_list: List[str],
-            sentences_offsets_list: List[Tuple[int, int]],
+            sentences_offsets_list: List[List[int]],
             substr_lens: List[int],
     ) -> Tuple[Union[List[List[str]], List[str]], Union[List[List[Any]], List[Any]]]:
         entity_ids_list = []
@@ -564,7 +566,7 @@ class EntityLinker(Component, Serializable):
 
             high_conf_entities = sorted(high_conf_entities, key=lambda x: (x[1], x[3], x[2]), reverse=True)
             for n, elem_num in enumerate(high_conf_nums):
-                if elem_num - n >= 0 and elem_num - n < len(top_entities):
+                if 0 <= elem_num - n < len(top_entities):
                     del top_entities[elem_num - n]
                     del top_conf[elem_num - n]
 

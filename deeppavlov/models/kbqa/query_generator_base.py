@@ -52,8 +52,7 @@ class QueryGeneratorBase(Component, Serializable):
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
                  use_alt_templates: bool = True,
-                 use_add_templates: bool = False,
-                 return_answers: bool = False, *args, **kwargs) -> None:
+                 use_add_templates: bool = False, *args, **kwargs) -> None:
         """
 
         Args:
@@ -74,7 +73,6 @@ class QueryGeneratorBase(Component, Serializable):
             use_el_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
                 Entity Linking
             use_alt_templates: whether to use alternative templates if no answer was found for default query template
-            return_answers: whether to return answers or candidate answers
         """
         super().__init__(save_path=None, load_path=load_path)
         self.template_matcher = template_matcher
@@ -94,7 +92,6 @@ class QueryGeneratorBase(Component, Serializable):
         self.use_alt_templates = use_alt_templates
         self.use_add_templates = use_add_templates
         self.sparql_queries_filename = sparql_queries_filename
-        self.return_answers = return_answers
 
         self.load()
 
@@ -117,8 +114,9 @@ class QueryGeneratorBase(Component, Serializable):
                                template_types: Union[List[str], str],
                                entities_from_ner: List[str],
                                entity_tags: List[str],
-                               answer_types: Set[str]) -> Union[List[Tuple[str, Any]], List[str]]:
-
+                               answer_types: Set[str]) -> Tuple[Union[Union[List[List[Union[str, float]]],
+                                                                            List[Any]], Any],
+                                                                Union[str, Any], Union[List[Any], Any]]:
         candidate_outputs = []
         self.template_nums = template_types
 
@@ -189,7 +187,8 @@ class QueryGeneratorBase(Component, Serializable):
                                type_ids: List[List[str]],
                                answer_types: List[str],
                                rels_from_template: Optional[List[Tuple[str]]] = None,
-                               rel_dirs_from_template: Optional[List[str]] = None) -> List[Tuple[str]]:
+                               rel_dirs_from_template: Optional[List[str]] = None) -> Tuple[Union[None, List[Any]],
+                                                                                            List[Any]]:
         candidate_outputs = []
         log.debug(f"use alternative templates {self.use_alt_templates}")
         log.debug(f"(find_candidate_answers)self.template_nums: {self.template_nums}")
@@ -295,3 +294,7 @@ class QueryGeneratorBase(Component, Serializable):
         else:
             howto_content = "Not Found"
         return howto_content
+
+    def query_parser(self, question, query_template, entities_and_types_select, entity_ids, type_ids, answer_types,
+                     rels_from_template):
+        pass

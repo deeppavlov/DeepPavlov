@@ -21,6 +21,7 @@ log = getLogger(__name__)
 
 @register('torch_transformers_el_ranker')
 class TorchTransformersElRanker(TorchModel):
+    """Class for ranking of entities by context and description"""
 
     def __init__(
             self,
@@ -36,7 +37,6 @@ class TorchTransformersElRanker(TorchModel):
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
             clip_norm: Optional[float] = None,
-            threshold: Optional[float] = None,
             **kwargs
     ):
         self.encoder_save_path = encoder_save_path
@@ -136,10 +136,10 @@ class TorchTransformersElRanker(TorchModel):
 
 
 class TextEncoder(nn.Module):
+    """Class for obtaining the BERT output for CLS-token and special entity token"""
+
     def __init__(self, pretrained_bert: str = None,
-                 bert_tokenizer_config_file: str = None,
                  bert_config_file: str = None,
-                 resize: bool = False,
                  device: str = "gpu"
                  ):
         super().__init__()
@@ -190,6 +190,8 @@ class TextEncoder(nn.Module):
 
 
 class BilinearRanking(nn.Module):
+    """Class for calculation of bilinear form of two vectors"""
+
     def __init__(self, n_classes: int = 2, emb_size: int = 768, block_size: int = 8):
         super().__init__()
         self.n_classes = n_classes
@@ -209,9 +211,12 @@ class BilinearRanking(nn.Module):
 
 
 class SiameseBertElModel(nn.Module):
+    """Class with model for ranking of entities by context and description"""
 
     def __init__(
             self,
+            emb_size: int,
+            block_size: int,
             encoder_save_path: str,
             bilinear_save_path: str,
             pretrained_bert: str = None,
@@ -227,7 +232,7 @@ class SiameseBertElModel(nn.Module):
 
         # initialize parameters that would be filled later
         self.encoder = TextEncoder(pretrained_bert=self.pretrained_bert, device=self.device)
-        self.bilinear_ranker = BilinearRanking(emb_size=264, block_size=6)
+        self.bilinear_ranker = BilinearRanking(emb_size, block_size)
 
     def forward(
             self,
@@ -271,6 +276,8 @@ class SiameseBertElModel(nn.Module):
 
 @register('torch_transformers_entity_ranker_infer')
 class TorchTransformersEntityRankerInfer:
+    """Class for infering of model for ranking of entities from a knowledge base by context and description"""
+
     def __init__(self, pretrained_bert,
                  encoder_weights_path,
                  bilinear_weights_path,

@@ -28,7 +28,7 @@ log = getLogger(__name__)
 if 'en-core-web-sm' not in pkg_resources.working_set.by_key.keys():
     importlib.reload(pkg_resources)
 
-# TODO: move nlp to sentence_answer, sentence_answer to rel_ranking_bert_infer and revise en_core_web_sm requirement
+# TODO: move nlp to sentence_answer, sentence_answer to rel_ranking_infer and revise en_core_web_sm requirement
 nlp = spacy.load('en_core_web_sm')
 
 pronouns = ["who", "what", "when", "where", "how"]

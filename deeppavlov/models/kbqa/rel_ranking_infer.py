@@ -15,13 +15,14 @@
 from logging import getLogger
 from typing import Tuple, List, Any, Optional
 
+from scipy.special import softmax
+from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 from deeppavlov.models.kbqa.sentence_answer import sentence_answer
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
-from scipy.special import softmax
 
 log = getLogger(__name__)
 
@@ -32,8 +33,7 @@ class RelRankerInfer(Component, Serializable):
 
     def __init__(self, load_path: str,
                  rel_q2name_filename: str,
-                 ranker=None,
-                 bert_preprocessor=None,
+                 ranker: Chainer = None,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
                  rels_to_leave: int = 40,
@@ -51,7 +51,6 @@ class RelRankerInfer(Component, Serializable):
             load_path: path to folder with wikidata files
             rel_q2name_filename: name of file which maps relation id to name
             ranker: component deeppavlov.models.ranking.rel_ranker
-            bert_perprocessor: component deeppavlov.models.preprocessors.bert_preprocessor
             wiki_parser: component deeppavlov.models.wiki_parser
             batch_size: infering batch size
             rels_to_leave: how many relations to leave after relation ranking
@@ -68,7 +67,6 @@ class RelRankerInfer(Component, Serializable):
         super().__init__(save_path=None, load_path=load_path)
         self.rel_q2name_filename = rel_q2name_filename
         self.ranker = ranker
-        self.bert_preprocessor = bert_preprocessor
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
         self.rels_to_leave = rels_to_leave
@@ -114,6 +112,8 @@ class RelRankerInfer(Component, Serializable):
                     confidences_batch = []
                     for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
                         candidate_rels = []
+                        candidate_rels_str, candidate_answer = "", ""
+                        candidate_entities, candidate_confidence = [], []
                         if candidate_ans_and_rels:
                             candidate_rels = candidate_ans_and_rels["relations"]
                             candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
@@ -132,11 +132,7 @@ class RelRankerInfer(Component, Serializable):
                             confidences_batch.append(candidate_confidence)
 
                     if questions_batch:
-                        if self.use_mt_bert:
-                            features = self.bert_preprocessor(questions_batch, rels_labels_batch)
-                            probas = self.ranker(features)
-                        else:
-                            probas = self.ranker(questions_batch, rels_labels_batch)
+                        probas = self.ranker(questions_batch, rels_labels_batch)
                         probas = [proba[1] for proba in probas]
                         for j, (answer, entities, confidence, rels_ids, rels_labels) in \
                                 enumerate(zip(answers_batch, entities_batch, confidences_batch, rels_batch,
@@ -208,11 +204,7 @@ class RelRankerInfer(Component, Serializable):
                         rels_batch.append(candidate_rel)
                         rels_labels_batch.append(self.rel_q2name[candidate_rel])
                 if questions_batch:
-                    if self.use_mt_bert:
-                        features = self.bert_preprocessor(questions_batch, rels_labels_batch)
-                        probas = self.ranker(features)
-                    else:
-                        probas = self.ranker(questions_batch, rels_labels_batch)
+                    probas = self.ranker(questions_batch, rels_labels_batch)
                     probas = [proba[1] for proba in probas]
                     for j, rel in enumerate(rels_batch):
                         rels_with_scores.append((rel, probas[j]))

@@ -62,7 +62,6 @@ class QueryGenerator(QueryGeneratorBase):
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
         self.return_all_possible_answers = return_all_possible_answers
-        self.return_answers = return_answers
         self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
                                ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
         super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
@@ -74,7 +73,7 @@ class QueryGenerator(QueryGeneratorBase):
                  template_type_batch: Union[List[List[str]], List[str]],
                  entities_from_ner_batch: List[List[str]],
                  entity_tags_batch: List[List[str]],
-                 answer_types_batch: List[Set[str]]) -> List[Union[List[Tuple[str, Any]], List[str]]]:
+                 answer_types_batch: List[Set[str]]) -> List[str]:
 
         candidate_outputs_batch = []
         template_answers_batch = []
@@ -104,7 +103,8 @@ class QueryGenerator(QueryGeneratorBase):
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
                      answer_types: Set[str],
-                     rels_from_template: Optional[List[Tuple[str]]] = None) -> List[List[Union[Tuple[Any, ...], Any]]]:
+                     rels_from_template: Optional[List[Tuple[str]]] = None) -> Union[
+        List[Dict[str, Union[Union[Tuple[Any, ...], List[Any]], Any]]], List[Dict[str, Any]]]:
         question_tokens = nltk.word_tokenize(question)
         query = query_info["query_template"].lower()
         for old_tok, new_tok in self.replace_tokens:
