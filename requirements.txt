@@ -12,7 +12,7 @@ pytz==2019.1
 pydantic==1.3
 pymorphy2==0.8
 pymorphy2-dicts-ru
-pyopenssl==19.1.0
+pyopenssl==22.0.0
 pytelegrambotapi==3.6.7
 requests==2.22.0
 ruamel.yaml==0.15.100
