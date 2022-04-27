@@ -174,12 +174,10 @@ class TorchModel(NNModel):
                 if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
                     model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
 
-                strict_load_flag = any([key.endswith("embeddings.position_ids")
-                                        for key in checkpoint['model_state_dict']])
                 if torch.cuda.device_count() > 1:
-                    self.model.module.load_state_dict(model_state, strict=strict_load_flag)
+                    self.model.module.load_state_dict(model_state)
                 else:
-                    self.model.load_state_dict(model_state, strict=strict_load_flag)
+                    self.model.load_state_dict(model_state)
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             elif model_func:
