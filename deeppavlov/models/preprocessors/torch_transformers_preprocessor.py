@@ -174,6 +174,7 @@ class TorchTransformersPreprocessor(Component):
         return input_features
 
 
+@register('torch_transformers_entity_ranker_preprocessor')
 class TorchTransformersEntityRankerPreprocessor(Component):
     """Class for tokenization of text into subtokens, encoding of subtokens with indices and obtaining positions of
     special [ENT]-tokens

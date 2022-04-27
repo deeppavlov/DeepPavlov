@@ -26,7 +26,15 @@ Currently, we provide two built-in models for KBQA in DeepPavlov library:
 
 * :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian,
 
-These configs use local Wikidata dump in hdt format (3.7 Gb on disk). :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` requires 3.5 Gb RAM and 4.3 Gb GPU, :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - 6.9 Gb RAM and 6.5 Gb GPU.
+These configs use local Wikidata dump in hdt format (3.7 Gb on disk).
+
++--------------------------------------------------+-----------+-----------+
+| Model                                            |    RAM    |    GPU    |
++==================================================+===========+===========+
+| :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>`      |    3.5    |    4.3    |
++--------------------------------------------------+-----------+-----------+
+| :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>`      |    6.9    |    6.5    |
++--------------------------------------------------+-----------+-----------+
 
 The Knowledge Base Question Answering model uses Wikidata to answer complex questions. Here are some of the most popular types of questions supported by the model:
 
