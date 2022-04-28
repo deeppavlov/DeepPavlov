@@ -13,9 +13,9 @@
 # limitations under the License.
 
 ALIASES = {
-    'multi_squad_noans': 'qa_squad2_bert',
-    'multi_squad_noans_infer': 'qa_squad2_bert',
-    'multi_squad_retr_noans': 'qa_squad2_bert',
+    'multi_squad_noans': 'qa_multisquad_bert',
+    'multi_squad_noans_infer': 'qa_multisquad_bert',
+    'multi_squad_retr_noans': 'qa_multisquad_bert',
     'ner_collection3_m1': 'ner_collection3_bert',
     'ner_conll2003': 'ner_conll2003_bert',
     'ner_conll2003_torch_bert': 'ner_conll2003_bert',

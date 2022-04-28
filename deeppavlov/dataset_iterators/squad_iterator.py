@@ -59,9 +59,13 @@ class SquadIterator(DataLearningIterator):
                         q = qa['question']
                         ans_text = []
                         ans_start = []
-                        for answer in qa['answers']:
-                            ans_text.append(answer['text'])
-                            ans_start.append(answer['answer_start'])
+                        if qa['answers']:
+                            for answer in qa['answers']:
+                                ans_text.append(answer['text'])
+                                ans_start.append(answer['answer_start'])
+                        else:
+                            ans_text = ['']
+                            ans_start = [-1]
                         cqas.append(((context, q), (ans_text, ans_start)))
         return cqas
 
