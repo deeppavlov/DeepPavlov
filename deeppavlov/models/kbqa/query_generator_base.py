@@ -44,7 +44,6 @@ class QueryGeneratorBase(Component, Serializable):
                  rank_rels_filename_2: str,
                  sparql_queries_filename: str,
                  wiki_parser=None,
-                 wiki_file_format: str = "hdt",
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
                  syntax_structure_known: bool = False,
@@ -63,7 +62,6 @@ class QueryGeneratorBase(Component, Serializable):
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
             sparql_queries_filename: file with sparql query templates
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
-            wiki_file_format: format of wikidata file
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
             syntax_structure_known: if syntax tree parser was used to define query template type
@@ -77,7 +75,6 @@ class QueryGeneratorBase(Component, Serializable):
         self.template_matcher = template_matcher
         self.entity_linker = entity_linker
         self.wiki_parser = wiki_parser
-        self.wiki_file_format = wiki_file_format
         self.rel_ranker = rel_ranker
         self.rank_rels_filename_1 = rank_rels_filename_1
         self.rank_rels_filename_2 = rank_rels_filename_2
@@ -296,4 +293,4 @@ class QueryGeneratorBase(Component, Serializable):
 
     def query_parser(self, question, query_template, entities_and_types_select, entity_ids, type_ids, answer_types,
                      rels_from_template):
-        pass
+        raise NotImplementedError

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import itertools
-import json
 import re
 from collections import namedtuple, OrderedDict
 from logging import getLogger
@@ -65,7 +64,7 @@ class QueryGenerator(QueryGeneratorBase):
                                ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
         super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
                          entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
-                         return_answers=self.return_answers, *args, **kwargs)
+                         *args, **kwargs)
 
     def __call__(self, question_batch: List[str],
                  question_san_batch: List[str],
@@ -77,7 +76,7 @@ class QueryGenerator(QueryGeneratorBase):
         candidate_outputs_batch = []
         template_answers_batch = []
         templates_nums_batch = []
-        log.info(f"kbqa inputs {question_batch} {entities_from_ner_batch} {template_type_batch} {entity_tags_batch}")
+        log.debug(f"kbqa inputs {question_batch} {entities_from_ner_batch} {template_type_batch} {entity_tags_batch}")
         for question, question_sanitized, template_type, entities_from_ner, entity_tags_list, answer_types in \
                 zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
                     entity_tags_batch, answer_types_batch):
@@ -94,7 +93,7 @@ class QueryGenerator(QueryGeneratorBase):
                                   template_answers_batch)
         log.debug(f"(__call__)answers: {answers}")
         if not answers:
-            answers = ["Not Found"]
+            answers = ["Not Found" for _ in question_batch]
         return answers
 
     def query_parser(self, question: str, query_info: Dict[str, str],
@@ -176,13 +175,6 @@ class QueryGenerator(QueryGeneratorBase):
         parser_info_list = []
         confidences_list = []
         all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
-        if self.wiki_file_format == "pickle":
-            total_entities_list = list(itertools.chain.from_iterable(selected_entity_ids)) + \
-                                  list(itertools.chain.from_iterable(selected_type_ids))
-            try:
-                self.wiki_parser(["parse_triplets"], [total_entities_list])
-            except json.decoder.JSONDecodeError:
-                log.info("parse triplets, not received output from wiki parser")
         for comb_num, combs in enumerate(all_combs_list):
             confidence = np.prod([score for rel, score in combs[2][:-1]])
             confidences_list.append(confidence)

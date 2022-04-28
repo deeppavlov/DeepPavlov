@@ -196,13 +196,12 @@ class TextEncoder(nn.Module):
     Args:
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        device: `cpu` or `cuda` device to use
+        device: device to use
     """
 
     def __init__(self, pretrained_bert: str = None,
                  bert_config_file: str = None,
-                 device: str = "gpu"
-                 ):
+                 device: torch.device = torch.device('cpu')):
         super().__init__()
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
@@ -285,7 +284,7 @@ class SiameseBertElModel(nn.Module):
         bilinear_save_path: path to save bilinear layer checkpoint
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        device: `cpu` or `cuda` device to use
+        device: device to use
     """
 
     def __init__(
@@ -296,7 +295,7 @@ class SiameseBertElModel(nn.Module):
             bilinear_save_path: str,
             pretrained_bert: str = None,
             bert_config_file: str = None,
-            device: str = "gpu"
+            device: torch.device = torch.device('cpu')
     ):
         super().__init__()
         self.pretrained_bert = pretrained_bert

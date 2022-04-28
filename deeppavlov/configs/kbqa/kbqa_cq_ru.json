@@ -97,11 +97,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/sparql_queries.json",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rels.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {

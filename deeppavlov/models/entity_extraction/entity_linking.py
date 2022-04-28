@@ -60,7 +60,7 @@ class EntityLinker(Component, Serializable):
         Args:
             load_path: path to folder with inverted index files
             entities_database_filename: file with sqlite database with Wikidata entities index
-            entity_ranker: component deeppavlov.models.kbqa.rel_ranking_bert
+            entity_ranker: deeppavlov.models.torch_bert.torch_transformers_el_ranker.TorchTransformersEntityRankerInfer
             num_entities_for_bert_ranking: number of candidate entities for BERT ranking using description and context
             wikidata_file: .hdt file with Wikidata graph
             num_entities_to_return: number of candidate entities for the substring which are returned
