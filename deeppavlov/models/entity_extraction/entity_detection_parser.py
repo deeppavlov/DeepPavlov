@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Tuple, Union, Dict
 from collections import defaultdict
+from typing import List, Tuple, Union, Dict
 
 import numpy as np
 
@@ -23,22 +23,9 @@ from deeppavlov.core.models.component import Component
 
 
 @register('question_sign_checker')
-class QuestionSignChecker(Component):
-    """This class adds question sign if it is absent or replaces dot with question sign"""
-
-    def __init__(self, **kwargs):
-        pass
-
-    def __call__(self, questions: List[str]) -> List[str]:
-        questions_sanitized = []
-        for question in questions:
-            if not question.endswith('?'):
-                if question.endswith('.'):
-                    question = question[:-1] + '?'
-                else:
-                    question += '?'
-            questions_sanitized.append(question)
-        return questions_sanitized
+def question_sign_checker(questions: List[str]) -> List[str]:
+    """Adds question sign if it is absent or replaces dots in the end with question sign."""
+    return [question if question.endswith('?') else f'{question.rstrip(".")}?' for question in questions]
 
 
 @register('entity_detection_parser')

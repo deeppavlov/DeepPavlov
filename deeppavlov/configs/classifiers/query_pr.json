@@ -26,8 +26,7 @@
         "save_path": "{MODEL_PATH}/classes.dict",
         "load_path": "{MODEL_PATH}/classes.dict",
         "in": ["y"],
-        "out": ["y_ids"
-        ]
+        "out": ["y_ids"]
       },
       {
         "in": ["y_ids"],
@@ -73,10 +72,7 @@
       "accuracy",
       {
         "name": "roc_auc",
-        "inputs": [
-          "y_onehot",
-          "y_pred_probas"
-        ]
+        "inputs": ["y_onehot", "y_pred_probas"]
       }
     ],
     "validation_patience": 10,

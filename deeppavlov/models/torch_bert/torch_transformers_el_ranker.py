@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from logging import getLogger
 from pathlib import Path
 from typing import List, Optional, Dict, Tuple, Union, Any
@@ -347,7 +361,7 @@ class TorchTransformersEntityRankerInfer:
         batch_size: batch size when model infering
         emb_size: entity embedding size
         block_size: size of block in bilinear layer
-        device: `cpu` or `cuda` device to use
+        device: `cpu` or `gpu` device to use
     """
 
     def __init__(self, pretrained_bert,

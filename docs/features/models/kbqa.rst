@@ -29,7 +29,7 @@ Currently, we provide two built-in models for KBQA in DeepPavlov library:
 These configs use local Wikidata dump in hdt format (3.7 Gb on disk).
 
 +--------------------------------------------------+-----------+-----------+
-| Model                                            |    RAM    |    GPU    |
+| Model                                            |  RAM, Gb  |  GPU, Gb  |
 +==================================================+===========+===========+
 | :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>`      |    3.5    |    4.3    |
 +--------------------------------------------------+-----------+-----------+
@@ -92,9 +92,9 @@ KBQA model for complex question answering can be used from Python using the foll
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    kbqa_model = build_model(configs.kbqa.kbqa_cq_en, download=True)
+    kbqa_model = build_model('kbqa_cq_en', download=True)
     kbqa_model(['What is the currency of Sweden?'])
     >>> ["Swedish krona"]
     kbqa_model(['Magnus Carlsen is a part of what sport?'])
@@ -110,9 +110,9 @@ KBQA model for complex question answering in Russian can be used from Python usi
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    kbqa_model = build_model(configs.kbqa.kbqa_cq_ru, download=True)
+    kbqa_model = build_model('kbqa_cq_ru', download=True)
     kbqa_model(['Когда родился Пушкин?'])
     >>> ["1799-05-26"]
 

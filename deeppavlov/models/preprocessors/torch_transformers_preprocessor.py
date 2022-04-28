@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 import random
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from logging import getLogger
 from pathlib import Path
-import torch
 from typing import Tuple, List, Optional, Union, Dict, Set, Any
 
 import numpy as np
+import torch
 from transformers import AutoTokenizer
 from transformers.data.processors.utils import InputFeatures
 

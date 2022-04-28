@@ -13,20 +13,19 @@
 # limitations under the License.
 
 import json
-import time
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Any, Set
 
-from whapi import search, get_html
 from bs4 import BeautifulSoup
+from whapi import search, get_html
 
+from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.common.file import read_json
-from deeppavlov.core.commands.utils import expand_path
-from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 from deeppavlov.models.entity_extraction.entity_linking import EntityLinker
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
+from deeppavlov.models.kbqa.template_matcher import TemplateMatcher
 
 log = getLogger(__name__)
 

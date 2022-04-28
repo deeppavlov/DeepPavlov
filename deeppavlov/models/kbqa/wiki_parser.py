@@ -29,21 +29,7 @@ log = getLogger(__name__)
 
 @register('wiki_parser')
 class WikiParser:
-    """This class extract relations, objects or triplets from Wikidata HDT file
-    Example of prefixes for entities and relations in hdt file:
-    {
-                 "entity": "http://we",
-                 "label": "http://wl",
-                 "alias": "http://wal",
-                 "description": "http://wd",
-                 "rels": {"direct": "http://wpd",
-                          "no_type": "http://wp",
-                          "statement": "http://wps",
-                          "qualifier": "http://wpq"
-                          },
-                 "statement": "http://ws"
-             }
-    """
+    """This class extract relations, objects or triplets from Wikidata HDT file."""
 
     def __init__(self, wiki_filename: str,
                  file_format: str = "hdt",
@@ -59,6 +45,20 @@ class WikiParser:
             **kwargs:
         """
 
+        if prefixes is None:
+            prefixes = {
+                "entity": "http://we",
+                "label": "http://wl",
+                "alias": "http://wal",
+                "description": "http://wd",
+                "rels": {
+                    "direct": "http://wpd",
+                    "no_type": "http://wp",
+                    "statement": "http://wps",
+                    "qualifier": "http://wpq"
+                },
+                "statement": "http://ws"
+            }
         self.prefixes = prefixes
         self.file_format = file_format
         self.wiki_filename = str(expand_path(wiki_filename))

@@ -15,20 +15,19 @@
 import itertools
 import json
 import re
-import time
+from collections import namedtuple, OrderedDict
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any, Set
-from collections import namedtuple, OrderedDict
 
-import numpy as np
 import nltk
+import numpy as np
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.models.kbqa.wiki_parser import WikiParser
+from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.utils import \
     extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
-from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
+from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
 log = getLogger(__name__)
 

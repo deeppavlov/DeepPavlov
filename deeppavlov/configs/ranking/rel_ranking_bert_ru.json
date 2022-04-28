@@ -45,9 +45,7 @@
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "optimizer": "AdamW",
-        "optimizer_parameters": {
-          "lr": 1e-05
-        },
+        "optimizer_parameters": {"lr": 1e-05},
         "learning_rate_drop_patience": 5,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],

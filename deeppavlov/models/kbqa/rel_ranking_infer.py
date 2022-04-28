@@ -16,6 +16,7 @@ from logging import getLogger
 from typing import Tuple, List, Any, Optional
 
 from scipy.special import softmax
+
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.file import load_pickle
 from deeppavlov.core.common.registry import register
