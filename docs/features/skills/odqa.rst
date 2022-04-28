@@ -30,7 +30,7 @@ Training (if you have your own data)
     from deeppavlov import configs, train_evaluate_model_from_config
 
     train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
-    train_evaluate_model_from_config(configs.squad.qa_squad2_bert, download=True)
+    train_evaluate_model_from_config(configs.squad.qa_multisquad_bert, download=True)
 
 Building
 
