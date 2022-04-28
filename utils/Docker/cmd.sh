@@ -20,4 +20,4 @@ cd ..
 
 flake8 `python -c 'import deeppavlov; print(deeppavlov.__path__[0])'` --count --select=E9,F63,F7,F82 --show-source --statistics
 
-pytest -v --disable-warnings $PYTEST_ARGS
+pytest -v --disable-warnings --instafail $PYTEST_ARGS
