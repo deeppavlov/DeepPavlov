@@ -30,7 +30,7 @@ Training (if you have your own data)
     from deeppavlov import configs, train_evaluate_model_from_config
 
     train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
-    train_evaluate_model_from_config(configs.squad.qa_multisquad_bert, download=True)
+    train_evaluate_model_from_config(configs.squad.qa_squad2_bert, download=True)
 
 Building
 
@@ -141,7 +141,7 @@ Scores for **ODQA** skill:
 |                                                                                                                                  |      |                      |                +----------+----------+-----------+---------+
 | Model                                                                                                                            | Lang |    Dataset           |   WikiDump     |  F1      |   EM     |   F1      |   EM    |
 +----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |  En  |                      | enwiki20180211 |  46.24   |  38.85   |  52.05    |  43.97  |
+|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |  En  |                      | enwiki20180211 |  29.03   |  22.75   |  31.38    |  25.96  |
 +----------------------------------------------------------------------------------------------------------------------------------+      +                      +----------------+----------+----------+-----------+---------+
 |`DrQA`_                                                                                                                           |      |                      |                |   \-     |  27.1    |   \-      |   \-    |
 +----------------------------------------------------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+

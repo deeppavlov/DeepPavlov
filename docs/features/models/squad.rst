@@ -151,12 +151,9 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 SQuAD with contexts without correct answers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/qa_squad2_bert.json>`
-and :config:`squad_noans <squad/qa_multisquad_bert.json>` configs with pretrained model. These models outputs empty string
-in case if there is no answer in context. :config:`squad_noans <squad/qa_squad2_bert.json>` was trained on SQuAD2.0
-dataset. :config:`squad_noans <squad/qa_multisquad_bert.json>` was trained not on SQuAD dataset. For each question-context
-pair from SQuAD we extracted contexts from the same Wikipedia article and ranked them according to tf-idf score between
-question and context. In this manner we built dataset with contexts without an answer.
+In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/qa_squad2_bert.json>` 
+with pretrained model. This model outputs empty string in case if there is no answer in 
+context. :config:`squad_noans <squad/qa_squad2_bert.json>` was trained on SQuAD2.0 dataset.
 
 Special trainable `no_answer` token is added to output of self-attention layer and it makes model able to select
 `no_answer` token in cases, when answer is not present in given context.
@@ -167,8 +164,6 @@ We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the sam
 | Model config                                                  |    EM (dev)    |    F-1 (dev)    |
 +===============================================================+================+=================+
 | :config:`DeepPavlov <squad/qa_squad2_bert.json>`              |     75.54      |     83.56       |
-+---------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov <squad/qa_multisquad_bert.json>`          |     75.71      |     80.72       |
 +---------------------------------------------------------------+----------------+-----------------+
 | `Simple and Effective Multi-Paragraph Reading Comprehension`_ |     59.14      |     67.34       |
 +---------------------------------------------------------------+----------------+-----------------+
