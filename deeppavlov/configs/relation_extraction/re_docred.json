@@ -17,7 +17,7 @@
         "in": ["tokens", "entity_pos", "entity_tags"],
         "out": ["input_ids", "attention_mask", "upd_entity_pos", "upd_entity_tags", "nf_samples"],
         "class_name": "re_preprocessor",
-        "vocab_file": "bert-base-uncased",
+        "vocab_file": "bert-base-cased",
         "default_tag": "PER"
       },
       {
@@ -30,7 +30,7 @@
         "model_name": "re_model",
         "n_classes": 97,
         "num_ner_tags": 6,
-        "pretrained_bert": "bert-base-uncased",
+        "pretrained_bert": "bert-base-cased",
         "return_probas": true
       },
       {
@@ -45,13 +45,13 @@
   },
   "train": {
     "epochs": 50,
-    "batch_size": 16,
+    "batch_size": 30,
     "log_every_n_batches": 100,
     "train_metrics": ["f1_weighted", "acc"],
     "evaluation_targets": ["valid", "train"],
     "metrics": ["f1_weighted", "acc"],
     "validation_patience": 50,
-    "val_every_n_batches": 100,
+    "val_every_n_batches": 200,
     "show_examples": false,
     "class_name": "torch_trainer"
   },
@@ -68,7 +68,7 @@
         "subdir": "{DOWNLOADS_PATH}/docred"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_docred_model.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_docred_model_v1.tar.gz",
         "subdir": "{MODELS_PATH}/re_docred"
       },
       {

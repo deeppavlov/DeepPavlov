@@ -89,7 +89,7 @@
         "subdir": "{DOWNLOADS_PATH}/ubuntu_v2_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ubuntu_v2_uncased_torch_bert_model_v2.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
