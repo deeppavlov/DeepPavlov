@@ -49,10 +49,6 @@
   "glove": [
     "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
   ],
-  "input_splitter": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
   "joint_tagger_parser": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
@@ -64,22 +60,6 @@
   ],
   "lemmatized_output_prettifier": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "mt_bert": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "mt_bert_classification_task": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "mt_bert_reuser": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "mt_bert_seq_tagging_task": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
   ],
   "pymorphy_vectorizer": [
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
