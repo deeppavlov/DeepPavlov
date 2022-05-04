@@ -87,14 +87,6 @@
   "rel_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "squad_bert_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
-  "squad_bert_model": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt"
-  ],
   "squad_model": [
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],

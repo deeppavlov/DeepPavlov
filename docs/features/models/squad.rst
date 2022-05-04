@@ -72,7 +72,7 @@ Model usage from Python
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
+    from deeppavlov import build_model
 
     model = build_model('squad_bert', download=True)
     model(['DeepPavlov is library for NLP and dialog systems.'], ['What is DeepPavlov?'])
@@ -91,7 +91,7 @@ following command to train the model:
 
 .. code:: bash
 
-    python -m deeppavlov train deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov train squad_bert
 
 Interact mode
 ~~~~~~~~~~~~~
@@ -102,7 +102,7 @@ To run model in interact mode run the following command:
 
 .. code:: bash
 
-    python -m deeppavlov interact deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov interact squad_bert
 
 Model will ask you to type in context and question.
 
@@ -118,7 +118,7 @@ We have all pretrained model available to download:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov download squad_bert
 
 It achieves ~88 F-1 score and ~80 EM on `SQuAD-v1.1`_ dev set.
 
@@ -174,7 +174,7 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/qa_squad2_bert.json
+    python -m deeppavlov download qa_squad2_bert
 
 
 .. _`DrQA`: https://arxiv.org/abs/1704.00051
@@ -187,7 +187,7 @@ Pretrained model is available and can be downloaded:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert.json
+    python -m deeppavlov download squad_ru_bert
 
 Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz
 
