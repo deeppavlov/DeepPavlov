@@ -23,7 +23,7 @@
         "class_name": "ner_chunk_model",
         "ner": {
           "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
-          "override": {
+          "overwrite": {
             "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
           }
         },

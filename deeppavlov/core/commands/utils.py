@@ -90,12 +90,12 @@ def _update_requirements(config: dict) -> dict:
     return response
 
 
-def _override(data: Any, value: Any, nested_keys: list) -> None:
+def _overwrite(data: Any, value: Any, nested_keys: list) -> None:
     """Changes ``data`` nested key value to ``value`` using ``nested_keys`` as nested keys list.
 
     Example:
         >>> x = {'a': [None, {'b': 2}]}
-        >>> _override(x, 42, ['a', 1, 'b'])
+        >>> _overwrite(x, 42, ['a', 1, 'b'])
         >>> x
         {'a': [None, {'b': 42}]}
 
@@ -104,15 +104,15 @@ def _override(data: Any, value: Any, nested_keys: list) -> None:
     if not nested_keys:
         data[key] = value
     else:
-        _override(data[key], value, nested_keys)
+        _overwrite(data[key], value, nested_keys)
 
 
-def parse_config(config: Union[str, Path, dict], override: Optional[dict] = None) -> dict:
+def parse_config(config: Union[str, Path, dict], overwrite: Optional[dict] = None) -> dict:
     """Apply variables' values to all its properties.
 
     Args:
         config: Config to parse.
-        override: If not None - key-value pairs of nested keys and values to override config.
+        overwrite: If not None - key-value pairs of nested keys and values to overwrite config.
             For {'chainer.pipe.0.class_name': 'simple_vocab'} it will update config
             config['chainer']['pipe'][0]['class_name'] = 'simple_vocab'.
 
@@ -120,10 +120,10 @@ def parse_config(config: Union[str, Path, dict], override: Optional[dict] = None
     if isinstance(config, (str, Path)):
         config = read_json(find_config(config))
 
-    if override is not None:
-        for key, value in override.items():
+    if overwrite is not None:
+        for key, value in overwrite.items():
             items = [int(item) if item.isdigit() else item for item in key.split('.')]
-            _override(config, value, items)
+            _overwrite(config, value, items)
 
     updated_config = _update_requirements(config)
 
