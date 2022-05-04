@@ -21,6 +21,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Optional, Union, Dict, Set, Any
 
+import nltk
 import numpy as np
 import torch
 from transformers import AutoTokenizer
@@ -326,8 +327,7 @@ class TorchSquadTransformersPreprocessor(Component):
             max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
             if 0 < max_chunk_len < len(context_subtokens):
                 number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
-                sentences = context.split(". ")
-                sentences = [f"{sentence}." for sentence in sentences if not sentence.endswith(".")]
+                sentences = nltk.sent_tokenize(context)
                 for chunk in np.array_split(sentences, number_of_chunks):
                     context_list += [' '.join(chunk)]
                     question_list += [question]
