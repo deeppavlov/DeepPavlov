@@ -59,8 +59,7 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.11,
-        "hidden_keep_prob": 0.11, 
-        "return_probas": false,
+        "hidden_keep_prob": 0.11,
         "encoder_layer_ids": [
           -1
         ],
@@ -90,7 +89,8 @@
           "y_ind"
         ],
         "out": [
-          "y_pred_ind"
+          "y_pred_ind",
+          "probas"
         ]
       },
       {

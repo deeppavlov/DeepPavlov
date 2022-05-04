@@ -37,7 +37,6 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
-        "return_probas": false,
         "encoder_layer_ids": [-1],
         "optimizer": "AdamW",
         "optimizer_parameters": {
@@ -55,7 +54,7 @@
         "load_path": "{MODEL_PATH}/model",
         "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
         "in_y": ["y_ind"],
-        "out": ["y_pred_ind"]
+        "out": ["y_pred_ind", "probas"]
       },
       {
         "ref": "tag_vocab",
