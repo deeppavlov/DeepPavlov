@@ -135,27 +135,95 @@ PARAMS = {
         ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_6L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
     },
-    "entity_linking": {
-        ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
+    "entity_extraction": {
+        ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
+            [
+                ("Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.",
+                 (['forrest gump', 'robert zemeckis', 'eric roth'],
+                  [(0, 12), (48, 63), (79, 88)],
+                  [[0, 1], [10, 11], [15, 16]],
+                  ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                  [(0, 89)],
+                  ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'],
+                  [0.8798, 0.9986, 0.9985]))
+            ],
+        ("entity_extraction/entity_detection_ru.json", "entity_extraction", ('IP',)):
             [
                 ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
                  (['москва', 'россии', 'центрального федерального округа', 'московской области'],
-                  [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
-                ("абв", ([], [], []))
+                  [(0, 6), (17, 23), (31, 63), (72, 90)],
+                  [[0], [3], [6, 7, 8], [11, 12]],
+                  ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                  [(0, 91)],
+                  ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
+                  [0.8359, 0.938, 0.9917, 0.9803]))
             ],
-        ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
+        ("entity_extraction/entity_linking_en.json", "entity_extraction", ('IP',)):
             [
-                ("The city stands on the River Thames in the south-east of England, " + \
-                 "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
-                 (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
-                  ['Q19686', 'Q1693', 'Q21'])),
-                ("abc", ([], [], []))
+                (['forrest gump', 'robert zemeckis', 'eric roth'],
+                 ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                 ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'],
+                 [(0, 12), (48, 63), (79, 88)],
+                 [(0, 89)],
+                 ([['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'], ['Q942932', 'Q89320386', 'Q89909683']],
+                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)],
+                   [(1.0, 73, 1.0), (0.5, 52, 0.29)],
+                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
+                  [['Forrest Gump', 'Forrest Gump (novel)', ''],
+                   ['Robert Zemeckis', 'Welcome to Marwen'], ['Eric Roth', '', '']]))
             ],
-        ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
+        ("entity_extraction/entity_linking_ru.json", "entity_extraction", ('IP',)):
             [
-                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
-                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
-                (["  "], "", "", ([[]], [[]]))
+                (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                 ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                 ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
+                 [(0, 6), (17, 23), (31, 63), (72, 90)],
+                 [(0, 91)],
+                 ([['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
+                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
+                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
+                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
+                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
+                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
+                  [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
+                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
+                    'Российская республика'],
+                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
+                    'Центральный административный округ (Назрань)'],
+                   ['Московская область', 'Московская область (1917—1918)',
+                    'Мостовский (Волгоградская область)']]))
+            ],
+        ("entity_extraction/entity_extraction_en.json", "entity_extraction", ('IP',)):
+            [
+                ("Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.",
+                 (['forrest gump', 'robert zemeckis', 'eric roth'],
+                  ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                  [(0, 12), (48, 63), (79, 88)],
+                  [['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'],
+                   ['Q942932', 'Q89320386', 'Q89909683']],
+                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)], [(1.0, 73, 1.0), (0.5, 52, 0.29)],
+                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
+                  [['Forrest Gump', 'Forrest Gump (novel)', ''], ['Robert Zemeckis', 'Welcome to Marwen'],
+                   ['Eric Roth', '', '']]))
+            ],
+        ("entity_extraction/entity_extraction_ru.json", "entity_extraction", ('IP',)):
+            [
+                ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
+                 (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                  ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                  [(0, 6), (17, 23), (31, 63), (72, 90)],
+                  [['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
+                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
+                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
+                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
+                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
+                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
+                  [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
+                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
+                    'Российская республика'],
+                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
+                    'Центральный административный округ (Назрань)'],
+                   ['Московская область', 'Московская область (1917—1918)', 'Мостовский (Волгоградская область)']]))
             ]
     },
     "ner": {
@@ -170,45 +238,17 @@ PARAMS = {
             (["hey", "alexa", "how", "are", "you"], None)]
     },
     "kbqa": {
-        ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
+        ("kbqa/kbqa_cq_en.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
                 ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
-        ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
+        ("kbqa/kbqa_cq_ru.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
-            [
-                ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
-                ("Чем питаются коалы?", ("Эвкалипт",)),
+                ("Кто такой Оксимирон?", ("российский рэп-исполнитель",)),
+                ("Чем питаются коалы?", ("Лист",)),
                 ("абв", ("Not Found",))
             ]
     },

@@ -13,6 +13,9 @@
 # limitations under the License.
 
 ALIASES = {
+    'kbqa_cq': 'kbqa_cq_en',
+    'kbqa_cq_online': 'kbqa_cq_en',
+    'kbqa_cq_rus': 'kbqa_cq_ru',
     'ner_collection3_m1': 'ner_collection3_bert',
     'ner_conll2003': 'ner_conll2003_bert',
     'ner_conll2003_torch_bert': 'ner_conll2003_bert',

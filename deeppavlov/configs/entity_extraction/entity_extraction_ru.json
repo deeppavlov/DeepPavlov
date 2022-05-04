@@ -1,0 +1,23 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_ru.json",
+        "in": ["x"],
+        "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_ru.json",
+        "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
+        "out": ["entity_ids", "entity_conf", "entity_pages"]
+      }
+    ],
+    "out": ["entity_substr", "tags", "entity_offsets", "entity_ids", "entity_conf", "entity_pages"]
+  },
+  "metadata": {
+    "variables": {
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    }
+  }
+}

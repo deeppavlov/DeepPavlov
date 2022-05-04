@@ -1,22 +1,23 @@
 {
   "dataset_reader": {
     "class_name": "sq_reader",
-    "data_path": "{DOWNLOADS_PATH}/query_prediction/query_prediction_eng.pickle"
+    "data_path": "{DOWNLOADS_PATH}/rel_ranking_rus/rubq_rel_ranking.pickle"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",
     "seed": 42
   },
   "chainer": {
-    "in": ["x"],
+    "in": ["question", "rel_list"],
     "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "torch_transformers_preprocessor",
+        "class_name": "rel_ranking_preprocessor",
         "vocab_file": "{TRANSFORMER}",
-        "do_lower_case": false,
+        "do_lower_case": true,
         "max_seq_length": 64,
-        "in": ["x"],
+        "add_special_tokens": ["<q>", "</q>", "<rel_sep>"],
+        "in": ["question", "rel_list"],
         "out": ["bert_features"]
       },
       {
@@ -38,7 +39,8 @@
       {
         "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
-        "return_probas": true,
+        "return_probas": "true",
+        "num_special_tokens": 3,
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
@@ -62,20 +64,20 @@
         "ref": "classes_vocab"
       }
     ],
-    "out": ["y_pred_labels"]
+    "out": ["y_pred_probas"]
   },
   "train": {
-    "epochs": 100,
-    "batch_size": 64,
+    "epochs": 3,
+    "batch_size": 30,
     "metrics": [
-      "f1_macro",
-      "accuracy",
       {
         "name": "roc_auc",
         "inputs": ["y_onehot", "y_pred_probas"]
-      }
+      },
+      "accuracy",
+      "f1_macro"
     ],
-    "validation_patience": 10,
+    "validation_patience": 5,
     "val_every_n_batches": 100,
     "log_every_n_batches": 100,
     "show_examples": false,
@@ -84,20 +86,20 @@
   },
   "metadata": {
     "variables": {
-      "TRANSFORMER": "haisongzhang/roberta-tiny-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction_eng"
+      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_rus_torch"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/query_prediction_eng.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers/query_prediction_eng"
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rel_ranking_bert_rus_torch.tar.gz",
+        "subdir": "{MODEL_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/query_prediction_eng.pickle",
-        "subdir": "{DOWNLOADS_PATH}/query_prediction"
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rubq_rel_ranking.pickle",
+        "subdir": "{DOWNLOADS_PATH}/rel_ranking_rus"
       }
     ]
   }
