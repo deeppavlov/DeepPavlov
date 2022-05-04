@@ -14,7 +14,7 @@
 import os
 from copy import deepcopy
 from pathlib import Path
-from typing import Union, Dict, TypeVar
+from typing import Any, Union, Dict, TypeVar, Optional
 
 from deeppavlov.core.common.file import read_json, find_config
 from deeppavlov.core.common.registry import inverted_registry
@@ -90,10 +90,40 @@ def _update_requirements(config: dict) -> dict:
     return response
 
 
-def parse_config(config: Union[str, Path, dict]) -> dict:
-    """Apply variables' values to all its properties"""
+def _override(data: Any, value: Any, nested_keys: list) -> None:
+    """Changes ``data`` nested key value to ``value`` using ``nested_keys`` as nested keys list.
+
+    Example:
+        >>> x = {'a': [None, {'b': 2}]}
+        >>> _override(x, 42, ['a', 1, 'b'])
+        >>> x
+        {'a': [None, {'b': 42}]}
+
+    """
+    key = nested_keys.pop(0)
+    if not nested_keys:
+        data[key] = value
+    else:
+        _override(data[key], value, nested_keys)
+
+
+def parse_config(config: Union[str, Path, dict], override: Optional[dict] = None) -> dict:
+    """Apply variables' values to all its properties.
+
+    Args:
+        config: Config to parse.
+        override: If not None - key-value pairs of nested keys and values to override config.
+            For {'chainer.pipe.0.class_name': 'simple_vocab'} it will update config
+            config['chainer']['pipe'][0]['class_name'] = 'simple_vocab'.
+
+    """
     if isinstance(config, (str, Path)):
         config = read_json(find_config(config))
+
+    if override is not None:
+        for key, value in override.items():
+            items = [int(item) if item.isdigit() else item for item in key.split('.')]
+            _override(config, value, items)
 
     updated_config = _update_requirements(config)
 
