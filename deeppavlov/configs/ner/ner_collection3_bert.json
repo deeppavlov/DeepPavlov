@@ -33,7 +33,8 @@
           "x_subword_tokens",
           "x_subword_tok_ids",
           "startofword_markers",
-          "attention_mask"
+          "attention_mask",
+          "tokens_offsets"
         ]
       },
       {

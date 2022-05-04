@@ -17,7 +17,6 @@
         "max_seq_length": 512,
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
-        "return_offsets": true,
         "in": ["x"],
         "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
