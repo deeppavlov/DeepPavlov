@@ -31,7 +31,7 @@ Welcome to DeepPavlov's documentation!
    Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
-   Entity Linking <features/models/entity_linking>
+   Entity Extraction <features/models/entity_extraction>
    Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
@@ -49,7 +49,6 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Skills
    
-   Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
    Frequently Asked Questions Answering <features/skills/faq>
 

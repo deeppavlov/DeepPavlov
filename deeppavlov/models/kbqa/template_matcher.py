@@ -69,8 +69,8 @@ class TemplateMatcher(Serializable):
         raise NotImplementedError
 
     def __call__(self, question: str, entities_from_ner: List[str]) -> \
-            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Any, Union[
-                str, Any]]:
+            Tuple[Union[List[str], list], list, Union[list, Any], Union[list, Any], Union[str, Any], Union[list, Any],
+                  Union[str, Any], Union[list, Any], Union[str, Any]]:
         question = question.lower()
         question = self.sanitize(question)
         question_length = len(question)
@@ -79,6 +79,7 @@ class TemplateMatcher(Serializable):
         template_found = ""
         entity_types = []
         template_answer = ""
+        answer_types = []
         results = self.pool.map(RegexpMatcher(question), self.templates)
         results = functools.reduce(lambda x, y: x + y, results)
         replace_tokens = [("the uk", "united kingdom"), ("the us", "united states")]
@@ -114,9 +115,11 @@ class TemplateMatcher(Serializable):
                         query_type = template["template_type"]
                         entity_types = template.get("entity_types", [])
                         template_answer = template.get("template_answer", "")
+                        answer_types = template.get("answer_types", [])
                         min_length = cur_len
 
-        return entities, types, relations, relation_dirs, query_type, entity_types, template_answer, template_found
+        return entities, types, relations, relation_dirs, query_type, entity_types, template_answer, answer_types, \
+            template_found
 
     def sanitize(self, question: str) -> str:
         question = re.sub(r"^(a |the )", '', question)

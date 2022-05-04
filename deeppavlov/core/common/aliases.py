@@ -13,6 +13,9 @@
 # limitations under the License.
 
 ALIASES = {
+    'kbqa_cq': 'kbqa_cq_en',
+    'kbqa_cq_online': 'kbqa_cq_en',
+    'kbqa_cq_rus': 'kbqa_cq_ru',
     'multi_squad_noans': 'qa_multisquad_bert',
     'multi_squad_noans_infer': 'qa_multisquad_bert',
     'multi_squad_retr_noans': 'qa_multisquad_bert',

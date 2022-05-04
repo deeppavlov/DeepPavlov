@@ -223,6 +223,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                  pretrained_bert: str,
                  bert_config_file: Optional[str] = None,
                  return_probas: bool = False,
+                 return_tags_and_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
@@ -237,6 +238,7 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         self.n_classes = n_tags
         self.return_probas = return_probas
+        self.return_tags_and_probas = return_tags_and_probas
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
@@ -323,20 +325,23 @@ class TorchTransformersSequenceTagger(TorchModel):
             # Move logits and labels to CPU and to numpy arrays
             logits = token_from_subtoken(logits[0].detach().cpu(), torch.from_numpy(y_masks))
 
-        if self.return_probas:
-            pred = torch.nn.functional.softmax(logits, dim=-1)
-            pred = pred.detach().cpu().numpy()
+        probas = torch.nn.functional.softmax(logits, dim=-1)
+        probas = probas.detach().cpu().numpy()
+        if self.use_crf:
+            logits = logits.transpose(1, 0).to(self.device)
+            pred = self.crf.decode(logits)
         else:
-            if self.use_crf:
-                logits = logits.transpose(1, 0).to(self.device)
-                pred = self.crf.decode(logits)
-            else:
-                logits = logits.detach().cpu().numpy()
-                pred = np.argmax(logits, axis=-1)
-            seq_lengths = np.sum(y_masks, axis=1)
-            pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+            logits = logits.detach().cpu().numpy()
+            pred = np.argmax(logits, axis=-1)
+        seq_lengths = np.sum(y_masks, axis=1)
+        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
 
-        return pred
+        if self.return_probas:
+            return probas
+        elif self.return_tags_and_probas:
+            return pred, probas
+        else:
+            return pred
 
     @overrides
     def load(self, fname=None):

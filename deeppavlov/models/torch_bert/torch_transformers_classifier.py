@@ -21,7 +21,7 @@ import numpy as np
 import torch
 from overrides import overrides
 from torch.nn import BCEWithLogitsLoss
-from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel
+from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel, AutoTokenizer
 from transformers.modeling_outputs import SequenceClassifierOutput
 
 from deeppavlov.core.common.errors import ConfigError
@@ -51,6 +51,8 @@ class TorchTransformersClassifierModel(TorchModel):
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
+        is_binary: whether classification task is binary or multi-class
+        num_special_tokens: number of special tokens used by classification model
     """
 
     def __init__(self, n_classes,
@@ -65,6 +67,7 @@ class TorchTransformersClassifierModel(TorchModel):
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  is_binary: Optional[bool] = False,
+                 num_special_tokens: int = None,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -84,6 +87,7 @@ class TorchTransformersClassifierModel(TorchModel):
         self.clip_norm = clip_norm
         self.is_binary = is_binary
         self.bert_config = None
+        self.num_special_tokens = num_special_tokens
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -240,6 +244,10 @@ class TorchTransformersClassifierModel(TorchModel):
             self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
+
+        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_bert)
+        if self.num_special_tokens:
+            self.model.resize_token_embeddings(len(tokenizer) + self.num_special_tokens)
 
         # TODO that should probably be parametrized in config
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
