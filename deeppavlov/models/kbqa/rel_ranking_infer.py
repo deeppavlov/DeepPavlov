@@ -42,7 +42,6 @@ class RelRankerInfer(Component, Serializable):
                  return_all_possible_answers: bool = False,
                  return_answer_ids: bool = False,
                  use_api_requester: bool = False,
-                 use_mt_bert: bool = False,
                  return_sentence_answer: bool = False,
                  rank: bool = True,
                  return_confidences: bool = False, **kwargs):
@@ -59,7 +58,6 @@ class RelRankerInfer(Component, Serializable):
             return_all_possible_answers: whether to return all found answers
             return_answer_ids: whether to return answer ids from Wikidata
             use_api_requester: whether wiki parser will be used as external api
-            use_mt_bert: whether multitask bert is used for ranking
             return_sentence_answer: whether to return answer as a sentence
             rank: whether to rank relations or simple copy input
             return_confidences: whether to return confidences of candidate answers
@@ -75,7 +73,6 @@ class RelRankerInfer(Component, Serializable):
         self.return_all_possible_answers = return_all_possible_answers
         self.return_answer_ids = return_answer_ids
         self.use_api_requester = use_api_requester
-        self.use_mt_bert = use_mt_bert
         self.return_sentence_answer = return_sentence_answer
         self.rank = rank
         self.return_confidences = return_confidences
