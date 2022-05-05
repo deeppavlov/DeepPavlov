@@ -14,6 +14,7 @@
 
 import pickle
 from itertools import islice
+from pathlib import Path
 from logging import getLogger
 from types import FunctionType
 from typing import Union, Tuple, List, Optional, Hashable, Reversible
@@ -275,10 +276,10 @@ class Chainer(Component):
             log.warning('Cannot get a main component for an empty chainer')
             return None
 
-    def save(self) -> None:
+    def save(self, fname: Optional[Union[str, Path]] = None) -> None:
         main_component = self.get_main_component()
         if isinstance(main_component, Serializable):
-            main_component.save()
+            main_component.save(fname)
 
     def load(self) -> None:
         for in_params, out_params, component in self.train_pipe:

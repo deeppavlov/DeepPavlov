@@ -14,6 +14,7 @@
 
 from logging import getLogger
 from typing import List, Union, Dict, Optional
+from pathlib import Path
 
 import numpy as np
 import tensorflow as tf
@@ -443,10 +444,10 @@ class BertSequenceNetwork(LRScheduledTFModel):
                  **kwargs) -> Union[List[List[int]], List[np.ndarray]]:
         raise NotImplementedError("You must implement method __call__ in your derived class.")
 
-    def save(self, exclude_scopes=('Optimizer', 'EMA/BackupVariables')) -> None:
+    def save(self, exclude_scopes=('Optimizer', 'EMA/BackupVariables'), fname: Optional[Union[str, Path]] = None) -> None:
         if self.ema:
             self.sess.run(self.ema.switch_to_train_op)
-        return super().save(exclude_scopes=exclude_scopes)
+        return super().save(exclude_scopes=exclude_scopes, fname = fname)
 
     def load(self,
              exclude_scopes=('Optimizer',
