@@ -123,12 +123,14 @@ class TorchTransformersSquad(TorchModel):
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
+        if any(x in self.pretrained_bert for x in ['roberta', 'distilbert', 'bart', 'longformer']):
+            b_input_type_ids = b_input_type_ids.unsqueeze(1).expand(-1, b_input_ids.shape[-1])
 
         y_st = [x[0] for x in y_st]
         y_end = [x[0] for x in y_end]
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
-        
+       
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,
@@ -184,7 +186,9 @@ class TorchTransformersSquad(TorchModel):
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
         b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
-        
+        if any(x in self.pretrained_bert for x in ['roberta', 'distilbert', 'bart', 'longformer']):
+            b_input_type_ids = b_input_type_ids.unsqueeze(1).expand(-1, b_input_ids.shape[-1])
+
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,

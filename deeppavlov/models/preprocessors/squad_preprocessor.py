@@ -404,7 +404,10 @@ class SquadBertMappingPreprocessor(Component):
                 subtokens = args[0][batch_counter]
             else:
                 subtokens = features.tokens
-            context_start = subtokens.index('[SEP]') + 1
+            if '[SEP]' in subtokens:
+                context_start = subtokens.index('[SEP]') + 1
+            else:
+                context_start = subtokens.index('<s>') + 1
             idx = 0
             subtok2char: Dict[int, int] = {}
             char2subtok: Dict[int, int] = {}
