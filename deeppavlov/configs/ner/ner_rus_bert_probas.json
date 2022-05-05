@@ -109,6 +109,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/rus_dream_entity_detection/wiki_ner_rus_bert.tar.gz",
         "subdir": "{MODELS_PATH}/wiki_ner_rus_bert"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wiki_ner_rus/wiki_ner_rus_dataset.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wiki_ner_rus"
       }
     ]
   }

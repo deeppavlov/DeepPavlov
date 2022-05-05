@@ -61,6 +61,38 @@ parameters:
     },
 
 
+Nested configuration files
+--------------------------
+
+Configuration file could be used from another configuration file as an element of the
+:class:`~deeppavlov.core.common.chainer.Chainer` or as a field of another component using ``config_path`` key.
+Any field of the nested configuration file could be overwritten using ``overwrite`` field:
+
+.. code::
+
+    "chainer": {
+      "pipe": {
+        ...
+        {
+          "class_name": "ner_chunk_model",
+          "ner": {
+            "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
+            "overwrite": {
+              "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+            }
+          },
+          ...
+        }
+      }
+    }
+
+In this example ``ner_ontonotes_bert.json`` is used as ``ner`` argument value in ``ner_chunk_model`` component.
+``chainer.out`` value is overwritten with new list. Overwritten fields names are defined using dot notation. In this
+notation numeric fields are treated as indexes of lists. For example, to change ``class_name`` value of the pipe second
+element (1 is the index of the second element) to ``ner_chunker`` one should use
+``"chainer.pipe.1.class_name": "ner_chunker"`` key-value pair.
+
+
 Variables
 ---------
 
