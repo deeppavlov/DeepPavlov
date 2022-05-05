@@ -30,6 +30,10 @@ class SquadDatasetReader(DatasetReader):
     SQuAD:
     Stanford Question Answering Dataset
     https://rajpurkar.github.io/SQuAD-explorer/
+    
+    SQuAD2.0:
+    Stanford Question Answering Dataset, version 2.0
+    https://rajpurkar.github.io/SQuAD-explorer/
 
     SberSQuAD:
     Dataset from SDSJ Task B
@@ -46,6 +50,7 @@ class SquadDatasetReader(DatasetReader):
     url_squad = 'http://files.deeppavlov.ai/datasets/squad-v1.1.tar.gz'
     url_sber_squad = 'http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz'
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
+    url_squad2 = 'http://files.deeppavlov.ai/datasets/squad-v2.0.tar.gz'
 
     def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs) \
             -> Dict[str, Dict[str, Any]]:
@@ -70,11 +75,16 @@ class SquadDatasetReader(DatasetReader):
             self.url = self.url_sber_squad
         elif dataset == 'MultiSQuAD':
             self.url = self.url_multi_squad
+        elif dataset == 'SQuAD2.0':
+            self.url = self.url_squad2
         else:
             raise RuntimeError(f'Dataset {dataset} is unknown')
 
         dir_path = Path(dir_path)
-        required_files = [f'{dt}-v1.1.json' for dt in ['train', 'dev']]
+        if dataset == "SQuAD2.0":
+            required_files = [f'{dt}-v2.0.json' for dt in ['train', 'dev']]
+        else:
+            required_files = [f'{dt}-v1.1.json' for dt in ['train', 'dev']]
         dir_path.mkdir(parents=True, exist_ok=True)
 
         if not all((dir_path / f).exists() for f in required_files):
@@ -84,7 +94,7 @@ class SquadDatasetReader(DatasetReader):
         for f in required_files:
             with dir_path.joinpath(f).open('r', encoding='utf8') as fp:
                 data = json.load(fp)
-            if f == 'dev-v1.1.json':
+            if f in {'dev-v1.1.json', 'dev-v2.0.json'}:
                 dataset['valid'] = data
             else:
                 dataset['train'] = data

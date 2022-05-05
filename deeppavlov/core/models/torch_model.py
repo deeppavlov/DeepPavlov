@@ -126,6 +126,10 @@ class TorchModel(NNModel):
         else:
             raise AttributeError("Model is not defined.")
 
+    @property
+    def is_data_parallel(self) -> bool:
+        return isinstance(self.model, torch.nn.DataParallel)
+
     @overrides
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Load model from `fname` (if `fname` is not given, use `self.load_path`) to `self.model` along with
@@ -143,7 +147,7 @@ class TorchModel(NNModel):
         if fname is not None:
             self.load_path = fname
 
-        model_func = getattr(self, self.opt.get("model_name"), None)
+        model_func = getattr(self, self.opt.get("model_name", ""), None)
 
         if self.load_path:
             log.info(f"Load path {self.load_path} is given.")
@@ -157,18 +161,29 @@ class TorchModel(NNModel):
                 log.info(f"Initializing `{self.__class__.__name__}` from saved.")
 
                 # firstly, initialize with random weights and previously saved parameters
-                self.init_from_opt(model_func)
+                if model_func:
+                    self.init_from_opt(model_func)
 
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"], strict=False)
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
+                model_state = checkpoint["model_state_dict"]
+                optimizer_state = checkpoint["optimizer_state_dict"]
+
+                # load a multi-gpu model on a single device
+                if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
+                    model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
+
+                if torch.cuda.device_count() > 1:
+                    self.model.module.load_state_dict(model_state)
+                else:
+                    self.model.load_state_dict(model_state)
+                self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
+            elif model_func:
                 log.info(f"Init from scratch. Load path {weights_path} does not exist.")
                 self.init_from_opt(model_func)
-        else:
+        elif model_func:
             log.info(f"Init from scratch. Load path {self.load_path} is not provided.")
             self.init_from_opt(model_func)
 
@@ -194,11 +209,18 @@ class TorchModel(NNModel):
         weights_path = Path(fname).with_suffix(f".pth.tar")
         log.info(f"Saving model to {weights_path}.")
         # move the model to `cpu` before saving to provide consistency
-        torch.save({
-            "model_state_dict": self.model.cpu().state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "epochs_done": self.epochs_done
-        }, weights_path)
+        if torch.cuda.device_count() > 1:
+            torch.save({
+                "model_state_dict": self.model.module.cpu().state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "epochs_done": self.epochs_done
+            }, weights_path)
+        else:
+            torch.save({
+                "model_state_dict": self.model.cpu().state_dict(),
+                "optimizer_state_dict": self.optimizer.state_dict(),
+                "epochs_done": self.epochs_done
+            }, weights_path)
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 

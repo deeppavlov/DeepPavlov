@@ -1,7 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
+    "dataset": "SQuAD2.0",
+    "data_path": "{DOWNLOADS_PATH}/squad2/"
   },
   "dataset_iterator": {
     "class_name": "squad_iterator",
@@ -30,14 +31,15 @@
         ],
         "out": [
           "bert_features",
-          "subtokens"
+          "subtokens",
+          "split_context"
         ]
       },
       {
         "class_name": "squad_bert_mapping",
         "do_lower_case": "{LOWERCASE}",
         "in": [
-          "context_raw",
+          "split_context",
           "bert_features",
           "subtokens"
         ],
@@ -65,6 +67,7 @@
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
+        "torch_seed": 1,
         "optimizer": "AdamW",
         "optimizer_parameters": {
           "lr": 2e-05,
@@ -75,6 +78,7 @@
           ],
           "eps": 1e-06
         },
+        "random_seed": 1,
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
         "in": [
@@ -87,7 +91,9 @@
         "out": [
           "ans_start_predicted",
           "ans_end_predicted",
-          "logits"
+          "logits",
+          "scores",
+          "inds"
         ]
       },
       {
@@ -95,10 +101,10 @@
         "in": [
           "ans_start_predicted",
           "ans_end_predicted",
-          "context_raw",
-          "bert_features",
+          "split_context",
           "subtok2chars",
-          "subtokens"
+          "subtokens",
+          "inds"
         ],
         "out": [
           "ans_predicted",
@@ -110,7 +116,7 @@
     "out": [
       "ans_predicted",
       "ans_start_predicted",
-      "logits"
+      "scores"
     ]
   },
   "train": {
@@ -118,9 +124,11 @@
     "evaluation_targets": [
       "valid"
     ],
-    "log_every_n_batches": 250,
+    "log_every_n_batches": 50,
     "val_every_n_batches": 500,
-    "batch_size": 10,
+    "batch_size": 20,
+    "valid_batch_size": 60,
+    "valid_batch_size": 32,
     "pytest_max_batches": 2,
     "pytest_batch_size": 5,
     "validation_patience": 10,
@@ -158,17 +166,17 @@
   },
   "metadata": {
     "variables": {
-      "LOWERCASE": true,
-      "TRANSFORMER": "bert-base-uncased",
+      "LOWERCASE": false,
+      "TRANSFORMER": "bert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/squad2_bert"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/squad/squad2_bert.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }

@@ -64,6 +64,7 @@ if __name__ == '__main__':
             'tests': [
                 'flake8',
                 'pytest',
+                'pytest-instafail',
                 'pexpect'
             ],
             'docs': [

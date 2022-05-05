@@ -37,7 +37,7 @@ Datasets, which follow this task format:
 Models
 ------
 
-There are two models for this task in DeepPavlov: BERT-based and R-Net. Both models predict answer start and end
+SQuAD model in DeepPavlov is based on BERT. The model predicts answer start and end
 position in a given context.
 Their performance is compared in :ref:`pretrained models <pretrained_models>` section of this documentation.
 
@@ -47,19 +47,7 @@ Pretrained BERT can be used for Question Answering on SQuAD dataset just by appl
 BERT outputs for each subtoken. First/second linear transformation is used for prediction of probability that current
 subtoken is start/end position of an answer.
 
-BERT for SQuAD model documentation on TensorFlow :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel`
-and on PyTorch :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
-
-R-Net
-~~~~~
-
-Question Answering Model is based on R-Net, proposed by Microsoft
-Research Asia (`"R-NET: Machine Reading Comprehension with Self-matching
-Networks" <https://www.microsoft.com/en-us/research/publication/mcr/>`__)
-and its `implementation <https://github.com/HKUST-KnowComp/R-Net>`__ by
-Wenxuan Zhou.
-
-R-Net for SQuAD model documentation: :class:`~deeppavlov.models.squad.squad.SquadModel`
+BERT for SQuAD model documentation on PyTorch :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
 
 Configuration
 -------------
@@ -69,31 +57,24 @@ Default configs could be found in :config:`deeppavlov/configs/squad/ <squad/>` f
 Prerequisites
 -------------
 
-Before using the model make sure that all required packages are installed running the command for TensorFlow:
+Before using the model make sure that all required packages are installed running the command:
 
 .. code:: bash
 
     python -m deeppavlov install squad_bert
 
-and for PyTorch
-
-.. code:: bash
-
-    python -m deeppavlov install squad_torch_bert
-
 
 By running this command we will install requirements for
-:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>` or for
-:config:`deeppavlov/configs/squad/squad_torch_bert.json <squad/squad_torch_bert.json>`
+:config:`deeppavlov/configs/squad/squad_bert.json <squad/squad_bert.json>`.
 
 Model usage from Python
 -----------------------
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
+    from deeppavlov import build_model
 
-    model = build_model(configs.squad.squad, download=True)
+    model = build_model('squad_bert', download=True)
     model(['DeepPavlov is library for NLP and dialog systems.'], ['What is DeepPavlov?'])
 
 
@@ -110,7 +91,7 @@ following command to train the model:
 
 .. code:: bash
 
-    python -m deeppavlov train deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov train squad_bert
 
 Interact mode
 ~~~~~~~~~~~~~
@@ -121,7 +102,7 @@ To run model in interact mode run the following command:
 
 .. code:: bash
 
-    python -m deeppavlov interact deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov interact squad_bert
 
 Model will ask you to type in context and question.
 
@@ -137,7 +118,7 @@ We have all pretrained model available to download:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad_bert.json
+    python -m deeppavlov download squad_bert
 
 It achieves ~88 F-1 score and ~80 EM on `SQuAD-v1.1`_ dev set.
 
@@ -147,11 +128,7 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 +---------------------------------------------------------+----------------+-----------------+
 | Model (single model)                                    |    EM (dev)    |    F-1 (dev)    |
 +=========================================================+================+=================+
-| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     80.88      |     88.49       |
-+---------------------------------------------------------+----------------+-----------------+
-| :config:`BERT on PyTorch <squad/squad_torch_bert.json>` |     78.8       |     86.7        |
-+---------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov R-Net <squad/squad.json>`           |     71.49      |     80.34       |
+| :config:`DeepPavlov BERT <squad/squad_bert.json>`       |     81.49      |     88.86       |
 +---------------------------------------------------------+----------------+-----------------+
 | `BiDAF + Self Attention + ELMo`_                        |       --       |     85.6        |
 +---------------------------------------------------------+----------------+-----------------+
@@ -174,11 +151,9 @@ Leadearboad <https://rajpurkar.github.io/SQuAD-explorer/>`__.
 SQuAD with contexts without correct answers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/multi_squad_noans.json>`
-config with pretrained model. This model outputs empty string in case if there is no answer in context.
-This model was trained not on SQuAD dataset. For each question-context pair from SQuAD we extracted contexts from the same
-Wikipedia article and ranked them according to tf-idf score between question and context. In this manner we built dataset
-with contexts without an answer.
+In the case when answer is not necessary present in given context we have :config:`squad_noans <squad/qa_squad2_bert.json>` 
+with pretrained model. This model outputs empty string in case if there is no answer in 
+context. :config:`squad_noans <squad/qa_squad2_bert.json>` was trained on SQuAD2.0 dataset.
 
 Special trainable `no_answer` token is added to output of self-attention layer and it makes model able to select
 `no_answer` token in cases, when answer is not present in given context.
@@ -188,7 +163,7 @@ We got 57.88 EM and 65.91 F-1 on ground truth Wikipedia article (we used the sam
 +---------------+-----------------------------------------------+----------------+-----------------+
 | Model config                                                  |    EM (dev)    |    F-1 (dev)    |
 +===============================================================+================+=================+
-| :config:`DeepPavlov <squad/multi_squad_noans.json>`           |     57.88      |     65.91       |
+| :config:`DeepPavlov <squad/qa_squad2_bert.json>`              |     75.54      |     83.56       |
 +---------------------------------------------------------------+----------------+-----------------+
 | `Simple and Effective Multi-Paragraph Reading Comprehension`_ |     59.14      |     67.34       |
 +---------------------------------------------------------------+----------------+-----------------+
@@ -199,7 +174,7 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/multi_squad_noans.json
+    python -m deeppavlov download qa_squad2_bert
 
 
 .. _`DrQA`: https://arxiv.org/abs/1704.00051
@@ -208,25 +183,17 @@ Pretrained model is available and can be downloaded (~2.5Gb):
 SDSJ Task B
 ~~~~~~~~~~~
 
-Pretrained models are available and can be downloaded:
+Pretrained model is available and can be downloaded:
 
 .. code:: bash
 
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru.json
-
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_rubert_infer.json
-
-    python -m deeppavlov download deeppavlov/configs/squad/squad_ru_bert_infer.json
+    python -m deeppavlov download squad_ru_bert
 
 Link to SDSJ Task B dataset: http://files.deeppavlov.ai/datasets/sber_squad-v1.1.tar.gz
 
 +------------------------------------------------------------------------+----------------+-----------------+
 | Model config                                                           |    EM (dev)    |    F-1 (dev)    |
 +========================================================================+================+=================+
-| :config:`DeepPavlov RuBERT <squad/squad_ru_rubert_infer.json>`         |   66.30+-0.24  |    84.60+-0.11  |
-+------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov multilingual BERT <squad/squad_ru_bert_infer.json>`|     66.24      |     84.71       |
-+------------------------------------------------------------------------+----------------+-----------------+
-| :config:`DeepPavlov R-Net <squad/squad_ru.json>`                       |     60.62      |     80.04       |
+| :config:`DeepPavlov RuBERT <squad/squad_ru_bert.json>`                 |      66.21     |      84.71      |
 +------------------------------------------------------------------------+----------------+-----------------+
 

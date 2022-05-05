@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import random
 import re
 from collections import defaultdict
@@ -20,6 +21,7 @@ from logging import getLogger
 from pathlib import Path
 from typing import Tuple, List, Optional, Union, Dict, Set, Any
 
+import nltk
 import numpy as np
 import torch
 from transformers import AutoTokenizer
@@ -296,61 +298,81 @@ class TorchSquadTransformersPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
-                                                                                         Tuple[List[InputFeatures],
-                                                                                               List[List[str]]]]:
+    def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[
+        List[InputFeatures],
+        Tuple[List[InputFeatures],
+              List[List[str]]]]:
         """Tokenize and create masks.
 
-        texts_a and texts_b are separated by [SEP] token
+        texts_a_batch and texts_b_batch are separated by [SEP] token
 
         Args:
-            texts_a: list of texts,
-            texts_b: list of texts, it could be None, e.g. single sentence classification task
+            texts_a_batch: list of texts,
+            texts_b_batch: list of texts, it could be None, e.g. single sentence classification task
 
         Returns:
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
-                subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
+                subtoken mask, segment mask, or tuple of batch of InputFeatures, batch of subtokens and batch of
+                split paragraphs
         """
 
-        if texts_b is None:
-            texts_b = [None] * len(texts_a)
+        if context_batch is None:
+            context_batch = [None] * len(question_batch)
 
-        input_features = []
-        tokens = []
-        for text_a, text_b in zip(texts_a, texts_b):
-            encoded_dict = self.tokenizer.encode_plus(
-                text=text_a, text_pair=text_b,
-                add_special_tokens=True,
-                max_length=self.max_seq_length,
-                truncation=True,
-                padding='max_length',
-                return_attention_mask=True,
-                return_tensors='pt')
+        input_features_batch, tokens_batch, split_context_batch = [], [], []
+        for question, context in zip(question_batch, context_batch):
+            question_list, context_list = [], []
+            context_subtokens = self.tokenizer.tokenize(context)
+            question_subtokens = self.tokenizer.tokenize(question)
+            max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
+            if 0 < max_chunk_len < len(context_subtokens):
+                number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
+                sentences = nltk.sent_tokenize(context)
+                for chunk in np.array_split(sentences, number_of_chunks):
+                    context_list += [' '.join(chunk)]
+                    question_list += [question]
+            else:
+                context_list += [context]
+                question_list += [question]
 
-            if 'token_type_ids' not in encoded_dict:
-                if self.add_token_type_ids:
-                    input_ids = encoded_dict['input_ids']
-                    seq_len = input_ids.size(1)
-                    sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
-                    len_a = min(sep + 1, seq_len)
-                    len_b = seq_len - len_a
-                    encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int),
-                                                                torch.ones(1, len_b, dtype=int)), dim=1)
-                else:
-                    encoded_dict['token_type_ids'] = torch.tensor([0])
+            input_features_list, tokens_list = [], []
+            for question_elem, context_elem in zip(question_list, context_list):
+                encoded_dict = self.tokenizer.encode_plus(
+                    text=question_elem, text_pair=context_elem,
+                    add_special_tokens=True,
+                    max_length=self.max_seq_length,
+                    truncation=True,
+                    padding='max_length',
+                    return_attention_mask=True,
+                    return_tensors='pt')
+                if 'token_type_ids' not in encoded_dict:
+                    if self.add_token_type_ids:
+                        input_ids = encoded_dict['input_ids']
+                        seq_len = input_ids.size(1)
+                        sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
+                        len_a = min(sep + 1, seq_len)
+                        len_b = seq_len - len_a
+                        encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int),
+                                                                    torch.ones(1, len_b, dtype=int)), dim=1)
+                    else:
+                        encoded_dict['token_type_ids'] = torch.tensor([0])
 
-            curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
-                                          attention_mask=encoded_dict['attention_mask'],
-                                          token_type_ids=encoded_dict['token_type_ids'],
-                                          label=None)
-            input_features.append(curr_features)
-            if self.return_tokens:
-                tokens.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
+                curr_features = InputFeatures(input_ids=encoded_dict['input_ids'],
+                                              attention_mask=encoded_dict['attention_mask'],
+                                              token_type_ids=encoded_dict['token_type_ids'],
+                                              label=None)
+                input_features_list.append(curr_features)
+                if self.return_tokens:
+                    tokens_list.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
+
+            input_features_batch.append(input_features_list)
+            tokens_batch.append(tokens_list)
+            split_context_batch.append(context_list)
 
         if self.return_tokens:
-            return input_features, tokens
+            return input_features_batch, tokens_batch, split_context_batch
         else:
-            return input_features
+            return input_features_batch, split_context_batch
 
 
 @register('rel_ranking_preprocessor')

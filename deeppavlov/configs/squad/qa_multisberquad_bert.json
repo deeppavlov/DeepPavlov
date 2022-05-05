@@ -1,12 +1,15 @@
 {
   "dataset_reader": {
-    "class_name": "squad_dataset_reader",
-    "data_path": "{DOWNLOADS_PATH}/squad/"
+    "class_name": "multi_squad_dataset_reader",
+    "dataset": "MultiSQuADRuRetrClean",
+    "url": "http://files.deeppavlov.ai/datasets/multi_squad_ru_retr_clean.tar.gz",
+    "data_path": "{DOWNLOADS_PATH}/multi_squad_ru_retr_clean/"
   },
   "dataset_iterator": {
-    "class_name": "squad_iterator",
+    "class_name": "multi_squad_retr_iterator",
     "seed": 1337,
-    "shuffle": true
+    "shuffle": false,
+    "with_answer_rate": 0.666
   },
   "chainer": {
     "in": ["context_raw", "question_raw"],
@@ -45,9 +48,8 @@
           "betas": [0.9, 0.999],
           "eps": 1e-06
         },
-        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
-        "batch_size": 10,
         "in": ["bert_features"],
         "in_y": ["ans_start", "ans_end"],
         "out": ["ans_start_predicted", "ans_end_predicted", "logits", "scores", "inds"]
@@ -65,9 +67,8 @@
     "evaluation_targets": ["valid"],
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
-    "batch_size": 10,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 5,
+    "batch_size": 20,
+    "valid_batch_size": 64,
     "validation_patience": 10,
     "metrics": [
       {
@@ -92,15 +93,15 @@
   "metadata": {
     "variables": {
       "LOWERCASE": false,
-      "TRANSFORMER": "bert-base-cased",
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/cased/{TRANSFORMER}"
+      "MODEL_PATH": "{MODELS_PATH}/multi_squad_ru_torch_bert_retr_noans/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert_cased.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/squad/multi_squad_ru_torch_bert_retr_noans.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

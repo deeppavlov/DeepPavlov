@@ -70,7 +70,7 @@
         "subdir": "{DOWNLOADS_PATH}/rured"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_rured_model.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/relation_extraction/re_rured_model_v1.tar.gz",
         "subdir": "{MODELS_PATH}/re_rured"
       }
     ]

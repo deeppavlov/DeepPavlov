@@ -141,7 +141,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_torch_bert_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/insults_kaggle_torch_bert_v5.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       }
     ]

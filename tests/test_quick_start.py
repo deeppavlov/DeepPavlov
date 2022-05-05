@@ -83,8 +83,8 @@ PARAMS = {
                     [[[(0, 2)], [(4, 6)]]],
                     [["PERSON", "CITY"]],
                     (
-                        'P551',
-                        'место жительства'
+                        'P495',
+                        'страна происхождения'
                     )
                 ),
             ]
@@ -131,9 +131,7 @@ PARAMS = {
         ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_2L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_6L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
@@ -263,21 +261,12 @@ PARAMS = {
     },
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_rubert.json", "squad_ru_rubert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "odqa": {
-        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "morpho_tagger": {
         ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
