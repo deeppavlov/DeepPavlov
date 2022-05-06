@@ -29,7 +29,6 @@
   "dstc2_intents_iterator": "deeppavlov.dataset_iterators.dstc2_intents_iterator:Dstc2IntentsDatasetIterator",
   "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
-  "dstc_slotfilling": "deeppavlov.models.slotfill.slotfill:DstcSlotFillingNetwork",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_detection_parser": "deeppavlov.models.entity_extraction.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.entity_extraction.entity_linking:EntityLinker",

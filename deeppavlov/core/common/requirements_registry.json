@@ -35,9 +35,6 @@
   "dictionary_vectorizer": [
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
-  "dstc_slotfilling": [
-    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
-  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
