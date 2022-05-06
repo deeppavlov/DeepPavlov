@@ -232,8 +232,8 @@ A concrete :class:`DatasetReader` class should be inherited from this base class
     from deeppavlov.core.common.registry import register
     from deeppavlov.core.data.dataset_reader import DatasetReader
 
-    @register('dstc2_datasetreader')
-    class DSTC2DatasetReader(DatasetReader):
+    @register('conll2003_reader')
+    class Conll2003DatasetReader(DatasetReader):
 
 
 DataLearningIterator and DataFittingIterator
