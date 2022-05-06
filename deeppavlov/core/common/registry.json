@@ -130,7 +130,6 @@
   "transformers_bert_embedder": "deeppavlov.models.embedders.transformers_embedder:TransformersBertEmbedder",
   "transformers_bert_preprocessor": "deeppavlov.models.preprocessors.transformers_preprocessor:TransformersBertPreprocessor",
   "tree_to_sparql": "deeppavlov.models.kbqa.tree_to_sparql:TreeToSparql",
-  "two_sentences_emb": "deeppavlov.models.ranking.rel_ranker:TwoSentencesEmbedder",
   "typos_custom_reader": "deeppavlov.dataset_readers.typos_reader:TyposCustom",
   "typos_iterator": "deeppavlov.dataset_iterators.typos_iterator:TyposDatasetIterator",
   "typos_kartaslov_reader": "deeppavlov.dataset_readers.typos_reader:TyposKartaslov",
