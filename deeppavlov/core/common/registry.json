@@ -39,7 +39,6 @@
   "intent_catcher": "deeppavlov.models.intent_catcher.intent_catcher:IntentCatcher",
   "intent_catcher_reader": "deeppavlov.dataset_readers.intent_catcher_reader:IntentCatcherReader",
   "joint_tagger_parser": "deeppavlov.models.syntax_parser.joint:JointTaggerParser",
-  "kbqa_reader": "deeppavlov.dataset_readers.kbqa_reader:KBQAReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
   "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
   "lazy_tokenizer": "deeppavlov.models.tokenizers.lazy_tokenizer:LazyTokenizer",
