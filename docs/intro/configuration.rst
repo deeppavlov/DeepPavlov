@@ -332,10 +332,6 @@ string).
       ``nltk.tokenize.moses.MosesDetokenizer``,
       ``nltk.tokenize.moses.MosesTokenizer``.
 
-    - :class:`~deeppavlov.models.tokenizers.ru_sent_tokenizer.RuSentTokenizer`
-      (registered as  ``ru_sent_tokenizer``) is a rule-based tokenizer for
-      Russian language.
-
     - :class:`~deeppavlov.models.tokenizers.ru_tokenizer.RussianTokenizer`
       (registered as ``ru_tokenizer``) tokenizes or lemmatizes Russian texts
       using ``nltk.tokenize.toktok.ToktokTokenizer``.
