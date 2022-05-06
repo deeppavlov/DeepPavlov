@@ -5,8 +5,6 @@ Concrete DatasetIterator classes.
 .. autoclass:: deeppavlov.dataset_iterators.basic_classification_iterator.BasicClassificationDatasetIterator
     :members:
 
-.. autoclass:: deeppavlov.dataset_iterators.file_paths_iterator.FilePathsIterator
-
 .. autofunction:: deeppavlov.dataset_iterators.morphotagger_iterator.preprocess_data
 .. autoclass:: deeppavlov.dataset_iterators.morphotagger_iterator.MorphoTaggerDatasetIterator
 

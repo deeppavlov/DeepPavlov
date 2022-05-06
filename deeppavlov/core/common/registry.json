@@ -28,8 +28,6 @@
   "entity_linker": "deeppavlov.models.entity_extraction.entity_linking:EntityLinker",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
-  "file_paths_iterator": "deeppavlov.dataset_iterators.file_paths_iterator:FilePathsIterator",
-  "file_paths_reader": "deeppavlov.dataset_readers.file_paths_reader:FilePathsReader",
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
   "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
