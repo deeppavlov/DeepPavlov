@@ -51,7 +51,6 @@
   "line_reader": "deeppavlov.dataset_readers.line_reader:LineReader",
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
-  "md_yaml_dialogs_reader": "deeppavlov.dataset_readers.md_yaml_dialogs_reader:MD_YAML_DialogsDatasetReader",
   "morphotagger_dataset": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",
   "multi_squad_dataset_reader": "deeppavlov.dataset_readers.squad_dataset_reader:MultiSquadDatasetReader",
