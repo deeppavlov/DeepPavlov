@@ -108,7 +108,7 @@ def _overwrite(data: Any, value: Any, nested_keys: list) -> None:
 
 
 def parse_config(config: Union[str, Path, dict], overwrite: Optional[dict] = None) -> dict:
-    """Apply variables' values to all its properties.
+    """Apply metadata.variables values to placeholders inside config and update nested configs using overwrite parameter
 
     Args:
         config: Config to parse.
