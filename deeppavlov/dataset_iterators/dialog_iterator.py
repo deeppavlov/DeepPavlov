@@ -64,33 +64,3 @@ class DialogDatasetIndexingIterator(DataLearningIterator):
             dialogs[-1][0].append(x)
             dialogs[-1][1].append(y)
         return dialogs
-
-
-@register('dialog_iterator')
-class DialogDatasetIterator(DataLearningIterator):
-    """
-    Iterates over dialog data,
-    generates batches where one sample is one dialog.
-
-    A subclass of :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator`.
-
-    Attributes:
-        train: list of training dialogs (tuples ``(context, response)``)
-        valid: list of validation dialogs (tuples ``(context, response)``)
-        test: list of dialogs used for testing (tuples ``(context, response)``)
-    """
-
-    @overrides
-    def preprocess(self, data, *args, **kwargs):
-        dialogs = []
-        prev_resp_act = None
-        for x, y in data:
-            if x.get('episode_done'):
-                del x['episode_done']
-                prev_resp_act = None
-                dialogs.append(([], []))
-            x['prev_resp_act'] = prev_resp_act
-            prev_resp_act = y['act']
-            dialogs[-1][0].append(x)
-            dialogs[-1][1].append(y)
-        return dialogs
