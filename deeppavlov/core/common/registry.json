@@ -92,7 +92,6 @@
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",
   "sentseg_restore_sent": "deeppavlov.models.preprocessors.sentseg_preprocessor:SentSegRestoreSent",
   "siamese_iterator": "deeppavlov.dataset_iterators.siamese_iterator:SiameseIterator",
-  "simple_dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:SimpleDSTC2DatasetReader",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "sklearn_component": "deeppavlov.models.sklearn.sklearn_component:SklearnComponent",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
