@@ -26,7 +26,6 @@
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
   "docred_reader": "deeppavlov.dataset_readers.docred_reader:DocREDDatasetReader",
   "document_chunker": "deeppavlov.models.preprocessors.odqa_preprocessors:DocumentChunker",
-  "dstc2_ner_iterator": "deeppavlov.dataset_iterators.dstc2_ner_iterator:Dstc2NerDatasetIterator",
   "dstc2_reader": "deeppavlov.dataset_readers.dstc2_reader:DSTC2DatasetReader",
   "emb_mat_assembler": "deeppavlov.models.preprocessors.assemble_embeddings_matrix:EmbeddingsMatrixAssembler",
   "entity_detection_parser": "deeppavlov.models.entity_extraction.entity_detection_parser:EntityDetectionParser",
