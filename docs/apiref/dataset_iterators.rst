@@ -9,8 +9,6 @@ Concrete DatasetIterator classes.
 
 .. autoclass:: deeppavlov.dataset_iterators.dialog_iterator.DialogDatasetIndexingIterator
 
-.. autoclass:: deeppavlov.dataset_iterators.dialog_iterator.DialogDBResultDatasetIterator
-
 .. autoclass:: deeppavlov.dataset_iterators.dstc2_intents_iterator.Dstc2IntentsDatasetIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.dstc2_ner_iterator.Dstc2NerDatasetIterator

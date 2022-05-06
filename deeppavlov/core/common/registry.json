@@ -22,7 +22,6 @@
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
   "dependency_output_prettifier": "deeppavlov.models.morpho_tagger.common:DependencyOutputPrettifier",
-  "dialog_db_result_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDBResultDatasetIterator",
   "dialog_indexing_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIndexingIterator",
   "dialog_iterator": "deeppavlov.dataset_iterators.dialog_iterator:DialogDatasetIterator",
   "dictionary_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:DictionaryVectorizer",

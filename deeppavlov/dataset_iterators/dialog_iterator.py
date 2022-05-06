@@ -94,30 +94,3 @@ class DialogDatasetIterator(DataLearningIterator):
             dialogs[-1][0].append(x)
             dialogs[-1][1].append(y)
         return dialogs
-
-
-@register('dialog_db_result_iterator')
-class DialogDBResultDatasetIterator(DataLearningIterator):
-    """
-    Iterates over dialog data,
-    outputs list of all ``'db_result'`` fields (if present).
-
-    The class helps to build a list of all ``'db_result'`` values present in a dataset.
-
-    Inherits key methods and attributes from :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator`.
-
-    Attributes:
-        train: list of tuples ``(db_result dictionary, '')`` from "train" data
-        valid: list of tuples ``(db_result dictionary, '')`` from "valid" data
-        test: list of tuples ``(db_result dictionary, '')`` from "test" data
-    """
-
-    @staticmethod
-    def _db_result(data):
-        x, y = data
-        if 'db_result' in x:
-            return x['db_result']
-
-    @overrides
-    def preprocess(self, data, *args, **kwargs):
-        return [(r, "") for r in filter(None, map(self._db_result, data))]
