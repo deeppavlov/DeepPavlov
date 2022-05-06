@@ -80,7 +80,6 @@
   "re_classifier": "deeppavlov.models.relation_extraction.relation_extraction_bert:REBertModel",
   "re_postprocessor": "deeppavlov.models.preprocessors.re_preprocessor:REPostprocessor",
   "re_preprocessor": "deeppavlov.models.preprocessors.re_preprocessor:REPreprocessor",
-  "rel_ranker": "deeppavlov.models.ranking.rel_ranker:RelRanker",
   "rel_ranking_infer": "deeppavlov.models.kbqa.rel_ranking_infer:RelRankerInfer",
   "rel_ranking_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:RelRankingPreprocessor",
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",

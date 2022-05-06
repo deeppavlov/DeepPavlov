@@ -94,9 +94,6 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
-  "rel_ranker": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "rel_ranking_infer": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
@@ -197,9 +194,6 @@
   ],
   "tree_to_sparql": [
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
-  ],
-  "two_sentences_emb": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "typos_custom_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"

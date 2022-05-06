@@ -175,7 +175,7 @@ An example of a template::
 
 * ``query_template`` is the template of the SPARQL query,
 * ``property_types`` defines the types of unknown relations in the template,
-* ``rank_rels`` is a list which defines whether to rank relations, in this example **p:R1** relations we extract from Wikidata for **wd:E1** entities and rank with RelRanker, **ps:R1** and **?p** relations we do not extract and rank,
+* ``rank_rels`` is a list which defines whether to rank relations, in this example **p:R1** relations we extract from Wikidata for **wd:E1** entities and rank with rel_ranker, **ps:R1** and **?p** relations we do not extract and rank,
 * ``rel_types`` - direct, statement or qualifier relations,
 * ``filter_rels`` (only for online version of KBQA) - whether candidate rels will be enumerated in the **filter** expression in the query, for example,
   **SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)**,
