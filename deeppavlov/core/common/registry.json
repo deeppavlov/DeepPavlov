@@ -52,8 +52,6 @@
   "multi_squad_dataset_reader": "deeppavlov.dataset_readers.squad_dataset_reader:MultiSquadDatasetReader",
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",
   "multi_squad_retr_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadRetrIterator",
-  "multitask_iterator": "deeppavlov.dataset_iterators.multitask_iterator:MultiTaskIterator",
-  "multitask_reader": "deeppavlov.dataset_readers.multitask_reader:MultiTaskReader",
   "ner_chunk_model": "deeppavlov.models.entity_extraction.ner_chunker:NerChunkModel",
   "ner_chunker": "deeppavlov.models.entity_extraction.ner_chunker:NerChunker",
   "ner_vocab": "deeppavlov.models.preprocessors.ner_preprocessor:NerVocab",
