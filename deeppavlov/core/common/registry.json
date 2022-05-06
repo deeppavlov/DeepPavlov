@@ -12,7 +12,6 @@
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
   "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
-  "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
   "char_splitter": "deeppavlov.models.preprocessors.char_splitter:CharSplitter",
   "char_splitting_lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:CharSplittingLowercasePreprocessor",

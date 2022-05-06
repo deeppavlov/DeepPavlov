@@ -371,10 +371,6 @@ sample).
       If ``mean`` returns one vector per sample - mean of embedding vectors
       of tokens.
 
-    - :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`
-      (registered as ``bow``) performs one-hot encoding of tokens using
-      pre-built vocabulary.
-
     - :class:`~deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder`
       (registered as ``tfidf_weighted``) accepts embedder, tokenizer (for
       detokenization, by default, detokenize with joining with space), TFIDF
