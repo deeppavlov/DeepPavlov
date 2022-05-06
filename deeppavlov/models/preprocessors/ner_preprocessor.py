@@ -11,64 +11,6 @@ from deeppavlov.core.models.estimator import Estimator
 log = getLogger(__name__)
 
 
-@register("ner_preprocessor")
-class NerPreprocessor():
-    """ Preprocess the batch of list of tokens
-
-    Params:
-        get_x_padded_for_elmo: whether the padded batch used for ELMo is returned
-        get_x_cap_padded: whether the padded batch used for capitalization feature extraction is returned
-    """
-
-    def __init__(self, get_x_padded_for_elmo=False, get_x_cap_padded=False, **kwargs):
-        self.get_x_padded_for_elmo = get_x_padded_for_elmo
-        self.get_x_cap_padded = get_x_cap_padded
-
-        self.cap_vocab_size = 5
-
-    def encode_cap(self, s):
-        if s.upper() == s:
-            return 1
-        elif s.lower() == s:
-            return 2
-        elif (s[0].upper() == s[0]) and (s[1:].lower() == s[1:]):
-            return 3
-        else:
-            return 4
-
-    def __call__(self, batch: List[List[str]], **kwargs):
-        """ Process the input batch
-
-        Args:
-            batch: list of list of tokens
-
-        Returns:
-            x_lower: batch in lowercase
-            sent_lengths: lengths of sents
-            x_padded_for_elmo (optional): batch padded with "", used as input for ELMo
-            x_cap_padded: batch of capitalization features
-        """
-
-        x_lower = [[token.lower() for token in sent] for sent in batch]
-        sent_lengths = [len(sent) for sent in batch]
-        ret = (x_lower, sent_lengths,)
-
-        max_len = max(sent_lengths)
-
-        if self.get_x_padded_for_elmo:
-            x_tokens_elmo = [sent + [""] * (max_len - len(sent)) for sent in batch]
-            ret += (x_tokens_elmo,)
-
-        if self.get_x_cap_padded:
-            cap_seq = [[self.encode_cap(token) for token in sent] for sent in batch]
-            x_cap_padded = np.zeros((len(batch), max_len))
-            for i, caps in enumerate(cap_seq):
-                x_cap_padded[i, :len(caps)] = caps
-            ret += (x_cap_padded,)
-
-        return ret
-
-
 @register("ner_vocab")
 class NerVocab(Estimator):
     """ Implementation of the NER vocabulary
