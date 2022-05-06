@@ -5,8 +5,6 @@ Concrete DatasetIterator classes.
 .. autoclass:: deeppavlov.dataset_iterators.basic_classification_iterator.BasicClassificationDatasetIterator
     :members:
 
-.. autoclass:: deeppavlov.dataset_iterators.dstc2_intents_iterator.Dstc2IntentsDatasetIterator
-
 .. autoclass:: deeppavlov.dataset_iterators.dstc2_ner_iterator.Dstc2NerDatasetIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.file_paths_iterator.FilePathsIterator
