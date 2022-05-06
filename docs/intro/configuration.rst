@@ -281,10 +281,6 @@ Preprocessor is a component that processes batch of samples.
 * Already implemented universal preprocessors of **tokenized texts** (each
   sample is a list of tokens):
 
-    - :class:`~deeppavlov.models.preprocessors.char_splitter.CharSplitter`
-      (registered as ``char_splitter``) splits every token in given batch of
-      tokenized samples to a sequence of characters.
-
     - :class:`~deeppavlov.models.preprocessors.mask.Mask` (registered as
       ``mask``) returns binary mask of corresponding length (padding up to the
       maximum length per batch.

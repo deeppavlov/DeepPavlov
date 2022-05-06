@@ -13,7 +13,6 @@
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
   "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
-  "char_splitter": "deeppavlov.models.preprocessors.char_splitter:CharSplitter",
   "char_splitting_lowercase_preprocessor": "deeppavlov.models.preprocessors.capitalization:CharSplittingLowercasePreprocessor",
   "chu_liu_edmonds_transformer": "deeppavlov.models.syntax_parser.parser:ChuLiuEdmonds",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
