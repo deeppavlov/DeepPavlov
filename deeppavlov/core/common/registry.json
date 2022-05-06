@@ -71,7 +71,6 @@
   "pymorphy_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:PymorphyVectorizer",
   "query_generator": "deeppavlov.models.kbqa.query_generator:QueryGenerator",
   "question_sign_checker": "deeppavlov.models.entity_extraction.entity_detection_parser:question_sign_checker",
-  "random_emb_mat": "deeppavlov.models.preprocessors.random_embeddings_matrix:RandomEmbeddingsMatrix",
   "re_classifier": "deeppavlov.models.relation_extraction.relation_extraction_bert:REBertModel",
   "re_postprocessor": "deeppavlov.models.preprocessors.re_preprocessor:REPostprocessor",
   "re_preprocessor": "deeppavlov.models.preprocessors.re_preprocessor:REPreprocessor",
