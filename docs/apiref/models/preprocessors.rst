@@ -7,8 +7,6 @@ deeppavlov.models.preprocessors
 
 .. autofunction:: deeppavlov.models.preprocessors.capitalization.process_word
 
-.. autoclass:: deeppavlov.models.preprocessors.capitalization.CharSplittingLowercasePreprocessor
-
 .. autoclass:: deeppavlov.models.preprocessors.dirty_comments_preprocessor.DirtyCommentsPreprocessor
 
     .. automethod:: __call__

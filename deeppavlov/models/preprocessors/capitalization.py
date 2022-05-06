@@ -115,24 +115,3 @@ def process_word(word: str, to_lower: bool = False,
         elif append_case == "last":
             answer = answer + [uppercase]
     return tuple(answer)
-
-
-@register('char_splitting_lowercase_preprocessor')
-class CharSplittingLowercasePreprocessor(Component):
-    """A callable wrapper over :func:`process_word`.
-    Takes as input a batch of tokenized sentences
-    and returns a batch of preprocessed sentences.
-    """
-
-    def __init__(self, to_lower: bool = True, append_case: str = "first", *args, **kwargs):
-        self.to_lower = to_lower
-        self.append_case = append_case
-
-    def __call__(self, tokens_batch: List[List[str]], **kwargs) -> List[List[Tuple[str]]]:
-        answer = []
-        for elem in tokens_batch:
-            # if isinstance(elem, str):
-            #     elem = NLTKMosesTokenizer()([elem])[0]
-            #     # elem = [x for x in re.split("(\w+|[,.])", elem) if x.strip() != ""]
-            answer.append([process_word(x, self.to_lower, self.append_case) for x in elem])
-        return answer
