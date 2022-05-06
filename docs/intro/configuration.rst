@@ -285,10 +285,6 @@ Preprocessor is a component that processes batch of samples.
       ``mask``) returns binary mask of corresponding length (padding up to the
       maximum length per batch.
 
-    - :class:`~deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer`
-      (registered as ``pymorphy_russian_lemmatizer``) performs lemmatization
-      for Russian language.
-
     - :class:`~deeppavlov.models.preprocessors.sanitizer.Sanitizer`
       (registered as ``sanitizer``) removes all combining characters like
       diacritical marks from tokens.

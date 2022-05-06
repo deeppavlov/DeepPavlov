@@ -67,7 +67,6 @@
   "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
   "pop_ranker": "deeppavlov.models.doc_retrieval.pop_ranker:PopRanker",
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
-  "pymorphy_russian_lemmatizer": "deeppavlov.models.preprocessors.russian_lemmatizer:PymorphyRussianLemmatizer",
   "pymorphy_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:PymorphyVectorizer",
   "query_generator": "deeppavlov.models.kbqa.query_generator:QueryGenerator",
   "question_sign_checker": "deeppavlov.models.entity_extraction.entity_detection_parser:question_sign_checker",

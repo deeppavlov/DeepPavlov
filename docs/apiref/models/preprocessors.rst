@@ -15,8 +15,6 @@ deeppavlov.models.preprocessors
 
 .. autoclass:: deeppavlov.models.preprocessors.one_hotter.OneHotter
 
-.. autoclass:: deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer
-
 .. autoclass:: deeppavlov.models.preprocessors.sanitizer.Sanitizer
 
 .. autofunction:: deeppavlov.models.preprocessors.str_lower.str_lower
