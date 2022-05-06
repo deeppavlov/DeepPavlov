@@ -5,7 +5,6 @@ from typing import Dict, List, Tuple
 from pathlib import Path
 from logging import getLogger
 from overrides import overrides
-import matplotlib.pyplot as plt
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -67,8 +66,6 @@ class RuREDDatasetReader(DatasetReader):
         test_data, self.stat["test"] = self.process_rured_file(test_data, num_neg_samples="equal")
 
         data = {"train": train_data, "valid": dev_data, "test": test_data}
-
-        self.draw_plot()
 
         return data
 
@@ -157,13 +154,6 @@ class RuREDDatasetReader(DatasetReader):
         relation = [0] * len(self.rel2id)
         relation[label] = 1
         return relation
-
-    def draw_plot(self) -> None:
-        """ Make plots with NER tags """
-        ner_stat_sorted = dict(list(reversed(sorted(self.ner_stat.items(), key=lambda item: item[1]))))
-        plt.bar(ner_stat_sorted.keys(), ner_stat_sorted.values())
-        plt.xticks(rotation=270)
-        plt.show()
 
     @staticmethod
     def add_default_rel_dict():
