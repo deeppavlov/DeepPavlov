@@ -15,7 +15,6 @@
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
   "chu_liu_edmonds_transformer": "deeppavlov.models.syntax_parser.parser:ChuLiuEdmonds",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
-  "convert_ids2tags": "deeppavlov.models.preprocessors.ner_preprocessor:ConvertIds2Tags",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",

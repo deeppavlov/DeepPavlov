@@ -69,31 +69,6 @@ class NerPreprocessor():
         return ret
 
 
-@register("convert_ids2tags")
-class ConvertIds2Tags():
-    """ Class used to convert the batch of indices to the batch of tags
-
-    Params:
-        id2tag: the dictionary used to convert the indices to the corresponding tags
-
-    """
-
-    def __init__(self, id2tag, *args, **kwargs):
-        self.id2tag = id2tag
-
-    def __call__(self, y_predicted):
-        """ Convert the batch of indices to the corresponding batch of tags
-
-        Params:
-            y_predicted: the batch of indices
-
-        Returns:
-            the corresponding batch of tags
-        """
-
-        return [[self.id2tag[id] for id in seq] for seq in y_predicted]
-
-
 @register("ner_vocab")
 class NerVocab(Estimator):
     """ Implementation of the NER vocabulary
