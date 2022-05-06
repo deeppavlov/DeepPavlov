@@ -29,9 +29,6 @@
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
-  "bilstm_nn": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
   ],

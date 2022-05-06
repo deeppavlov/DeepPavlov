@@ -11,7 +11,6 @@
   "bert_sequence_network": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceNetwork",
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
-  "bilstm_nn": "deeppavlov.models.ranking.bilstm_siamese_network:BiLSTMSiameseNetwork",
   "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
   "bow": "deeppavlov.models.embedders.bow_embedder:BoWEmbedder",
   "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
