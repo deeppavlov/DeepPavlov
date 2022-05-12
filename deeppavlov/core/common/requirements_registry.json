@@ -32,9 +32,6 @@
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
   ],
-  "dictionary_vectorizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
-  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"

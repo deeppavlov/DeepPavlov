@@ -19,7 +19,6 @@
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",
   "data_learning_iterator": "deeppavlov.core.data.data_learning_iterator:DataLearningIterator",
   "dependency_output_prettifier": "deeppavlov.models.morpho_tagger.common:DependencyOutputPrettifier",
-  "dictionary_vectorizer": "deeppavlov.models.vectorizers.word_vectorizer:DictionaryVectorizer",
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
   "docred_reader": "deeppavlov.dataset_readers.docred_reader:DocREDDatasetReader",
   "document_chunker": "deeppavlov.models.preprocessors.odqa_preprocessors:DocumentChunker",
