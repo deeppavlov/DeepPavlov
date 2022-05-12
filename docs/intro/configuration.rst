@@ -348,12 +348,6 @@ Embedder is a component that converts every token in a tokenized batch to a
 vector of a particular dimension (optionally, returns a single vector per
 sample).
 
-    - :class:`~deeppavlov.models.embedders.glove_embedder.GloVeEmbedder`
-      (registered as ``glove``) reads embedding file in GloVe format (file
-      starts with ``number_of_words embeddings_dim line`` followed by lines
-      ``word embedding_vector``). If ``mean`` returns one vector per
-      sample --- mean of embedding vectors of tokens.
-
     - :class:`~deeppavlov.models.embedders.fasttext_embedder.FasttextEmbedder`
       (registered as ``fasttext``) reads embedding file in fastText format.
       If ``mean`` returns one vector per sample - mean of embedding vectors

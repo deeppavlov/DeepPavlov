@@ -26,7 +26,6 @@
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
-  "glove": "deeppavlov.models.embedders.glove_embedder:GloVeEmbedder",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
   "huggingface_dataset_iterator": "deeppavlov.dataset_iterators.huggingface_dataset_iterator:HuggingFaceDatasetIterator",
   "huggingface_dataset_reader": "deeppavlov.dataset_readers.huggingface_dataset_reader:HuggingFaceDatasetReader",

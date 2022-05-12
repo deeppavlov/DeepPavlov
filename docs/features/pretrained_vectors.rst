@@ -108,8 +108,7 @@ All vectors are 300-dimensional. We used fastText skip-gram (see
 `Bojanowski et al. (2016) <https://arxiv.org/abs/1607.04606>`__) for
 vectors training as well as various preprocessing options (see below).
 
-You can get vectors either in binary or in text (vec) formats both for
-fastText and GloVe.
+You can get vectors either in binary or in text (vec) formats for FastText.
 
 License
 ~~~~~~~

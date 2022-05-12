@@ -39,9 +39,6 @@
   "fasttext": [
     "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
   ],
-  "glove": [
-    "{DEEPPAVLOV_PATH}/requirements/gensim.txt"
-  ],
   "huggingface_dataset_iterator": [
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
   ],
