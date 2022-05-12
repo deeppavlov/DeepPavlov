@@ -12,7 +12,6 @@
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",
   "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
-  "capitalization_featurizer": "deeppavlov.models.preprocessors.capitalization:CapitalizationPreprocessor",
   "chu_liu_edmonds_transformer": "deeppavlov.models.syntax_parser.parser:ChuLiuEdmonds",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
