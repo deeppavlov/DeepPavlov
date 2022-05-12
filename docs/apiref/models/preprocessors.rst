@@ -1,8 +1,6 @@
 deeppavlov.models.preprocessors
 ===============================
 
-.. autoclass:: deeppavlov.models.preprocessors.assemble_embeddings_matrix.EmbeddingsMatrixAssembler
-
 .. autoclass:: deeppavlov.models.preprocessors.capitalization.CapitalizationPreprocessor
 
 .. autofunction:: deeppavlov.models.preprocessors.capitalization.process_word
