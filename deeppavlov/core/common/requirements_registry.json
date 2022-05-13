@@ -3,6 +3,8 @@
     "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
   "answer_types_extractor": [
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
   ],
   "bert_classifier": [
@@ -113,6 +115,7 @@
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "stream_spacy_tokenizer": [
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
   ],
   "torch_bert_ranker": [

@@ -11,9 +11,8 @@ ENV LANG='en_US.UTF-8'
 ARG DEBIAN_FRONTEND=noninteractive
 ARG PYTHON_VERSION
 
-RUN rm -f /etc/apt/sources.list.d/cuda*.list
-
-RUN apt update && \
+RUN rm -f /etc/apt/sources.list.d/cuda*.list && \
+    apt update && \
     apt install -y --no-install-recommends \
         build-essential \
         dpkg-dev \
