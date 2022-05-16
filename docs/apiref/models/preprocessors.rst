@@ -1,16 +1,6 @@
 deeppavlov.models.preprocessors
 ===============================
 
-.. autoclass:: deeppavlov.models.preprocessors.assemble_embeddings_matrix.EmbeddingsMatrixAssembler
-
-.. autoclass:: deeppavlov.models.preprocessors.capitalization.CapitalizationPreprocessor
-
-.. autofunction:: deeppavlov.models.preprocessors.capitalization.process_word
-
-.. autoclass:: deeppavlov.models.preprocessors.capitalization.CharSplittingLowercasePreprocessor
-
-.. autoclass:: deeppavlov.models.preprocessors.char_splitter.CharSplitter
-
 .. autoclass:: deeppavlov.models.preprocessors.dirty_comments_preprocessor.DirtyCommentsPreprocessor
 
     .. automethod:: __call__
@@ -18,10 +8,6 @@ deeppavlov.models.preprocessors
 .. autoclass:: deeppavlov.models.preprocessors.mask.Mask
 
 .. autoclass:: deeppavlov.models.preprocessors.one_hotter.OneHotter
-
-.. autoclass:: deeppavlov.models.preprocessors.random_embeddings_matrix.RandomEmbeddingsMatrix
-
-.. autoclass:: deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer
 
 .. autoclass:: deeppavlov.models.preprocessors.sanitizer.Sanitizer
 

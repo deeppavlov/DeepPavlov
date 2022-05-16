@@ -12,37 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
 from typing import Tuple, List, Dict, Any, Iterator
 
 import numpy as np
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-from deeppavlov.models.preprocessors.capitalization import process_word
-
-
-def preprocess_data(data: List[Tuple[List[str], List[str]]], to_lower: bool = True,
-                    append_case: str = "first") -> List[Tuple[List[Tuple[str]], List[str]]]:
-    """Processes all words in data using
-    :func:`~deeppavlov.dataset_iterators.morphotagger_iterator.process_word`.
-
-    Args:
-        data: a list of pairs (words, tags), each pair corresponds to a single sentence
-        to_lower: whether to lowercase
-        append_case: whether to add case mark
-
-    Returns:
-        a list of preprocessed sentences
-    """
-    new_data = []
-    for words, tags in data:
-        new_words = [process_word(word, to_lower=to_lower, append_case=append_case)
-                     for word in words]
-        # tags could also be processed in future
-        new_tags = tags
-        new_data.append((new_words, new_tags))
-    return new_data
 
 
 @register('morphotagger_dataset')

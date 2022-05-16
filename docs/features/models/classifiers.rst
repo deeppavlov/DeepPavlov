@@ -184,43 +184,8 @@ Therefore, for sklearn component classifier one should set ``ensure_list_output`
 Pre-trained models
 ------------------
 
-We also provide with **pre-trained models** for classification on DSTC 2 dataset, "AG News" dataset,
+We also provide with **pre-trained models** for classification on "AG News" dataset,
 "Detecting Insults in Social Commentary", Twitter sentiment in Russian dataset.
-
-`DSTC 2 dataset <http://camdial.org/~mh521/dstc/>`__ does not initially contain information about **intents**,
-therefore, ``Dstc2IntentsDatasetIterator`` (``deeppavlov/dataset_iterators/dstc2_intents_interator.py``) instance
-extracts artificial intents for each user reply using information from acts and slots.
-
-Below we give several examples of intent construction:
-
-    System: "Hello, welcome to the Cambridge restaurant system. You can
-    ask for restaurants by area, price range or food type. How may I
-    help you?"
-
-    User: "cheap restaurant"
-
-In the original dataset this user reply has characteristics
-
-.. code:: bash
-
-    "goals": {"pricerange": "cheap"}, 
-    "db_result": null, 
-    "dialog-acts": [{"slots": [["pricerange", "cheap"]], "act": "inform"}]}
-
-This message contains only one intent: ``inform_pricerange``.
-
-    User: "thank you good bye",
-
-In the original dataset this user reply has characteristics
-
-.. code:: bash
-
-    "goals": {"food": "dontcare", "pricerange": "cheap", "area": "south"}, 
-    "db_result": null, 
-    "dialog-acts": [{"slots": [], "act": "thankyou"}, {"slots": [], "act": "bye"}]}
-
-This message contains two intents ``(thankyou, bye)``. Train, valid and
-test division is the same as on web-site.
 
 `Detecting Insults in Social Commentary dataset <https://www.kaggle.com/c/detecting-insults-in-social-commentary>`__
 contains binary classification task for **detecting insults** for

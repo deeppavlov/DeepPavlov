@@ -232,8 +232,8 @@ A concrete :class:`DatasetReader` class should be inherited from this base class
     from deeppavlov.core.common.registry import register
     from deeppavlov.core.data.dataset_reader import DatasetReader
 
-    @register('dstc2_datasetreader')
-    class DSTC2DatasetReader(DatasetReader):
+    @register('conll2003_reader')
+    class Conll2003DatasetReader(DatasetReader):
 
 
 DataLearningIterator and DataFittingIterator
@@ -281,17 +281,9 @@ Preprocessor is a component that processes batch of samples.
 * Already implemented universal preprocessors of **tokenized texts** (each
   sample is a list of tokens):
 
-    - :class:`~deeppavlov.models.preprocessors.char_splitter.CharSplitter`
-      (registered as ``char_splitter``) splits every token in given batch of
-      tokenized samples to a sequence of characters.
-
     - :class:`~deeppavlov.models.preprocessors.mask.Mask` (registered as
       ``mask``) returns binary mask of corresponding length (padding up to the
       maximum length per batch.
-
-    - :class:`~deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer`
-      (registered as ``pymorphy_russian_lemmatizer``) performs lemmatization
-      for Russian language.
 
     - :class:`~deeppavlov.models.preprocessors.sanitizer.Sanitizer`
       (registered as ``sanitizer``) removes all combining characters like
@@ -336,10 +328,6 @@ string).
       ``nltk.tokenize.moses.MosesDetokenizer``,
       ``nltk.tokenize.moses.MosesTokenizer``.
 
-    - :class:`~deeppavlov.models.tokenizers.ru_sent_tokenizer.RuSentTokenizer`
-      (registered as  ``ru_sent_tokenizer``) is a rule-based tokenizer for
-      Russian language.
-
     - :class:`~deeppavlov.models.tokenizers.ru_tokenizer.RussianTokenizer`
       (registered as ``ru_tokenizer``) tokenizes or lemmatizes Russian texts
       using ``nltk.tokenize.toktok.ToktokTokenizer``.
@@ -360,20 +348,10 @@ Embedder is a component that converts every token in a tokenized batch to a
 vector of a particular dimension (optionally, returns a single vector per
 sample).
 
-    - :class:`~deeppavlov.models.embedders.glove_embedder.GloVeEmbedder`
-      (registered as ``glove``) reads embedding file in GloVe format (file
-      starts with ``number_of_words embeddings_dim line`` followed by lines
-      ``word embedding_vector``). If ``mean`` returns one vector per
-      sample --- mean of embedding vectors of tokens.
-
     - :class:`~deeppavlov.models.embedders.fasttext_embedder.FasttextEmbedder`
       (registered as ``fasttext``) reads embedding file in fastText format.
       If ``mean`` returns one vector per sample - mean of embedding vectors
       of tokens.
-
-    - :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`
-      (registered as ``bow``) performs one-hot encoding of tokens using
-      pre-built vocabulary.
 
     - :class:`~deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder`
       (registered as ``tfidf_weighted``) accepts embedder, tokenizer (for
