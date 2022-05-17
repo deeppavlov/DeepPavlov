@@ -24,7 +24,6 @@
         "vocab_file": "{TRANSFORMER}",
         "do_lower_case": "{LOWERCASE}",
         "max_seq_length": 384,
-        "return_tokens": true,
         "in": [
           "question_raw",
           "context_raw"
