@@ -192,8 +192,7 @@ texinfo_documents = [
 
 autodoc_mock_imports = ['bert_dp', 'bs4', 'fastText', 'fasttext', 'hdt', 'kenlm', 'librosa', 'lxml', 'nltk',
                         'opt_einsum', 'rapidfuzz', 'rasa', 'russian_tagsets', 'sacremoses', 'sortedcontainers', 'spacy',
-                        'tensorflow', 'tensorflow_hub', 'torch', 'torchcrf', 'transformers', 'udapi', 'ufal_udpipe',
-                        'whapi', 'xeger']
+                        'tensorflow', 'torch', 'torchcrf', 'transformers', 'udapi', 'ufal_udpipe', 'whapi']
 
 extlinks = {
     'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)

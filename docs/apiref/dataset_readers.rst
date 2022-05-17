@@ -26,5 +26,3 @@ Concrete DatasetReader classes.
 
 .. automodule:: deeppavlov.dataset_readers.ubuntu_v2_reader
    :members:
-
-.. autoclass:: deeppavlov.dataset_readers.intent_catcher_reader.IntentCatcherReader
