@@ -30,6 +30,7 @@ ALIASES = {
     'ner_ontonotes_bert_mult_torch': 'ner_ontonotes_bert_mult',
     'ner_ontonotes_bert_torch': 'ner_ontonotes_bert',
     'ner_rus': 'ner_rus_bert',
+    'paraphraser_bert': 'paraphraser_rubert',
     'ru_odqa_infer_wiki_rubert': 'ru_odqa_infer_wiki',
     'sentseg_dailydialog': 'sentseg_dailydialog_bert',
     'squad': 'squad_bert',
