@@ -244,7 +244,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               | F1-macro    | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-|                  |`RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               | F1-weighted | 0.6809 | 0.7193 |  1900 Mb  |
+|                  |`RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               | F1-weighted | 0.6693 | 0.6983 |  1.3 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
 |                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.7548 | 0.7742 |  657 Mb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
