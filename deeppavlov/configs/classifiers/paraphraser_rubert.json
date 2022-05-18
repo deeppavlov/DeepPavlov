@@ -55,7 +55,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/paraphraser_rubert",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/paraphraser_rubert_torch",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased"
     },
     "download": [
