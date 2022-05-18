@@ -6,7 +6,6 @@
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "bert_ner_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertNerPreprocessor",
-  "bert_preprocessor": "deeppavlov.models.preprocessors.bert_preprocessor:BertPreprocessor",
   "bert_sequence_network": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceNetwork",
   "bert_sequence_tagger": "deeppavlov.models.bert.bert_sequence_tagger:BertSequenceTagger",
   "bert_syntax_parser": "deeppavlov.models.syntax_parser.network:BertSyntaxParser",

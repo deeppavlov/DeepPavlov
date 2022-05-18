@@ -4,10 +4,6 @@ deeppavlov.models.bert
 .. automodule:: deeppavlov.models.bert
    :members:
 
-.. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor
-
-    .. automethod:: __call__
-
 .. autoclass:: deeppavlov.models.preprocessors.bert_preprocessor.BertNerPreprocessor
 
     .. automethod:: __call__
