@@ -119,7 +119,8 @@ class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
     Args:
-        vocab_file: path to vocabulary
+        vocab_file: A string, the `model id` of a predefined tokenizer hosted inside a model repo on huggingface.co or
+            a path to a `directory` containing vocabulary files required by the tokenizer.
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
     Attributes:
@@ -133,12 +134,7 @@ class TorchTransformersPreprocessor(Component):
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        if Path(vocab_file).is_file():
-            vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
-        else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
                                                                                          Tuple[List[InputFeatures],
