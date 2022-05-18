@@ -121,21 +121,21 @@ BERT (Bidirectional Encoder Representations from Transformers) [5]_ is a Transfo
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
-**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
+**deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
 solution for classification problem using pre-trained BERT.
 Several **pre-trained English, multi-lingual and Russian BERT** models are provided in
 :doc:`our BERT documentation </features/models/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
 ``deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor`` on TensorFlow (or ``deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor`` on PyTorch) (see :doc:`here </apiref/models/bert>`)
-and ``deeppavlov.models.bert.bert_classifier.BertClassifierModel`` on TensorFlow (or ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` on PyTorch) (see :doc:`here </apiref/models/bert>`).
+and ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` (see :doc:`here </apiref/models/bert>`).
 The ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` class supports any Transformer-based model.
 
 Non-processed texts should be given to ``bert_preprocessor`` (``torch_transformers_preprocessor``) for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
 
-``bert_classifier`` (``torch_bert_classifier``) has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+``torch_transformers_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
 Neural Networks on Keras
