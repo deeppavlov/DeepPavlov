@@ -240,7 +240,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 +==================+====================+======+=================================================================================================+=============+========+========+===========+
 | Insult detection | `Insults`_         | En   | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   | ROC-AUC     | 0.9327 | 0.8602 |  1.1 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6293 | 0.6626 |  1.1 Gb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               | F1-macro    | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
