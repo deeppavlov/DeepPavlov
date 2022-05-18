@@ -246,7 +246,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 |                  |`RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               | F1-weighted | 0.6693 | 0.6983 |  1.3 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.7548 | 0.7742 |  657 Mb   |
+|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.739  | 0.7724 |  1.5 Gb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
