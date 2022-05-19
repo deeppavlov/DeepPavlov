@@ -40,12 +40,6 @@ or provide flag ``-d`` for commands like ``interact``,  ``train``, ``evaluate``:
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
 or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
 
-When using KerasClassificationModel for **Windows** platforms one have to set `KERAS_BACKEND` to `tensorflow`:
-
-.. code:: bash
-
-    set "KERAS_BACKEND=tensorflow"
-
 **INTERACT** One can run the following command to interact in command line interface with provided config:
 
 .. code:: bash
@@ -80,14 +74,6 @@ Python code
 ~~~~~~~~~~~
 
 One can also use these configs in python code.
-When using ``KerasClassificationModel`` for **Windows** platform
-one needs to set ``KERAS_BACKEND`` to ``tensorflow`` in the following way:
-
-.. code:: python
-
-    import os
-
-    os.environ["KERAS_BACKEND"] = "tensorflow"
 
 **INTERACT** To download required data one have to set ``download`` parameter to ``True``.
 Then one can build and interact a model from configuration file:
@@ -138,33 +124,11 @@ If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` shoul
 ``torch_transformers_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
-Neural Networks on Keras
-------------------------
-
-**deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
-contains a number of different neural network configurations for classification task.
-Please, pay attention that each model has its own parameters that should be specified in config.
-Information about parameters could be found :doc:`here </apiref/models/classifiers>`.
-One of the available network configurations can be chosen in ``model_name`` parameter in config.
-Below the list of available models is presented:
-
-* ``cnn_model`` -- Shallow-and-wide CNN [1]_ with max pooling after convolution,
-* ``dcnn_model`` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
-* ``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN [1]_ with max and average pooling concatenation after convolution,
-* ``bilstm_model`` -- Bidirectional LSTM,
-* ``bilstm_bilstm_model`` -- 2-layers bidirectional LSTM,
-* ``bilstm_cnn_model`` -- Bidirectional LSTM followed by shallow-and-wide CNN,
-* ``cnn_bilstm_model`` -- Shallow-and-wide CNN followed by bidirectional LSTM,
-* ``bilstm_self_add_attention_model`` -- Bidirectional LSTM followed by self additive attention layer,
-* ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
-* ``bigru_model`` -- Bidirectional GRU model.
-
-
 Neural Networks on PyTorch
 --------------------------
 
 **deeppavlov.models.classifiers.TorchClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
-does not contain a zoo of models while it has an example of shallow-and-wide CNN (``swcnn_model``).
+could be used for implementation of different neural network configurations for classification task.
 An instruction of how to build your own architecture on PyTorch one may find :doc:`here </intro/choose_framework>`.
 
 Sklearn models

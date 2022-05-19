@@ -35,31 +35,24 @@ If using PyTorch, you need to use ``"class_name": "torch_trainer"``, which diffe
 only in assigning ``torch.nn.Module.train()`` and ``torch.nn.Module.eval()`` models for PyTorch modules.
 
 
-Text Classification on Keras or PyTorch
+Text Classification on PyTorch
 ---------------------------------------
 
-If you want to build your own architecture for **text classification** tasks, do the following in **Keras** or in **PyTorch**:
+If you want to build your own architecture for **text classification** tasks, do the following:
 
     .. code:: python
 
-        # Keras
-        from deeppavlov.models.classifiers.keras_classification_model import KerasClassificationModel
-        # PyTorch
-        # from deeppavlov.models.classifiers.torch_classification_model import TorchTextClassificationModel
+        from deeppavlov.models.classifiers.torch_classification_model import TorchTextClassificationModel
 
-        # Keras
-        class MyModel(KerasClassificationModel):
-        # Torch
-        # class MyModel(TorchTextClassificationModel):
+        class MyModel(TorchTextClassificationModel):
 
             def my_network_architecture(self, **kwargs):
-                model = <create Keras/Torch model using parameters from kwargs>
+                model = <create Torch model using parameters from kwargs>
                 return model
 
     In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"`` 
     and ``"model_name": "my_network_architecture"``
     in the dictionary with the main model.
-    Don't forget to set ``torch_trainer`` or ``nn_trainer`` (for PyTorch) or ``nn_trainer`` (for TensorFlow and Keras).
 
 Other NLP-tasks on TensorFlow, Keras, or PyTorch
 ------------------------------------------------

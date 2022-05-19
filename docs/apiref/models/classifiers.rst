@@ -9,11 +9,6 @@ deeppavlov.models.classifiers
 
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.classifiers.keras_classification_model.KerasClassificationModel
-    :members:
-
-    .. automethod:: __call__
-
 .. autoclass:: deeppavlov.models.classifiers.cos_sim_classifier.CosineSimilarityClassifier
     :members:
 
