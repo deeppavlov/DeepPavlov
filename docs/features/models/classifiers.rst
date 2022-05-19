@@ -6,7 +6,7 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [5]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
+* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [4]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
 
 * **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
 
@@ -103,7 +103,7 @@ Then one can build and interact a model from configuration file:
 BERT models
 -----------
 
-BERT (Bidirectional Encoder Representations from Transformers) [5]_ is a Transformer pre-trained on masked language model
+BERT (Bidirectional Encoder Representations from Transformers) [4]_ is a Transformer pre-trained on masked language model
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
@@ -164,7 +164,7 @@ and the train set is the rest.
 
 `Twitter mokoron dataset <http://study.mokoron.com/>`__ contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [2]_. It was automatically labeled.
+replies [1]_. It was automatically labeled.
 Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Two provided pre-trained
@@ -284,21 +284,19 @@ Then training process can be run in the same way:
 How to improve the performance
 ------------------------------
 
--  One can use FastText [3]_ to train embeddings that are better suited
+-  One can use FastText [2]_ to train embeddings that are better suited
    for considered datasets.
 -  One can use some custom preprocessing to clean texts.
--  One can use ELMo [4]_ or BERT [5]_.
+-  One can use ELMo [3]_ or BERT [4]_.
 -  All the parameters should be tuned on the validation set.
 
 References
 ----------
 
-.. [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
+.. [1] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
 
-.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
+.. [2] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
-.. [3] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
+.. [3] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
 
-.. [4] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
-
-.. [5] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.
+.. [4] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.
