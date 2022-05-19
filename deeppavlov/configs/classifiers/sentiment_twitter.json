@@ -55,13 +55,13 @@
           "x_emb"
         ],
         "in_y": [
-          "y_onehot"
+          "y_ids"
         ],
         "out": [
           "y_pred_probas"
         ],
         "main": true,
-        "class_name": "keras_classification_model",
+        "class_name": "torch_text_classification_model",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "embedding_size": "#my_embedder.dim",
@@ -72,15 +72,14 @@
           7
         ],
         "filters_cnn": 256,
-        "optimizer": "Adam",
-        "learning_rate": 0.01,
-        "learning_rate_decay": 0.1,
-        "loss": "binary_crossentropy",
-        "last_layer_activation": "softmax",
-        "coef_reg_cnn": 1e-3,
-        "coef_reg_den": 1e-2,
         "dropout_rate": 0.5,
-        "dense_size": 100,
+        "dense_size": 64,
+        "optimizer": "SGD",
+        "optimizer_parameters": {
+          "lr": 0.0001,
+          "momentum": 0.9,
+          "weight_decay": 0.0001
+        },
         "model_name": "cnn_model"
       },
       {
@@ -101,7 +100,7 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 64,
+    "batch_size": 128,
     "metrics": [
       "accuracy",
       "f1_macro",
@@ -119,14 +118,14 @@
       "valid",
       "test"
     ],
-    "class_name": "nn_trainer"
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_twitter_v6"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_twitter_torch"
     },
     "download": [
       {
@@ -138,8 +137,8 @@
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_twitter_v6.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers"
+        "url": "http://files.deeppavlov.ai/v1/classifiers/sentiment_twitter/sentiment_twitter_torch.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
