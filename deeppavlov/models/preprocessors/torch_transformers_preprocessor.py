@@ -118,14 +118,17 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
+
     Args:
         vocab_file: A string, the `model id` of a predefined tokenizer hosted inside a model repo on huggingface.co or
             a path to a `directory` containing vocabulary files required by the tokenizer.
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
         tokenizer: instance of Bert FullTokenizer
+
     """
 
     def __init__(self,
