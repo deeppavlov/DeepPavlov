@@ -47,11 +47,6 @@
   "huggingface_dataset_reader": [
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
   ],
-  "intent_catcher": [
-    "{DEEPPAVLOV_PATH}/requirements/tf-hub.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/xeger.txt"
-  ],
   "kenlm_elector": [
     "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
   ],

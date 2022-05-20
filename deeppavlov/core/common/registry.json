@@ -30,8 +30,6 @@
   "huggingface_dataset_iterator": "deeppavlov.dataset_iterators.huggingface_dataset_iterator:HuggingFaceDatasetIterator",
   "huggingface_dataset_reader": "deeppavlov.dataset_readers.huggingface_dataset_reader:HuggingFaceDatasetReader",
   "imdb_reader": "deeppavlov.dataset_readers.imdb_reader:ImdbReader",
-  "intent_catcher": "deeppavlov.models.intent_catcher.intent_catcher:IntentCatcher",
-  "intent_catcher_reader": "deeppavlov.dataset_readers.intent_catcher_reader:IntentCatcherReader",
   "joint_tagger_parser": "deeppavlov.models.syntax_parser.joint:JointTaggerParser",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
   "keras_classification_model": "deeppavlov.models.classifiers.keras_classification_model:KerasClassificationModel",
