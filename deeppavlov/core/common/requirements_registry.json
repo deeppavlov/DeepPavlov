@@ -7,15 +7,7 @@
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
   ],
-  "bert_classifier": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
   "bert_ner_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bert_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
     "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
@@ -49,9 +41,6 @@
   ],
   "kenlm_elector": [
     "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
-  ],
-  "keras_classification_model": [
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
   ],
   "ner_chunk_model": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",

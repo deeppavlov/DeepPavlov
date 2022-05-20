@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
 import random
+import re
 from logging import getLogger
-from typing import Tuple, List, Optional, Union
+from typing import Tuple, List, Union
 
-from bert_dp.preprocessing import convert_examples_to_features, InputExample, InputFeatures
 from bert_dp.tokenization import FullTokenizer
 
 from deeppavlov.core.commands.utils import expand_path
@@ -26,54 +25,6 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.models.preprocessors.mask import Mask
 
 log = getLogger(__name__)
-
-
-@register('bert_preprocessor')
-class BertPreprocessor(Component):
-    """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
-
-    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
-
-    Args:
-        vocab_file: path to vocabulary
-        do_lower_case: set True if lowercasing is needed
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-
-    Attributes:
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        tokenizer: instance of Bert FullTokenizer
-    """
-
-    def __init__(self,
-                 vocab_file: str,
-                 do_lower_case: bool = True,
-                 max_seq_length: int = 512,
-                 **kwargs) -> None:
-        self.max_seq_length = max_seq_length
-        vocab_file = str(expand_path(vocab_file))
-        self.tokenizer = FullTokenizer(vocab_file=vocab_file,
-                                       do_lower_case=do_lower_case)
-
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> List[InputFeatures]:
-        """Call Bert :func:`bert_dp.preprocessing.convert_examples_to_features` function to tokenize and create masks.
-
-        texts_a and texts_b are separated by [SEP] token
-
-        Args:
-            texts_a: list of texts,
-            texts_b: list of texts, it could be None, e.g. single sentence classification task
-
-        Returns:
-            batch of :class:`bert_dp.preprocessing.InputFeatures` with subtokens, subtoken ids, subtoken mask, segment mask.
-
-        """
-
-        if texts_b is None:
-            texts_b = [None] * len(texts_a)
-        # unique_id is not used
-        examples = [InputExample(unique_id=0, text_a=text_a, text_b=text_b)
-                    for text_a, text_b in zip(texts_a, texts_b)]
-        return convert_examples_to_features(examples, self.max_seq_length, self.tokenizer)
 
 
 @register('bert_ner_preprocessor')

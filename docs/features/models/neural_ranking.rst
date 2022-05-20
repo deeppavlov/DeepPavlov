@@ -29,7 +29,7 @@ Before using the model make sure that all required packages are installed runnin
 
 .. code:: bash
 
-    python -m deeppavlov install paraphraser_bert
+    python -m deeppavlov install paraphraser_rubert
 
 To train the model on the `paraphraser.ru`_ dataset one can use the following code in Python:
 
@@ -37,7 +37,7 @@ To train the model on the `paraphraser.ru`_ dataset one can use the following co
 
     from deeppavlov import configs, train_model
 
-    para_model = train_model('paraphraser_bert', download=True)
+    para_model = train_model('paraphraser_rubert', download=True)
 
 
 Paraphrase identification

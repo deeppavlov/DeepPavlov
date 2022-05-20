@@ -46,11 +46,9 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
         tokenizer: instance of Bert FullTokenizer
 
     """
@@ -59,10 +57,8 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.return_tokens = return_tokens
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -122,31 +118,26 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
     Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
+
     Args:
-        vocab_file: path to vocabulary
+        vocab_file: A string, the `model id` of a predefined tokenizer hosted inside a model repo on huggingface.co or
+            a path to a `directory` containing vocabulary files required by the tokenizer.
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
+
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
         tokenizer: instance of Bert FullTokenizer
+
     """
 
     def __init__(self,
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.return_tokens = return_tokens
-        if Path(vocab_file).is_file():
-            vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
-        else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
                                                                                          Tuple[List[InputFeatures],
@@ -184,7 +175,6 @@ class TorchTransformersEntityRankerPreprocessor(Component):
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
         special_tokens: list of special tokens
         special_token_id: id of special token
         return_special_tokens_pos: whether to return positions of found special tokens
@@ -194,13 +184,11 @@ class TorchTransformersEntityRankerPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = False,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
                  special_tokens: List[str] = None,
                  special_token_id: int = None,
                  return_special_tokens_pos: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.return_tokens = return_tokens
         self.do_lower_case = do_lower_case
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
@@ -272,11 +260,9 @@ class TorchSquadTransformersPreprocessor(Component):
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        return_tokens: whether to return tuple of input features and tokens, or only input features
         tokenizer: instance of Bert FullTokenizer
 
     """
@@ -285,11 +271,9 @@ class TorchSquadTransformersPreprocessor(Component):
                  vocab_file: str,
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
                  add_token_type_ids: bool = False,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.return_tokens = return_tokens
         self.add_token_type_ids = add_token_type_ids
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
@@ -362,17 +346,13 @@ class TorchSquadTransformersPreprocessor(Component):
                                               token_type_ids=encoded_dict['token_type_ids'],
                                               label=None)
                 input_features_list.append(curr_features)
-                if self.return_tokens:
-                    tokens_list.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
+                tokens_list.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
 
             input_features_batch.append(input_features_list)
             tokens_batch.append(tokens_list)
             split_context_batch.append(context_list)
 
-        if self.return_tokens:
-            return input_features_batch, tokens_batch, split_context_batch
-        else:
-            return input_features_batch, split_context_batch
+        return input_features_batch, tokens_batch, split_context_batch
 
 
 @register('rel_ranking_preprocessor')

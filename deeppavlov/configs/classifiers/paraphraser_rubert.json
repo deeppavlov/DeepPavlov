@@ -14,24 +14,21 @@
     "in_y": ["y"],
     "pipe": [
       {
-        "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/vocab.txt",
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": ["text_a", "text_b"],
         "out": ["bert_features"]
       },
       {
-        "class_name": "bert_classifier",
+        "class_name": "torch_transformers_classifier",
         "n_classes": 2,
-        "one_hot_labels": false,
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/rubert_cased_L-12_H-768_A-12_v1/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/paraphraser_rubert/model_rubert",
-        "load_path": "{MODELS_PATH}/paraphraser_rubert/model_rubert",
-        "keep_prob": 0.5,
-        "optimizer": "tf.train:AdamOptimizer",
-        "learning_rate": 2e-05,
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {"lr": 2e-05},
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
         "in": ["bert_features"],
@@ -51,13 +48,15 @@
     "log_every_n_batches": 50,
     "validate_best": true,
     "test_best": true,
-    "tensorboard_log_dir": "{MODELS_PATH}/paraphraser_rubert/logs"
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/paraphraser_rubert_torch",
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased"
     },
     "download": [
       {
@@ -69,12 +68,8 @@
         "subdir": "{DOWNLOADS_PATH}/paraphraser_data"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v1.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/paraphraser_rubert_v0.tar.gz",
-        "subdir": "{ROOT_PATH}/models"
+        "url": "http://files.deeppavlov.ai/v1/classifiers/paraphraser_rubert/paraphraser_rubert_v1.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }

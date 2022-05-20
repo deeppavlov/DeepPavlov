@@ -6,7 +6,7 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [5]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
+* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [4]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
 
 * **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
 
@@ -39,12 +39,6 @@ or provide flag ``-d`` for commands like ``interact``,  ``train``, ``evaluate``:
 
 where ``<path_to_config>`` is a path to one of the :config:`provided config files <classifiers>`
 or its name without an extension, for example :config:`"insults_kaggle_bert" <classifiers/insults_kaggle_bert.json>`.
-
-When using KerasClassificationModel for **Windows** platforms one have to set `KERAS_BACKEND` to `tensorflow`:
-
-.. code:: bash
-
-    set "KERAS_BACKEND=tensorflow"
 
 **INTERACT** One can run the following command to interact in command line interface with provided config:
 
@@ -80,14 +74,6 @@ Python code
 ~~~~~~~~~~~
 
 One can also use these configs in python code.
-When using ``KerasClassificationModel`` for **Windows** platform
-one needs to set ``KERAS_BACKEND`` to ``tensorflow`` in the following way:
-
-.. code:: python
-
-    import os
-
-    os.environ["KERAS_BACKEND"] = "tensorflow"
 
 **INTERACT** To download required data one have to set ``download`` parameter to ``True``.
 Then one can build and interact a model from configuration file:
@@ -117,54 +103,32 @@ Then one can build and interact a model from configuration file:
 BERT models
 -----------
 
-BERT (Bidirectional Encoder Representations from Transformers) [5]_ is a Transformer pre-trained on masked language model
+BERT (Bidirectional Encoder Representations from Transformers) [4]_ is a Transformer pre-trained on masked language model
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
-**deeppavlov.models.bert.BertClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
+**deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
 solution for classification problem using pre-trained BERT.
 Several **pre-trained English, multi-lingual and Russian BERT** models are provided in
 :doc:`our BERT documentation </features/models/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-``deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor`` on TensorFlow (or ``deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor`` on PyTorch) (see :doc:`here </apiref/models/bert>`)
-and ``deeppavlov.models.bert.bert_classifier.BertClassifierModel`` on TensorFlow (or ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` on PyTorch) (see :doc:`here </apiref/models/bert>`).
+``deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor``
+and ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` (see :doc:`here </apiref/models/bert>`).
 The ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` class supports any Transformer-based model.
 
-Non-processed texts should be given to ``bert_preprocessor`` (``torch_transformers_preprocessor``) for tokenization on subtokens,
+Non-processed texts should be given to ``torch_transformers_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 If one processed classes to one-hot labels in pipeline, ``one_hot_labels`` should be set to ``true``.
 
-``bert_classifier`` (``torch_bert_classifier``) has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+``torch_transformers_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
-
-Neural Networks on Keras
-------------------------
-
-**deeppavlov.models.classifiers.KerasClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
-contains a number of different neural network configurations for classification task.
-Please, pay attention that each model has its own parameters that should be specified in config.
-Information about parameters could be found :doc:`here </apiref/models/classifiers>`.
-One of the available network configurations can be chosen in ``model_name`` parameter in config.
-Below the list of available models is presented:
-
-* ``cnn_model`` -- Shallow-and-wide CNN [1]_ with max pooling after convolution,
-* ``dcnn_model`` -- Deep CNN with number of layers determined by the given number of kernel sizes and filters,
-* ``cnn_model_max_and_aver_pool`` -- Shallow-and-wide CNN [1]_ with max and average pooling concatenation after convolution,
-* ``bilstm_model`` -- Bidirectional LSTM,
-* ``bilstm_bilstm_model`` -- 2-layers bidirectional LSTM,
-* ``bilstm_cnn_model`` -- Bidirectional LSTM followed by shallow-and-wide CNN,
-* ``cnn_bilstm_model`` -- Shallow-and-wide CNN followed by bidirectional LSTM,
-* ``bilstm_self_add_attention_model`` -- Bidirectional LSTM followed by self additive attention layer,
-* ``bilstm_self_mult_attention_model`` -- Bidirectional LSTM followed by self multiplicative attention layer,
-* ``bigru_model`` -- Bidirectional GRU model.
-
 
 Neural Networks on PyTorch
 --------------------------
 
 **deeppavlov.models.classifiers.TorchClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
-does not contain a zoo of models while it has an example of shallow-and-wide CNN (``swcnn_model``).
+could be used for implementation of different neural network configurations for classification task.
 An instruction of how to build your own architecture on PyTorch one may find :doc:`here </intro/choose_framework>`.
 
 Sklearn models
@@ -200,7 +164,7 @@ and the train set is the rest.
 
 `Twitter mokoron dataset <http://study.mokoron.com/>`__ contains
 **sentiment classification** of Russian tweets for positive and negative
-replies [2]_. It was automatically labeled.
+replies [1]_. It was automatically labeled.
 Train, valid and test division is made by hands (Stratified
 division: 1/5 from all dataset for test set with 42 seed, then 1/5 from
 the rest for validation set with 42 seed). Two provided pre-trained
@@ -240,13 +204,13 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 +==================+====================+======+=================================================================================================+=============+========+========+===========+
 | Insult detection | `Insults`_         | En   | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   | ROC-AUC     | 0.9327 | 0.8602 |  1.1 Gb   |
 +------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6456 | 0.6715 |  400 Mb   |
+| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6293 | 0.6626 |  1.1 Gb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 | Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               | F1-macro    | 0.9965 | 0.9961 |  6.2 Gb   |
 +                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
-|                  |`RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               | F1-weighted | 0.6809 | 0.7193 |  1900 Mb  |
+|                  |`RuSentiment`_      |      | :config:`Multi-language BERT <classifiers/rusentiment_bert.json>`                               | F1-weighted | 0.6787 | 0.7005 |  1.3 Gb   |
 +                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------+--------+-----------+
-|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.7548 | 0.7742 |  657 Mb   |
+|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.739  | 0.7724 |  1.5 Gb   |
 +------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------+--------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -320,21 +284,19 @@ Then training process can be run in the same way:
 How to improve the performance
 ------------------------------
 
--  One can use FastText [3]_ to train embeddings that are better suited
+-  One can use FastText [2]_ to train embeddings that are better suited
    for considered datasets.
 -  One can use some custom preprocessing to clean texts.
--  One can use ELMo [4]_ or BERT [5]_.
+-  One can use ELMo [3]_ or BERT [4]_.
 -  All the parameters should be tuned on the validation set.
 
 References
 ----------
 
-.. [1] Kim Y. Convolutional neural networks for sentence classification //arXiv preprint arXiv:1408.5882. – 2014.
+.. [1] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
 
-.. [2] Ю. В. Рубцова. Построение корпуса текстов для настройки тонового классификатора // Программные продукты и системы, 2015, №1(109), –С.72-78
+.. [2] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
 
-.. [3] P. Bojanowski\ *, E. Grave*, A. Joulin, T. Mikolov, Enriching Word Vectors with Subword Information.
+.. [3] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
 
-.. [4] Peters, Matthew E., et al. "Deep contextualized word representations." arXiv preprint arXiv:1802.05365 (2018).
-
-.. [5] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.
+.. [4] Devlin J. et al. Bert: Pre-training of deep bidirectional transformers for language understanding //arXiv preprint arXiv:1810.04805. – 2018.
