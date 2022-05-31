@@ -8,7 +8,7 @@ numpy==1.18.0
 overrides==2.7.0
 pandas==0.25.3
 prometheus-client==0.7.1
-protobuf==3.20.1
+protobuf<4
 pytz==2019.1
 pydantic==1.3
 pymorphy2==0.8
