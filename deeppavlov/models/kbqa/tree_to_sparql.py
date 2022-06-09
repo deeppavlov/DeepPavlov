@@ -119,20 +119,21 @@ class SlovnetSyntaxParser(Component, Serializable):
         Class for syntax parsing using Slovnet library
     """
 
-    def __init__(self, navec_filename: str, syntax_parser_filename: str, **kwargs):
+    def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, **kwargs):
+        super().__init__(save_path=None, load_path=load_path)
         self.navec_filename = str(expand_path(navec_filename))
         self.syntax_parser_filename = str(expand_path(syntax_parser_filename))
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.load()
-    
+
     def load(self) -> None:
         navec = Navec.load(self.navec_filename)
         self.syntax = Syntax.load(self.syntax_parser_filename)
         self.syntax.navec(navec)
-    
+
     def save(self) -> None:
         pass
-    
+
     def __call__(self, sentences):
         sentences_tok = []
         for sentence in sentences:
