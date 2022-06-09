@@ -20,7 +20,9 @@ from collections import defaultdict
 import numpy as np
 import pymorphy2
 import re
+from navec import Navec
 from scipy.sparse import csr_matrix
+from slovnet import Syntax
 from udapi.block.read.conllu import Conllu
 from udapi.core.node import Node
 
@@ -28,6 +30,7 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
 
@@ -108,6 +111,42 @@ class RuAdjToNoun:
         matrix = csr_matrix((data, indices, indptr), shape=(len(words), self.max_word_length * self.alphabet_length))
 
         return matrix
+
+
+@register('slovnet_syntax_parser')
+class SlovnetSyntaxParser(Component, Serializable):
+    """
+        Class for syntax parsing using Slovnet library
+    """
+
+    def __init__(self, navec_filename: str, syntax_parser_filename: str, **kwargs):
+        self.navec_filename = str(expand_path(navec_filename))
+        self.syntax_parser_filename = str(expand_path(syntax_parser_filename))
+        self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self.load()
+    
+    def load(self) -> None:
+        navec = Navec.load(self.navec_filename)
+        self.syntax = Syntax.load(self.syntax_parser_filename)
+        self.syntax.navec(navec)
+    
+    def save(self) -> None:
+        pass
+    
+    def __call__(self, sentences):
+        sentences_tok = []
+        for sentence in sentences:
+            sentences_tok.append(re.findall(self.re_tokenizer, sentence))
+        markup = list(self.syntax.map(sentences_tok))
+
+        processed_markup_batch = []
+        for markup_elem in markup:
+            processed_markup = []
+            for elem in markup_elem.tokens:
+                processed_markup.append(f"{elem.id}\t{elem.text}\t_\t_\t_\t_\t{elem.head_id}\t{elem.rel}\t_\t_")
+            processed_markup_batch.append("\n".join(processed_markup))
+
+        return processed_markup_batch
 
 
 @register('tree_to_sparql')

@@ -71,6 +71,7 @@
   "siamese_iterator": "deeppavlov.dataset_iterators.siamese_iterator:SiameseIterator",
   "simple_vocab": "deeppavlov.core.data.simple_vocab:SimpleVocabulary",
   "sklearn_component": "deeppavlov.models.sklearn.sklearn_component:SklearnComponent",
+  "slovnet_syntax_parser": "deeppavlov.models.kbqa.tree_to_sparql:SlovnetSyntaxParser",
   "spelling_error_model": "deeppavlov.models.spelling_correction.brillmoore.error_model:ErrorModel",
   "spelling_levenshtein": "deeppavlov.models.spelling_correction.levenshtein.searcher_component:LevenshteinSearcherComponent",
   "split_tokenizer": "deeppavlov.models.tokenizers.split_tokenizer:SplitTokenizer",

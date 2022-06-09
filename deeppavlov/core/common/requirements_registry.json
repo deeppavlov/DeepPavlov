@@ -89,6 +89,9 @@
   "russian_words_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
+  "slovnet_syntax_parser": [
+    "{DEEPPAVLOV_PATH}/requirements/slovnet.txt"
+  ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
