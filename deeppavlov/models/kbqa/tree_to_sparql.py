@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io import StringIO
-from typing import Any, List, Tuple, Dict, Union
-from logging import getLogger
+import re
 from collections import defaultdict
+from io import StringIO
+from logging import getLogger
+from typing import Any, List, Tuple, Dict, Union
 
 import numpy as np
 import pymorphy2
-import re
 from navec import Navec
 from scipy.sparse import csr_matrix
 from slovnet import Syntax
 from udapi.block.read.conllu import Conllu
 from udapi.core.node import Node
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
