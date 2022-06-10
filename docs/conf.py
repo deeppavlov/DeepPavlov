@@ -190,9 +190,10 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['bert_dp', 'bs4', 'fastText', 'fasttext', 'hdt', 'kenlm', 'librosa', 'lxml', 'nltk',
-                        'opt_einsum', 'rapidfuzz', 'rasa', 'russian_tagsets', 'sacremoses', 'sortedcontainers', 'spacy',
-                        'tensorflow', 'torch', 'torchcrf', 'transformers', 'udapi', 'ufal_udpipe', 'whapi']
+autodoc_mock_imports = ['bert_dp', 'bs4', 'fastText', 'fasttext', 'hdt', 'kenlm', 'librosa', 'lxml', 'navec', 'nltk',
+                        'opt_einsum', 'rapidfuzz', 'rasa', 'russian_tagsets', 'sacremoses', 'slovnet',
+                        'sortedcontainers', 'spacy', 'tensorflow', 'torch', 'torchcrf', 'transformers', 'udapi',
+                        'ufal_udpipe', 'whapi']
 
 extlinks = {
     'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)

@@ -115,14 +115,12 @@ class RuAdjToNoun:
 
 @register('slovnet_syntax_parser')
 class SlovnetSyntaxParser(Component, Serializable):
-    """
-        Class for syntax parsing using Slovnet library
-    """
+    """Class for syntax parsing using Slovnet library"""
 
     def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, **kwargs):
         super().__init__(save_path=None, load_path=load_path)
-        self.navec_filename = str(expand_path(navec_filename))
-        self.syntax_parser_filename = str(expand_path(syntax_parser_filename))
+        self.navec_filename = expand_path(navec_filename)
+        self.syntax_parser_filename = expand_path(syntax_parser_filename)
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.load()
 
