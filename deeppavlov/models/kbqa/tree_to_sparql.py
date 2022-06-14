@@ -132,9 +132,14 @@ class SlovnetSyntaxParser(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, sentences):
+    def __call__(self, sentences, entity_offsets_batch):
         sentences_tok = []
-        for sentence in sentences:
+        for sentence, entity_offsets in zip(sentences, entity_offsets_batch):
+            for start, end in entity_offsets:
+                entity_old = sentence[start:end]
+                entity_new = entity_old.capitalize()
+                sentence = sentence.replace(entity_old, entity_new)
+            sentence = sentence.capitalize()
             sentences_tok.append(re.findall(self.re_tokenizer, sentence))
         markup = list(self.syntax.map(sentences_tok))
 
