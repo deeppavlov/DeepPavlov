@@ -46,8 +46,7 @@
     "validation_patience": 7,
     "val_every_n_batches": 50,
     "log_every_n_batches": 50,
-    "validate_best": true,
-    "test_best": true,
+    "evaluation_targets": ["valid", "test"],
     "class_name": "torch_trainer"
   },
   "metadata": {
