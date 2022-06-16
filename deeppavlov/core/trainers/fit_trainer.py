@@ -240,15 +240,14 @@ class FitTrainer:
 
         return report
 
-    def evaluate(self, iterator: DataLearningIterator, evaluation_targets: Optional[Iterable[str]] = None, *,
-                 print_reports: bool = True) -> Dict[str, dict]:
+    def evaluate(self, iterator: DataLearningIterator,
+                 evaluation_targets: Optional[Iterable[str]] = None) -> Dict[str, dict]:
         """
         Run :meth:`test` on multiple data types using provided data iterator
 
         Args:
             iterator: :class:`~deeppavlov.core.data.data_learning_iterator.DataLearningIterator` used for evaluation
             evaluation_targets: iterable of data types to evaluate on
-            print_reports: a flag used to print evaluation reports as json lines
 
         Returns:
             a dictionary with data types as keys and evaluation reports as values
@@ -263,7 +262,6 @@ class FitTrainer:
             data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report
-            if print_reports:
-                print(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
+            log.info(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
 
         return res

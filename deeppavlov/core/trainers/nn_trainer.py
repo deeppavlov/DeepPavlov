@@ -217,7 +217,7 @@ class NNTrainer(FitTrainer):
 
         self._send_event(event_name='after_validation', data=report)
         report = {'valid': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
         self.validation_number += 1
 
     def _log(self, iterator: DataLearningIterator,
@@ -257,7 +257,7 @@ class NNTrainer(FitTrainer):
         self._send_event(event_name='after_train_log', data=report)
 
         report = {'train': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
 
     def _send_event(self, event_name: str, data: Optional[dict] = None) -> None:
         report = {

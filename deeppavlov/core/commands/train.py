@@ -111,7 +111,7 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     res = {}
 
     if iterator is not None:
-        res = trainer.evaluate(iterator, evaluation_targets, print_reports=True)
+        res = trainer.evaluate(iterator, evaluation_targets)
         trainer.get_chainer().destroy()
 
     res = {k: v['metrics'] for k, v in res.items()}
