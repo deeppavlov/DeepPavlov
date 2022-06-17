@@ -18,10 +18,12 @@
     "name": "{TASK}",
     "train": "train",
     "valid": "validation",
+    "test": "test",
     "seed": "{SEED}",
     "downsample_ratio": [
       1.8,
-      1.8
+      1.8,
+      1
     ],
     "do_index_correction": false
   },
