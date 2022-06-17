@@ -129,8 +129,8 @@ class EntityLinker(Component, Serializable):
                     start = end + 1
                 sentences_offsets_batch.append(sentences_offsets_list)
 
-        if entity_tags_batch is None:
-            entity_tags_batch = [[] for _ in entity_substr_batch]
+        if entity_tags_batch is None or not entity_tags_batch[0]:
+            entity_tags_batch = [["" for _ in entity_substr_list] for entity_substr_list in entity_substr_batch]
         else:
             entity_tags_batch = [[tag.upper() for tag in entity_tags] for entity_tags in entity_tags_batch]
 
@@ -264,7 +264,7 @@ class EntityLinker(Component, Serializable):
     def process_cand_ent(self, cand_ent_init, entities_and_ids, entity_substr_split, tag):
         if self.use_tags:
             for cand_entity_title, cand_entity_id, cand_entity_rels, cand_tag, *_ in entities_and_ids:
-                if tag == cand_tag:
+                if not tag or tag == cand_tag:
                     substr_score = self.calc_substr_score(cand_entity_title, entity_substr_split)
                     cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
             if not cand_ent_init:
@@ -511,7 +511,6 @@ class EntityLinker(Component, Serializable):
             contexts.append(context)
 
         scores_list = self.entity_ranker(contexts, cand_ent_list, cand_ent_descr_list)
-
         for (entity_substr, candidate_entities, substr_len, entities_scores, scores,) in zip(
                 entity_substr_list,
                 cand_ent_list,
