@@ -146,8 +146,19 @@ class SlovnetSyntaxParser(Component, Serializable):
         processed_markup_batch = []
         for markup_elem in markup:
             processed_markup = []
+            ids, words, head_ids, rels = [], [], [], []
             for elem in markup_elem.tokens:
-                processed_markup.append(f"{elem.id}\t{elem.text}\t_\t_\t_\t_\t{elem.head_id}\t{elem.rel}\t_\t_")
+                ids.append(elem.id)
+                words.append(elem.text)
+                head_ids.append(elem.head_id)
+                rels.append(elem.rel)
+            if "root" not in {rel.lower() for rel in rels}:
+                for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
+                    if elem_id == head_id:
+                        rels[n] = "root"
+                        head_ids[n] = 0
+            for elem_id, word, head_id, rel in zip(ids, words, head_ids, rels):
+                processed_markup.append(f"{elem_id}\t{word}\t_\t_\t_\t_\t{head_id}\t{rel}\t_\t_")
             processed_markup_batch.append("\n".join(processed_markup))
 
         return processed_markup_batch
@@ -206,9 +217,13 @@ class TreeToSparql(Component):
         count = False
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
             log.debug(f"\n{syntax_tree}")
-            tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
-            root = self.find_root(tree)
-            tree_desc = tree.descendants
+            root = ""
+            try:
+                tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
+                root = self.find_root(tree)
+                tree_desc = tree.descendants
+            except:
+                pass
             unknown_node = ""
             if root:
                 log.debug(f"syntax tree info, root: {root.form}")
