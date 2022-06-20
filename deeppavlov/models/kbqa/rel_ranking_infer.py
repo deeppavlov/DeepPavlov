@@ -154,7 +154,7 @@ class RelRankerInfer(Component, Serializable):
                     answer_ids = answer_ids.split("/")[-1]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
-                log.info(f"answer_labels {answer_labels}")
+                log.debug(f"answer_labels {answer_labels}")
                 if self.return_all_possible_answers:
                     answer_labels = list(set(answer_labels))
                     answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]

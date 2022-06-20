@@ -217,13 +217,12 @@ class TreeToSparql(Component):
         count = False
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
             log.debug(f"\n{syntax_tree}")
-            root = ""
             try:
                 tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
                 root = self.find_root(tree)
                 tree_desc = tree.descendants
-            except:
-                pass
+            except ValueError:
+                root = ""
             unknown_node = ""
             if root:
                 log.debug(f"syntax tree info, root: {root.form}")
