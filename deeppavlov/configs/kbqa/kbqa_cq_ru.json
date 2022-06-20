@@ -32,8 +32,11 @@
         "lang": "@ru"
       },
       {
-        "config_path": "{CONFIGS_PATH}/syntax/syntax_ru_syntagrus_bert.json",
-        "in": ["x_punct"],
+        "class_name": "slovnet_syntax_parser",
+        "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
+        "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
+        "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
+        "in": ["x_punct", "entity_offsets"],
         "out": ["syntax_info"]
       },
       {
@@ -103,6 +106,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_ru.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slovnet_syntax_parser.tar.gz",
+        "subdir": "{MODELS_PATH}/slovnet_syntax_parser"
       }
     ]
   }

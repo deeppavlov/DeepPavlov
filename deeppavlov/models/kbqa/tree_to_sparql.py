@@ -12,22 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io import StringIO
-from typing import Any, List, Tuple, Dict, Union
-from logging import getLogger
+import re
 from collections import defaultdict
+from io import StringIO
+from logging import getLogger
+from typing import Any, List, Tuple, Dict, Union
 
 import numpy as np
 import pymorphy2
-import re
+from navec import Navec
 from scipy.sparse import csr_matrix
+from slovnet import Syntax
 from udapi.block.read.conllu import Conllu
 from udapi.core.node import Node
 
-from deeppavlov.core.models.component import Component
-from deeppavlov.core.common.file import read_json
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
+from deeppavlov.core.models.serializable import Serializable
 
 log = getLogger(__name__)
 
@@ -110,6 +113,57 @@ class RuAdjToNoun:
         return matrix
 
 
+@register('slovnet_syntax_parser')
+class SlovnetSyntaxParser(Component, Serializable):
+    """Class for syntax parsing using Slovnet library"""
+
+    def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, **kwargs):
+        super().__init__(save_path=None, load_path=load_path)
+        self.navec_filename = expand_path(navec_filename)
+        self.syntax_parser_filename = expand_path(syntax_parser_filename)
+        self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self.load()
+
+    def load(self) -> None:
+        navec = Navec.load(self.navec_filename)
+        self.syntax = Syntax.load(self.syntax_parser_filename)
+        self.syntax.navec(navec)
+
+    def save(self) -> None:
+        pass
+
+    def __call__(self, sentences, entity_offsets_batch):
+        sentences_tok = []
+        for sentence, entity_offsets in zip(sentences, entity_offsets_batch):
+            for start, end in entity_offsets:
+                entity_old = sentence[start:end]
+                entity_new = entity_old.capitalize()
+                sentence = sentence.replace(entity_old, entity_new)
+            sentence = sentence.capitalize()
+            sentences_tok.append(re.findall(self.re_tokenizer, sentence))
+        markup = list(self.syntax.map(sentences_tok))
+
+        processed_markup_batch = []
+        for markup_elem in markup:
+            processed_markup = []
+            ids, words, head_ids, rels = [], [], [], []
+            for elem in markup_elem.tokens:
+                ids.append(elem.id)
+                words.append(elem.text)
+                head_ids.append(elem.head_id)
+                rels.append(elem.rel)
+            if "root" not in {rel.lower() for rel in rels}:
+                for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
+                    if elem_id == head_id:
+                        rels[n] = "root"
+                        head_ids[n] = 0
+            for elem_id, word, head_id, rel in zip(ids, words, head_ids, rels):
+                processed_markup.append(f"{elem_id}\t{word}\t_\t_\t_\t_\t{head_id}\t{rel}\t_\t_")
+            processed_markup_batch.append("\n".join(processed_markup))
+
+        return processed_markup_batch
+
+
 @register('tree_to_sparql')
 class TreeToSparql(Component):
     """
@@ -163,9 +217,12 @@ class TreeToSparql(Component):
         count = False
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
             log.debug(f"\n{syntax_tree}")
-            tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
-            root = self.find_root(tree)
-            tree_desc = tree.descendants
+            try:
+                tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
+                root = self.find_root(tree)
+                tree_desc = tree.descendants
+            except ValueError:
+                root = ""
             unknown_node = ""
             if root:
                 log.debug(f"syntax tree info, root: {root.form}")
