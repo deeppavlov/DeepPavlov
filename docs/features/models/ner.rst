@@ -41,6 +41,9 @@ Here is the list of all available configs:
     +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
     | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_mbert_dream_distil <ner/ner_mbert_dream_distil.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
+    |                                                                        | Collection3        | En+Ru    | 700 MB          |   1.6 GB   |   96.4     |
+    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
 
@@ -67,6 +70,7 @@ The data for training should be placed in the folder provided in the config:
 
     from deeppavlov import configs, train_model
     from deeppavlov.core.commands.utils import parse_config
+    
     
     config_dict = parse_config(configs.ner.ner_ontonotes_bert)
 
@@ -297,6 +301,19 @@ The model also can be trained from scratch by using the command:
 
 
 
+Multilingual Case-insensitive Named Entity Recognition
+------------------------------------------------------
+
+Although capitalisation is an important feature for the Named Entity Recognition (NER) task, 
+the NER input data is not always cased, for example, virtual assistants data coming from ASR. 
+Moreover, while developing virtual assistants there is often a need to support interaction in several languages. 
+It has been shown that multilingual BERT can be successfully used for cross-lingual transfer, 
+performing on datasets in various languages with scores comparable to those obtained with language-specific models.  
+
+
+The model :config:`ner_mbert_dream_distil <ner/ner_mbert_dream_distil.json>` was trained on 
+on a concatenation of original and lowered datasets to solve the task. Our model achieves 
+the highest average result on CoNLL-2003 and Collection 3 datasets while being robust to missing casing.
 
 
 Literature
