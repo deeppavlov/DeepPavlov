@@ -30,10 +30,9 @@ log = getLogger(__name__)
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
                 load_trained: bool = False, download: bool = False,
-                serialized: Optional[bytes] = None) -> Chainer:
+                serialized: Optional[bytes] = None, buckets: Optional[list] = None) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     config = parse_config(config)
-
     if serialized:
         serialized: list = pickle.loads(serialized)
 
@@ -43,9 +42,7 @@ def build_model(config: Union[str, Path, dict], mode: str = 'infer',
     import_packages(config.get('metadata', {}).get('imports', []))
 
     model_config = config['chainer']
-
-    model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'))
-
+    model = Chainer(model_config['in'], model_config['out'], model_config.get('in_y'), model_config.get('buckets'))
     for component_config in model_config['pipe']:
         if load_trained and ('fit_on' in component_config or 'in_y' in component_config):
             try:
@@ -106,7 +103,7 @@ def predict_on_stream(config: Union[str, Path, dict],
     else:
         f = open(file_path, encoding='utf8')
 
-    model: Chainer = build_model(config)
+    model: Chainer = build_model(config, hist_name = "predict")
 
     args_count = len(model.in_x)
     while True:

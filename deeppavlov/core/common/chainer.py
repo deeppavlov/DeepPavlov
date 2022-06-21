@@ -12,11 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import pickle
+import random
+import string
 from itertools import islice
 from logging import getLogger
 from types import FunctionType
 from typing import Union, Tuple, List, Optional, Hashable, Reversible
+from prometheus_client import Histogram
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.component import Component
@@ -48,7 +52,7 @@ class Chainer(Component):
     """
 
     def __init__(self, in_x: Union[str, list] = None, out_params: Union[str, list] = None,
-                 in_y: Union[str, list] = None, *args, **kwargs) -> None:
+                 in_y: Union[str, list] = None, buckets: Optional[list] = None, *args, **kwargs) -> None:
         self.pipe: List[Tuple[Tuple[List[str], List[str]], List[str], Component]] = []
         self.train_pipe = []
         if isinstance(in_x, str):
@@ -67,6 +71,23 @@ class Chainer(Component):
         self._components_dict = {}
 
         self.main = None
+
+        self.hist_name = ''.join(random.choice(string.ascii_uppercase) for _ in range(5))
+        if buckets is not None:
+            self.buckets = buckets
+        else:
+            self.buckets = [.005, .01, .025, .05, .075, .1, .25, .5, .75, 1.0, 2.5, 5.0, 7.5, 10.0, 20, 50, 100, 200, 500]
+        self.hist = Histogram(self.hist_name, "response latency (seconds)", ["component"], buckets = self.buckets)
+        def print_hist():
+            intervals = [str(i) for i in self.hist._upper_bounds]
+            components = [k[0]for k in list(self.hist._metrics.keys())]
+            components_ = [i.split('.')[-1].split(' ')[0] for i in components]
+            values = [[str(self.hist.labels(component=i)._buckets[j].get()) for j in range(len(self.hist._upper_bounds))] for i in components]
+            format = "{:>45}  "+"{:>10}" *len(intervals)
+            print(format.format("", *intervals))
+            for component, value in zip(components_, values):
+                print(format.format(component, *value))
+        self.print_hist = print_hist
 
     def __getitem__(self, item):
         if isinstance(item, int):
@@ -201,13 +222,13 @@ class Chainer(Component):
                 args += list(zip(*y))
             in_params += self.in_y
 
-        return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets)
+        return self._compute(*args, pipe=pipe, param_names=in_params, targets=targets, hist = self.hist)
 
     def __call__(self, *args):
-        return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params)
+        return self._compute(*args, param_names=self.in_x, pipe=self.pipe, targets=self.out_params, hist = self.hist)
 
     @staticmethod
-    def _compute(*args, param_names, pipe, targets):
+    def _compute(*args, param_names, pipe, targets, hist: Optional[Histogram] = None):
         expected = set(targets)
         final_pipe = []
         for (in_keys, in_params), out_params, component in reversed(pipe):
@@ -224,10 +245,14 @@ class Chainer(Component):
 
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
+            start_time = time.perf_counter()
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))
             else:
                 res = component.__call__(*x)
+            duration = time.perf_counter() - start_time
+            if hist is not None:
+                hist.labels(component = component).observe(duration)
             if len(out_params) == 1:
                 mem[out_params[0]] = res
             else:

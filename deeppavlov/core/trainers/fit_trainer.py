@@ -67,7 +67,8 @@ class FitTrainer:
         if kwargs:
             log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
-        self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
+        self.buckets = chainer_config.get('buckets')
+        self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'), self.buckets)
         self.batch_size = batch_size
         self.metrics = parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
@@ -155,7 +156,7 @@ class FitTrainer:
     def _load(self) -> None:
         if not self._loaded:
             self._chainer.destroy()
-            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=self._saved)
+            self._chainer = build_model({'chainer': self.chainer_config}, load_trained=self._saved, buckets = self.buckets)
             self._loaded = True
 
     def get_chainer(self) -> Chainer:
@@ -265,5 +266,6 @@ class FitTrainer:
             res[data_type] = report
             if print_reports:
                 print(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
-
+        if self._chainer.hist_name is not None:
+            self._chainer.print_hist()
         return res

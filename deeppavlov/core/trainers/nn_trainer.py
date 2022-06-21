@@ -23,6 +23,7 @@ from typing import List, Tuple, Union, Optional, Iterable
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.models import component
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics, NumpyArrayEncoder
 
@@ -293,6 +294,9 @@ class NNTrainer(FitTrainer):
 
                 if self.log_every_n_batches > 0 and self.train_batches_seen % self.log_every_n_batches == 0:
                     self._log(iterator, tensorboard_tag='every_n_batches', tensorboard_index=self.train_batches_seen)
+                    if self._chainer.hist_name is not None:
+                        self._chainer.print_hist()
+
 
                 if self.val_every_n_batches > 0 and self.train_batches_seen % self.val_every_n_batches == 0:
                     self._validate(iterator,
