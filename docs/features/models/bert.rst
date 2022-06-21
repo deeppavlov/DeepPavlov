@@ -117,32 +117,15 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
-can be found :doc:`here </features/models/ner>`. The modules used for tagging
-are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
+can be found :doc:`here </features/models/ner>`. The module used for tagging
+is :class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger`.
 The tags are obtained by applying a dense layer to the representation of
-the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
-In the PyTorch implementation you can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
+the first subtoken of each word. There is also an optional CRF layer on the top.
+You can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
 The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
-
-BERT for Morphological Tagging
-------------------------------
-
-Since morphological tagging is also a sequence labeling task, it can be solved in a similar fashion.
-The only difference is that we may use the last subtoken of each word in case word morphology
-is mostly defined by its suffixes, not prefixes (that is the case for most Indo-European languages,
-such as Russian, Spanish, German etc.). See :doc:`also </features/models/morphotagger>`.
-
-BERT for Syntactic Parsing
---------------------------
-
-You can use BERT for syntactic parsing also. As most modern parsers, we use the biaffine model
-over the embedding layer, which is the output of BERT. The model outputs the index of syntactic
-head and the dependency type for each word. See :doc:`the parser documentation </features/models/syntaxparser>`
-for more information about model performance and algorithm.
 
 
 BERT for Context Question Answering (SQuAD)

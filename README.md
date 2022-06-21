@@ -35,8 +35,6 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
 
-[Morphological tagging](http://docs.deeppavlov.ai/en/master/features/models/morphotagger.html) | [Syntactic parsing](http://docs.deeppavlov.ai/en/master/features/models/syntaxparser.html)
-
 [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)
 
 [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)

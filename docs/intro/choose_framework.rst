@@ -7,7 +7,6 @@ DeepPavlov is built on top of the machine learning frameworks
 
 * BERT-based models on TensorFlow and PyTorch;
 * Text classification on Keras and PyTorch;
-* Text ranking and morpho-tagging on Keras;
 * All other models on TensorFlow.
 
 First, follow the instructions on :doc:`Installation page </intro/installation>`

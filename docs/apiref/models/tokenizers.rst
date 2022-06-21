@@ -1,8 +1,6 @@
 deeppavlov.models.tokenizers
 ============================
 
-.. autoclass:: deeppavlov.models.tokenizers.lazy_tokenizer.LazyTokenizer
-
 .. autoclass:: deeppavlov.models.tokenizers.nltk_moses_tokenizer.NLTKMosesTokenizer
 
     .. automethod:: __call__
