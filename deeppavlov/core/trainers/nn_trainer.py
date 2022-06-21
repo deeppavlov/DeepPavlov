@@ -27,6 +27,7 @@ from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics, NumpyArrayEncoder
 from deeppavlov.core.common.log_events import get_tb_writer
 log = getLogger(__name__)
+report_log = getLogger('train_report')
 
 
 @register('nn_trainer')
@@ -212,7 +213,7 @@ class NNTrainer(FitTrainer):
 
         self._send_event(event_name='after_validation', data=report)
         report = {'valid': report}
-        log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        report_log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
         self.validation_number += 1
 
     def _log(self, iterator: DataLearningIterator,
@@ -250,7 +251,7 @@ class NNTrainer(FitTrainer):
         self._send_event(event_name='after_train_log', data=report)
 
         report = {'train': report}
-        log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        report_log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
 
     def _send_event(self, event_name: str, data: Optional[dict] = None) -> None:
         report = {

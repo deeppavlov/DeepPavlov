@@ -29,6 +29,7 @@ from deeppavlov.core.models.estimator import Estimator
 from deeppavlov.core.trainers.utils import Metric, parse_metrics, prettify_metrics, NumpyArrayEncoder
 
 log = getLogger(__name__)
+report_log = getLogger('train_report')
 
 
 @register('fit_trainer')
@@ -219,6 +220,6 @@ class FitTrainer:
             data_gen = iterator.gen_batches(self.batch_size, data_type=data_type, shuffle=False)
             report = self.test(data_gen)
             res[data_type] = report
-            log.info(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
+            report_log.info(json.dumps({data_type: report}, ensure_ascii=False, cls=NumpyArrayEncoder))
 
         return res
