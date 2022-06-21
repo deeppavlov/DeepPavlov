@@ -267,14 +267,6 @@ PARAMS = {
         ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger": {
-        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "syntax_tagger": {
-        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "squad"]}  # marks defined in pytest.ini

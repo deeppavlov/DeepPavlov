@@ -1,30 +1,8 @@
 {
-  "UD_pymorphy_lemmatizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
-  ],
   "answer_types_extractor": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
-  ],
-  "bert_ner_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bert_sequence_network": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bert_sequence_tagger": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "bert_syntax_parser": [
-    "{DEEPPAVLOV_PATH}/requirements/bert_dp.txt",
-    "{DEEPPAVLOV_PATH}/requirements/tf.txt"
-  ],
-  "chu_liu_edmonds_transformer": [
-    "{DEEPPAVLOV_PATH}/requirements/syntax_parser.txt"
   ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
@@ -49,9 +27,6 @@
   "ner_chunker": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-  ],
-  "pymorphy_vectorizer": [
-    "{DEEPPAVLOV_PATH}/requirements/morpho_tagger.txt"
   ],
   "query_generator": [
     "{DEEPPAVLOV_PATH}/requirements/bs4.txt",

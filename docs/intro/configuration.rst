@@ -316,9 +316,6 @@ Tokenizers
 Tokenizer is a component that processes batch of samples (each sample is a text
 string).
 
-    - :class:`~deeppavlov.models.tokenizers.lazy_tokenizer.LazyTokenizer`
-      (registered as ``lazy_tokenizer``) tokenizes using ``nltk.word_tokenize``.
-
     - :class:`~deeppavlov.models.tokenizers.nltk_tokenizer.NLTKTokenizer`
       (registered as ``nltk_tokenizer``) tokenizes using tokenizers from
       ``nltk.tokenize``, e.g. ``nltk.tokenize.wordpunct_tokenize``.

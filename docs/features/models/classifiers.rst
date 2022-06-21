@@ -6,7 +6,7 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/bert>`) builds BERT [4]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
+* **BERT classifier** (see :doc:`here </apiref/models/torch_bert>`) builds BERT [4]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
 
 * **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
 
@@ -107,14 +107,14 @@ BERT (Bidirectional Encoder Representations from Transformers) [4]_ is a Transfo
 and next sentence prediction tasks. This approach showed state-of-the-art results on a wide range of NLP tasks in
 English.
 
-**deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel** (see :doc:`here </apiref/models/bert>`) provides easy to use
+**deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel** (see :doc:`here </apiref/models/torch_bert>`) provides easy to use
 solution for classification problem using pre-trained BERT.
 Several **pre-trained English, multi-lingual and Russian BERT** models are provided in
 :doc:`our BERT documentation </features/models/bert>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
 ``deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor``
-and ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` (see :doc:`here </apiref/models/bert>`).
+and ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` (see :doc:`here </apiref/models/torch_bert>`).
 The ``deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`` class supports any Transformer-based model.
 
 Non-processed texts should be given to ``torch_transformers_preprocessor`` for tokenization on subtokens,
