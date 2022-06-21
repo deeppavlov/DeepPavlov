@@ -3,8 +3,7 @@
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
 
-DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/), [Keras](https://keras.io/)
-and [PyTorch](https://pytorch.org/).
+DeepPavlov is an open-source conversational AI library built on [PyTorch](https://pytorch.org/).
 
 DeepPavlov is designed for
 * development of production ready chat-bots and complex conversational systems,

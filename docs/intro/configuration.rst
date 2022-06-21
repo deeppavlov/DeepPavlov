@@ -216,8 +216,8 @@ Train Parameters
 ~~~~~~~~~~~~~~~~
 
 ``train`` element can contain a ``class_name`` parameter that references a trainer class (default value is
-:class:`nn_trainer <deeppavlov.core.trainers.NNTrainer>`). All other parameters will be passed as keyword arguments
-to the trainer class's constructor.
+:class:`torch_trainer <deeppavlov.core.trainers.torch_trainer.TorchTrainer>`).
+All other parameters will be passed as keyword arguments to the trainer class's constructor.
 
 
 Metrics
@@ -226,7 +226,7 @@ _______
 .. code:: python
 
     "train": {
-      "class_name": "nn_trainer",
+      "class_name": "torch_trainer",
       "metrics": [
         "f1",
         {

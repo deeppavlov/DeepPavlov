@@ -6,9 +6,7 @@ which are implemented as a number of different **neural networks** or **sklearn 
 Models can be used for binary, multi-class or multi-label classification.
 List of available classifiers (more info see below):
 
-* **BERT classifier** (see :doc:`here </apiref/models/torch_bert>`) builds BERT [4]_ architecture for classification problem on **TensorFlow** or on **PyTorch**.
-
-* **Keras classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on Keras with tensorflow backend.
+* **BERT classifier** (see :doc:`here </apiref/models/torch_bert>`) builds BERT [4]_ architecture for classification problem on **PyTorch**.
 
 * **PyTorch classifier** (see :doc:`here </apiref/models/classifiers>`) builds neural network on PyTorch.
 

@@ -40,8 +40,6 @@ log = getLogger(__name__)
 class TorchTransformersMultiplechoicePreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
 
-    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
-
     Args:
         vocab_file: path to vocabulary
         do_lower_case: set True if lowercasing is needed
@@ -117,7 +115,6 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
 @register('torch_transformers_preprocessor')
 class TorchTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
-    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
 
     Args:
         vocab_file: A string, the `model id` of a predefined tokenizer hosted inside a model repo on huggingface.co or
@@ -253,8 +250,6 @@ class TorchTransformersEntityRankerPreprocessor(Component):
 @register('torch_squad_transformers_preprocessor')
 class TorchSquadTransformersPreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
-
-    Check details in :func:`bert_dp.preprocessing.convert_examples_to_features` function.
 
     Args:
         vocab_file: path to vocabulary

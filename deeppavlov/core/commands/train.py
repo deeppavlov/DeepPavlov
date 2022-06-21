@@ -102,7 +102,8 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     if start_epoch_num is not None:
         train_config['start_epoch_num'] = start_epoch_num
 
-    trainer_class = get_model(train_config.pop('class_name', 'nn_trainer'))
+    trainer_class = get_model(train_config.pop('class_name', 'torch_trainer'))
+
     trainer = trainer_class(config['chainer'], **train_config)
 
     if to_train:

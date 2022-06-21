@@ -128,18 +128,9 @@ You can also calculate metrics on the dataset specified in your config file:
 Using GPU
 ~~~~~~~~~
 
-To run or train **TensorFlow**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
-installed on your host machine and TensorFlow with GPU support (``tensorflow-gpu``)
-installed in your python environment. Current supported TensorFlow version is 1.15.5. Run
-
-    .. code:: bash
-
-        pip install tensorflow-gpu==1.15.5
-
-before installing model's package requirements to install supported ``tensorflow-gpu`` version.
-
-To run or train **PyTorch**-based DeepPavlov models on GPU you should also have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 9.0 or 10.0
-installed on your host machine, and install model's package requirements.
+To run or train **PyTorch**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__
+installed on your host machine, and install model's package requirements. CUDA version should be compatible with
+DeepPavlov :dp_file:`required PyTorch version <deeppavlov/requirements/pytorch.txt>`.
 If you want to run the code on GPU, just make the device visible for the script.
 If you want to use a particular device, you may set it in command line:
 
