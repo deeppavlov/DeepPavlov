@@ -17,11 +17,9 @@ import json
 import time
 from itertools import islice
 from logging import getLogger
-from pathlib import Path
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
 from deeppavlov.core.commands.infer import build_model
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
@@ -50,8 +48,6 @@ class FitTrainer:
         evaluation_targets: data types on which to evaluate trained pipeline (default is ``('valid', 'test')``)
         show_examples: a flag used to print inputs, expected outputs and predicted outputs for the last batch
             in evaluation logs (default is ``False``)
-        tensorboard_log_dir: path to a directory where tensorboard logs can be stored, ignored if None
-            (default is ``None``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, ignored if negative
             (default is ``-1``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
@@ -61,7 +57,6 @@ class FitTrainer:
                  metrics: Iterable[Union[str, dict]] = ('accuracy',),
                  evaluation_targets: Iterable[str] = ('valid', 'test'),
                  show_examples: bool = False,
-                 tensorboard_log_dir: Optional[Union[str, Path]] = None,
                  max_test_batches: int = -1,
                  **kwargs) -> None:
         if kwargs:
@@ -72,23 +67,7 @@ class FitTrainer:
         self.metrics = parse_metrics(metrics, self._chainer.in_y, self._chainer.out_params)
         self.evaluation_targets = tuple(evaluation_targets)
         self.show_examples = show_examples
-
         self.max_test_batches = None if max_test_batches < 0 else max_test_batches
-
-        self.tensorboard_log_dir: Optional[Path] = tensorboard_log_dir
-        if tensorboard_log_dir is not None:
-            try:
-                # noinspection PyPackageRequirements
-                # noinspection PyUnresolvedReferences
-                import tensorflow
-            except ImportError:
-                log.warning('TensorFlow could not be imported, so tensorboard log directory'
-                            f'`{self.tensorboard_log_dir}` will be ignored')
-                self.tensorboard_log_dir = None
-            else:
-                self.tensorboard_log_dir = expand_path(tensorboard_log_dir)
-                self._tf = tensorflow
-
         self._built = False
         self._saved = False
         self._loaded = False
@@ -110,37 +89,15 @@ class FitTrainer:
                     targets = [targets]
 
                 if self.batch_size > 0 and callable(getattr(component, 'partial_fit', None)):
-                    writer = None
-
                     for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
                         preprocessed = self._chainer.compute(x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
-                        result = component.partial_fit(*preprocessed)
-
-                        if result is not None and self.tensorboard_log_dir is not None:
-                            if writer is None:
-                                writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
-                                                                         f'partial_fit_{component_index}_log'))
-                            for name, score in result.items():
-                                summary = self._tf.Summary()
-                                summary.value.add(tag='partial_fit/' + name, simple_value=score)
-                                writer.add_summary(summary, i)
-                            writer.flush()
+                        component.partial_fit(*preprocessed)
                 else:
                     preprocessed = self._chainer.compute(*iterator.get_instances(), targets=targets)
                     if len(targets) == 1:
                         preprocessed = [preprocessed]
-                    result: Optional[Dict[str, Iterable[float]]] = component.fit(*preprocessed)
-
-                    if result is not None and self.tensorboard_log_dir is not None:
-                        writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir /
-                                                                 f'fit_log_{component_index}'))
-                        for name, scores in result.items():
-                            for i, score in enumerate(scores):
-                                summary = self._tf.Summary()
-                                summary.value.add(tag='fit/' + name, simple_value=score)
-                                writer.add_summary(summary, i)
-                        writer.flush()
+                    component.fit(*preprocessed)
 
                 component.save()
 
