@@ -70,7 +70,6 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
                                      iterator: Union[DataLearningIterator, DataFittingIterator] = None, *,
                                      to_train: bool = True,
                                      evaluation_targets: Optional[Iterable[str]] = None,
-                                     to_validate: Optional[bool] = None,
                                      download: bool = False,
                                      start_epoch_num: Optional[int] = None,
                                      recursive: bool = False) -> Dict[str, Dict[str, float]]:
@@ -98,21 +97,10 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
 
     if 'train' not in config:
         log.warning('Train config is missing. Populating with default values')
-    train_config = config.get('train')
+    train_config = config.get('train', {})
 
     if start_epoch_num is not None:
         train_config['start_epoch_num'] = start_epoch_num
-
-    if 'evaluation_targets' not in train_config and ('validate_best' in train_config
-                                                     or 'test_best' in train_config):
-        log.warning('"validate_best" and "test_best" parameters are deprecated.'
-                    ' Please, use "evaluation_targets" list instead')
-
-        train_config['evaluation_targets'] = []
-        if train_config.pop('validate_best', True):
-            train_config['evaluation_targets'].append('valid')
-        if train_config.pop('test_best', True):
-            train_config['evaluation_targets'].append('test')
 
     trainer_class = get_model(train_config.pop('class_name', 'nn_trainer'))
     trainer = trainer_class(config['chainer'], **train_config)
@@ -123,18 +111,7 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     res = {}
 
     if iterator is not None:
-        if to_validate is not None:
-            if evaluation_targets is None:
-                log.warning('"to_validate" parameter is deprecated and will be removed in future versions.'
-                            ' Please, use "evaluation_targets" list instead')
-                evaluation_targets = ['test']
-                if to_validate:
-                    evaluation_targets.append('valid')
-            else:
-                log.warning('Both "evaluation_targets" and "to_validate" parameters are specified.'
-                            ' "to_validate" is deprecated and will be ignored')
-
-        res = trainer.evaluate(iterator, evaluation_targets, print_reports=True)
+        res = trainer.evaluate(iterator, evaluation_targets)
         trainer.get_chainer().destroy()
 
     res = {k: v['metrics'] for k, v in res.items()}
