@@ -46,7 +46,7 @@ def get_tb_writer(tensorboard_log_dir: Optional[str]) -> Optional[TBWriter]:
         else:
             tb_writer = None
     except ImportError:
-        log.error('Failed to import SummaryWriter from torch.utils.tensorboard.Failed to initialize Tensorboard '
+        log.error('Failed to import SummaryWriter from torch.utils.tensorboard. Failed to initialize Tensorboard '
                   'logger. Install appropriate Pytorch version to use this logger or remove tensorboard_log_dir '
                   'parameter from the train parameters list in the configuration file.')
         tb_writer = None
