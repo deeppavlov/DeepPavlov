@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -202,7 +202,6 @@ class TorchTransformersSequenceTagger(TorchModel):
     Args:
         n_tags: number of distinct tags
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
-        return_probas: set this to `True` if you need the probabilities instead of raw answers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
@@ -222,8 +221,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                  n_tags: int,
                  pretrained_bert: str,
                  bert_config_file: Optional[str] = None,
-                 return_probas: bool = False,
-                 return_tags_and_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
@@ -237,8 +234,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                  **kwargs) -> None:
 
         self.n_classes = n_tags
-        self.return_probas = return_probas
-        self.return_tags_and_probas = return_tags_and_probas
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
@@ -303,7 +298,7 @@ class TorchTransformersSequenceTagger(TorchModel):
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
+                 y_masks: Union[List[List[int]], np.ndarray]) -> Tuple[List[List[int]], List[np.ndarray]]:
         """ Predicts tag indices for a given subword tokens batch
 
         Args:
@@ -336,12 +331,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         seq_lengths = np.sum(y_masks, axis=1)
         pred = [p[:l] for l, p in zip(seq_lengths, pred)]
 
-        if self.return_probas:
-            return probas
-        elif self.return_tags_and_probas:
-            return pred, probas
-        else:
-            return pred
+        return pred, probas
 
     @overrides
     def load(self, fname=None):

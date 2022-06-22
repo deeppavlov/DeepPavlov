@@ -77,7 +77,7 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         from deeppavlov.core.commands.infer import build_model
         refs = _refs.copy()
         _refs.clear()
-        config = parse_config(expand_path(config_params['config_path']))
+        config = parse_config(expand_path(config_params['config_path']), config_params.get('overwrite'))
         model = build_model(config, serialized=serialized)
         _refs.clear()
         _refs.update(refs)

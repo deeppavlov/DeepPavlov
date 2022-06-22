@@ -31,7 +31,8 @@
           "x_subword_tokens",
           "x_subword_tok_ids",
           "startofword_markers",
-          "attention_mask"
+          "attention_mask",
+          "tokens_offsets"
         ]
       },
       {
@@ -58,7 +59,6 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
-        "return_probas": false,
         "encoder_layer_ids": [
           -1
         ],
@@ -88,7 +88,8 @@
           "y_ind"
         ],
         "out": [
-          "y_pred_ind"
+          "y_pred_ind",
+          "probas"
         ]
       },
       {

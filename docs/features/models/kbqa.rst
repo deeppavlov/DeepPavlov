@@ -122,7 +122,7 @@ Here are the models we've trained for complex question answering:
 
 * :config:`query_pr <classifiers/query_pr.json>` - classification model for prediction of query template type,
 
-* :config:`entity_detection <ner/ner_ontonotes_bert_probas.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
+* :config:`entity_detection <ner/ner_ontonotes_bert.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
 
 * :config:`rel_ranking <ranking/rel_ranking_bert_en.json>` - model for ranking of candidate relations and candidate_relation_paths for the question,
 

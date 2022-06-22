@@ -459,7 +459,6 @@ class TorchTransformersNerPreprocessor(Component):
                  token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  subword_mask_mode: str = "first",
-                 return_offsets: bool = False,
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -474,7 +473,6 @@ class TorchTransformersNerPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
-        self.return_offsets = return_offsets
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
@@ -542,10 +540,7 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
                 return tokens, subword_tokens, subword_tok_ids, \
                        attention_mask, startofword_markers, nonmasked_tags
-        if self.return_offsets:
-            return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
-        else:
-            return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
+        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],

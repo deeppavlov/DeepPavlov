@@ -17,7 +17,6 @@
         "max_seq_length": 512,
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
-        "return_offsets": true,
         "in": ["x"],
         "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
@@ -37,7 +36,6 @@
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{TRANSFORMER}",
         "attention_probs_keep_prob": 0.5,
-        "return_tags_and_probas": true,
         "encoder_layer_ids": [-1],
         "optimizer": "AdamW",
         "optimizer_parameters": {
@@ -111,6 +109,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/rus_dream_entity_detection/wiki_ner_rus_bert.tar.gz",
         "subdir": "{MODELS_PATH}/wiki_ner_rus_bert"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/wiki_ner_rus/wiki_ner_rus_dataset.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wiki_ner_rus"
       }
     ]
   }
