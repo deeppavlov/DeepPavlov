@@ -42,7 +42,7 @@ Here is the list of all available configs:
     | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
     | :config:`ner_mbert_dream_distil <ner/ner_mbert_dream_distil.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
-    |                                                                        | Collection3        | En+Ru    | 700 MB          |   1.6 GB   |   96.4     |
+    |                                                                        | Collection3        |          |                 |            |   96.4     |
     +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
