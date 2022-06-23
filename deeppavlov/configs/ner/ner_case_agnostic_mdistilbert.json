@@ -94,11 +94,11 @@
             "DOWNLOADS_PATH": "~/.deeppavlov/downloads",
             "MODELS_PATH": "~/.deeppavlov/models",
             "TRANSFORMER": "distilbert-base-multilingual-cased",
-            "MODEL_PATH": "{MODELS_PATH}/ner/ner_mbert_dream_distil"
+            "MODEL_PATH": "{MODELS_PATH}/ner/ner_case_agnostic_mdistilbert"
         },
         "download": [
             {
-                "url": "http://files.deeppavlov.ai/v1/ner/ner_mbert_dream_distil.tar.gz",
+                "url": "http://files.deeppavlov.ai/v1/ner/ner_case_agnostic_mdistilbert.tar.gz",
                 "subdir": "{MODELS_PATH}"
             }
         ]
