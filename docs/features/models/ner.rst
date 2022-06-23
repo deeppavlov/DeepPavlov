@@ -30,20 +30,20 @@ Here is the list of all available configs:
 .. table::
     :widths: auto
 
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | Model                                                                  | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
-    +========================================================================+====================+==========+=================+============+============+
-    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`   | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
-    +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`             |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
-    +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`ner_mbert_dream_distil <ner/ner_mbert_dream_distil.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
-    |                                                                        | Collection3        |          |                 |            |   96.4     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | Model                                                                                | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
+    +======================================================================================+====================+==========+=================+============+============+
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                       | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                 | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`                           |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`                           | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
+    |                                                                                      | Collection3        |          |                 |            |   96.4     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
 
@@ -311,9 +311,9 @@ It has been shown that multilingual BERT can be successfully used for cross-ling
 performing on datasets in various languages with scores comparable to those obtained with language-specific models.  
 
 
-The model :config:`ner_mbert_dream_distil <ner/ner_mbert_dream_distil.json>` was trained on 
+The model :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>` was trained on 
 on a concatenation of original and lowered datasets to solve the task. Our model achieves 
-the highest average result on CoNLL-2003 and Collection 3 datasets while being robust to missing casing.
+89.5 F1 on CoNLL-2003 and 96.4 F1 on Collection 3 datasets while being robust to missing casing.
 
 
 Literature
