@@ -127,7 +127,44 @@ Neural Networks on PyTorch
 
 **deeppavlov.models.classifiers.TorchClassificationModel** (see :doc:`here </apiref/models/classifiers>`)
 could be used for implementation of different neural network configurations for classification task.
-An instruction of how to build your own architecture on PyTorch one may find :doc:`here </intro/choose_framework>`.
+
+If you want to build your own architecture for **text classification** tasks, do the following:
+
+    .. code:: python
+
+        from deeppavlov.models.classifiers.torch_classification_model import TorchTextClassificationModel
+
+        class MyModel(TorchTextClassificationModel):
+
+            def my_network_architecture(self, **kwargs):
+                model = <create Torch model using parameters from kwargs>
+                return model
+
+In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"``
+and ``"model_name": "my_network_architecture"`` in the dictionary with the main model.
+
+If you want to build your own **PyTorch**-based model for **some other NLP** task, do the following:
+
+    .. code:: python
+
+        from deeppavlov.core.models.torch_model import TorchModel
+
+        class MyModel(TorchModel):
+
+            def train_on_batch(x, y, *args, **kwargs):
+                <your code here>
+                return loss
+
+            def __call__(data, *args, **kwargs):
+                <your code here>
+                return predictions
+
+            def my_network_architecture(self, **kwargs):
+                model = <create Torch model using parameters from kwargs>
+                return model
+
+In the config file, assign ``"class_name": "module.path.to.my.model.file:MyModel"``
+and ``"model_name": "my_network_architecture"`` in the dictionary with the main model.
 
 Sklearn models
 --------------
