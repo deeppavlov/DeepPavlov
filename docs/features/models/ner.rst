@@ -49,9 +49,9 @@ Models can be used from Python using the following code:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert, download=True)
+    ner_model = build_model('ner_ontonotes_bert', download=True)
 
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
@@ -60,22 +60,21 @@ The model also can be trained from the Python:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
 
-    ner_model = train_model(configs.ner.ner_ontonotes_bert)
+    ner_model = train_model('ner_ontonotes_bert')
 
 The data for training should be placed in the folder provided in the config:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
     from deeppavlov.core.commands.utils import parse_config
-    
-    
-    config_dict = parse_config(configs.ner.ner_ontonotes_bert)
+
+    config_dict = parse_config('ner_ontonotes_bert')
 
     print(config_dict['dataset_reader']['data_path'])
-    >>> '~/.deeppavlov/downloads/ontonotes'
+    >>> '~/.deeppavlov/downloads/ontonotes/'
 
 There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changed from code.
 The format of the data is described in the `Training data`_ section.
@@ -106,9 +105,9 @@ The following Python code can be used to infer the model:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
+    ner_model = build_model('ner_ontonotes_bert_mult', download=True)
 
     ner_model(['Curling World Championship will be held in Antananarivo'])
     >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
