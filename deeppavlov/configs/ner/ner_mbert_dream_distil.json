@@ -8,9 +8,7 @@
         "class_name": "data_learning_iterator"
     },
     "chainer": {
-        "in": [
-            "x"
-        ],
+        "in": ["x"],
         "in_y": [
             "y"
         ],
