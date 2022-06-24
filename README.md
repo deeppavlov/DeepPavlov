@@ -3,8 +3,7 @@
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
 
-DeepPavlov is an open-source conversational AI library built on [TensorFlow](https://www.tensorflow.org/), [Keras](https://keras.io/)
-and [PyTorch](https://pytorch.org/).
+DeepPavlov is an open-source conversational AI library built on [PyTorch](https://pytorch.org/).
 
 DeepPavlov is designed for
 * development of production ready chat-bots and complex conversational systems,
@@ -106,29 +105,8 @@ evaluate and infer it:
 
 #### GPU requirements
 
-To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) 10.0
-installed on your host machine and TensorFlow with GPU support (`tensorflow-gpu`)
-installed in your python environment. Current supported TensorFlow version is 1.15.2.
-Run
-
-```
-pip install tensorflow-gpu==1.15.2
-```
-
-before installing model's package requirements to install supported `tensorflow-gpu` version.
-
-
-Before making choice of an interface, install model's package requirements
-(CLI):
-
-```bash
-python -m deeppavlov install <config_path>
-```
-
-* where `<config_path>` is path to the chosen model's config file (e.g.
-  `deeppavlov/configs/classifiers/insults_kaggle_bert.json`) or just name without
-  *.json* extension (e.g. `insults_kaggle_bert`)
-
+To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) compatible
+with used GPU and [library PyTorch version](deeppavlov/requirements/pytorch.txt).
 
 ### Command line interface (CLI)
 

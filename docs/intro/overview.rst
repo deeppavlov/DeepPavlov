@@ -48,8 +48,5 @@ the input and output of a ``Skill`` should both be strings.
 Therefore, ``Skill``\ s are usually associated with
 dialogue tasks.
 
-DeepPavlov is built on top of the machine learning frameworks
-`TensorFlow <https://www.tensorflow.org/>`__,
-`Keras <https://keras.io/>`__ and `PyTorch <https://www.pytorch.org/>`__. Other external libraries can be used to
-build basic components.
-
+Most of DeepPavlov models are built on top of `PyTorch <https://www.pytorch.org/>`__.
+Other external libraries can be used to build basic components.

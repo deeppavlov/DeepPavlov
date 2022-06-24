@@ -21,11 +21,11 @@
     "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
   ],
   "ner_chunk_model": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ner_chunker": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "query_generator": [
@@ -38,15 +38,15 @@
   ],
   "re_classifier": [
     "{DEEPPAVLOV_PATH}/requirements/opt_einsum.txt",
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "re_postprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "re_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "rel_ranking_infer": [
@@ -55,7 +55,7 @@
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
   ],
   "rel_ranking_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ru_adj_to_noun": [
@@ -81,74 +81,74 @@
     "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
   ],
   "torch_bert_ranker": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_bert_ranker_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_record_postprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_squad_transformers_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_text_classification_model": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt"
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt"
   ],
   "torch_transformers_classifier": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_el_ranker": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_entity_ranker_infer": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_entity_ranker_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_multiplechoice": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_multiplechoice_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_ner_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_sequence_tagger": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_squad": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torchtext_classification_data_reader": [
     "{DEEPPAVLOV_PATH}/requirements/torchtext.txt"
   ],
   "transformers_bert_embedder": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "transformers_bert_preprocessor": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch16.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "tree_to_sparql": [

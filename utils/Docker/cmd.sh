@@ -4,13 +4,6 @@ set -e
 
 pip install .[tests,docs]
 
-if [ $(python -c 'import sys; print(sys.version_info[1])') -le 7 ]
-then
-  pip install -r deeppavlov/requirements/tf-gpu.txt
-else
-  rm tests/test_tf_layers.py
-fi
-
 rm -rf `find . -mindepth 1 -maxdepth 1 ! -name tests ! -name Jenkinsfile ! -name docs`
 
 cd docs
