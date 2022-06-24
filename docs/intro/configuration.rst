@@ -221,7 +221,8 @@ Each metric can be described as a JSON object with ``name``, ``alias`` and ``inp
     Default value is a concatenation of chainer's ``in_y`` and ``out`` parameters.
 
 All other arguments are interpreted as kwargs when the metric is called.
-If a metric is described as a single string, this string is interpreted as a registered name.
+If a metric is given as a string, this string is interpreted as a metric name, i.e. ``"f1"`` in the example
+above is equivalent to ``{"name": "f1"}``.
 
 
 DatasetReader
