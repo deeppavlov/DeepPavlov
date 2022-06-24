@@ -29,7 +29,6 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "query_generator": [
-    "{DEEPPAVLOV_PATH}/requirements/bs4.txt",
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
