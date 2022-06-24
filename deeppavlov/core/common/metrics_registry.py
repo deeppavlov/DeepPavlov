@@ -34,11 +34,13 @@ def fn_from_str(name: str) -> Callable[..., Any]:
     """Returns a function object with the name given in string."""
     try:
         module_name, fn_name = name.split(':')
+        return getattr(importlib.import_module(module_name), fn_name)
     except ValueError:
         raise ConfigError('Expected function description in a `module.submodules:function_name` form, but got `{}`'
                           .format(name))
-
-    return getattr(importlib.import_module(module_name), fn_name)
+    except AttributeError:
+        # noinspection PyUnboundLocalVariable
+        raise ConfigError(f"Incorrect metric: '{module_name}' has no attribute '{fn_name}'.")
 
 
 def register_metric(metric_name: str) -> Callable[..., Any]:
