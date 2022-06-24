@@ -27,6 +27,9 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
+  "nltk_moses_tokenizer": [
+    "{DEEPPAVLOV_PATH}/requirements/sacremoses.txt"
+  ],
   "query_generator": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
