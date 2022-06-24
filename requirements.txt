@@ -18,7 +18,6 @@ ruamel.yaml<=0.17.20
 scikit-learn>=0.24,<=1.0.2
 scipy<=1.7.3
 tqdm<=4.62.3
-click<=8.0.3
 uvicorn<=0.17.4
 sacremoses<=0.0.47
 uvloop<=0.14.0; python_version=="3.6"
