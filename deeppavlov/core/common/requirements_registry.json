@@ -1,8 +1,7 @@
 {
   "answer_types_extractor": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
@@ -32,7 +31,6 @@
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt",
     "{DEEPPAVLOV_PATH}/requirements/whapi.txt"
   ],
   "re_classifier": [
@@ -50,8 +48,7 @@
   ],
   "rel_ranking_infer": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
+    "{DEEPPAVLOV_PATH}/requirements/hdt.txt"
   ],
   "rel_ranking_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
@@ -76,8 +73,7 @@
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "stream_spacy_tokenizer": [
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/spacy.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
   ],
   "torch_bert_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
