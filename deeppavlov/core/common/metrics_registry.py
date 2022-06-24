@@ -22,7 +22,6 @@ from deeppavlov.core.common.errors import ConfigError
 
 log = getLogger(__name__)
 
-
 _registry_path = Path(__file__).parent / 'metrics_registry.json'
 if _registry_path.exists():
     with _registry_path.open(encoding='utf-8') as f:

@@ -202,22 +202,26 @@ _______
           "inputs": ["y", "y_labels"]
         },
         {
-          "name": "roc_auc",
-          "inputs": ["y", "y_probabilities"]
+          "name": "sklearn.metrics:accuracy_score",
+          "alias": "unnormalized_accuracy",
+          "inputs": ["y", "y_labels"],
+          "normalize": false
         }
       ],
       ...
     }
 
-| The first metric in the list is used for early stopping.
-|
-| Each metric can be described as a JSON object with ``name`` and ``inputs`` properties, where ``name``
-  is a registered name of a metric function and ``inputs`` is a list of parameter names from chainer's
-  inner memory that will be passed to the metric function.
-|
-| If a metric is described as a single string, this string is interpreted as a registered name.
-|
-| Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
+The first metric in the list is used for early stopping.
+
+Each metric can be described as a JSON object with ``name``, ``alias`` and ``inputs`` properties, where:
+
+  - ``name`` is either a registered name of a metric function or ``module.submodules:function_name``.
+  - ``alias`` is a metric name. Default value is ``name`` value.
+  - ``inputs`` is a list of parameter names from chainer's inner memory that will be passed to the metric function.
+    Default value is a concatenation of chainer's ``in_y`` and ``out`` parameters.
+
+All other arguments are interpreted as kwargs when the metric is called.
+If a metric is described as a single string, this string is interpreted as a registered name.
 
 
 DatasetReader
