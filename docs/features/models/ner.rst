@@ -308,7 +308,7 @@ Although capitalisation is an important feature for the Named Entity Recognition
 the NER input data is not always cased, for example, virtual assistants data coming from ASR. 
 Moreover, while developing virtual assistants there is often a need to support interaction in several languages. 
 It has been shown that multilingual BERT can be successfully used for cross-lingual transfer, 
-performing on datasets in various languages with scores comparable to those obtained with language-specific models.  
+performing on datasets in various languages with scores comparable to those obtained with language-specific models.
 
 
 The model :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>` was trained on 
