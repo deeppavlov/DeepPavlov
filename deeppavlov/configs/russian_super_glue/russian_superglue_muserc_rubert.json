@@ -29,7 +29,8 @@
         "class_name": "huggingface_dataset_iterator",
         "features": [
             "context",
-            "answer"
+            "answer",
+	    "idx"
         ],
         "label": "label",
         "seed": 42
