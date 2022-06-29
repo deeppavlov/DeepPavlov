@@ -127,7 +127,7 @@
         ]
     },
     "train": {
-        "batch_size": 16,
+        "batch_size": 4,
         "metrics": [
             "accuracy"
         ],
@@ -135,6 +135,7 @@
         "validation_patience": 10,
         "val_every_n_epochs": 1,
         "log_every_n_epochs": 1,
+	"val_every_n_batches": 1000,
         "show_examples": false,
         "evaluation_targets": [
             "valid"
