@@ -47,7 +47,7 @@
                 "class_name": "torch_transformers_preprocessor",
                 "vocab_file": "{BASE_MODEL}",
                 "do_lower_case": false,
-                "max_seq_length": 256,
+                "max_seq_length": 512,
                 "in": [
                     "question",
                     "passage"
@@ -130,7 +130,7 @@
         ]
     },
     "train": {
-        "batch_size": 16,
+        "batch_size": 4,
         "metrics": [
             "accuracy"
         ],
