@@ -30,25 +30,28 @@ Here is the list of all available configs:
 .. table::
     :widths: auto
 
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | Model                                                                  | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
-    +========================================================================+====================+==========+=================+============+============+
-    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                         | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`   | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
-    +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`             |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
-    +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | Model                                                                                | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
+    +======================================================================================+====================+==========+=================+============+============+
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                       | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                 | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`                           |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`                           | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
+    |                                                                                      | Collection3        |          |                 |            |   96.4     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert, download=True)
+    ner_model = build_model('ner_ontonotes_bert', download=True)
 
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
@@ -57,21 +60,21 @@ The model also can be trained from the Python:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
 
-    ner_model = train_model(configs.ner.ner_ontonotes_bert)
+    ner_model = train_model('ner_ontonotes_bert')
 
 The data for training should be placed in the folder provided in the config:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
     from deeppavlov.core.commands.utils import parse_config
-    
-    config_dict = parse_config(configs.ner.ner_ontonotes_bert)
+
+    config_dict = parse_config('ner_ontonotes_bert')
 
     print(config_dict['dataset_reader']['data_path'])
-    >>> '~/.deeppavlov/downloads/ontonotes'
+    >>> '~/.deeppavlov/downloads/ontonotes/'
 
 There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changed from code.
 The format of the data is described in the `Training data`_ section.
@@ -102,9 +105,9 @@ The following Python code can be used to infer the model:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult, download=True)
+    ner_model = build_model('ner_ontonotes_bert_mult', download=True)
 
     ner_model(['Curling World Championship will be held in Antananarivo'])
     >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
@@ -297,6 +300,19 @@ The model also can be trained from scratch by using the command:
 
 
 
+Multilingual Case-insensitive Named Entity Recognition
+------------------------------------------------------
+
+Although capitalisation is an important feature for the Named Entity Recognition (NER) task, 
+the NER input data is not always cased, for example, virtual assistants data coming from ASR. 
+Moreover, while developing virtual assistants there is often a need to support interaction in several languages. 
+It has been shown that multilingual BERT can be successfully used for cross-lingual transfer, 
+performing on datasets in various languages with scores comparable to those obtained with language-specific models.
+
+
+The model :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>` was trained on 
+on a concatenation of original and lowered datasets to solve the task. Our model achieves 
+89.5 F1 on CoNLL-2003 and 96.4 F1 on Collection 3 datasets while being robust to missing casing.
 
 
 Literature
