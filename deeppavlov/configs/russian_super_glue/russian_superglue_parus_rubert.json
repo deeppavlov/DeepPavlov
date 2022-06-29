@@ -46,7 +46,7 @@
                 "class_name": "torch_transformers_multiplechoice_preprocessor",
                 "vocab_file": "{BASE_MODEL}",
                 "do_lower_case": false,
-                "max_seq_length": 64,
+                "max_seq_length": 256,
                 "in": [
                     "contexts_list",
                     "choices_list"
@@ -90,7 +90,7 @@
                 "load_path": "{MODEL_PATH}/model",
                 "optimizer": "AdamW",
                 "optimizer_parameters": {
-                    "lr": 2e-05
+                    "lr": 4e-05
                 },
                 "in": [
                     "bert_features"
@@ -127,7 +127,7 @@
         ]
     },
     "train": {
-        "batch_size": 64,
+        "batch_size": 4,
         "metrics": [
             "accuracy"
         ],

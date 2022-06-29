@@ -130,7 +130,7 @@
         ]
     },
     "train": {
-        "batch_size": 16,
+        "batch_size": 4,
         "metrics": [
             "accuracy"
         ],
