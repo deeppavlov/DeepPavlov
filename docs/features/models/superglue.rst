@@ -1,12 +1,10 @@
 Russian SuperGlue Submission
 ==========================================
-The DeepPavlov library provides a way to train your Russian SuperGlue model and submit the results in a couple of easy steps.     
+The DeepPavlov library provides a way to train your Russian SuperGlue model and submit the results to the leaderboard in a couple of easy steps.     
 
 Task definition
 ---------------
-`Russian SuperGlue <https://russiansuperglue.com/>`__ is a benchmark that contains a set of tasks in Russian developed for models evaluating. 
-It is similar to `the English analog <https://super.gluebenchmark.com/>`__ and is aimed to 
-You can train your own models using the DeepPavlov library and easily create files with predictions to submit them to leaderboard. 
+`Russian SuperGlue <https://russiansuperglue.com/>`__ is a benchmark that contains a set of tasks in Russian developed for evaluating a general language understanding.
 
 There are 9 tasks in the Russian SuperGlue set:
 
@@ -35,12 +33,12 @@ in which syntactic ambiguity is resolved differently. The model is trained to pr
 For more detailed description of each task see `this <https://russiansuperglue.com/tasks/>`__.
 
 Train your model
-------
+----------------
 Modify the configuration file you need and train your own model for the task (see :doc:`here </intro/quick_start>` 
-for more detailed instructions). The full list of models designed for each task can be found in the :ref:`Scores` table.
+for more detailed instructions). The full list of models designed for each task can be found in the table below.
 
 Create your submission files
-------
+----------------------------
 To do that, use the `predict` command with the name of the configuration file that defines the path to your model. 
 Note that the name of the Russian SuperGlue task should be defined in the ``["metadata"]["variables"]["TASK"]`` variable in the config file. 
 
