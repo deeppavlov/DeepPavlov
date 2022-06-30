@@ -122,6 +122,13 @@ PARAMS = {
         ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
+    "russian_super_glue":{
+            ("russian_super_glue/russian_superglue_danetqa_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+            ("russian_super_glue/russian_superglue_terra_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+            ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+            ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+            ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+            },
     "distil": {
         ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -129,10 +136,16 @@ PARAMS = {
         ("classifiers/rusentiment_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
     },
+    "russian_super_glue":{                      
+        ("russian_super_glue/russian_superglue_danetqa_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_terra_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+    }, 
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
             [
@@ -268,6 +281,14 @@ PARAMS = {
         ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
+    "morpho_tagger": {
+        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
+            [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "squad"]}  # marks defined in pytest.ini
@@ -293,6 +314,16 @@ def _override_with_test_values(item: Union[dict, list]) -> None:
     for child in item:
         if isinstance(child, (dict, list)):
             _override_with_test_values(child)
+
+
+def skip_tf_config(config_path):
+    src_file = src_dir / config_path
+    if not src_file.is_file():
+        src_file = test_src_dir / config_path
+    requirements = {Path(req).name for req in get_config_requirements(src_file)}
+    config_uses_tf = bool(requirements & {'tf.txt', 'tf-gpu.txt', 'tf-hub.txt'})
+    if config_uses_tf and SKIP_TF:
+        pytest.skip("Skipping test as config requires tensorflow")
 
 
 def download_config(config_path):
@@ -515,6 +546,7 @@ class TestQuickStart(object):
             p.wait()
 
     def test_inferring_pretrained_model(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             config_file_path = str(test_configs_path.joinpath(conf_file))
             install_config(config_file_path)
@@ -525,12 +557,14 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_api(test_configs_path / conf_file)
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
@@ -540,6 +574,7 @@ class TestQuickStart(object):
             pytest.skip(f"Unsupported mode: {mode}")
 
     def test_serialization(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'SR' not in mode:
             return pytest.skip("Unsupported mode: {}".format(mode))
 
@@ -563,6 +598,7 @@ class TestQuickStart(object):
             raise exc
 
     def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
+        skip_tf_config(conf_file)
         if 'TI' in mode:
             c = test_configs_path / conf_file
             model_path = download_path / model_dir
