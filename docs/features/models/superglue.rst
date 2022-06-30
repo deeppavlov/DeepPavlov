@@ -76,6 +76,3 @@ The scores for DeepPavlov's pretrained models on the tasks are presented in the 
 +-------------------------------------------------------------------------------------------------------+----------------+-----------------+
 |  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_terra_rubert.json>`  |    Accuracy    |      0.65       |
 +-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-
-
-
