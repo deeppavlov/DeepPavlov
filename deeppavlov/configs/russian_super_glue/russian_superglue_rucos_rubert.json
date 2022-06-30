@@ -8,7 +8,6 @@
             "COMPETITION": "russian_super_glue",
             "TASK": "rucos",
             "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}",
-            "BINARY_CLASSIFICATION": false,
             "SEED": 42
         },
         "download": [
@@ -52,7 +51,6 @@
                 "class_name": "torch_transformers_classifier",
                 "n_classes": 2,
                 "return_probas": true,
-                "is_binary": "{BINARY_CLASSIFICATION}",
                 "pretrained_bert": "{BASE_MODEL}",
                 "save_path": "{MODEL_PATH}/model",
                 "load_path": "{MODEL_PATH}/model",

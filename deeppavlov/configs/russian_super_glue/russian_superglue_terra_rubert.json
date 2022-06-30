@@ -7,8 +7,7 @@
             "TASK": "terra",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}",
-            "BINARY_CLASSIFICATION": false
+            "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
         },
         "download": [
             {
@@ -79,7 +78,6 @@
                 "in": ["y_pred_probas"],
                 "out": ["y_pred_ids"],
                 "class_name": "proba2labels",
-                "is_binary": "{BINARY_CLASSIFICATION}",
                 "max_proba": true
             },
             {

@@ -7,8 +7,7 @@
             "MODELS_PATH": "{ROOT_PATH}/models",
             "COMPETITION": "russian_super_glue",
             "TASK": "muserc",
-            "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}",
-            "BINARY_CLASSIFICATION": false
+            "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
         },
         "download": [
             {
@@ -64,7 +63,6 @@
                 "n_classes": "#classes_vocab.len",
                 "return_probas": true,
                 "pretrained_bert": "{BASE_MODEL}",
-                "is_binary": "{BINARY_CLASSIFICATION}",
                 "save_path": "{MODEL_PATH}/model",
                 "load_path": "{MODEL_PATH}/model",
                 "optimizer": "AdamW",
