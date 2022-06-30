@@ -16,12 +16,13 @@ import json
 import jsonlines
 import pickle
 import sys
+
+import numpy as np
+from tqdm import tqdm
+from pathlib import Path
 from itertools import islice
 from logging import getLogger
-from pathlib import Path
 from typing import Iterable, Optional, Union, Any
-from tqdm import tqdm
-import numpy as np
 from collections import defaultdict
 
 from deeppavlov.core.commands.utils import import_packages, parse_config
@@ -125,7 +126,7 @@ def write_to_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
     with jsonlines.open(filepath, mode='w') as writer:
         writer.write_all(data) 
     
-    print(f'Prediction saved to {filepath}')
+    log.info(f'Prediction saved to {filepath}')
     
 
 def predict_on_stream(config: Union[str, Path, dict],
@@ -155,7 +156,7 @@ def predict_on_stream(config: Union[str, Path, dict],
         entities_list = []
         predictions = []
 
-        for idx, (x, _) in enumerate(data_gen): 
+        for idx, (x, _) in enumerate(tqdm(data_gen)):
             indices = x[0][0]
             queries = x[0][1]
             passages = x[0][2]
@@ -168,9 +169,6 @@ def predict_on_stream(config: Union[str, Path, dict],
             entities_list.append(entities)
             predictions.append(prediction)
 
-            if (idx + 1) % 500 == 0:
-                print(f'{idx + 1} examples done')
-    
         output = defaultdict(
             lambda: {
                 "predicted": [],
@@ -193,7 +191,7 @@ def predict_on_stream(config: Union[str, Path, dict],
             )
 
     elif task_name == 'copa' or task_name == 'parus':
-        for idx, (x, _) in enumerate(data_gen):
+        for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)
             
             if prediction[0] == "choice1":
@@ -203,12 +201,9 @@ def predict_on_stream(config: Union[str, Path, dict],
 
             submission.append({'idx': idx, 'label': label})
 
-            if (idx + 1) % 500 == 0:
-                print(f'{idx + 1} examples done')
-    
     elif task_name == 'muserc' or task_name == 'multirc':
         tmp_output = []
-        for idx, (x, _) in enumerate(data_gen):
+        for idx, (x, _) in enumerate(tqdm(data_gen)):
             contexts = x[0][0]
             answers = x[0][1]
 
@@ -223,9 +218,6 @@ def predict_on_stream(config: Union[str, Path, dict],
                                    question=int(question_ind), 
                                    answer=int(answer_ind), 
                                    label=prediction[0]))
-
-            if (idx + 1) % 500 == 0:
-                print(f'{idx + 1} examples done')
 
         output = {}
         for line in tmp_output:
@@ -264,15 +256,12 @@ def predict_on_stream(config: Union[str, Path, dict],
         submission = [value for _, value in output.items()]
 
     else:
-        for idx, (x, _) in enumerate(data_gen):
+        for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)
 
             while isinstance(prediction, list):
                 prediction = prediction[0]                
 
             submission.append({'idx': idx, 'label': prediction})
-
-            if (idx + 1) % 500 == 0:
-                print(f'{idx + 1} examples done')
 
     write_to_jsonl(submission, task_name)
