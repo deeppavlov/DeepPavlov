@@ -18,6 +18,7 @@ import pexpect
 import pexpect.popen_spawn
 import pytest
 import requests
+import numpy as np
 
 import deeppavlov
 from deeppavlov import build_model
@@ -134,11 +135,16 @@ PARAMS = {
         ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "russian_super_glue":{
+        ("russian_super_glue/russian_superglue_lidirus_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_danetqa_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_terra_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rcb_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): 
+            [(  "1", "Москва центр Московской области",
+                "Москва — столица России, центр Центрального федерального округа и центр Московской области", ['Москва', 'Питер', 'Владивосток'], 3, (1,))]
         },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
