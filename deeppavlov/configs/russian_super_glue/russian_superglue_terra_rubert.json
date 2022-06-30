@@ -7,6 +7,7 @@
             "TASK": "terra",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
+	    "BINARY_CLASSIFICATION": false,
             "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
         },
         "download": [

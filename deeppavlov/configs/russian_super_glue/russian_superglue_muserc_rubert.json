@@ -6,6 +6,7 @@
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
             "COMPETITION": "russian_super_glue",
+            "BINARY_CLASSIFICATION": false,
             "TASK": "muserc",
             "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
         },
@@ -62,6 +63,7 @@
                 "class_name": "torch_transformers_classifier",
                 "n_classes": "#classes_vocab.len",
                 "return_probas": true,
+                "BINARY_CLASSIFICATION": false,
                 "pretrained_bert": "{BASE_MODEL}",
                 "save_path": "{MODEL_PATH}/model",
                 "load_path": "{MODEL_PATH}/model",
