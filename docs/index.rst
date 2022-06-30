@@ -9,6 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
+   Choosing The Framework <intro/choose_framework>
    Models/Skills overview <features/overview>
 
 
@@ -30,13 +31,16 @@ Welcome to DeepPavlov's documentation!
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
    Entity Extraction <features/models/entity_extraction>
+   Morphological Tagger <features/models/morphotagger>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
    Spelling Correction <features/models/spelling_correction>
+   Syntactic Parser <features/models/syntaxparser>
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
+   SuperGlue Submission <features/models/superglue>
 
 
 .. toctree::
