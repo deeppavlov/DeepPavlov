@@ -3,7 +3,7 @@ fastapi>=0.47.0,<0.78.0
 filelock>=3.0.0,<3.8.0
 nltk>=3.2.5,<3.8.0
 numpy
-overrides==5.1.0
+overrides==5.0.1
 pandas>=1.0.0,<1.5.0
 prometheus-client>=0.13.0,<0.15.0
 pydantic
