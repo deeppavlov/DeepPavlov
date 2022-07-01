@@ -18,7 +18,6 @@ import pexpect
 import pexpect.popen_spawn
 import pytest
 import requests
-import numpy as np
 
 import deeppavlov
 from deeppavlov import build_model
@@ -26,7 +25,6 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 

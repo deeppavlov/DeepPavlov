@@ -31,16 +31,14 @@ class HuggingFaceDatasetReader(DatasetReader):
     """
 
     @overrides
-    def read(
-            self,
-            data_path: str,
-            path: str,
-            name: Optional[str] = None,
-            train: Optional[str] = None, #for lidirus with no train
-            valid: Optional[str] = None,
-            test: Optional[str] = None,
-            **kwargs
-    ) -> Dict[str, Dataset]:
+    def read(self,
+             data_path: str,
+             path: str,
+             name: Optional[str] = None,
+             train: Optional[str] = None,  # for lidirus with no train
+             valid: Optional[str] = None,
+             test: Optional[str] = None,
+             **kwargs) -> Dict[str, Dataset]:
         """Wraps datasets.load_dataset method
 
         Args:
@@ -73,13 +71,10 @@ class HuggingFaceDatasetReader(DatasetReader):
             raise ValueError("The number of downsample ratios must be the same as the number of splits")
 
         if path == "russian_super_glue" and "_mixed" in name:
-            dataset = load_dataset(
-                path=path, name=name.replace("_mixed", ""), split=list(split_mapping.values()), **kwargs
-            )
-        else:
-            dataset = load_dataset(
-                path=path, name=name, split=list(split_mapping.values()), **kwargs
-            )
+            name = name.replace("_mixed", "")
+
+        dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
+
         if (path == "super_glue" and name == "copa") or (path == "russian_super_glue" and name == "parus"):
             lang = "en" if name == "copa" else "ru"
             dataset = [
@@ -87,15 +82,11 @@ class HuggingFaceDatasetReader(DatasetReader):
             ]
         elif path == "super_glue" and name == "boolq":
             # danetqa doesn't require the same preprocessing
-            dataset = load_dataset(
-                path=path,
-                name=name,
-                split=interleave_splits(
-                    splits=list(split_mapping.values()),
-                    percentage=percentage
-                ),
-                **kwargs
-            )
+            dataset = load_dataset(path=path,
+                                   name=name,
+                                   split=interleave_splits(splits=list(split_mapping.values()),
+                                                           percentage=percentage),
+                                   **kwargs)
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
         elif (path == "super_glue" and name == "record") or (path == "russian_super_glue" and name == "rucos"):
             label_column = "label"
@@ -190,6 +181,7 @@ def preprocess_copa(examples: Dataset, *, lang: str = "en") -> Dict[str, List[Li
     """COPA preprocessing to be applied by the map function.
     Args:
         examples: an instance of Dataset class
+        lang: task language. Either `en` or `ru`.
     Returns:
         Dict[str, List[List[str]]]: processed features represented as nested
         list with number of elements corresponding to the number of choices
@@ -206,7 +198,7 @@ def preprocess_copa(examples: Dataset, *, lang: str = "en") -> Dict[str, List[Li
             "effect": "Что случилось в результате?",
         }
     else:
-        raise ValueError
+        raise ValueError(f"Incorrect `lang` value '{lang}'. Should be either 'en' or 'ru'.")
 
     num_choices = 2
 
@@ -218,10 +210,8 @@ def preprocess_copa(examples: Dataset, *, lang: str = "en") -> Dict[str, List[Li
 
     choices = [[choice1, choice2] for choice1, choice2 in zip(examples["choice1"], examples["choice2"])]
 
-    return {
-        "contexts": contexts,
-        "choices": choices
-    }
+    return {"contexts": contexts,
+            "choices": choices}
 
 
 def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
@@ -248,9 +238,7 @@ def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
     return {"passage": passages}
 
 
-def preprocess_record(
-        examples: Dataset, *, clean_entities: bool = True
-) -> Dict[str, Union[List[str], List[int]]]:
+def preprocess_record(examples: Dataset, *, clean_entities: bool = True) -> Dict[str, Union[List[str], List[int]]]:
     """ReCoRD preprocessing to be applied by the map function. This transforms the original
     nested structure of the dataset into a flat one. New indices are generated to allow for
     the restoration of the original structure. The resulting dataset amounts to a binary
@@ -313,13 +301,11 @@ def preprocess_record(
     # whether the entity in this example is found in the answers (0 or 1)
     labels: List[int] = []
 
-    for query, passage, list_of_answers, list_of_entities, index in zip(
-            queries,
-            passages,
-            answers,
-            entities,
-            indices,
-    ):
+    for query, passage, list_of_answers, list_of_entities, index in zip(queries,
+                                                                        passages,
+                                                                        answers,
+                                                                        entities,
+                                                                        indices):
         num_candidates: int = len(list_of_entities)
 
         candidate_queries: List[str] = [fill_placeholder(query, entity) for entity in list_of_entities]
@@ -340,13 +326,11 @@ def preprocess_record(
             flat_entities.extend(list_of_entities)
             labels.extend(cur_labels)
 
-    return {
-        "idx": merged_indices,
-        "query": filled_queries,
-        "passage": extended_passages,
-        "entities": flat_entities,
-        "label": labels
-    }
+    return {"idx": merged_indices,
+            "query": filled_queries,
+            "passage": extended_passages,
+            "entities": flat_entities,
+            "label": labels}
 
 
 def add_label_names(dataset: Dataset, label_column: str, label_names: List[str]):
@@ -364,14 +348,12 @@ def add_label_names(dataset: Dataset, label_column: str, label_names: List[str])
     return dataset.cast(new_features)
 
 
-def binary_downsample(
-        dataset: Dataset,
-        ratio: float = 0.,
-        seed: int = 42,
-        label_column: str = "label",
-        *,
-        do_correction: bool = True
-) -> Dataset:
+def binary_downsample(dataset: Dataset,
+                      ratio: float = 0.,
+                      seed: int = 42,
+                      label_column: str = "label",
+                      *,
+                      do_correction: bool = True) -> Dataset:
     """Downsamples a given dataset to the specified negative to positive examples ratio. Only works with
     binary classification datasets with labels denoted as `0` and `1`.
     Args:
@@ -462,19 +444,9 @@ def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> D
     questions: List[str] = examples["question"]
 
     if clean_paragraphs:
-        paragraphs = [
-            re.sub(
-                r"\s+",
-                " ",
-                re.sub(r"\(\d{1,2}\)", "", paragraph).strip()
-            )
-            for paragraph in paragraphs
-        ]
+        paragraphs = [re.sub(r"\s+", " ", re.sub(r"\(\d{1,2}\)", "", paragraph).strip()) for paragraph in paragraphs]
 
-    contexts: List[str] = []
-
-    for paragraph, question in zip(paragraphs, questions):
-        contexts.append(f"{paragraph} {question}")
+    contexts = [f"{paragraph} {question}" for paragraph, question in zip(paragraphs, questions)]
 
     return {"context": contexts}
 
@@ -482,7 +454,5 @@ def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> D
 def preprocess_wsc(dataset: Dataset) -> Dict[str, List[str]]:
     spans1: List[str] = dataset["span1_text"]
     spans2: List[str] = dataset["span2_text"]
-    answers = [
-        f"{s2.capitalize()} {s1}" for s1, s2 in zip(spans1, spans2)
-    ]
+    answers = [f"{s2.capitalize()} {s1}" for s1, s2 in zip(spans1, spans2)]
     return {"answer": answers}
