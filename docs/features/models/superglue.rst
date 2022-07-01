@@ -49,7 +49,7 @@ Note that the name of the Russian SuperGlue task should be defined in the ``["me
 ``-d`` here downloads the required data.
 
 The prediction results will be saved in the correct format and the file will be automatically named with the name required by the system and saved to the current directory. All you have to do next 
-is zip the files you want into one archive and `submit them to leaderboard <https://russiansuperglue.com/guide/>`__.
+is to zip the files you want into one archive and `submit them to leaderboard <https://russiansuperglue.com/guide/>`__.
 
 Scores
 ------
