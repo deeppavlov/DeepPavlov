@@ -95,7 +95,6 @@
   "torch_transformers_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersPreprocessor",
   "torch_transformers_sequence_tagger": "deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger",
   "torch_transformers_squad": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad",
-  "torchtext_classification_data_reader": "deeppavlov.dataset_readers.torchtext_classification_data_reader:TorchtextClassificationDataReader",
   "transformers_bert_embedder": "deeppavlov.models.embedders.transformers_embedder:TransformersBertEmbedder",
   "transformers_bert_preprocessor": "deeppavlov.models.preprocessors.transformers_preprocessor:TransformersBertPreprocessor",
   "tree_to_sparql": "deeppavlov.models.kbqa.tree_to_sparql:TreeToSparql",

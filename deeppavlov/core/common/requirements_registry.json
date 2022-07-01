@@ -138,9 +138,6 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
-  "torchtext_classification_data_reader": [
-    "{DEEPPAVLOV_PATH}/requirements/torchtext.txt"
-  ],
   "transformers_bert_embedder": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
