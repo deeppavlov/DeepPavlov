@@ -1,1 +1,1 @@
-opt-einsum==3.3.0
+opt-einsum==3.3.*
