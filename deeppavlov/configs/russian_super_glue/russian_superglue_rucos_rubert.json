@@ -6,7 +6,6 @@
     "train": "train",
     "valid": "validation",
     "test": "test",
-    "seed": "{SEED}",
     "downsample_ratio": [1.8, 1.8, 1],
     "do_index_correction": false
   },
@@ -14,7 +13,6 @@
     "class_name": "huggingface_dataset_iterator",
     "features": ["idx", "query", "passage", "entities", "num_examples"],
     "label": "label",
-    "seed": "{SEED}",
     "use_label_name": false
   },
   "chainer": {
@@ -101,8 +99,7 @@
       "COMPETITION": "russian_super_glue",
       "BINARY_CLASSIFICATION": false,
       "TASK": "rucos",
-      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}",
-      "SEED": 42
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
     },
     "download": [
       {
