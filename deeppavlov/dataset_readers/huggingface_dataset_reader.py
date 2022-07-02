@@ -440,6 +440,13 @@ def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
 
 
 def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> Dict[str, List[str]]:
+    """Compose strings in form of paragraphs and the folllowing questions.
+    Args:
+        examples: a given dataset
+        clean_paragraphs: whether replace spaces and digits with a single space
+    Returns:
+        Dict[str, List[str]]: composed strings
+    """  
     paragraphs: List[str] = examples["paragraph"]
     questions: List[str] = examples["question"]
 
@@ -452,6 +459,13 @@ def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> D
 
 
 def preprocess_wsc(dataset: Dataset) -> Dict[str, List[str]]:
+    """Forms proper sentences from spans1 that are always entities 
+    and spans2 that describe these entities.
+    Args:
+        dataset: a given dataset
+    Returns:
+        Dict[str, List[str]]: answers that form proper sentences from capitalized spans1 and spans2
+    """
     spans1: List[str] = dataset["span1_text"]
     spans2: List[str] = dataset["span2_text"]
     answers = [f"{s2.capitalize()} {s1}" for s1, s2 in zip(spans1, spans2)]
