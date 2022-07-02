@@ -140,12 +140,9 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): 
-           [[["Моё тело отбрасывает тень на траву. Что было причиной этого?", "Моё тело отбрасывает тень на траву. Что было причиной этого?"]],["Солнце уже поднялось.", "Трава уже подстрижена."], ["choice1"]],
-        ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): 
-            [(  "1", "Москва центр Московской области",
-                "Москва — столица России, центр Центрального федерального округа и центр Московской области", ['Москва', 'Питер', 'Владивосток'], 3, (1,))]
-        },
+        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
+   },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
             [
