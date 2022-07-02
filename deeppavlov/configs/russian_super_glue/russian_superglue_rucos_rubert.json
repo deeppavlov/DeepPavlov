@@ -55,7 +55,7 @@
         "out": ["record_examples"]
       }
     ],
-    "out": ["y_pred_ids"]
+    "out": ["y_pred_probas"]
   },
   "train": {
     "batch_size": 12,
