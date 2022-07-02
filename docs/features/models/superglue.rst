@@ -4,11 +4,11 @@ The DeepPavlov library provides a way to train your Russian SuperGlue models and
 
 Task definition
 ---------------
-`Russian SuperGlue <https://russiansuperglue.com/>`__ is a benchmark that contains a set of tasks in Russian developed for evaluation if the model's general language understanding.
+`Russian SuperGlue <https://russiansuperglue.com/>`__ is a benchmark that contains a set of tasks in Russian developed for evaluating general language understanding.
 
 There are 9 tasks in the Russian SuperGlue set:
 
-`DaNetQA (Yes/no Question Answering Dataset for the Russian)` is a binary classification task of question answering, in which the model is asked to answer a yes/no question based on a given context fragment.  
+`DaNetQA (Yes/no Question Answering Dataset for Russian)` is a binary classification task of question answering, in which the model is asked to answer a yes/no question based on a given context fragment.  
 
 `PARus (Choice of Plausible Alternatives for Russian language)` is a causal reasoning task. The model is asked to choose the most plausible alternative that has causal relation with the given premise.
 
@@ -22,7 +22,7 @@ In the `RuCoS (Russian reading comprehension with Commonsense reasoning)` task t
 `RUSSE (Russian Word-in-Context)` is a reading comprehension task in which the model has to identify whether a given word is used in the same 
 meaning in two different sentences.
 
-In `RWSD (The Russian Winograd Schema Challenge)` the data is a set of sentences that differ with one or two words
+In `RWSD (The Russian Winograd Schema Challenge)` the data is a set of sentences that differ by one or two words
 in which syntactic ambiguity is resolved differently. The model is trained to predict whether it is resolved correctly.
 
 `LiDiRus` is a diagnostic task in which the model has to identify whether there is entailment between two sentences. 
