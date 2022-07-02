@@ -98,7 +98,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/v1/russian_super_glue/russian_superglue_muserc_rubert.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
