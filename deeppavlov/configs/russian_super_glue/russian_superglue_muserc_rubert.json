@@ -14,14 +14,14 @@
     "seed": 42
   },
   "chainer": {
-    "in": ["context", "answer"],
+    "in": ["context", "answer", "idx"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 320,
+        "max_seq_length": 512,
         "in": ["context", "answer"],
         "out": ["bert_features"]
       },
@@ -71,8 +71,8 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 10,
-    "metrics": ["f1"],
+    "batch_size": 8,
+    "metrics": ["roc_auc","f1"],
     "epochs": 10,
     "validation_patience": 10,
     "val_every_n_epochs": 1,
