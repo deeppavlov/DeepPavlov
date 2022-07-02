@@ -17,7 +17,7 @@ import pickle
 from collections import OrderedDict
 from logging import getLogger
 from pathlib import Path
-from typing import Union, Any
+from typing import Union, Any, Iterable, Optional
 
 from ruamel.yaml import YAML
 
@@ -33,6 +33,22 @@ DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
                   "# Automatic name resolving will be disabled in the next release,\n" \
                   "# and if you try to use '{0}' you will get an ERROR.\n" \
                   f"{_sharp_line}{_reset_text_color}\n"
+
+task_name_dict = {
+    'danetqa': 'DaNetQA',
+    'rcb': 'RCB',
+    'parus': 'PARus',
+    'muserc': 'MuSeRC',
+    'rucos': 'RuCoS',
+    'russe': 'RUSSE',
+    'rwsd': 'RWSD',
+    'lidirus': 'LiDiRus',
+    'terra': 'TERRa',
+    'record': 'ReCoRD',
+    'cops': 'COPA',
+    'multirc': 'MultiRC',
+    'boolq': 'BoolQ'
+    }
 
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
@@ -75,3 +91,13 @@ def read_yaml(fpath: Union[str, Path]) -> dict:
     yaml = YAML(typ="safe")
     with open(fpath, encoding='utf8') as fin:
         return yaml.load(fin)
+
+
+def save_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
+    json_name = task_name_dict[task_name]
+    filepath = f'{json_name}.jsonl'
+    with open(filepath, 'w') as f:
+        for item in data:
+            f.write(f"{json.dumps(item)}\n")
+    log.info(f'Prediction saved to {filepath}')
+
