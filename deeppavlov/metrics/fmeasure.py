@@ -198,7 +198,7 @@ def round_f1(y_true, y_predicted):
             y_true = [y == "True" for y in y_true]
             predictions = [y == "True" for y in y_predicted]
         else:
-            predictions = y_predicted
+            raise RuntimeError(f"Unexpectible type for {y_true} and {predictions}")
 
     return f1_score(y_true, predictions)
 
