@@ -423,7 +423,7 @@ def binary_downsample(dataset: Dataset,
         return shuffled_dataset
     # the same logic is not applicable to cases with != 2 classes
     else:
-        raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
+        raise ValueError(f"Only binary classification labels are supported (i.e. [0, 1]), but {dataset_labels} were given")
 
 
 def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
