@@ -30,7 +30,7 @@ DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
                   "# The model '{0}' has been removed from the DeepPavlov configs.\n" \
                   "# The model '{1}' is used instead.\n" \
                   "# To disable this message please switch to '{1}'.\n" \
-                  "# Automatic name resolving will be disabled in the next release,\n" \
+                  "# Automatic name resolving will be disabled in the deeppavlov 1.2.0,\n" \
                   "# and if you try to use '{0}' you will get an ERROR.\n" \
                   f"{_sharp_line}{_reset_text_color}\n"
 
@@ -45,10 +45,10 @@ task_name_dict = {
     'lidirus': 'LiDiRus',
     'terra': 'TERRa',
     'record': 'ReCoRD',
-    'cops': 'COPA',
+    'copa': 'COPA',
     'multirc': 'MultiRC',
     'boolq': 'BoolQ'
-    }
+}
 
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:

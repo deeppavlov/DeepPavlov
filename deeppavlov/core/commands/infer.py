@@ -36,6 +36,7 @@ from deeppavlov.download import deep_download
 
 log = getLogger(__name__)
 
+
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
                 load_trained: bool = False, download: bool = False,
                 serialized: Optional[bytes] = None) -> Chainer:
@@ -101,132 +102,82 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config: Union[str, Path, dict],
-                      batch_size: Optional[int] = None,
-                      file_path: Optional[str] = None,
-                      data_type: Optional[str] = 'test',
-                      iterator: Union[DataLearningIterator, DataFittingIterator] = None) -> None:
+def predict_on_stream(config: Union[str, Path, dict]) -> None:
     """Make a prediction with the component described in corresponding configuration file."""
     config = parse_config(config)
+    data = read_data_by_config(config)
+    iterator = get_iterator_from_config(config, data)
+    task_name = config['dataset_reader']['name']
 
-    if iterator is None:
-        data = read_data_by_config(config)
-        iterator = get_iterator_from_config(config, data)
-
-    data_gen = iterator.gen_batches(1, data_type=data_type, shuffle=False)
-    
-    try:
-        task_name = config['dataset_reader']['name']
-    except KeyError:
-        task_name = 'test'
+    data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
 
     model = build_model(config)
 
     submission = []
 
-    if task_name == 'record' or task_name == "rucos":
-        index_list = []
-        entities_list = []
-        predictions = []
-
-        for idx, (x, _) in enumerate(tqdm(data_gen)):
-            indices = x[0][0]
-            queries = x[0][1]
-            passages = x[0][2]
-            entities = x[0][3]
-            num_examples = x[0][4]
-
-            prediction = model.compute(x)[:, 1]                
-
-            index_list.append(indices)
-            entities_list.append(entities)
-            predictions.append(prediction)
-
+    if task_name in {'record', 'rucos'}:
         output = defaultdict(
             lambda: {
-                "predicted": [],
-                "probability": []
+                'predicted': [],
+                'probability': []
             }
         )
-        
-        for index, entity, prediction in zip(index_list, entities_list, predictions):
-            output[index]["predicted"].append(entity)
-            output[index]["probability"].append(prediction)
-        
+
+        for x, _ in tqdm(data_gen):
+            indices, _, _, entities, _ = x
+            prediction = model.compute(x)[:, 1]
+            output[indices]['predicted'].append(entities)
+            output[indices]['probability'].append(prediction)
+
         for key, value in output.items():
-            answer_index = np.argmax(value["probability"])
-            answer = value["predicted"][answer_index]
-            submission.append(
-                {
-                    "idx": int(key.split("-")[-2]),
-                    "label": answer
-                }
-            )
+            answer_index = np.argmax(value['probability'])
+            answer = value['predicted'][answer_index]
+            submission.append({'idx': int(key.split('-')[1]), 'label': answer})
 
-    elif task_name == 'copa' or task_name == 'parus':
+    elif task_name in {'copa', 'parus'}:
         for idx, (x, _) in enumerate(tqdm(data_gen)):
-            prediction = model.compute(x)
-            
-            if prediction[0] == "choice1":
-                label = 0
-            else:
-                label = 1
-
+            prediction = model.compute(x)[0]
+            label = int(prediction == 'choice2')
             submission.append({'idx': idx, 'label': label})
 
-    elif task_name == 'muserc' or task_name == 'multirc':
-        tmp_output = []
-        for idx, (x, _) in enumerate(tqdm(data_gen)):
-            contexts = x[0][0]
-            answers = x[0][1]
-
-            indices = x[0][2]
-            paragraph_ind = indices['paragraph']
-            question_ind = indices['question']
-            answer_ind = indices['answer']
+    elif task_name in {'muserc', 'multirc'}:
+        output = {}
+        for x, _ in tqdm(data_gen):
+            contexts, answers, indices = x[0]
 
             prediction = model(contexts, answers)
 
-            tmp_output.append(dict(paragraph=int(paragraph_ind), 
-                                   question=int(question_ind), 
-                                   answer=int(answer_ind), 
-                                   label=prediction[0]))
+            paragraph_idx = indices['paragraph']
+            question_idx = indices['question']
+            answer_idx = indices['answer']
 
-        output = {}
-        for line in tmp_output:
-            paragraph_idx = line["paragraph"]
-            question_idx = line["question"]
-            answer_idx = line["answer"]
-            label = 1 if line["label"] == "True" else 0
+            label = int(prediction[0] == 'True')
             if paragraph_idx not in output:
-                output[paragraph_idx] = dict(
-                    idx=paragraph_idx, passage=dict(
-                        questions=[
-                            dict(
-                                idx=question_idx,
-                                answers=[
-                                    dict(
-                                        idx=answer_idx,
-                                        label=label
-                                    )
-                                ]
-                            )
+                output[paragraph_idx] = {
+                    'idx': paragraph_idx,
+                    'passage': {
+                        'questions': [
+                            {
+                                'idx': question_idx,
+                                'answers': [{'idx': answer_idx, 'label': label}]
+                            }
                         ]
-                    )
-                )
+                    }
+                }
     
-            questions = output[paragraph_idx]["passage"]["questions"]
-            question_indices = set(el["idx"] for el in questions)
+            questions = output[paragraph_idx]['passage']['questions']
+            question_indices = set(el['idx'] for el in questions)
             if question_idx not in question_indices:
-                output[paragraph_idx]["passage"]["questions"].append(dict(
-                    idx=question_idx, answers=[dict(idx=answer_idx, label=label)]
-                ))
+                output[paragraph_idx]['passage']['questions'].append({
+                    'idx': question_idx,
+                    'answers': [{'idx': answer_idx, 'label': label}]
+                })
             else:
-                for question in output[paragraph_idx]["passage"]["questions"]:
-                    if question["idx"] == question_idx:
-                        question["answers"].append(dict(idx=answer_idx, label=label))
+                for question in questions:
+                    if question['idx'] == question_idx:
+                        question['answers'].append({'idx': answer_idx, 'label': label})
     
-        submission = [value for _, value in output.items()]
+        submission = list(output.values())
 
     else:
         for idx, (x, _) in enumerate(tqdm(data_gen)):
