@@ -380,33 +380,18 @@ class TorchMultiTaskBert(TorchModel):
         if args.test_pipeline:
             ggg=args
             breakpoint()
-            assert gg[3] == ggg[0]
-            assert ggg[4] == ggg[1]
-            assert ggg[5] == ggg[2]
+            assert gg[2] == ggg[0]
+            assert ggg[3] == ggg[1]
             print('Pipelining ok')
             breakpoint()
-        n_in = sum([inp for inp in self.in_distribution.values()])
-        if len(args)%2!=0:
-            task_id = args[0]
-            features = args[1:]
-        else:
-            task_id = None
-            features = args
-        args_in, args_in_y = features[:self.n_tasks], features[-self.n_tasks:]
-        if not args.test_pipeline:
-            assert len(features) == 2*self.n_tasks
 
         self.validation_predictions = []
-        in_by_tasks = self._distribute_arguments_by_tasks(args_in, {}, self.task_names, "in")
-        if task_id not in [k for k in range(len(self.task_names))]:
-            task_ids_to_use = [k for k in range(len(self.task_names)) if len(args_in[k])]
-        else:
-            task_ids_to_use = [task_id]
+
         for task_id in range(len(self.task_names)):
-            if task_id not in task_ids_to_use:
+            if not len(args_in[task_id]):
                 self.validation_predictions.append([])
             else:
-                task_features = in_by_tasks[self.task_names[task_id]]
+                task_features = args_in[task_id]
                 if len(task_features) == 1 and isinstance(task_features[0],list):
                     task_features = task_features[0]
                 _input = {}
@@ -428,7 +413,6 @@ class TorchMultiTaskBert(TorchModel):
                         except Exception as e:
                             breakpoint()
                             raise e
-
                 with torch.no_grad():
                     logits = self.model(
                         task_id=task_id, name=self.tasks_type[task_id], **_input
@@ -465,41 +449,21 @@ class TorchMultiTaskBert(TorchModel):
         if args.test_pipeline:
             ggg=args
             breakpoint()
-            assert gg[3] == ggg[0]
-            assert ggg[4] == ggg[1]
-            assert ggg[5] == ggg[2]
+            assert gg[2] == ggg[0]
+            assert ggg[3] == ggg[1]
             print('Pipelining ok')
             breakpoint()
-        n_in = sum([inp for inp in self.in_distribution.values()])
-        if len(args)%2!=0:
-            task_id = args[0]
-            features = args[1:]
-        else:
-            task_id = None
-            features = args
-        args_in, args_in_y = features[:self.n_tasks], features[-self.n_tasks:]
         if not args.test_pipeline:
             assert len(features) == 2*self.n_tasks
-                
-        in_by_tasks = self._distribute_arguments_by_tasks(
-            args_in, {}, self.task_names, "in"
-        )
-        in_y_by_tasks = self._distribute_arguments_by_tasks(
-            args_in_y, {}, self.task_names, "in_y"
-        )
-        if task_id == None:
-            task_ids = [k for k in range(len(self.task_names)) if len(args_in[k])]
-        else:
-            task_ids = [task_id]
-        for task_id in task_ids:
-            task_features = in_by_tasks[self.task_names[task_id]]
-            if len(task_features) == 1 and isinstance(task_features[0],list):
-                task_features = task_features[0]
-            task_labels = in_y_by_tasks[self.task_names[task_id]]
-
+        for i in range(self.n_tasks):
+            args_in[i].labels = args_in_y[i + self.n_tasks] 
+        args_in = args_in[:self.n_tasks]
+        ids_to_iterate = [k for k in range(self.n_tasks) if args_in[k]]
+        assert len(ids_to_iterate) > 1, breakpoint()
+        for task_id in range(self.n_tasks):
             _input = {}
-            for elem in ["input_ids", "attention_mask", "token_type_ids"]:
-                _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in task_features]
+            for elem in ["input_ids", "attention_mask", "token_type_ids","labels"]:
+                _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in args_in[task_id]]
                 _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
             if self.tasks_type[task_id] == "span_classification":
                 for elem in ["span1", "span2"]:
@@ -545,102 +509,3 @@ class TorchMultiTaskBert(TorchModel):
             self.steps_taken += 1
         return {"losses": self.train_losses}
 
-    def _distribute_arguments_by_tasks(
-            self,
-            args,
-            kwargs,
-            task_names,
-            what_to_distribute,
-            in_distribution=None):
-
-        if args and kwargs:
-            raise ValueError("You may use args or kwargs but not both")
-
-        if what_to_distribute == "in":
-            if in_distribution is not None:
-                distribution = in_distribution
-            else:
-                distribution = self.in_distribution
-        elif what_to_distribute == "in_y":
-            if in_distribution is not None:
-                raise ValueError(
-                    f"If parameter `what_to_distribute` is 'in_y', parameter `in_distribution` has to be `None`. "
-                    f"in_distribution = {in_distribution}")
-            distribution = self.in_y_distribution
-        else:
-            raise ValueError(
-                f"`what_to_distribute` can be 'in' or 'in_y', {repr(what_to_distribute)} is given"
-            )
-
-        if distribution is None:
-            if len(task_names) != 1:
-                raise ValueError(
-                    f"If no `{what_to_distribute}_distribution` is not provided there have to be only 1"
-                    "task for inference")
-            return {
-                task_names[0]: list(kwargs.values()) if kwargs else list(args)}
-
-        if all([isinstance(task_distr, int)
-               for task_distr in distribution.values()]):
-            ints = True
-        elif all(
-            [isinstance(task_distr, list)
-             for task_distr in distribution.values()]
-        ):
-            ints = False
-        else:
-            raise ConfigError(
-                f"Values of `{what_to_distribute}_distribution` attribute of `MultiTaskBert` have to be "
-                f"either `int` or `list` not both. "
-                f"{what_to_distribute}_distribution = {distribution}")
-
-        args_by_task = {}
-
-        flattened = []
-        for task_name in task_names:
-            if isinstance(task_name, str):
-                flattened.append(task_name)
-            else:
-                flattened.extend(task_name)
-        task_names = flattened
-
-        if args and not ints:
-            ints = True
-            distribution = {
-                task_name: len(in_distr) for task_name,
-                in_distr in distribution.items()}
-        if ints:
-            if kwargs:
-                values = list(kwargs.values())
-            else:
-                values = args
-            n_distributed = sum([n_args for n_args in distribution.values()])
-            if len(values) != n_distributed:
-                raise ConfigError(
-                    f"The number of '{what_to_distribute}' arguments of MultitaskBert does not match "
-                    f"the number of distributed params according to '{what_to_distribute}_distribution' parameter. "
-                    f"{len(values)} parameters are in '{what_to_distribute}' and {n_distributed} parameters are "
-                    f"required '{what_to_distribute}_distribution'. "
-                    f"{what_to_distribute}_distribution = {distribution}")
-            values_taken = 0
-            for task_name in task_names:
-                n_args = distribution[task_name]
-                args_by_task[task_name] = [values[i]
-                                           for i in range(values_taken, values_taken + n_args)]
-                values_taken += n_args
-
-        else:
-            assert kwargs
-            arg_names_used = []
-            for task_name in task_names:
-                in_distr = distribution[task_name]
-                args_by_task[task_name] = [kwargs[arg_name]
-                                           for arg_name in in_distr]
-                arg_names_used += in_distr
-            set_used = set(arg_names_used)
-            set_all = set(kwargs.keys())
-            if set_used != set_all:
-                raise ConfigError(
-                    f"There are unused '{what_to_distribute}' parameters {set_all - set_used}"
-                )
-        return args_by_task

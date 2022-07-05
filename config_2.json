@@ -34,8 +34,8 @@
    },
    "chainer":{
       "in":[
-         "x_cola_with_id",
-         "x_rte_with_id"
+         "x_cola",
+         "x_rte"
       ],
       "in_y":[
          "y_cola",
@@ -53,29 +53,12 @@
             "max_seq_length":128,
             "do_lower_case":true,
             "in":[
-               "x_cola_with_id",
-               "x_rte_with_id"
-            ],
-            "out":[
-               "task_id_pipelined",
-               "bert_features_cola_pipelined",
-               "bert_features_rte_pipelined"
-            ]
-         },
-         {
-            "class_name":"multitask_preprocessor",
-            "keys_to_extract":[
-               0,
-               1
-            ],
-            "in":[
-               "x_cola_with_id",
-               "x_rte_with_id"
-            ],
-            "out":[
-               "task_id",
                "x_cola",
                "x_rte"
+            ],
+            "out":[
+               "bert_features_cola_pipelined",
+               "bert_features_rte_pipelined"
             ]
          },
          {
@@ -143,10 +126,8 @@
                }
             },
             "in":[
-               "task_id",
                "bert_features_cola",
                "bert_features_rte",
-               "task_id_pipelined",
                "bert_features_cola_pipelined",
                "bert_features_rte_pipelined"
             ],
@@ -187,7 +168,7 @@
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":3,
+      "batch_size":2,
       "metrics":[
          {
             "name":"multitask_accuracy",

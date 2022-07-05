@@ -38,7 +38,6 @@ class MultiTaskPipelinePreprocessor(Component):
         else:
             self.input_splitters = [InputSplitter(keys_to_extract=possible_keys_to_extract)
                                     for _ in range(self.n_task)]
-        self.id_extractor = MultiTaskPreprocessor()
         if preprocessor_names is None:
             log.info(f'Assuming the same preprocessors name for all for all {preprocessor_name}')
             preprocessor_name = eval(preprocessor_name)
@@ -64,15 +63,9 @@ class MultiTaskPipelinePreprocessor(Component):
         """
         #print('calling pipeline')
         #print(args)
-        self.id_extractor.n_task = len(args)
-        values = self.id_extractor(*args)
-        #print('obtained')
-        #print(values)
-        task_id = values[0]
-        all_task_data = values[1:]
-        answer = [task_id]
-        for i in range(len(all_task_data)):
-            texts_a, texts_b = self.input_splitters[i](all_task_data[i])
+        answer =  []
+        for i in range(len(args)):
+            texts_a, texts_b = self.input_splitters[i](args[i])
             #input splitters to return None if not found
             assert texts_a is not None
             answer.append(self.preprocessors[i](texts_a, texts_b))
@@ -81,41 +74,3 @@ class MultiTaskPipelinePreprocessor(Component):
         return answer
         
 
- 
-@register('multitask_preprocessor')
-class MultiTaskPreprocessor(Component):
-    """
-    Extracts out the task_id from the first index of each example for each task
-    """
-
-    def __init__(self, *args, **kwargs):
-        try:
-            self.n_task = len(kwargs["in"])
-        except:
-            self.n_task = None
-
-    def __call__(self, *args):
-        print('EXTRACTOR INPUT')
-        print(args)
-        out = []
-        final_id=(args[0][0][0])
-        if self.n_task == 0:
-            self.n_task = len(args)
-        for task_no in range(self.n_task):
-            examples = args[task_no]
-            task_data = []
-            for values in examples:
-                if isinstance(values, Iterable):
-                    task_id = task_no
-                    if isinstance(task_id, int):
-                        task_data.extend([*values[1:]])
-                    else:
-                        task_data.append(values)
-                else:
-                    pass
-            if task_data:
-                out.append(tuple(task_data))
-        ans = [final_id, *out]
-        print('EXTRACTOR OUTPUT')
-        print(ans)
-        return ans
