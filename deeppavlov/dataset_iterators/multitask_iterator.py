@@ -26,8 +26,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 log = getLogger(__name__)
 
 
-@register('multitask_pal_bert_iterator')
-class MultiTaskPalBertIterator:
+@register('multitask_iterator')
+class MultiTaskIterator:
     """
     Class merges data from several dataset iterators. When used for batch generation batches from
     merged dataset iterators are united into one batch. If sizes of merged datasets are different
