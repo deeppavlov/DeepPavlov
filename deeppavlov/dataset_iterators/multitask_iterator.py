@@ -234,7 +234,7 @@ class MultiTaskIterator:
                 self.steps_taken += 1
                 print(f'Yielding {batchs}')
                 breakpoint()
-                print('ПРИМЕРЫ ДОЛЖНЫ БЫТЬ ТОЛЬКО ДЛЯ ОДНОЙ ТАСКИ')
+                print("ПРИМЕРЫ ДОЛЖНЫ БЫТЬ ТОЛЬКО ДЛЯ ОДНОЙ ТАСКИ")
                 yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
