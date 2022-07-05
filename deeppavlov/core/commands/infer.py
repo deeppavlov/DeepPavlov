@@ -124,7 +124,7 @@ def predict_on_stream(config: Union[str, Path, dict]) -> None:
         )
 
         for x, _ in tqdm(data_gen):
-            indices, _, _, entities, _ = x
+            indices, _, _, entities, _ = x[0]
             prediction = model.compute(x)[:, 1]
             output[indices]['predicted'].append(entities)
             output[indices]['probability'].append(prediction)
