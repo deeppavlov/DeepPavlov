@@ -242,7 +242,7 @@ class BertForMultiTask(nn.Module):
             
 
 @register('multitask_bert')
-class MultiTaskPalBert(TorchModel):
+class TorchMultiTaskBert(TorchModel):
     """Multi-Task Bert Based Model
     Args:
         tasks: Dict of task names along with the labels for each task,
