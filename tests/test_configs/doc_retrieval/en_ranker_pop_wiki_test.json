@@ -56,7 +56,7 @@
       {
         "class_name": "pop_ranker",
         "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
-        "load_path": "{MODELS_PATH}/odqa/logreg_3features.joblib",
+        "load_path": "{MODELS_PATH}/odqa/logreg_3features_v2.joblib",
         "top_n": 10,
         "in": [
           "tfidf_doc_ids",
@@ -90,8 +90,8 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/pop_ranker.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ranking/logreg_3features_v2.joblib",
+        "subdir": "{MODELS_PATH}/odqa"
       }
     ]
   }

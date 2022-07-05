@@ -21,7 +21,7 @@ import numpy as np
 import torch
 from overrides import overrides
 from torch.nn import BCEWithLogitsLoss
-from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel
+from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel, AutoTokenizer
 from transformers.modeling_outputs import SequenceClassifierOutput
 
 from deeppavlov.core.common.errors import ConfigError
@@ -51,6 +51,8 @@ class TorchTransformersClassifierModel(TorchModel):
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
+        is_binary: whether classification task is binary or multi-class
+        num_special_tokens: number of special tokens used by classification model
     """
 
     def __init__(self, n_classes,
@@ -65,6 +67,7 @@ class TorchTransformersClassifierModel(TorchModel):
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  is_binary: Optional[bool] = False,
+                 num_special_tokens: int = None,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -84,6 +87,7 @@ class TorchTransformersClassifierModel(TorchModel):
         self.clip_norm = clip_norm
         self.is_binary = is_binary
         self.bert_config = None
+        self.num_special_tokens = num_special_tokens
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -210,7 +214,8 @@ class TorchTransformersClassifierModel(TorchModel):
             else:
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
 
-                # TODO need a better solution here
+                # TODO need a better solution here and at
+                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
                 try:
                     hidden_size = self.model.classifier.out_proj.in_features
 
@@ -221,7 +226,7 @@ class TorchTransformersClassifierModel(TorchModel):
                         self.model.classifier.out_proj.out_features = self.n_classes
                         self.model.num_labels = self.n_classes
 
-                except torch.nn.modules.module.ModuleAttributeError:
+                except AttributeError:
                     hidden_size = self.model.classifier.in_features
 
                     if self.n_classes != self.model.num_labels:
@@ -240,6 +245,10 @@ class TorchTransformersClassifierModel(TorchModel):
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 
+        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_bert)
+        if self.num_special_tokens:
+            self.model.resize_token_embeddings(len(tokenizer) + self.num_special_tokens)
+
         # TODO that should probably be parametrized in config
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
@@ -251,41 +260,7 @@ class TorchTransformersClassifierModel(TorchModel):
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
-
-        if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                model_state = checkpoint["model_state_dict"]
-                optimizer_state = checkpoint["optimizer_state_dict"]
-
-                # load a multi-gpu model on a single device
-                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
-                    tmp_model_state = {}
-                    for key, value in model_state.items():
-                        tmp_model_state[re.sub("module.", "", key)] = value
-                    model_state = tmp_model_state
-
-                # set strict flag to False if position_ids are missing
-                # this is needed to load models trained on older versions
-                # of transformers library
-                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
-                                         if key.endswith("embeddings.position_ids")])
-                self.model.load_state_dict(model_state, strict=strict_load_flag)
-                self.optimizer.load_state_dict(optimizer_state)
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+        super().load()
 
 
 class AutoModelForBinaryClassification(torch.nn.Module):

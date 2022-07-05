@@ -1,0 +1,116 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "question_sign_checker",
+        "in": ["x"],
+        "out": ["x_punct"]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_ru.json",
+        "in": ["x_punct"],
+        "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
+      },
+      {
+        "class_name": "answer_types_extractor",
+        "lang": "@ru",
+        "types_filename": "{DOWNLOADS_PATH}/wikidata_rus/types_labels_dict_ru.pickle",
+        "types_sets_filename": "{DOWNLOADS_PATH}/wikidata_rus/answer_types.pickle",
+        "in": ["x_punct", "entity_substr", "tags"],
+        "out": ["answer_types", "f_entity_substr", "f_tags"]
+      },
+      {
+        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_ru.json",
+        "id": "entity_linker"
+      },
+      {
+        "class_name": "wiki_parser",
+        "id": "wiki_p",
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "lang": "@ru"
+      },
+      {
+        "class_name": "slovnet_syntax_parser",
+        "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
+        "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
+        "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
+        "in": ["x_punct", "entity_offsets"],
+        "out": ["syntax_info"]
+      },
+      {
+        "class_name": "ru_adj_to_noun",
+        "freq_dict_filename": "{DOWNLOADS_PATH}/wikidata_rus/freqrnc2011.csv",
+        "id": "adj2noun"
+      },
+      {
+        "class_name": "tree_to_sparql",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "adj_to_noun": "#adj2noun",
+        "lang": "rus",
+        "in": ["syntax_info", "entity_positions"],
+        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
+      },
+      {
+        "class_name": "template_matcher",
+        "id": "template_m",
+        "num_processors": 8,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "templates_filename": "templates_rus.json"
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "id": "rel_r_inf",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json"},
+        "wiki_parser": "#wiki_p",
+        "batch_size": 32,
+        "return_all_possible_answers": true,
+        "return_answer_ids": false,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
+      },
+      {
+        "class_name": "query_generator",
+        "id": "query_g",
+        "entity_linker": "#entity_linker",
+        "template_matcher": "#template_m",
+        "rel_ranker": "#rel_r_inf",
+        "wiki_parser": "#wiki_p",
+        "load_path": "{DOWNLOADS_PATH}/wikidata",
+        "rank_rels_filename_1": "rels_0.txt",
+        "rank_rels_filename_2": "rels_1.txt",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "entities_to_leave": 9,
+        "rels_to_leave": 10,
+        "return_all_possible_answers": false,
+        "syntax_structure_known": true,
+        "in": ["x_punct", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
+        "out": ["answers"]
+      }
+    ],
+    "out": ["answers"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_ru.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/slovnet_syntax_parser.tar.gz",
+        "subdir": "{MODELS_PATH}/slovnet_syntax_parser"
+      }
+    ]
+  }
+}

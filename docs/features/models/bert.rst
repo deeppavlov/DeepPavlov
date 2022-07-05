@@ -22,19 +22,19 @@ There are several pre-trained BERT models released by Google Research, more deta
 We have trained BERT-base model for other languages and domains:
 
 -  RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_v2.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/rubert_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  SlavicBERT, Slavic (bg, cs, pl, ru), cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_v1.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/bg_cs_pl_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  Conversational BERT, English, cased, 12-layer, 768-hidden, 12-heads, 110M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_v1.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  Conversational RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/ru_conversational_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  Conversational DistilRuBERT, Russian, cased, 6-layer, 768-hidden, 12-heads, 135.4M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-6_H-768_A-12_pt.tar.gz>`__
 -  Conversational DistilRuBERT-tiny, Russian, cased, 2-layer, 768-hidden, 12-heads, 107M parameters: `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/distil_ru_conversational_cased_L-2_H-768_A-12_pt.tar.gz>`__
 -  Sentence Multilingual BERT, 101 languages, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_multi_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 -  Sentence RuBERT, Russian, cased, 12-layer, 768-hidden, 12-heads, 180M parameters: `[deeppavlov] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12.tar.gz>`__,
-   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt.tar.gz>`__
+   `[deeppavlov_pytorch] <http://files.deeppavlov.ai/deeppavlov_data/bert/sentence_ru_cased_L-12_H-768_A-12_pt_v1.tar.gz>`__
 
 The ``deeppavlov_pytorch`` models are designed to be run with the `HuggingFace's Transformers <https://huggingface.co/transformers/>`__ library.
 
@@ -52,7 +52,7 @@ English cased version of BERT-base as initialization for English Conversational 
 Conversational RuBERT was trained on OpenSubtitles [5]_, Dirty, Pikabu, and Social Media segment of Taiga corpus [8]_.
 We assembled new vocabulary for Conversational RuBERT model on this data and initialized model with RuBERT.
 
-Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [13]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
+Conversational DistilRuBERT (6 transformer layers) and DistilRuBERT-tiny (2 transformer layers) were trained on the same data as Conversational RuBERT and highly inspired by DistilBERT [3]_. Namely, Distil* models (students) used pretrained Conversational RuBERT as teacher and linear combination of the following losses:
 
 1. Masked language modeling loss (between student output logits for tokens and its true labels)
 2. Kullback-Leibler divergence (between student and teacher output logits)
@@ -92,31 +92,24 @@ you can use or modify a :config:`BERT embedder configuration <embedder/bert_embe
     texts = ['Hi, i want my embedding.', 'And mine too, please!']
     tokens, token_embs, subtokens, subtoken_embs, sent_max_embs, sent_mean_embs, bert_pooler_outputs = m(texts)
 
-Examples of using these embeddings in model training pipelines can be found in :config:`Sentiment Twitter <classifiers/sentiment_twitter_bert_emb.json>`
-and :config:`NER Ontonotes <ner/ner_ontonotes_bert_emb.json>` configuration files.
-
 
 BERT for Classification
 -----------------------
 
-:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` and
 :class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`
-provide easy to use solution for classification problem
-using pre-trained BERT on TensorFlow and PyTorch correspondingly.
+provides solution for classification problem using pre-trained BERT on PyTorch.
 One can use several pre-trained English, multi-lingual and Russian BERT models that are
 listed above. :class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`
-supports any Transformer-based model of `Transformers <https://github.com/huggingface/transformers>`.
+also supports any Transformer-based model of `Transformers <https://github.com/huggingface/transformers>`.
 
 Two main components of BERT classifier pipeline in DeepPavlov are
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertPreprocessor` on TensorFlow
-(:class:`~deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor` on PyTorch) and
-:class:`~deeppavlov.models.bert.bert_classifier.BertClassifierModel` on TensorFlow
-(:class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel` on PyTorch).
-Non-processed texts should be given to ``bert_preprocessor`` (or ``torch_transformers_preprocessor``) for tokenization on subtokens,
+:class:`~deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchTransformersPreprocessor` and
+:class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`.
+Non-processed texts should be given to ``torch_transformers_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
 In case of using one-hot encoded classes in the pipeline, set ``one_hot_labels`` to ``true``.
 
-``bert_classifier`` and ``torch_bert_classifier`` have a dense layer of number of classes size upon pooled outputs of Transformer encoder,
+``torch_transformers_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).
 
 
@@ -124,61 +117,24 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
-can be found :doc:`here </features/models/ner>`. The modules used for tagging
-are :class:`~deeppavlov.models.bert.bert_sequence_tagger.BertSequenceTagger` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger` on PyTorch.
+can be found :doc:`here </features/models/ner>`. The module used for tagging
+is :class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger`.
 The tags are obtained by applying a dense layer to the representation of
-the first subtoken of each word. There is also an optional CRF layer on the top for TensorFlow implementation.
-In the PyTorch implementation you can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
+the first subtoken of each word. There is also an optional CRF layer on the top.
+You can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
 The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
 hundred languages see :ref:`ner_multi_bert`.
-
-BERT for Morphological Tagging
-------------------------------
-
-Since morphological tagging is also a sequence labeling task, it can be solved in a similar fashion.
-The only difference is that we may use the last subtoken of each word in case word morphology
-is mostly defined by its suffixes, not prefixes (that is the case for most Indo-European languages,
-such as Russian, Spanish, German etc.). See :doc:`also </features/models/morphotagger>`.
-
-BERT for Syntactic Parsing
---------------------------
-
-You can use BERT for syntactic parsing also. As most modern parsers, we use the biaffine model
-over the embedding layer, which is the output of BERT. The model outputs the index of syntactic
-head and the dependency type for each word. See :doc:`the parser documentation </features/models/syntaxparser>`
-for more information about model performance and algorithm.
 
 
 BERT for Context Question Answering (SQuAD)
 -------------------------------------------
 Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer/>`__ dataset is a task
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
-and end position in a given context. :class:`~deeppavlov.models.bert.bert_squad.BertSQuADModel` on TensorFlow and
-:class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad` on PyTorch use two linear
+and end position in a given context. :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad` on PyTorch uses two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
 :doc:`Context Question Answering documentation page </features/models/squad>`.
-
-BERT for Ranking
-----------------
-There are two main approaches in text ranking. The first one is interaction-based which is relatively accurate but
-works slow and the second one is representation-based which is less accurate but faster [3]_.
-The interaction-based ranking based on BERT is represented in the DeepPavlov with two main components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertRankerPreprocessor` on TensorFlow
-(:class:`~deeppavlov.models.preprocessors.torch_transformers_preprocessor.TorchBertRankerPreprocessor` on PyTorch)
-and :class:`~deeppavlov.models.bert.bert_ranker.BertRankerModel` on TensorFlow
-(:class:`~deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel` on PyTorch)
-and the representation-based ranking with components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerModel` on TensorFlow.
-Additional components
-:class:`~deeppavlov.models.preprocessors.bert_preprocessor.BertSepRankerPredictorPreprocessor`
-and :class:`~deeppavlov.models.bert.bert_ranker.BertSepRankerPredictor` (on TensorFlow) are for usage in the ``interact`` mode
-where the task for ranking is to retrieve the best possible response from some provided response base with the help of
-the trained model. Working examples with the trained models are given :doc:`here </features/models/neural_ranking>`.
-Statistics are available :doc:`here </features/overview>`.
 
 Using custom BERT in DeepPavlov
 -------------------------------
@@ -190,12 +146,12 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 * download URL in the ``metadata.download.url`` part of the config
 * ``bert_config_file``, ``pretrained_bert`` in the BERT based Component. In case of PyTorch BERT, ``pretrained_bert`` can be assigned to
     string name of any Transformer-based model (e.g. ``"bert-base-uncased"``, ``"distilbert-base-uncased"``) and then ``bert_config_file`` is set to ``None``.
-* ``vocab_file`` in the ``bert_preprocessor`` (``torch_transformers_preprocessor``). In case of PyTorch BERT, ``vocab_file`` can be assigned to
+* ``vocab_file`` in the ``torch_transformers_preprocessor``. ``vocab_file`` can be assigned to
     string name of used pre-trained BERT (e.g. ``"bert-base-uncased"``).
 
 .. [1] Kuratov, Y., Arkhipov, M. (2019). Adaptation of Deep Bidirectional Multilingual Transformers for Russian Language. arXiv preprint arXiv:1905.07213.
 .. [2] Arkhipov M., Trofimova M., Kuratov Y., Sorokin A. (2019). `Tuning Multilingual Transformers for Language-Specific Named Entity Recognition <https://www.aclweb.org/anthology/W19-3712/>`__ . ACL anthology W19-3712.
-.. [3] McDonald, R., Brokos, G. I., & Androutsopoulos, I. (2018). Deep relevance ranking using enhanced document-query interactions. arXiv preprint arXiv:1809.01682.
+.. [3] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.
 .. [4] Yanran Li, Hui Su, Xiaoyu Shen, Wenjie Li, Ziqiang Cao, and Shuzi Niu. DailyDialog: A Manually Labelled Multi-turn Dialogue Dataset. IJCNLP 2017.
 .. [5] P. Lison and J. Tiedemann, 2016, OpenSubtitles2016: Extracting Large Parallel Corpora from Movie and TV Subtitles. In Proceedings of the 10th International Conference on Language Resources and Evaluation (LREC 2016)
 .. [6] Justine Zhang, Ravi Kumar, Sujith Ravi, Cristian Danescu-Niculescu-Mizil. Proceedings of NAACL, 2016.
@@ -205,4 +161,3 @@ the :doc:`config </intro/configuration>` file must be changed to match new BERT 
 .. [10] Williams A., Bowman S. (2018) XNLI: Evaluating Cross-lingual Sentence Representations. arXiv preprint arXiv:1809.05053
 .. [11] S. R. Bowman, G. Angeli, C. Potts, and C. D. Manning. (2015) A large annotated corpus for learning natural language inference. arXiv preprint arXiv:1508.05326
 .. [12] N. Reimers, I. Gurevych (2019) Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. arXiv preprint arXiv:1908.10084
-.. [13] Sanh, V., Debut, L., Chaumond, J., & Wolf, T. (2019). DistilBERT, a distilled version of BERT: smaller, faster, cheaper and lighter. arXiv preprint arXiv:1910.01108.

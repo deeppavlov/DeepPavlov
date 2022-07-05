@@ -61,6 +61,38 @@ parameters:
     },
 
 
+Nested configuration files
+--------------------------
+
+Any configuration file could be used inside another configuration file as an element of the
+:class:`~deeppavlov.core.common.chainer.Chainer` or as a field of another component using ``config_path`` key.
+Any field of the nested configuration file could be overwritten using ``overwrite`` field:
+
+.. code::
+
+    "chainer": {
+      "pipe": {
+        ...
+        {
+          "class_name": "ner_chunk_model",
+          "ner": {
+            "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
+            "overwrite": {
+              "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+            }
+          },
+          ...
+        }
+      }
+    }
+
+In this example ``ner_ontonotes_bert.json`` is used as ``ner`` argument value in ``ner_chunk_model`` component.
+``chainer.out`` value is overwritten with new list. Overwritten fields names are defined using dot notation. In this
+notation numeric fields are treated as indexes of lists. For example, to change ``class_name`` value of the second
+element of the pipe to ``ner_chunker`` (1 is the index of the second element), use
+``"chainer.pipe.1.class_name": "ner_chunker"`` key-value pair.
+
+
 Variables
 ---------
 
@@ -83,7 +115,7 @@ from ``metadata.variables`` element:
           {
             "in": ["x"],
             "out": ["y_predicted"],
-            "config_path": "{CONFIGS_PATH}/classifiers/intents_snips.json"
+            "config_path": "{CONFIGS_PATH}/classifiers/insults_kaggle_bert.json"
           }
         ],
         "out": ["y_predicted"]
@@ -177,18 +209,15 @@ and ``train``:
 
 
 Simplified version of training pipeline contains two elements: ``dataset`` and ``train``. The ``dataset`` element
-currently can be used for train from classification data in ``csv`` and ``json`` formats. You can find complete examples
-of how to use simplified training pipeline in
-:config:`intents_sample_csv.json <classifiers/intents_sample_csv.json>` and
-:config:`intents_sample_json.json <classifiers/intents_sample_json.json>` config files.
+currently can be used for train from classification data in ``csv`` and ``json`` formats.
 
 
 Train Parameters
 ~~~~~~~~~~~~~~~~
 
 ``train`` element can contain a ``class_name`` parameter that references a trainer class (default value is
-:class:`nn_trainer <deeppavlov.core.trainers.NNTrainer>`). All other parameters will be passed as keyword arguments
-to the trainer class's constructor.
+:class:`torch_trainer <deeppavlov.core.trainers.torch_trainer.TorchTrainer>`).
+All other parameters will be passed as keyword arguments to the trainer class's constructor.
 
 
 Metrics
@@ -197,7 +226,7 @@ _______
 .. code:: python
 
     "train": {
-      "class_name": "nn_trainer",
+      "class_name": "torch_trainer",
       "metrics": [
         "f1",
         {
@@ -205,22 +234,27 @@ _______
           "inputs": ["y", "y_labels"]
         },
         {
-          "name": "roc_auc",
-          "inputs": ["y", "y_probabilities"]
+          "name": "sklearn.metrics:accuracy_score",
+          "alias": "unnormalized_accuracy",
+          "inputs": ["y", "y_labels"],
+          "normalize": false
         }
       ],
       ...
     }
 
-| The first metric in the list is used for early stopping.
-|
-| Each metric can be described as a JSON object with ``name`` and ``inputs`` properties, where ``name``
-  is a registered name of a metric function and ``inputs`` is a list of parameter names from chainer's
-  inner memory that will be passed to the metric function.
-|
-| If a metric is described as a single string, this string is interpreted as a registered name.
-|
-| Default value for ``inputs`` parameter is a concatenation of chainer's ``in_y`` and ``out`` parameters.
+The first metric in the list is used for early stopping.
+
+Each metric can be described as a JSON object with ``name``, ``alias`` and ``inputs`` properties, where:
+
+  - ``name`` is either a registered name of a metric function or ``module.submodules:function_name``.
+  - ``alias`` is a metric name. Default value is ``name`` value.
+  - ``inputs`` is a list of parameter names from chainer's inner memory that will be passed to the metric function.
+    Default value is a concatenation of chainer's ``in_y`` and ``out`` parameters.
+
+All other arguments are interpreted as kwargs when the metric is called.
+If a metric is given as a string, this string is interpreted as a metric name, i.e. ``"f1"`` in the example
+above is equivalent to ``{"name": "f1"}``.
 
 
 DatasetReader
@@ -235,8 +269,8 @@ A concrete :class:`DatasetReader` class should be inherited from this base class
     from deeppavlov.core.common.registry import register
     from deeppavlov.core.data.dataset_reader import DatasetReader
 
-    @register('dstc2_datasetreader')
-    class DSTC2DatasetReader(DatasetReader):
+    @register('conll2003_reader')
+    class Conll2003DatasetReader(DatasetReader):
 
 
 DataLearningIterator and DataFittingIterator
@@ -284,17 +318,9 @@ Preprocessor is a component that processes batch of samples.
 * Already implemented universal preprocessors of **tokenized texts** (each
   sample is a list of tokens):
 
-    - :class:`~deeppavlov.models.preprocessors.char_splitter.CharSplitter`
-      (registered as ``char_splitter``) splits every token in given batch of
-      tokenized samples to a sequence of characters.
-
     - :class:`~deeppavlov.models.preprocessors.mask.Mask` (registered as
       ``mask``) returns binary mask of corresponding length (padding up to the
       maximum length per batch.
-
-    - :class:`~deeppavlov.models.preprocessors.russian_lemmatizer.PymorphyRussianLemmatizer`
-      (registered as ``pymorphy_russian_lemmatizer``) performs lemmatization
-      for Russian language.
 
     - :class:`~deeppavlov.models.preprocessors.sanitizer.Sanitizer`
       (registered as ``sanitizer``) removes all combining characters like
@@ -327,9 +353,6 @@ Tokenizers
 Tokenizer is a component that processes batch of samples (each sample is a text
 string).
 
-    - :class:`~deeppavlov.models.tokenizers.lazy_tokenizer.LazyTokenizer`
-      (registered as ``lazy_tokenizer``) tokenizes using ``nltk.word_tokenize``.
-
     - :class:`~deeppavlov.models.tokenizers.nltk_tokenizer.NLTKTokenizer`
       (registered as ``nltk_tokenizer``) tokenizes using tokenizers from
       ``nltk.tokenize``, e.g. ``nltk.tokenize.wordpunct_tokenize``.
@@ -338,10 +361,6 @@ string).
       (registered as ``nltk_moses_tokenizer``) tokenizes and detokenizes using
       ``nltk.tokenize.moses.MosesDetokenizer``,
       ``nltk.tokenize.moses.MosesTokenizer``.
-
-    - :class:`~deeppavlov.models.tokenizers.ru_sent_tokenizer.RuSentTokenizer`
-      (registered as  ``ru_sent_tokenizer``) is a rule-based tokenizer for
-      Russian language.
 
     - :class:`~deeppavlov.models.tokenizers.ru_tokenizer.RussianTokenizer`
       (registered as ``ru_tokenizer``) tokenizes or lemmatizes Russian texts
@@ -363,20 +382,10 @@ Embedder is a component that converts every token in a tokenized batch to a
 vector of a particular dimension (optionally, returns a single vector per
 sample).
 
-    - :class:`~deeppavlov.models.embedders.glove_embedder.GloVeEmbedder`
-      (registered as ``glove``) reads embedding file in GloVe format (file
-      starts with ``number_of_words embeddings_dim line`` followed by lines
-      ``word embedding_vector``). If ``mean`` returns one vector per
-      sample --- mean of embedding vectors of tokens.
-
     - :class:`~deeppavlov.models.embedders.fasttext_embedder.FasttextEmbedder`
       (registered as ``fasttext``) reads embedding file in fastText format.
       If ``mean`` returns one vector per sample - mean of embedding vectors
       of tokens.
-
-    - :class:`~deeppavlov.models.embedders.bow_embedder.BoWEmbedder`
-      (registered as ``bow``) performs one-hot encoding of tokens using
-      pre-built vocabulary.
 
     - :class:`~deeppavlov.models.embedders.tfidf_weighted_embedder.TfidfWeightedEmbedder`
       (registered as ``tfidf_weighted``) accepts embedder, tokenizer (for
@@ -384,11 +393,6 @@ sample).
       vectorizer or counter vocabulary, optionally accepts tags vocabulary (to
       assign additional multiplcative weights to particular tags). If ``mean``
       returns one vector per sample - mean of embedding vectors of tokens.
-
-    - :class:`~deeppavlov.models.embedders.elmo_embedder.ELMoEmbedder`
-      (registered as ``elmo``) converts tokens to pre-trained contextual
-      representations from large-scale bidirectional language models. See
-      examples `here <https://www.tensorflow.org/hub/modules/google/elmo/2>`__.
 
 Vectorizers
 ~~~~~~~~~~~

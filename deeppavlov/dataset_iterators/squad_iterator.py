@@ -25,7 +25,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 @register('squad_iterator')
 class SquadIterator(DataLearningIterator):
     """SquadIterator allows to iterate over examples in SQuAD-like datasets.
-    SquadIterator is used to train :class:`~deeppavlov.models.squad.squad.SquadModel`.
+    SquadIterator is used to train 
+    :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad`.
 
     It extracts ``context``, ``question``, ``answer_text`` and ``answer_start`` position from dataset.
     Example from a dataset is a tuple of ``(context, question)`` and ``(answer_text, answer_start)``
@@ -58,9 +59,13 @@ class SquadIterator(DataLearningIterator):
                         q = qa['question']
                         ans_text = []
                         ans_start = []
-                        for answer in qa['answers']:
-                            ans_text.append(answer['text'])
-                            ans_start.append(answer['answer_start'])
+                        if qa['answers']:
+                            for answer in qa['answers']:
+                                ans_text.append(answer['text'])
+                                ans_start.append(answer['answer_start'])
+                        else:
+                            ans_text = ['']
+                            ans_start = [-1]
                         cqas.append(((context, q), (ans_text, ans_start)))
         return cqas
 

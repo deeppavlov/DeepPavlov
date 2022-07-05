@@ -64,13 +64,15 @@ if __name__ == '__main__':
             'tests': [
                 'flake8',
                 'pytest',
+                'pytest-instafail',
                 'pexpect'
             ],
             'docs': [
                 'sphinx==3.5.4',
                 'sphinx_rtd_theme==0.5.2',
                 'nbsphinx==0.8.4',
-                'ipykernel==5.5.4'
+                'ipykernel==5.5.4',
+                'jinja2<=3.0.3'
             ],
             's3': [
                 'boto3'

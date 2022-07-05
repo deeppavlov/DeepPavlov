@@ -1,1 +1,0 @@
-russian-tagsets==0.6

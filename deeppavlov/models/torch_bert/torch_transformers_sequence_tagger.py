@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, Tuple
 
 import numpy as np
 import torch
@@ -25,6 +25,7 @@ from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.models.torch_bert.crf import CRF
 
 log = getLogger(__name__)
 
@@ -58,97 +59,38 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
     nf = shape[2]
     nf_int = units.size()[-1]
 
-    # number of TOKENS in each sentence
     token_seq_lengths = torch.sum(mask, 1).to(torch.int64)
-    # for a matrix m =
-    # [[1, 1, 1],
-    #  [0, 1, 1],
-    #  [1, 0, 0]]
-    # it will be
-    # [3, 2, 1]
 
     n_words = torch.sum(token_seq_lengths)
-    # n_words -> 6
 
     max_token_seq_len = torch.max(token_seq_lengths)
-    # max_token_seq_len -> 3
 
     idxs = torch.stack(torch.nonzero(mask, as_tuple=True), dim=1)
-    # for the matrix mentioned above
-    # tf.where(mask) ->
-    # [[0, 0],
-    #  [0, 1]
-    #  [0, 2],
-    #  [1, 1],
-    #  [1, 2]
-    #  [2, 0]]
 
     sample_ids_in_batch = torch.nn.functional.pad(input=idxs[:, 0], pad=[1, 0])
-    # for indices
-    # [[0, 0],
-    #  [0, 1]
-    #  [0, 2],
-    #  [1, 1],
-    #  [1, 2],
-    #  [2, 0]]
-    # it is
-    # [0, 0, 0, 0, 1, 1, 2]
-    # padding is for computing change from one sample to another in the batch
 
     a = torch.logical_not(torch.eq(sample_ids_in_batch[1:], sample_ids_in_batch[:-1]).to(torch.int64))
-    # for the example above the result of this statement equals
-    # [0, 0, 0, 1, 0, 1]
-    # so data samples begin in 3rd and 5th positions (the indexes of ones)
 
-    # transforming sample start masks to the sample starts themselves
     q = a * torch.arange(n_words).to(torch.int64)
-    # [0, 0, 0, 3, 0, 5]
     count_to_substract = torch.nn.functional.pad(torch.masked_select(q, q.to(torch.bool)), [1, 0])
-    # [0, 3, 5]
 
     new_word_indices = torch.arange(n_words).to(torch.int64) - torch.gather(
         count_to_substract, dim=0, index=torch.cumsum(a, 0))
-    # tf.range(n_words) -> [0, 1, 2, 3, 4, 5]
-    # tf.cumsum(a) -> [0, 0, 0, 1, 1, 2]
-    # tf.gather(count_to_substract, tf.cumsum(a)) -> [0, 0, 0, 3, 3, 5]
-    # new_word_indices -> [0, 1, 2, 3, 4, 5] - [0, 0, 0, 3, 3, 5] = [0, 1, 2, 0, 1, 0]
-    # new_word_indices is the concatenation of range(word_len(sentence))
-    # for all sentences in units
 
     n_total_word_elements = (batch_size * max_token_seq_len).to(torch.int32)
     word_indices_flat = (idxs[:, 0] * max_token_seq_len + new_word_indices).to(torch.int64)
     x_mask = torch.sum(torch.nn.functional.one_hot(word_indices_flat, n_total_word_elements), 0)
     x_mask = x_mask.to(torch.bool)
-    # to get absolute indices we add max_token_seq_len:
-    # idxs[:, 0] * max_token_seq_len -> [0, 0, 0, 1, 1, 2] * 2 = [0, 0, 0, 3, 3, 6]
-    # word_indices_flat -> [0, 0, 0, 3, 3, 6] + [0, 1, 2, 0, 1, 0] = [0, 1, 2, 3, 4, 6]
-    # total number of words in the batch (including paddings)
-    # batch_size * max_token_seq_len -> 3 * 3 = 9
-    # tf.one_hot(...) ->
-    # [[1. 0. 0. 0. 0. 0. 0. 0. 0.]
-    #  [0. 1. 0. 0. 0. 0. 0. 0. 0.]
-    #  [0. 0. 1. 0. 0. 0. 0. 0. 0.]
-    #  [0. 0. 0. 1. 0. 0. 0. 0. 0.]
-    #  [0. 0. 0. 0. 1. 0. 0. 0. 0.]
-    #  [0. 0. 0. 0. 0. 0. 1. 0. 0.]]
-    #  x_mask -> [1, 1, 1, 1, 1, 0, 1, 0, 0]
 
     full_range = torch.arange(batch_size * max_token_seq_len).to(torch.int64)
-    # full_range -> [0, 1, 2, 3, 4, 5, 6, 7, 8]
     nonword_indices_flat = torch.masked_select(full_range, torch.logical_not(x_mask))
 
-    # # y_idxs -> [5, 7, 8]
-
-    # get a sequence of units corresponding to the start subtokens of the words
-    # size: [n_words, n_features]
     def gather_nd(params, indices):
         assert type(indices) == torch.Tensor
         return params[indices.transpose(0, 1).long().numpy().tolist()]
 
     elements = gather_nd(units, idxs)
 
-    # prepare zeros for paddings
-    # size: [batch_size * TOKEN_seq_length - n_words, n_features]
     sh = tuple(torch.stack([torch.sum(max_token_seq_len - token_seq_lengths), torch.tensor(nf)], 0).numpy())
     paddings = torch.zeros(sh, dtype=torch.float64)
 
@@ -167,12 +109,8 @@ def token_from_subtoken(units: torch.Tensor, mask: torch.Tensor) -> torch.Tensor
         return res
 
     tensor_flat = torch.stack(dynamic_stitch([word_indices_flat, nonword_indices_flat], [elements, paddings]))
-    # tensor_flat -> [x, x, x, x, x, 0, x, 0, 0]
 
     tensor = torch.reshape(tensor_flat, (batch_size, max_token_seq_len.item(), nf_int))
-    # tensor -> [[x, x, x],
-    #            [x, x, 0],
-    #            [x, 0, 0]]
 
     return tensor
 
@@ -201,7 +139,6 @@ class TorchTransformersSequenceTagger(TorchModel):
     Args:
         n_tags: number of distinct tags
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
-        return_probas: set this to `True` if you need the probabilities instead of raw answers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
@@ -214,13 +151,13 @@ class TorchTransformersSequenceTagger(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        use_crf: whether to use Conditional Ramdom Field to decode tags
     """
 
     def __init__(self,
                  n_tags: int,
                  pretrained_bert: str,
                  bert_config_file: Optional[str] = None,
-                 return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  optimizer: str = "AdamW",
@@ -230,16 +167,17 @@ class TorchTransformersSequenceTagger(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-07,
+                 use_crf: bool = False,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
-        self.return_probas = return_probas
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.use_crf = use_crf
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -281,6 +219,8 @@ class TorchTransformersSequenceTagger(TorchModel):
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
         loss.backward()
+        if self.use_crf:
+            self.crf(y, y_masks)
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
@@ -295,7 +235,7 @@ class TorchTransformersSequenceTagger(TorchModel):
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
                  input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Union[List[List[int]], List[np.ndarray]]:
+                 y_masks: Union[List[List[int]], np.ndarray]) -> Tuple[List[List[int]], List[np.ndarray]]:
         """ Predicts tag indices for a given subword tokens batch
 
         Args:
@@ -317,16 +257,18 @@ class TorchTransformersSequenceTagger(TorchModel):
             # Move logits and labels to CPU and to numpy arrays
             logits = token_from_subtoken(logits[0].detach().cpu(), torch.from_numpy(y_masks))
 
-        if self.return_probas:
-            pred = torch.nn.functional.softmax(logits, dim=-1)
-            pred = pred.detach().cpu().numpy()
+        probas = torch.nn.functional.softmax(logits, dim=-1)
+        probas = probas.detach().cpu().numpy()
+        if self.use_crf:
+            logits = logits.transpose(1, 0).to(self.device)
+            pred = self.crf.decode(logits)
         else:
             logits = logits.detach().cpu().numpy()
             pred = np.argmax(logits, axis=-1)
-            seq_lengths = np.sum(y_masks, axis=1)
-            pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        seq_lengths = np.sum(y_masks, axis=1)
+        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
 
-        return pred
+        return pred, probas
 
     @overrides
     def load(self, fname=None):
@@ -349,6 +291,8 @@ class TorchTransformersSequenceTagger(TorchModel):
             raise ConfigError("No pre-trained BERT model is given.")
 
         self.model.to(self.device)
+        if self.use_crf:
+            self.crf = CRF(self.n_classes).to(self.device)
 
         self.optimizer = getattr(torch.optim, self.optimizer_name)(
             self.model.parameters(), **self.optimizer_parameters)
@@ -357,21 +301,21 @@ class TorchTransformersSequenceTagger(TorchModel):
                 self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
+            super().load()
+            if self.use_crf:
+                weights_path_crf = Path(f"{self.load_path}_crf").resolve()
+                weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
+                if weights_path_crf.exists():
+                    checkpoint = torch.load(weights_path_crf, map_location=self.device)
+                    self.crf.load_state_dict(checkpoint["model_state_dict"], strict=False)
+                else:
+                    log.info(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+    @overrides
+    def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
+        super().save()
+        if self.use_crf:
+            weights_path_crf = Path(f"{fname}_crf").resolve()
+            weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
+            torch.save({"model_state_dict": self.crf.cpu().state_dict()}, weights_path_crf)
+            self.crf.to(self.device)

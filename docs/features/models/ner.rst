@@ -4,23 +4,22 @@ Named Entity Recognition (NER)
 Train and use the model
 -----------------------
 
-There are three main types of models available: Standard RNN-based model, BERT-based model (on TensorFlow and PyTorch), and the hybrid model.
-To see details about BERT based models see :doc:`here </features/models/bert>`. The last one, the hybrid model, reproduces the architecture proposed
-in the paper `A Deep Neural Network Model for the Task of Named Entity Recognition <http://www.ijmlc.org/show-83-881-1.html>`__.
+Entity recognition is based on BERT model on PyTorch.
+To see details about BERT based models see :doc:`here </features/models/bert>`.
 Any pre-trained model can be used for inference from both Command Line Interface (CLI) and Python. Before using the
 model make sure that all required packages are installed using the command:
 
 .. code:: bash
 
-    python -m deeppavlov install ner_ontonotes_bert_torch
+    python -m deeppavlov install ner_ontonotes_bert
 
 To use a pre-trained model from CLI use the following command:
 
 .. code:: bash
 
-    python deeppavlov/deep.py interact ner_ontonotes_bert_torch [-d]
+    python deeppavlov/deep.py interact ner_ontonotes_bert [-d]
 
-where ``ner_ontonotes_bert_torch`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
+where ``ner_ontonotes_bert`` is the name of the config and ``-d`` is an optional download key. The key ``-d`` is used
 to download the pre-trained model along with embeddings and all other files needed to run the model. Other possible
 commands are ``train``, ``evaluate``, and ``download``,
 
@@ -31,43 +30,28 @@ Here is the list of all available configs:
 .. table::
     :widths: auto
 
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | Model                                                                  | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
-    +========================================================================+====================+==========+=================+============+============+
-    | :config:`ner_rus_bert_torch <ner/ner_rus_bert_torch.json>`             | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.7**   |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_collection3_m1 <ner/ner_collection3_m1.json>`             |                    |          | 1.1 GB          |    1 GB    |   97.8     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_rus <ner/ner_rus.json>`                                   |                    |          | 1.0 GB          |   5.6 MB   |   95.1     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`<ner/ner_ontonotes_bert_mult_torch.json>`                     | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **87.2**   |
-    +------------------------------------------------------------------------+                    +----------+-----------------+------------+------------+
-    | :config:`ner_ontonotes_bert_torch <ner/ner_ontonotes_bert_torch.json>` |                    | En       | 400 MB          |   1.3 GB   |   87.9     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_ontonotes_m1 <ner/ner_ontonotes_m1.json>`                 |                    |          | 347 MB          |  379.4 MB  |   87.7     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_ontonotes <ner/ner_ontonotes.json>`                       |                    |          | 331 MB          |   7.8 MB   |   86.7     |
-    +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`             | CoNLL-2003         |          | 400 MB          |   850 MB   |   91.7     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_conll2003_torch_bert <ner/ner_conll2003_torch_bert.json>` |                    |          | ---             |   1.3 GB   |   90.7     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`ner_conll2003 <ner/ner_conll2003.json>`                       |                    |          | 331 MB          |   3.1 MB   |   89.9     |
-    +------------------------------------------------------------------------+                    +          +-----------------+------------+------------+
-    | :config:`conll2003_m1 <ner/conll2003_m1.json>`                         |                    |          | 339 MB          |  359.7 MB  | **91.9**   |
-    +------------------------------------------------------------------------+--------------------+          +-----------------+------------+------------+
-    | :config:`ner_dstc2 <ner/ner_dstc2.json>`                               | DSTC2              |          | ---             |   626 KB   |   97.1     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
-    | :config:`vlsp2016_full <ner/vlsp2016_full.json>`                       | VLSP-2016          | Vi       | 520 MB          |   37.2 MB  |   93.4     |
-    +------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | Model                                                                                | Dataset            | Language | Embeddings Size | Model Size |  F1 score  |
+    +======================================================================================+====================+==========+=================+============+============+
+    | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                       | Collection3 [1]_   | Ru       | 700 MB          |   2.0 GB   | **97.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                 | Ontonotes          | Multi    | 700 MB          |   2.0 GB   | **88.9**   |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_ontonotes_bert <ner/ner_ontonotes_bert.json>`                           |                    | En       | 400 MB          |   1.3 GB   |   89.2     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_conll2003_bert <ner/ner_conll2003_bert.json>`                           | CoNLL-2003         |          | 400 MB          |   1.3 GB   |   91.7     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
+    | :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>`     | CoNLL-2003         | En+Ru    | 700 MB          |   1.6 GB   |   89.4     |
+    |                                                                                      | Collection3        |          |                 |            |   96.4     |
+    +--------------------------------------------------------------------------------------+--------------------+----------+-----------------+------------+------------+
 
 Models can be used from Python using the following code:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_torch, download=True)
+    ner_model = build_model('ner_ontonotes_bert', download=True)
 
     ner_model(['Bob Ross lived in Florida'])
     >>> [[['Bob', 'Ross', 'lived', 'in', 'Florida']], [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE']]]
@@ -76,21 +60,21 @@ The model also can be trained from the Python:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
 
-    ner_model = train_model(configs.ner.ner_ontonotes_bert_torch)
+    ner_model = train_model('ner_ontonotes_bert')
 
 The data for training should be placed in the folder provided in the config:
 
 .. code:: python
 
-    from deeppavlov import configs, train_model
+    from deeppavlov import train_model
     from deeppavlov.core.commands.utils import parse_config
-    
-    config_dict = parse_config(configs.ner.ner_ontonotes_bert_torch)
+
+    config_dict = parse_config('ner_ontonotes_bert')
 
     print(config_dict['dataset_reader']['data_path'])
-    >>> '~/.deeppavlov/downloads/ontonotes'
+    >>> '~/.deeppavlov/downloads/ontonotes/'
 
 There must be three txt files: train.txt, valid.txt, and test.txt. Furthermore the `data_path` can be changed from code.
 The format of the data is described in the `Training data`_ section.
@@ -102,7 +86,7 @@ Multilingual BERT Zero-Shot Transfer
 ------------------------------------
 
 Multilingual BERT models allow to perform zero-shot transfer from one language to another. The model
-:config:`ner_ontonotes_bert_mult_torch <ner/ner_ontonotes_bert_mult_torch.json>` was trained on OntoNotes corpus which has 19 types
+:config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>` was trained on OntoNotes corpus which has 19 types
 in the markup schema. The model performance was evaluated on Russian corpus Collection 3 [1]_. Results of the
 transfer are presented in the table below.
 
@@ -121,9 +105,9 @@ The following Python code can be used to infer the model:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ner_model = build_model(configs.ner.ner_ontonotes_bert_mult_torch, download=True)
+    ner_model = build_model('ner_ontonotes_bert_mult', download=True)
 
     ner_model(['Curling World Championship will be held in Antananarivo'])
     >>> (['Curling', 'World', 'Championship', 'will', 'be', 'held', 'in', 'Antananarivo']],
@@ -265,81 +249,6 @@ quality. Typical partition of a dataset into train, validation, and test
 are 80%, 10%, 10%, respectively.
 
 
-
-Few-shot Language-Model based
------------------------------
-
-It is possible to get a cold-start baseline from just a few samples of labeled data in a couple of seconds. The solution
-is based on a Language Model trained on open domain corpus. On top of the LM a SVM classification layer is placed. It is
-possible to start from as few as 10 sentences containing entities of interest.
-
-The data for training this model should be collected in the following way. Given a collection of `N` sentences without
-markup, sequentially markup sentences until the total number of sentences with entity of interest become equal
-`K`. During the training both sentences with and without markup are used.
-
-
-Mean chunk-wise F1 scores for Russian language on 10 sentences with entities :
-
-+---------+-------+
-|PER      | 84.85 |
-+---------+-------+
-|LOC      | 68.41 |
-+---------+-------+
-|ORG      | 32.63 |
-+---------+-------+
-
-(the total number of training sentences is bigger and defined by the distribution of sentences with / without entities).
-
-The model can be trained using CLI:
-
-.. code:: bash
-
-    python -m deeppavlov train ner_few_shot_ru
-
-you have to provide the `train.txt`, `valid.txt`, and `test.txt` files in the format described in the `Training data`_
-section. The files must be in the `ner_few_shot_data` folder as described in the `dataset_reader` part of the config
-:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru.json>` .
-
-To train and use the model from python code the following snippet can be used:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    ner_model = train_model(configs.ner.ner_few_shot_ru, download=True)
-
-    ner_model(['Example sentence'])
-
-Warning! This model can take a lot of time and memory if the number of sentences is greater than 1000!
-
-If a lot of data is available the few-shot setting can be simulated with special `dataset_iterator`. For this purpose
-the config
-:config:`ner/ner_few_shot_ru_train.json <ner/ner_few_shot_ru_simulate.json>` . The following code can be used for this
-simulation:
-
-.. code:: python
-
-    from deeppavlov import configs, train_model
-
-    ner_model = train_model(configs.ner.ner_few_shot_ru_simulate, download=True)
-
-In this config the `Collection dataset <http://labinform.ru/pub/named_entities/descr_ne.htm>`__ is used. However, if
-there are files `train.txt`, `valid.txt`, and `test.txt` in the `ner_few_shot_data` folder they will be used instead.
-
-
-To use existing few-shot model use the following python interface can be used:
-
-.. code:: python
-
-    from deeppavlov import configs, build_model
-
-    ner_model = build_model(configs.ner.ner_few_shot_ru)
-
-    ner_model([['Example', 'sentence']])
-    ner_model(['Example sentence'])
-
-
-
 NER-based Model for Sentence Boundary Detection Task
 ----------------------------------------------------
 
@@ -365,14 +274,14 @@ dataset generated from the DailyDialog dataset [2]_:
 +----------------------+---------+
 
 Here is the achieved result of training the hybrid model on the above dataset using
-the config file :config:`sentseg_dailydialog <sentence_segmentation/sentseg_dailydialog.json>`:
+the config file :config:`sentseg_dailydialog_bert <sentence_segmentation/sentseg_dailydialog_bert.json>`:
 
 +-----------+-----------+--------+-------+
 | Tag       | Precision | Recall |  F1   |
 +-----------+-----------+--------+-------+
-| Question  |   96.48   | 93.49  | 94.96 |
+| Question  |   96.56   | 96.78  | 96.67 |
 +-----------+-----------+--------+-------+
-| Statement |   96.24   | 96.69  | 96.47 |
+| Statement |   96.83   | 97.37  | 97.10 |
 +-----------+-----------+--------+-------+
 | Overall   |   96.30   | 95.89  | 96.10 |
 +-----------+-----------+--------+-------+
@@ -381,16 +290,29 @@ The command below is used to download and use the pre-trained model in the CLI:
 
 .. code:: bash
 
-    python -m deeppavlov interact sentseg_dailydialog -d
+    python -m deeppavlov interact sentseg_dailydialog_bert -d
 
 The model also can be trained from scratch by using the command:
 
 .. code:: bash
 
-    python -m deeppavlov train sentseg_dailydialog
+    python -m deeppavlov train sentseg_dailydialog_bert
 
 
 
+Multilingual Case-insensitive Named Entity Recognition
+------------------------------------------------------
+
+Although capitalisation is an important feature for the Named Entity Recognition (NER) task, 
+the NER input data is not always cased, for example, virtual assistants data coming from ASR. 
+Moreover, while developing virtual assistants there is often a need to support interaction in several languages. 
+It has been shown that multilingual BERT can be successfully used for cross-lingual transfer, 
+performing on datasets in various languages with scores comparable to those obtained with language-specific models.
+
+
+The model :config:`ner_case_agnostic_mdistilbert <ner/ner_case_agnostic_mdistilbert.json>` was trained on 
+on a concatenation of original and lowered datasets to solve the task. Our model achieves 
+89.5 F1 on CoNLL-2003 and 96.4 F1 on Collection 3 datasets while being robust to missing casing.
 
 
 Literature

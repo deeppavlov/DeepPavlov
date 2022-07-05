@@ -27,18 +27,18 @@ Training (if you have your own data)
 
 .. code:: python
 
-    from deeppavlov import configs, train_evaluate_model_from_config
+    from deeppavlov import train_evaluate_model_from_config
 
-    train_evaluate_model_from_config(configs.doc_retrieval.en_ranker_tfidf_wiki, download=True)
-    train_evaluate_model_from_config(configs.squad.multi_squad_noans, download=True)
+    train_evaluate_model_from_config('en_ranker_tfidf_wiki', download=True)
+    train_evaluate_model_from_config('qa_squad2_bert', download=True)
 
 Building
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
+    from deeppavlov import build_model
 
-    odqa = build_model(configs.odqa.en_odqa_infer_wiki, download=True)
+    odqa = build_model('en_odqa_infer_wiki', download=True)
 
 Inference
 
@@ -73,7 +73,7 @@ Running ODQA
 
 .. note::
 
-    About **24 GB of RAM** required.
+    About **22 GB of RAM** required.
     It is possible to run on a 16 GB machine, but than swap size should be at least 8 GB.
 
 Training
@@ -121,10 +121,6 @@ There are several ODQA configs available:
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
 |                                                                                        | answer in ``enwiki20180211`` Wikipedia dump.    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
-|:config:`en_odqa_infer_enwiki20161221 <odqa/en_odqa_infer_enwiki20161221.json>`         | Basic config for **English** language. Consists |
-|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in ``enwiki20161221`` Wikipedia dump.    |
-+----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`ru_odqa_infer_wiki <odqa/ru_odqa_infer_wiki.json>`                             | Basic config for **Russian** language. Consists |
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
 |                                                                                        | answer in ``ruwiki20180401`` Wikipedia dump.    |
@@ -140,23 +136,19 @@ Comparison
 
 Scores for **ODQA** skill:
 
-+-------------------------------------------------------------------------------------+------+----------------------+----------------+---------------------+---------------------+
-|                                                                                     |      |                      |                |   Ranker@5          |   Ranker@25         |
-|                                                                                     |      |                      |                +----------+----------+-----------+---------+
-| Model                                                                               | Lang |    Dataset           |   WikiDump     |  F1      |   EM     |   F1      |   EM    |
-+-------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                  |      |                      | enwiki20180211 |  35.89   |  29.21   |  39.96    |  32.64  |
-+-------------------------------------------------------------------------------------+      +                      +----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov <odqa/en_odqa_infer_enwiki20161221.json>`                        |  En  |   SQuAD (dev)        |                | **37.83**|**31.26** |  41.86    |  34.73  |
-+-------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
-|`DrQA`_                                                                              |      |                      |                |   \-     |  27.1    |   \-      |   \-    |
-+-------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
-|`R3`_                                                                                |      |                      | enwiki20161221 |  37.5    |  29.1    |   \-      |   \-    |
-+-------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki_rubert.json>`        |      |                      |                | **42.02**|**29.56** |   \-      |   \-    |
-+-------------------------------------------------------------------------------------+  Ru  +  SDSJ Task B (dev)   + ruwiki20180401 +----------+----------+-----------+---------+
-|:config:`DeepPavlov <odqa/ru_odqa_infer_wiki.json>`                                  |      |                      |                |  28.56   |  18.17   |   \-      |   \-    |
-+-------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
++----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+---------------------+---------------------+
+|                                                                                                                                  |      |                      |                |   Ranker@5          |   Ranker@25         |
+|                                                                                                                                  |      |                      |                +----------+----------+-----------+---------+
+| Model                                                                                                                            | Lang |    Dataset           |   WikiDump     |  F1      |   EM     |   F1      |   EM    |
++----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
+|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |  En  |                      | enwiki20180211 |  29.03   |  22.75   |  31.38    |  25.96  |
++----------------------------------------------------------------------------------------------------------------------------------+      +                      +----------------+----------+----------+-----------+---------+
+|`DrQA`_                                                                                                                           |      |                      |                |   \-     |  27.1    |   \-      |   \-    |
++----------------------------------------------------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
+|`R3`_                                                                                                                             |      |                      | enwiki20161221 |  37.5    |  29.1    |   \-      |   \-    |
++----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
+|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki.json>`                                                            |  Ru  |  SDSJ Task B (dev)   | ruwiki20180401 | **42.02**|**29.56** |   \-      |   \-    |  
++----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
 
 EM stands for "exact-match accuracy". Metrics are counted for top 5 and top 25 documents returned by retrieval module.
 

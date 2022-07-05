@@ -22,8 +22,10 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -36,6 +38,8 @@ download_path = tests_dir / "download"
 cache_dir: Optional[Path] = None
 if not os.getenv('DP_PYTEST_NO_CACHE'):
     cache_dir = tests_dir / 'download_cache'
+
+SKIP_TF = os.getenv('SKIP_TF', False)
 
 api_port = os.getenv('DP_PYTEST_API_PORT')
 if api_port is not None:
@@ -79,8 +83,8 @@ PARAMS = {
                     [[[(0, 2)], [(4, 6)]]],
                     [["PERSON", "CITY"]],
                     (
-                        'P551',
-                        'место жительства'
+                        'P495',
+                        'страна происхождения'
                     )
                 ),
             ]
@@ -98,54 +102,18 @@ PARAMS = {
                 ("helllo", ("hello",)),
                 ("datha", ("data",))
             ],
-        ("spelling_correction/brillmoore_kartaslov_ru.json", "error_model", ('IP',)):
-            [
-                ("преведствую", ("приветствую",)),
-                ("я джва года дду эту игру", ("я два года жду эту игру",))
-            ],
         ("spelling_correction/levenshtein_corrector_ru.json", "error_model", ('IP',)):
             [
                 ("преветствую", ("приветствую",)),
                 ("Я джва года хочу такую игру", ("я два года хочу такую игру",))
             ]
     },
-    "go_bot": {
-        ("go_bot/gobot_dstc2.json", "gobot_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_best.json", "gobot_dstc2_best", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("go_bot/gobot_dstc2_minimal.json", "gobot_dstc2_minimal", ('TI',)): [([{"text": "the weather is clooudy and gloooomy"}], None)],
-        ("go_bot/gobot_md_yaml_minimal.json", "gobot_md_yaml_minimal", ('TI',)): [([{"text": "start"}], None)]
-    },
     "classifiers": {
-        ("classifiers/paraphraser_bert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/paraphraser_rubert.json", "classifiers", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/insults_kaggle_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/insults_kaggle_conv_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_dstc2_bert.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_dstc2.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_dstc2_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/insults_kaggle.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_twitter_bert_emb.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_twitter_preproc.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/topic_ag_news.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_elmo_twitter_cnn.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_bigru_superconv.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/yahoo_convers_vs_info.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/ru_obscenity_classifier.json", "classifiers", ('IP',)):
-            [
-                ("Ну и сука же она", (True,)),
-                ("я два года жду эту игру", (False,))
-            ],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_sst_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_yelp_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_yelp_multi_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_imdb_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sentiment_imdb_conv_bert.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/sst_torch_swcnn.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/insults_kaggle_bert_torch.json", "classifiers", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
@@ -154,26 +122,6 @@ PARAMS = {
         ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
-    "snips": {
-        ("classifiers/intents_snips.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_big.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bigru.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_cnn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_proj_layer.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_self_add_attention.json", "classifiers", ('TI',)):
-            [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_bilstm_self_mult_attention.json", "classifiers", ('TI',)):
-            [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_cnn_bilstm.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_sklearn.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_snips_tfidf_weighted.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "sample": {
-        ("classifiers/intents_sample_csv.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/intents_sample_json.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
     "distil": {
         ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -181,133 +129,128 @@ PARAMS = {
         ("classifiers/rusentiment_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_2L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_6L_infer.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
     },
-    "entity_linking": {
-        ("kbqa/entity_linking_rus.json", "entity_linking",  ('IP',)):
+    "entity_extraction": {
+        ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
+            [
+                ("Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.",
+                 (['forrest gump', 'robert zemeckis', 'eric roth'],
+                  [(0, 12), (48, 63), (79, 88)],
+                  [[0, 1], [10, 11], [15, 16]],
+                  ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                  [(0, 89)],
+                  ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'],
+                  [0.8798, 0.9986, 0.9985]))
+            ],
+        ("entity_extraction/entity_detection_ru.json", "entity_extraction", ('IP',)):
             [
                 ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
                  (['москва', 'россии', 'центрального федерального округа', 'московской области'],
-                  [[0], [3], [6, 7, 8], [11, 12]], ['Q649', 'Q159', 'Q190778', 'Q1749'])),
-                ("абв", ([], [], []))
+                  [(0, 6), (17, 23), (31, 63), (72, 90)],
+                  [[0], [3], [6, 7, 8], [11, 12]],
+                  ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                  [(0, 91)],
+                  ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
+                  [0.8359, 0.938, 0.9917, 0.9803]))
             ],
-        ("kbqa/entity_linking_eng.json", "entity_linking",  ('IP',)):
+        ("entity_extraction/entity_linking_en.json", "entity_extraction", ('IP',)):
             [
-                ("The city stands on the River Thames in the south-east of England, " + \
-                 "at the head of its 50-mile (80 km) estuary leading to the North Sea.",
-                 (['the river thames', 'the north sea', 'england'], [[4, 5, 6], [30, 31, 32], [13]],
-                  ['Q19686', 'Q1693', 'Q21'])),
-                ("abc", ([], [], []))
+                (['forrest gump', 'robert zemeckis', 'eric roth'],
+                 ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                 ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'],
+                 [(0, 12), (48, 63), (79, 88)],
+                 [(0, 89)],
+                 ([['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'], ['Q942932', 'Q89320386', 'Q89909683']],
+                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)],
+                   [(1.0, 73, 1.0), (0.5, 52, 0.29)],
+                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
+                  [['Forrest Gump', 'Forrest Gump (novel)', ''],
+                   ['Robert Zemeckis', 'Welcome to Marwen'], ['Eric Roth', '', '']]))
             ],
-        ("kbqa/kbqa_entity_linking.json", "entity_linking",  ('IP',)):
+        ("entity_extraction/entity_linking_ru.json", "entity_extraction", ('IP',)):
             [
-                (["River Thames", "England"], "", "The city stands on the River Thames in the south-east of England.",
-                 ([['Q19686', 'Q2880751'], ['Q21', 'Q179876']], [[0.02, 0.02], [0.01, 0.01]])),
-                (["  "], "", "", ([[]], [[]]))
+                (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                 ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                 ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
+                 [(0, 6), (17, 23), (31, 63), (72, 90)],
+                 [(0, 91)],
+                 ([['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
+                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
+                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
+                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
+                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
+                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
+                  [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
+                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
+                    'Российская республика'],
+                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
+                    'Центральный административный округ (Назрань)'],
+                   ['Московская область', 'Московская область (1917—1918)',
+                    'Мостовский (Волгоградская область)']]))
+            ],
+        ("entity_extraction/entity_extraction_en.json", "entity_extraction", ('IP',)):
+            [
+                ("Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.",
+                 (['forrest gump', 'robert zemeckis', 'eric roth'],
+                  ['WORK_OF_ART', 'PERSON', 'PERSON'],
+                  [(0, 12), (48, 63), (79, 88)],
+                  [['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'],
+                   ['Q942932', 'Q89320386', 'Q89909683']],
+                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)], [(1.0, 73, 1.0), (0.5, 52, 0.29)],
+                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
+                  [['Forrest Gump', 'Forrest Gump (novel)', ''], ['Robert Zemeckis', 'Welcome to Marwen'],
+                   ['Eric Roth', '', '']]))
+            ],
+        ("entity_extraction/entity_extraction_ru.json", "entity_extraction", ('IP',)):
+            [
+                ("Москва — столица России, центр Центрального федерального округа и центр Московской области.",
+                 (['москва', 'россии', 'центрального федерального округа', 'московской области'],
+                  ['CITY', 'COUNTRY', 'LOC', 'LOC'],
+                  [(0, 6), (17, 23), (31, 63), (72, 90)],
+                  [['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
+                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
+                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
+                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
+                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
+                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
+                  [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
+                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
+                    'Российская республика'],
+                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
+                    'Центральный административный округ (Назрань)'],
+                   ['Московская область', 'Московская область (1917—1918)', 'Мостовский (Волгоградская область)']]))
             ]
     },
     "ner": {
-        ("ner/ner_ontonotes_m1.json", "ner_ontonotes_m1", ('IP', 'TI')): [
-            (["Peter", "Blackburn"], None)],
-        ("ner/ner_collection3_m1.json", "ner_collection3_m1", ('IP', 'TI')): [
-            (["Валентин", "Москва"], None)],
-        ("ner/conll2003_m1.json", "conll2003_m1", ('IP', 'TI')): [
-            (["Peter", "Blackburn"], ["NNP", "NNP"], None)],
-        ("ner/vlsp2016_full.json", "vlsp2016_full", ('IP', 'TI')): [
-            (["Hương", "tự_tin"], ["NNP", "V"], ["B-NP", "B-VP"], None)],
         ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_bert.json", "ner_rus_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_conll2003.json", "ner_conll2003", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_dstc2.json", "slotfill_dstc2", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes.json", "ner_ontonotes", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes_bert_emb.json", "ner_ontonotes_bert_emb", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_few_shot_ru_simulate.json", "ner_fs", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus.json", "ner_rus", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/slotfill_dstc2.json", "slotfill_dstc2", ('IP',)):
-            [
-                ("chinese food", ({'food': 'chinese'},)),
-                ("in the west part", ({'area': 'west'},)),
-                ("moderate price range", ({'pricerange': 'moderate'},))
-            ],
-        ("ner/slotfill_simple_rasa_raw.json", "slotfill_simple_rasa_raw", ('IP')): [
-            ("i see 1 cat", ({"number": '1'},))],
-        ("ner/ner_conll2003_torch_bert.json", "ner_conll2003_torch_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_bert_torch.json", "ner_rus_bert_torch", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes_bert_torch.json", "ner_ontonotes_bert_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_ontonotes_bert_mult_torch.json", "ner_ontonotes_bert_mult_torch", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
+        ("ner/ner_collection3_bert.json", "ner_collection3_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
-        ("sentence_segmentation/sentseg_dailydialog.json", "sentseg_dailydialog", ('IP', 'TI')): [
+        ("sentence_segmentation/sentseg_dailydialog_bert.json", "sentseg_dailydialog_bert", ('IP', 'TI')): [
             (["hey", "alexa", "how", "are", "you"], None)]
     },
     "kbqa": {
-        ("kbqa/kbqa_cq.json", "kbqa", ('IP',)):
+        ("kbqa/kbqa_cq_en.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?", ("Swedish krona",)),
                 ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
                 ("When did the Korean War end?", ("27 July 1953",)),
                 ("   ", ("Not Found",))
             ],
-        ("kbqa/kbqa_cq_sep.json", "kbqa", ('IP',)):
+        ("kbqa/kbqa_cq_ru.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Who directed Forrest Gump?", ("Robert Zemeckis",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_mt_bert.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_online_mt_bert.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("1953-07-27",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_bert_ranker.json", "kbqa", ('IP',)):
-            [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
-        ("kbqa/kbqa_cq_rus.json", "kbqa", ('IP',)):
-            [
-                ("Кто такой Оксимирон?", ("британский рэп-исполнитель",)),
-                ("Чем питаются коалы?", ("Эвкалипт",)),
+                ("Кто такой Оксимирон?", ("российский рэп-исполнитель",)),
+                ("Чем питаются коалы?", ("Лист",)),
                 ("абв", ("Not Found",))
             ]
     },
-    "elmo_embedder": {
-        ("embedder/elmo_ru_news.json", "embedder_ru_news", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-    },
-    "elmo_model": {
-        ("elmo/elmo_1b_benchmark_test.json", "elmo_1b_benchmark_test", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-    },
     "ranking": {
-        ("ranking/ranking_ubuntu_v2_mt.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/paraphrase_ident_paraphraser_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_bert_sep_interact.json", "ranking", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_smn.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("ranking/ranking_ubuntu_v2_mt_word2vec_dam_transformer.json", "ranking", ('IP',)):
-            [(' & & & & & & & & bonhoeffer  whar drives do you want to mount what &  i have an ext3 usb drive  '
-              '& look with fdisk -l & hello there & fdisk is all you need',
-              None)],
         ("ranking/ranking_ubuntu_v2_torch_bert_uncased.json", "ranking", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "doc_retrieval": {
@@ -318,42 +261,16 @@ PARAMS = {
     },
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_bert_infer.json", "squad_ru_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_rubert.json", "squad_ru_rubert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_rubert_infer.json", "squad_ru_rubert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_bert_infer.json", "squad_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad.json", "squad_model", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru.json", "squad_model_ru", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/multi_squad_noans.json", "multi_squad_noans", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_zh_bert_mult.json", "squad_zh_bert_mult", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_zh_bert_zh.json", "squad_zh_bert_zh", ALL_MODES): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_torch_bert.json", "squad_torch_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_torch_bert_infer.json", "squad_torch_bert_infer", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_torch_bert.json", "squad_ru_torch_bert", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
+        ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "odqa": {
-        ("odqa/en_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/ru_odqa_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/en_odqa_pop_infer_wiki_test.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
-    "morpho_tagger": {
-        ("morpho_tagger/UD2.0/morpho_en.json", "morpho_en", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/UD2.0/morpho_ru_syntagrus_pymorphy_lemmatize.json", "morpho_tagger_pymorphy", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_tagger/BERT/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
-            [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "syntax_tagger": {
-        ("syntax/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("syntax/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "nemo": {
-        ("nemo/tts2asr_test.json", "nemo", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    }
 }
 
-MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "go_bot", "squad"]}  # marks defined in pytest.ini
+MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "squad"]}  # marks defined in pytest.ini
 
 TEST_GRID = []
 for model in PARAMS.keys():
@@ -738,3 +655,18 @@ def test_hashes_existence():
             messages.append(f'got status_code {status} for {url}')
     if messages:
         raise RuntimeError('\n'.join(messages))
+
+
+def test_aliases():
+    configs = list(src_dir.glob('**/*.json'))
+    config_names = [c.stem for c in configs]
+
+    assert len(config_names) == len(set(config_names)), 'Some model names are duplicated'
+
+    aliases_in_configs = set(ALIASES.keys()) & set(config_names)
+    assert aliases_in_configs == set(), f'Following model(s) marked as deprecated but still present in configs list: ' \
+                                        f'{", ".join(aliases_in_configs)}.'
+
+    alias_targets_not_in_configs = set(ALIASES.values()) - set(config_names)
+    assert alias_targets_not_in_configs == set(), f'Following model(s) marked as alias targets but there is no such ' \
+                                                  f'config in the library: {", ".join(alias_targets_not_in_configs)}'

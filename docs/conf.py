@@ -190,13 +190,13 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['aiml', 'bert_dp', 'bs4', 'faiss', 'fastText', 'fasttext', 'gensim', 'hdt', 'kenlm', 'librosa',
-                        'lxml', 'nemo', 'nemo_asr', 'nemo_tts', 'nltk', 'opt_einsum', 'rapidfuzz', 'rasa',
-                        'russian_tagsets', 'sacremoses', 'sortedcontainers', 'spacy', 'tensorflow', 'tensorflow_hub',
-                        'torch', 'transformers', 'udapi', 'ufal_udpipe', 'whapi', 'xeger']
+autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz',
+                        'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf', 'transformers',
+                        'udapi', 'whapi']
 
 extlinks = {
-    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),
+    'dp_file': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/%s', None)
 }
 
 # -- Options for intersphinx extension ---------------------------------------

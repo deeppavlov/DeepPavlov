@@ -36,8 +36,8 @@
         ],
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/tfidf.pkl",
-        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/tfidf.pkl",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/tfidf.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/tfidf.pkl",
         "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
         "infer_method": "transform"
       },
@@ -47,8 +47,8 @@
         "fit_on": [
           "y"
         ],
-        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
-        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/en_mipt_answers.dict",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/en_mipt_answers.dict",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/en_mipt_answers.dict",
         "in": "y",
         "out": "y_ids"
       },
@@ -63,8 +63,8 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/logreg.pkl",
-        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v4/logreg.pkl",
+        "save_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/logreg.pkl",
+        "load_path": "{MODELS_PATH}/faq/mipt/en_mipt_faq_v5/logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
         "C": 1000,
@@ -99,7 +99,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v4.tar.gz",
+        "url": "http://files.deeppavlov.ai/faq/mipt/en_mipt_faq_v5.tar.gz",
         "subdir": "{MODELS_PATH}/faq/mipt"
       }
     ]

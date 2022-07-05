@@ -1,0 +1,1 @@
+pytorch-crf==0.7.*

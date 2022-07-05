@@ -9,7 +9,6 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
-   Choosing The Framework <intro/choose_framework>
    Models/Skills overview <features/overview>
 
 
@@ -28,21 +27,15 @@ Welcome to DeepPavlov's documentation!
    :caption: Models
    
    BERT-based models <features/models/bert>
-   Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
-   Entity Linking <features/models/entity_linking>
-   Morphological Tagger <features/models/morphotagger>
+   Entity Extraction <features/models/entity_extraction>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
-   Slot filling <features/models/slot_filling>
-   Speech recognition and synthesis <features/models/nemo>
    Spelling Correction <features/models/spelling_correction>
-   Syntactic Parser <features/models/syntaxparser>
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
-   Intent Catcher <features/models/intent_catcher>
    Relation Extraction <features/models/re>
 
 
@@ -51,12 +44,8 @@ Welcome to DeepPavlov's documentation!
    :maxdepth: 1
    :caption: Skills
    
-   Goal-Oriented Dialogue Bot <features/skills/go_bot>
    Open-Domain Question Answering <features/skills/odqa>
    Frequently Asked Questions Answering <features/skills/faq>
-   AIML <features/skills/aiml_skill>
-   Rasa <features/skills/rasa_skill>
-   DSL <features/skills/dsl_skill>
 
 
 .. toctree::
@@ -67,10 +56,6 @@ Welcome to DeepPavlov's documentation!
    REST API <integrations/rest_api>
    Socket API <integrations/socket_api>
    DeepPavlov Agent RabbitMQ integration <integrations/dp_agent>
-   Telegram integration <integrations/telegram>
-   Yandex Alice integration <integrations/yandex_alice>
-   Amazon Alexa integration <integrations/amazon_alexa>
-   Microsoft Bot Framework integration <integrations/ms_bot>
    Amazon AWS deployment <integrations/aws_ec2>
    DeepPavlov settings <integrations/settings>
 

@@ -1,1 +1,1 @@
-fasttext==0.9.1
+fasttext==0.9.*

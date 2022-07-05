@@ -1,0 +1,46 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "pipe": [
+      {
+        "class_name": "ner_chunker",
+        "batch_size": 16,
+        "max_chunk_len" : 180,
+        "max_seq_len" : 300,
+        "vocab_file": "{TRANSFORMER}",
+        "in": ["x"],
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
+      },
+      {
+        "thres_proba": 0.05,
+        "o_tag": "O",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "return_entities_with_tags": true,
+        "class_name": "entity_detection_parser",
+        "id": "edp"
+      },
+      {
+        "class_name": "ner_chunk_model",
+        "ner": {
+          "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
+          "overwrite": {
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+          }
+        },
+        "ner_parser": "#edp",
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
+        "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
+      }
+    ],
+    "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "TRANSFORMER": "bert-base-cased",
+      "NER_PATH": "{MODELS_PATH}/ner_ontonotes_bert_torch_crf"
+    }
+  }
+}

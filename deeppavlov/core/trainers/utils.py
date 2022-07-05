@@ -13,10 +13,11 @@
 # limitations under the License.
 
 from collections import OrderedDict, namedtuple
+from functools import partial
 from json import JSONEncoder
 from typing import List, Tuple, Union, Iterable
 
-import numpy
+import numpy as np
 
 from deeppavlov.core.common.metrics_registry import get_metric_by_name
 
@@ -29,16 +30,17 @@ def parse_metrics(metrics: Iterable[Union[str, dict]], in_y: List[str], out_vars
         if isinstance(metric, str):
             metric = {'name': metric, 'alias': metric}
 
-        metric_name = metric['name']
-        alias = metric.get('alias', metric_name)
+        metric_name = metric.pop('name')
+        alias = metric.pop('alias', metric_name)
 
         f = get_metric_by_name(metric_name)
 
-        inputs = metric.get('inputs', in_y + out_vars)
+        inputs = metric.pop('inputs', in_y + out_vars)
         if isinstance(inputs, str):
             inputs = [inputs]
 
-        metrics_functions.append(Metric(metric_name, f, inputs, alias))
+        metrics_functions.append(Metric(metric_name, partial(f, **metric), inputs, alias))
+
     return metrics_functions
 
 
@@ -56,6 +58,10 @@ def prettify_metrics(metrics: List[Tuple[str, float]], precision: int = 4) -> Or
 
 class NumpyArrayEncoder(JSONEncoder):
     def default(self, obj):
-        if isinstance(obj, numpy.ndarray):
+        if isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
         return JSONEncoder.default(self, obj)
