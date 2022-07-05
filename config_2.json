@@ -42,7 +42,7 @@
         "pipe": [
             {
                 "class_name": "multitask_pal_bert_pipeline_preprocessor",
-                "possible_keys_to_extract":[0,1] , #eval(x) to preproxessor
+                "possible_keys_to_extract":[0,1],
                 "preprocessor":"TorchTransformersPreprocessor",
                 "vocab_file":"{BACKBONE}", 
                 "max_seq_length":128,
@@ -72,7 +72,6 @@
             {
                 "id": "multitask_bert",
                 "class_name": "multitask_bert",
-#all config params to default. ditch in_distribution and in_y_distribution
                 "optimizer_parameters": {
                     "lr": 2e-5
                 },
