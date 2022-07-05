@@ -86,10 +86,12 @@
                 "load_path": "{SAVE_LOAD_PATH}",
                 "tasks": {
                     "cola": {
-                        "n_classes": 2
+                        "type":"classification",
+                        "options": 2
                     },
                     "rte": {
-                        "n_classes": 2
+                        "type":"classification",
+                        "options": 2
                     }
                 },
                 "in": [
