@@ -1,17 +1,3 @@
-# Copyright 2021 Neural Networks and Deep Learning lab, MIPT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 from logging import getLogger
 from typing import List, Dict, Union, Optional
 from pathlib import Path
@@ -32,8 +18,6 @@ from deeppavlov.models.preprocessors.torch_transformers_preprocessor import Torc
 log = getLogger(__name__)
 
 
-
-
 prev_input = None 
 class BertForMultiTask(nn.Module):
     """BERT model for classification or regression on GLUE tasks (STS-B is treated as a regression task).
@@ -41,88 +25,29 @@ class BertForMultiTask(nn.Module):
     the pooled output.
     ```
     """
-    def process_on_top(self, last_hidden_state, number_of_task, attention_mask):
-
-        first_token_tensor = last_hidden_state[:, 0]        
-        pooled_output = self.bert.pooler(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
-        if self.gsa_mode == 'no_2loss':
-            return last_hidden_state, pooled_output, last_hidden_state[:,1]
-        return last_hidden_state, pooled_output, None
-
 
     def __init__(self, tasks,task_types,
-                 backbone_model='bert_base_uncased', config_file=None, hidden_size_aug=204,
-                 max_seq_len=320,
-                 attention_type='BERTAttention',process_on_top=True,
-                 only_low_rank=False, dense_transforms=True,
-                 top_attention_heads=12, top_attention_layers=6, all_hidden=False,
-                 use_taskspecific_token=False, use_only_taskspecific_token=False,
-                 pool=True,gsa_mode='gsa-lstm'):
+                 backbone_model='bert_base_uncased', config_file=None,
+                 max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
-        global prev_input
-        #nclasses? #con
-        #print(backbone_model)
         config = AutoConfig.from_pretrained(backbone_model,output_hidden_states=True,output_attentions=True)
-        config.hidden_dropout_prob = 0
-        config.attention_probs_dropout_prob = 0
-        n_hidden = config.num_hidden_layers
         self.bert = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=backbone_model,
-                                                                           config=config   
-                                                                        )
-        SUPPORTED_MODES=['lstm','gsa','lstm&gsa','lstm-gsa','gsa-lstm', 'no', 'no_2loss']
+                                                                           config=config )
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.classes = [num_labels for num_labels in tasks]
         num_tasks = len(self.classes)
         self.max_seq_len =max_seq_len
-        self.pool = pool
-        self.all_hidden = all_hidden
-        self.use_taskspecific_token = use_taskspecific_token
-        self.gsa_mode=gsa_mode
-        assert self.gsa_mode in SUPPORTED_MODES,(self.gsa_mode, SUPPORTED_MODES)
-        self.use_only_taskspecific_token = use_only_taskspecific_token
-        num_tasks = len(tasks)
-        config.hidden_size_aug = hidden_size_aug
-        config.top_attention_heads = top_attention_heads
-        config.num_tasks = num_tasks
-
-         attention = None
-        mult_dense = nn.Linear(config.hidden_size, config.hidden_size_aug)
-        self.bert.mult_dense = nn.ModuleList([copy.deepcopy(mult_dense)
-                                         for _ in range(num_tasks)])
-        mult_dense2 = nn.Linear(config.hidden_size_aug, config.hidden_size)
-        self.bert.mult_dense2 = nn.ModuleList([copy.deepcopy(mult_dense2)
-                                          for _ in range(num_tasks)])
-        multi = nn.ModuleList(
-                    [copy.deepcopy(attention)
-                     for _ in range(top_attention_layers)]
-                )
-        self.bert.multi_layers = nn.ModuleList(
-                [copy.deepcopy(multi) for _ in range(num_tasks)]
-            )
-        # assert not self.lstm
-        #Layers for the pooling processing
         self.activation = nn.Tanh()
-           OUT_DIM = config.hidden_size
+        OUT_DIM = config.hidden_size
         self.classifier = nn.ModuleList(
             [
                 nn.Linear(OUT_DIM, num_labels) if task_type != 'multiple_choice'
                 else nn.Linear(OUT_DIM, 1)
-                #Only 2 spans are supported yet
                 for num_labels, task_type in zip(tasks, task_types)
             ]
         )
         self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
-        self.only_low_rank = only_low_rank
-        self.dense_transforms = dense_transforms
-        if torch.cuda.is_available():
-            self.bert=self.bert.to('cuda:0')
-            self.classifier=self.classifier.to('cuda:0')
-        else:
-            print('cuda not available')
-            # breakpoint()
-
         
 
     def forward(
@@ -144,14 +69,8 @@ class BertForMultiTask(nn.Module):
         try:
             outputs = self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
         except Exception as e:
-            if torch.cuda.is_available():
-                self.bert=self.bert.to('cuda:0')
-                try:
-                    outputs = self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
-                except Exception as e:
-                    breakpoint()
-                    raise e
-        prev_input=(input_ids,token_type_ids,attention_mask)
+            breakpoint()
+            raise e
         last_hidden_state = outputs[1][-1]
         sentence_embeddings = outputs[1][0]
         first_token_tensor = last_hidden_state[:, 0]        
@@ -164,8 +83,6 @@ class BertForMultiTask(nn.Module):
                 loss_fct = CrossEntropyLoss()
                 active_logits = logits.view(-1, self.classes[task_id])
                 loss=loss_fct(active_logits, labels.view(-1))
-                if self.gsa_mode == 'no_2loss':
-                    loss = loss + task_classification_loss
                 return loss, logits     
             else:
                 return logits,outputs.hidden_states, final_output
@@ -191,28 +108,23 @@ class BertForMultiTask(nn.Module):
                         loss = loss_fct(logits, labels.unsqueeze(1))
                     except:
                         breakpoint()
-                    if self.gsa_mode == 'no_2loss':
-                        loss = loss + task_classification_loss
                     return loss, logits
             else:
                 return logits
         elif name == 'span_classification':
             assert span1 is not None and span2 is not None
-            print('hidden state shape (batch_size,seq_len_emb_size)')
-            print(last_hidden_state.shape)
+            log.warning('SPAN CLASSIFICATION IS SUPPORTED ONLY EXPERIMENTALLY')
             input_dict = {"input":last_hidden_state, "attention_mask": attention_mask, 
                           "span1s":span1, "span2s":span2}
             if labels is not None:
                 input_dict["labels"] = labels
             output_dict = self.classifier[task_id].forward(input_dict)
             if 'loss' in output_dict:
-                if self.gsa_mode == 'no_2loss':
-                    output_dict['loss'] = output_dict['loss'] + task_classification_loss
                 return output_dict['loss'], output_dict['logits']
             else:
                 return output_dict['logits']
         elif name == 'question_answering':
-            print('WARNING - QUESTION ANSWERING IS SUPPORTED ONLY EXPERIMENTALLY')
+            log.warning('QUESTION ANSWERING IS SUPPORTED ONLY EXPERIMENTALLY')
             sequence_output = outputs.hidden_states[-1]        
             sequence_output = self.dropout(sequence_output)
             # or logits?
@@ -229,13 +141,10 @@ class BertForMultiTask(nn.Module):
                 ignored_index = start_logits.size(1)
                 start_positions.clamp_(0, ignored_index)
                 end_positions.clamp_(0, ignored_index)
-
                 loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
                 start_loss = loss_fct(start_logits, start_positions)
                 end_loss = loss_fct(end_logits, end_positions)
                 total_loss = (start_loss + end_loss) / 2
-                if self.gsa_mode == 'no_2loss':
-                    total_loss = total_loss + task_classification_loss
                 return total_loss
             else:
                 return start_logits, end_logits
@@ -288,18 +197,8 @@ class TorchMultiTaskBert(TorchModel):
         one_hot_labels: bool = False,
         multilabel: bool = False,
         return_probas: bool = False,
-        include_preprocessors: bool=False,
-        lstm: bool = False,
-        bidirectional: bool = False, # if True use bidirectional lstm
-        gsa = False, 
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
-        use_new_model: bool = False,
-        attention_type: str = 'BERTAttention',
-        use_taskspecific_token = False,
-        all_hidden: bool = False,
-        pool: bool = True,
-        gsa_mode = 'no',
         *args,
         **kwargs,
     ) -> None:
@@ -381,11 +280,6 @@ class TorchMultiTaskBert(TorchModel):
                 "Set return_probas to True for multilabel classification!"
             )
 
-        #if gradient_accumulation_steps > 1 and not self.steps_per_epoch:
-        #    raise RuntimeError(
-        #        "Provide steps per epoch when using gradient accumulation"
-        #    )
-
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
             lr_scheduler=self.lr_scheduler_name,
@@ -404,19 +298,10 @@ class TorchMultiTaskBert(TorchModel):
         """
 
     
-        self.model = NewBertForMultiTask(
+        self.model = BertForMultiTask(
                 backbone_model=self.backbone_model,
                 tasks = self.tasks_num_classes,
-                task_types=self.tasks_type,
-                attention_type=self.attention_type,process_on_top=True,
-                only_low_rank=only_low_rank,
-                dense_transforms=dense_transforms, hidden_size_aug=204,
-                top_attention_heads=12, top_attention_layers=6,
-                all_hidden=self.all_hidden,use_taskspecific_token=self.use_taskspecific_token,
-                use_only_taskspecific_token = self.use_only_taskspecific_token,
-                gsa_mode=self.gsa_mode)
-        
-
+                task_types=self.tasks_type)
 
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
@@ -478,10 +363,8 @@ class TorchMultiTaskBert(TorchModel):
 
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
-                # breakpoint()
                 checkpoint = torch.load(weights_path, map_location=self.device)
-                # print(self.lstm)
-                # breakpoint()
+)
                 self.model.load_state_dict(checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(
                     checkpoint["optimizer_state_dict"])
@@ -530,7 +413,6 @@ class TorchMultiTaskBert(TorchModel):
             args_in, args_in_y = args[:1], args[1:]
             task_id=0
             assert args_in_y
-        #print(in_by_tasks)
 
         self.validation_predictions = []
         in_by_tasks = self._distribute_arguments_by_tasks(args_in, {}, self.task_names, "in")
@@ -539,27 +421,18 @@ class TorchMultiTaskBert(TorchModel):
         else:
             task_ids_to_use = [task_id]
         for task_id in range(len(self.task_names)):
-            #print(task_id)
-            #print(task_ids_to_use)
             if task_id not in task_ids_to_use:
                 self.validation_predictions.append([])
             else:
-                # print(self.task_names[task_id])
                 task_features = in_by_tasks[self.task_names[task_id]]
                 if len(task_features) == 1 and isinstance(task_features[0],list):
                     task_features = task_features[0]
-
                 _input = {}
-                #breakpoint()
                 for elem in ["input_ids", "attention_mask", "token_type_ids"]:
                     if elem in task_features[0] or hasattr(task_features[0], elem):
                         try:
-                            #breakpoint()
-                            # print('processing')
                             _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in task_features]
-                            # print('processed')
                         except Exception as e:
-                            print(e)
                             breakpoint()
                             raise e
                         _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
@@ -571,23 +444,15 @@ class TorchMultiTaskBert(TorchModel):
                         try:
                             _input[elem] = torch.cat(tmp, dim=0).to(self.device)
                         except Exception as e:
+                            breakpoint()
                             raise e
-                        #print(_input[elem])
-                        #except Exception as e:
-                        #    print(e)
-                        #    breakpoint()
-                        #    raise e
-                #print(f'Prepared input {_input}')
+
                 with torch.no_grad():
-                    #breakpoint()
-                    #breakpoint()
-                    # print('running')
                     logits = self.model(
                         task_id=task_id, name=self.tasks_type[task_id], **_input
                     )
                     if isinstance(logits,tuple) or logits.shape[0]==1:
                         logits=logits[0]
-                #print(f'Returned logits {logits}')
                 if self.return_probas:
                     if not self.multilabel and self.tasks_type[task_id] != 'regression':
                         pred = torch.nn.functional.softmax(logits, dim=-1)
@@ -596,27 +461,13 @@ class TorchMultiTaskBert(TorchModel):
                     pred = pred.detach().cpu().numpy()
                 elif self.tasks_num_classes[task_id] > 1:
                     logits = logits.detach().cpu().numpy()
-                    #print('not return probas')
-                    #print(logits)
                     pred = np.argmax(logits, axis=1)
-                    #print(pred)
-                else:  # regression
+                else: 
+                    # regression
                     pred = logits.squeeze(-1).detach().cpu().numpy()
-                #if self.tasks_type[task_id] == 'span_classification':
-                    #print('Pred MUST be between 0 and 1')
-                    #breakpoint()
-                #print(f'Pred to append {pred}')
                 self.validation_predictions.append([pred])
-        #print('val pred')
-        #print('*')
-        #print(self.validation_predictions)
         if len(args) ==1:
-            #print('1 argument')
-            #print(self.validation_predictions)
-            #print(self.validation_predictions[0])
-            #breakpoint()
             return self.validation_predictions[0]
-        # print(f'Predictions {self.validation_predictions}')
         return self.validation_predictions
     def set_gradient_accumulation_interval(self, task_id, interval):
         self.gradient_accumulation_steps[task_id] = interval
@@ -630,7 +481,6 @@ class TorchMultiTaskBert(TorchModel):
             dict with loss for each task
         """
         n_in = sum([inp for inp in self.in_distribution.values()])
-        #print(f'RECEIVED {args[0]}')
         if len(args) >2:
             if len(args)%2!=0:
                 task_id = args[0]
@@ -655,7 +505,6 @@ class TorchMultiTaskBert(TorchModel):
         else:
             task_ids = [task_id]
         for task_id in task_ids:
-            # print(f'Train on batch for {self.task_names[task_id]}')
             task_features = in_by_tasks[self.task_names[task_id]]
             if len(task_features) == 1 and isinstance(task_features[0],list):
                 task_features = task_features[0]
@@ -665,16 +514,14 @@ class TorchMultiTaskBert(TorchModel):
             for elem in ["input_ids", "attention_mask", "token_type_ids"]:
                 _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in task_features]
                 _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-            #print(f'Shape {_input["input_ids"].shape[0]}')
             if self.tasks_type[task_id] == "span_classification":
                 for elem in ["span1", "span2"]:
                     tmp = [getattr(f,elem) for f in task_features] 
                     try:
                         _input[elem] = torch.cat(tmp, dim=1).to(self.device)
-                        breakpoint()
                     except Exception as e:
+                        breakpoint()
                         raise e
-                    #print(_input[elem])
             if self.tasks_type[task_id] == "regression":
                 _input["labels"] = torch.tensor(
                     np.array(task_labels[0], dtype=float), dtype=torch.float32
@@ -683,31 +530,16 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(task_labels[0])).to(
                     self.device
                 )
-            #print('id')
-            #print(task_id)
-            #print('input')
-            if self.steps_taken==0 and False:
-                print(_input)
-                print(_input)
-                breakpoint()
             if self.prev_id is None:
                 self.prev_id = task_id
             elif self.prev_id != task_id and not self.printed:
-                print('All ok. Seen samples from different tasks')
+                print('Seen samples from different tasks')
                 self.printed = True
-            # breakpoint()
-            #print('Input')
-            #print(_input)
             loss, logits = self.model(
                 task_id=task_id, name=self.tasks_type[task_id], **_input
             )
-            # #print(f'For {_input["input_ids"]}')
-            #print('Inference result on train')
-            #print(torch.nn.functional.softmax(logits, dim=-1))
-            #breakpoint()
-            #print(loss)
+
             loss = loss / self.gradient_accumulation_steps[task_id]
-            #print(loss)
             loss.backward()
 
             # Clip the norm of the gradients to 1.0.
@@ -718,15 +550,12 @@ class TorchMultiTaskBert(TorchModel):
 
             if (self.steps_taken + 1) % self.gradient_accumulation_steps[task_id] == 0 or (
                 self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
-                #print('STEP')
                 self.optimizer.step()
                 if self.lr_scheduler:
                     self.lr_scheduler.step()  # Update learning rate schedule
                 self.optimizer.zero_grad()
             self.train_losses[task_id] = loss.item()
             self.steps_taken += 1
-        #print('TASK '+str(task_id))
-        #print(self.train_losses)
         return {"losses": self.train_losses}
 
     def _distribute_arguments_by_tasks(
