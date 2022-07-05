@@ -150,6 +150,10 @@ class TorchTransformersPreprocessor(Component):
         """
 
         # in case of iterator's strange behaviour
+        print('texts')
+        print(texts_a)
+        print(texts_b)
+
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
 
@@ -209,6 +213,7 @@ class TorchTransformersEntityRankerPreprocessor(Component):
             batch of indices of special token ids in input ids sequence
         """
         # in case of iterator's strange behaviour
+
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
         if self.do_lower_case:

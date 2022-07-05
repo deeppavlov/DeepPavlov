@@ -62,15 +62,24 @@ class MultiTaskPipelinePreprocessor(Component):
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
+        #print('calling pipeline')
+        #print(args)
         self.id_extractor.n_task = len(args)
         values = self.id_extractor(*args)
+        #print('obtained')
+        #print(values)
         task_id = values[0]
         all_task_data = values[1:]
+        answer = [task_id]
         for i in range(len(all_task_data)):
-            texts_a, texts_b = self.input_splitters[i](values[i])
+            texts_a, texts_b = self.input_splitters[i](all_task_data[i])
             #input splitters to return None if not found
-            values[i] = self.preprocessors[i](texts_a, texts_b)
-        return values
+            assert texts_a is not None
+            answer.append(self.preprocessors[i](texts_a, texts_b))
+        #print('returned')
+        #print(answer)
+        return answer
+        
 
  
 @register('multitask_preprocessor')
@@ -86,6 +95,8 @@ class MultiTaskPreprocessor(Component):
             self.n_task = None
 
     def __call__(self, *args):
+        print('EXTRACTOR INPUT')
+        print(args)
         out = []
         final_id=(args[0][0][0])
         if self.n_task == 0:
@@ -105,4 +116,6 @@ class MultiTaskPreprocessor(Component):
             if task_data:
                 out.append(tuple(task_data))
         ans = [final_id, *out]
+        print('EXTRACTOR OUTPUT')
+        print(ans)
         return ans

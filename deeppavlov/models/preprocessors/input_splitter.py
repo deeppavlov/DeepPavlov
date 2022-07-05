@@ -42,7 +42,7 @@ class InputSplitter:
         extracted = [[] for _ in self.keys_to_extract]
         for item in inp:
             for i, key in enumerate(self.keys_to_extract):
-                if key in item:
+                if key < len(item):
                     extracted[i].append(item[key])
         for i in range(len(extracted)):
             if len(extracted[i]) == 0:

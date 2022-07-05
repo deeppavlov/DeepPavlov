@@ -232,6 +232,7 @@ class MultiTaskIterator:
                     tuple(zip(*y_instances)),
                 )
                 self.steps_taken += 1
+                print(f'Yielding {batchs}')
                 yield batchs
             self.epochs_done += 1
             # one additional step is taken while logging training metrics

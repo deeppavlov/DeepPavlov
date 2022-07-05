@@ -1,20 +1,27 @@
 from logging import getLogger
 from typing import List, Dict, Union, Optional
 from pathlib import Path
-
+import math 
+import copy
+import json
+import six
 import numpy as np
 from overrides import overrides
-import torch
-from torch import nn
 import os
+import _pickle as cPickle
 
-
+import torch
+import torch.nn.functional as F
+import torch.nn as nn
+from torch.nn import CrossEntropyLoss, MSELoss
+from torch.autograd import Variable
+from torch.nn.parameter import Parameter
+from transformers import AutoConfig, AutoModelForSequenceClassification
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.models.preprocessors.torch_transformers_preprocessor import TorchTransformersMultiplechoicePreprocessor, TorchTransformersPreprocessor
 
 log = getLogger(__name__)
 
@@ -217,13 +224,13 @@ class TorchMultiTaskBert(TorchModel):
         self.backbone_model = backbone_model
         self.max_seq_len=max_seq_len
         self.tasks_num_classes = []
-        self.include_preprocessors = include_preprocessors
         self.task_names = []
-        self.test_pipeline = pipeline
+        self.test_pipeline = test_pipeline
         for task in tasks:
             self.task_names.append(task)
-            self.tasks_num_classes.append(task['options'])
-            self.tasks_type.append(task['type'])
+            self.tasks_num_classes.append(tasks[task]['options'])
+            self.tasks_type.append(tasks[task]['type'])
+        self.n_tasks = len(tasks)
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
@@ -240,8 +247,6 @@ class TorchMultiTaskBert(TorchModel):
         if not self.in_y_distribution:
             self.in_y_distribution = {task: 1 for task in tasks}
         self.steps_taken = 0
-        self.use_new_model=use_new_model
-        self.attention_type=attention_type
         self.prev_id = None
         self.printed = False
         if self.multilabel and not self.one_hot_labels:
@@ -371,6 +376,7 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             predicted classes or probabilities of each class
         """
+        ### IMPROVE ARGS CHECKING AFTER DEBUG
         if args.test_pipeline:
             ggg=args
             breakpoint()
@@ -380,21 +386,15 @@ class TorchMultiTaskBert(TorchModel):
             print('Pipelining ok')
             breakpoint()
         n_in = sum([inp for inp in self.in_distribution.values()])
-        if len(args) >2:
-
-
-            if type(args[0])==int or args[0] is None:
-                task_id = args[0]
-                features = args[1:]
-                args_in, args_in_y = features[:n_in], features[n_in:]
-            else:
-                task_id = None
-                args_in, args_in_y = args[:n_in], args[n_in:]
-                
+        if len(args)%2!=0:
+            task_id = args[0]
+            features = args[1:]
         else:
-            args_in, args_in_y = args[:1], args[1:]
-            task_id=0
-            assert args_in_y
+            task_id = None
+            features = args
+        args_in, args_in_y = features[:self.n_tasks], features[-self.n_tasks:]
+        if not args.test_pipeline:
+            assert len(features) == 2*self.n_tasks
 
         self.validation_predictions = []
         in_by_tasks = self._distribute_arguments_by_tasks(args_in, {}, self.task_names, "in")
@@ -471,19 +471,16 @@ class TorchMultiTaskBert(TorchModel):
             print('Pipelining ok')
             breakpoint()
         n_in = sum([inp for inp in self.in_distribution.values()])
-        if len(args) >2:
-            if len(args)%2!=0:
-                task_id = args[0]
-                features = args[1:]
-                args_in, args_in_y = features[:n_in], features[n_in:]
-            else:
-                task_id = None
-                args_in, args_in_y = args[:n_in], args[n_in:]
-                
+        if len(args)%2!=0:
+            task_id = args[0]
+            features = args[1:]
         else:
-            args_in, args_in_y = args[:1], args[1:]
-            task_id=0
-            assert args_in_y
+            task_id = None
+            features = args
+        args_in, args_in_y = features[:self.n_tasks], features[-self.n_tasks:]
+        if not args.test_pipeline:
+            assert len(features) == 2*self.n_tasks
+                
         in_by_tasks = self._distribute_arguments_by_tasks(
             args_in, {}, self.task_names, "in"
         )
@@ -523,7 +520,7 @@ class TorchMultiTaskBert(TorchModel):
             if self.prev_id is None:
                 self.prev_id = task_id
             elif self.prev_id != task_id and not self.printed:
-                print('Seen samples from different tasks')
+                log.info('Seen samples from different tasks')
                 self.printed = True
             loss, logits = self.model(
                 task_id=task_id, name=self.tasks_type[task_id], **_input
