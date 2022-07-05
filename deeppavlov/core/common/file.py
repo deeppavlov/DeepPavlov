@@ -19,8 +19,6 @@ from logging import getLogger
 from pathlib import Path
 from typing import Union, Any, Iterable, Optional
 
-from ruamel.yaml import YAML
-
 from deeppavlov.core.common.aliases import ALIASES
 
 log = getLogger(__name__)
@@ -87,12 +85,6 @@ def load_pickle(fpath: Union[str, Path]) -> Any:
         return pickle.load(fin)
 
 
-def read_yaml(fpath: Union[str, Path]) -> dict:
-    yaml = YAML(typ="safe")
-    with open(fpath, encoding='utf8') as fin:
-        return yaml.load(fin)
-
-
 def save_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
     json_name = task_name_dict[task_name]
     filepath = f'{json_name}.jsonl'
@@ -100,4 +92,3 @@ def save_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
         for item in data:
             f.write(f"{json.dumps(item)}\n")
     log.info(f'Prediction saved to {filepath}')
-
