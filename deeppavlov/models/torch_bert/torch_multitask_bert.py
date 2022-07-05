@@ -220,36 +220,8 @@ class TorchMultiTaskBert(TorchModel):
 
         for task in tasks:
             self.task_names.append(task)
-            if 'question_answering' not in tasks[task]:
-                assert any([k in tasks[task] for k in ['n_classes','n_choices','n_ner_choices','n_spans']])
-            n_classes = tasks[task].get("n_classes", 0)
-            n_choices = tasks[task].get("n_choices", 0)
-            n_ner_choices = tasks[task].get("n_ner_choices", 0)
-            n_spans = tasks[task].get("n_spans",0)
-            is_question_answering = 'question_answering' in tasks[task] and all([k==0
-                                                                                 for k in [n_classes,n_choices, 
-                                                                                           n_ner_choices, n_spans]])
-            if is_question_answering:
-                self.tasks_type.append('question_answering')
-                self.tasks_num_classes.append(2)                
-            elif n_ner_choices > 0:
-                assert isinstance(n_ner_choices, int) and n_ner_choices > 0
-                self.tasks_type.append('sequence_labeling')
-                self.tasks_num_classes.append(n_ner_choices)
-            elif n_choices > 0:
-                assert isinstance(n_choices, int) and n_choices > 0
-                self.tasks_type.append('multiple_choice')
-                self.tasks_num_classes.append(n_choices)                
-            elif n_spans >0:
-                self.tasks_type.append("span_classification")
-                self.tasks_num_classes.append(n_spans)
-            elif n_classes == 1:
-                self.tasks_type.append("regression")
-                self.tasks_num_classes.append(n_classes)
-            else:
-                assert isinstance(n_classes, int) and n_classes > 0
-                self.tasks_type.append("classification")
-                self.tasks_num_classes.append(n_classes)
+            self.tasks_num_classes.append(task['options'])
+            self.tasks_type.append(task['type'])
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
         self.freeze_embeddings = freeze_embeddings
