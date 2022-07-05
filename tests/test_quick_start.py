@@ -140,7 +140,9 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [
+            (["Моё тело отбрасывает тень на траву. Что было причиной этого?", "Моё тело отбрасывает тень на траву. Что было причиной этого?"],
+             ["Солнце уже поднялось.", "Трава уже подстрижена."], ("choice1",))],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
    },
     "entity_extraction": {
@@ -422,7 +424,8 @@ class TestQuickStart(object):
                 raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
-    def infer_api(config_path):
+    def infer_api(config_path, qr_list):
+        *inputs, expected_outputs = zip(*qr_list)
         server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
@@ -445,10 +448,7 @@ class TestQuickStart(object):
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
             model_args_names = get_response.json()
-            post_payload = dict()
-            for arg_name in model_args_names:
-                arg_value = ' '.join(['qwerty'] * 10)
-                post_payload[arg_name] = [arg_value]
+            post_payload = dict(zip(model_args_names, inputs))
 
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
@@ -464,7 +464,8 @@ class TestQuickStart(object):
             #     raise RuntimeError('Error in shutting down API server: \n{}'.format(logfile.getvalue().decode()))
 
     @staticmethod
-    def infer_socket(config_path, socket_type):
+    def infer_socket(config_path, socket_type, qr_list):
+        *inputs, expected_outputs = zip(*qr_list)
         socket_params = get_server_params(config_path)
         model_args_names = socket_params['model_args_names']
 
@@ -472,10 +473,7 @@ class TestQuickStart(object):
         host = host.replace('0.0.0.0', '127.0.0.1')
         port = api_port or socket_params['port']
 
-        socket_payload = {}
-        for arg_name in model_args_names:
-            arg_value = ' '.join(['qwerty'] * 10)
-            socket_payload[arg_name] = [arg_value]
+        socket_payload = dict(zip(model_args_names, inputs))
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
@@ -536,13 +534,13 @@ class TestQuickStart(object):
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.infer_api(test_configs_path / conf_file)
+            self.infer_api(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.infer_socket(test_configs_path / conf_file, 'TCP')
+            self.infer_socket(test_configs_path / conf_file, 'TCP', PARAMS[model][(conf_file, model_dir, mode)])
 
             if 'TI' not in mode:
                 shutil.rmtree(str(download_path), ignore_errors=True)
