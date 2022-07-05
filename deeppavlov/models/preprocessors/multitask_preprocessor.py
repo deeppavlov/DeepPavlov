@@ -10,7 +10,7 @@ log = getLogger(__name__)
 
 
 @register('multitask_pipeline_preprocessor')
-class MultitaskPipelinePreprocessor(Component):
+class MultiTaskPipelinePreprocessor(Component):
     """
     Extracts out the task_id from the first index of each example for each task.
     Then splits the input and performs tokenization
@@ -73,7 +73,7 @@ class MultitaskPipelinePreprocessor(Component):
 
  
 @register('multitask_preprocessor')
-class MultitaskPreprocessor(Component):
+class MultiTaskPreprocessor(Component):
     """
     Extracts out the task_id from the first index of each example for each task
     """
