@@ -197,6 +197,7 @@ class TorchMultiTaskBert(TorchModel):
         one_hot_labels: bool = False,
         multilabel: bool = False,
         return_probas: bool = False,
+        test_pipeline=True,#delete later
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         *args,
@@ -217,7 +218,7 @@ class TorchMultiTaskBert(TorchModel):
         self.tasks_num_classes = []
         self.include_preprocessors = include_preprocessors
         self.task_names = []
-
+        self.test_pipeline = pipeline
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(task['options'])
@@ -336,7 +337,6 @@ class TorchMultiTaskBert(TorchModel):
                 # now load the weights, optimizer from saved
                 log.info(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
-)
                 self.model.load_state_dict(checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(
                     checkpoint["optimizer_state_dict"])
@@ -370,9 +370,18 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             predicted classes or probabilities of each class
         """
-
+        if args.test_pipeline:
+            ggg=args
+            breakpoint()
+            assert gg[3] == ggg[0]
+            assert ggg[4] == ggg[1]
+            assert ggg[5] == ggg[2]
+            print('Pipelining ok')
+            breakpoint()
         n_in = sum([inp for inp in self.in_distribution.values()])
         if len(args) >2:
+
+
             if type(args[0])==int or args[0] is None:
                 task_id = args[0]
                 features = args[1:]
@@ -452,6 +461,14 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             dict with loss for each task
         """
+        if args.test_pipeline:
+            ggg=args
+            breakpoint()
+            assert gg[3] == ggg[0]
+            assert ggg[4] == ggg[1]
+            assert ggg[5] == ggg[2]
+            print('Pipelining ok')
+            breakpoint()
         n_in = sum([inp for inp in self.in_distribution.values()])
         if len(args) >2:
             if len(args)%2!=0:

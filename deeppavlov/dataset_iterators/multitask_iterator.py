@@ -26,6 +26,9 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 log = getLogger(__name__)
 
 
+def is_nan(a):
+    return a != a
+
 @register('multitask_iterator')
 class MultiTaskIterator:
     """
@@ -73,9 +76,11 @@ class MultiTaskIterator:
                 elif param_name == 'iterator_class_name' and 'iterator_class_name' in task_iterator_params:
                     task_iterator_params["class_name"] = task_iterator_params[
                     "iterator_class_name"]
-                    del task_iterator_params["iterator_class_name"]                    
+                    del task_iterator_params["iterator_class_name"]
+            self.task_iterators[task_name] = from_params(
+                task_iterator_params, data=data[task_name]
+            )                
         self.n_tasks = len(tasks.keys())
-        self.use_prob_capping = use_prob_capping
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
         self.gradient_accumulation_steps = gradient_accumulation_steps
@@ -92,9 +97,9 @@ class MultiTaskIterator:
         for mode in ["train", "valid", "test"]:
             log.info(f'For {mode}')
             for task_name in self.data[mode]:
-                log.info(f'{task_name} has {len(self.data[mode][task_name]} examples')
-        self.train_sizes = self._get_data_size(self.data['train'])
-
+                log.info(f'{task_name} has {len(self.data[mode][task_name])} examples')
+        self.train_sizes = self._get_data_size("train")
+        assert self.train_sizes
         if steps_per_epoch == 0:
             self.steps_per_epoch = sum(self.train_sizes)// batch_size
         else:
@@ -105,35 +110,35 @@ class MultiTaskIterator:
                     for i in range(len(self.data[mode][task]) - 1, -1, -1):
                         x = self.data[mode][task][i][0]
                         y = self.data[mode][task][i][1]
-                        if any([np.isnan(z) for z in x]) or np.isnan(y):
+                        if any([is_nan(z) for z in x]) or is_nan(y):
                             del self.data['train'][task][i]
                             log.info(f'NAN for mode {mode} task {task} element {i} CLEARED')
-        self.max_task_data_len = {}
-        for data_type in self.data.keys():
-            self.max_task_data_len[data_type] = max(
-                [len(iter_.data[data_type]) for iter_ in self.task_iterators.values()])
+        self.max_task_data_len = dict()
+        for data_type in self.data:
+            sizes = self._get_data_size(data_type)
+            self.max_task_data_len[data_type] = max(sizes)
         self.sample_x_instances = None
         self.sample_y_instances = None
 
-    def _get_data_size(self, data: Dict[str, List]):
-        return [len(data[key]) for key in data.keys()]
+    def _get_data_size(self, data_type):
+        return [len(self.data[data_type][key]) for key in self.data[data_type]]
 
     def _get_probs(self, data_type):
         data = self._get_data(data_type)
-		# print('Sizes ')
-		# print(self._get_data_size(data))
 
-        elif self.sampling_mode == 'uniform':
+        if self.sampling_mode == 'uniform':
             probs = [1 / len(data[data_type]) for _ in data[data_type]]
-        if self.sampling_mode == 'plain':
-            sizes = self._get_data_size(data)
+        elif self.sampling_mode == 'plain':
+            sizes = self._get_data_size(data_type)
             n_samples = sum(sizes)
             probs = [p / n_samples for p in sizes]
         elif self.sampling_mode == 'anneal':
             alpha = 1.0 - 0.8 * (self.epochs_done / self.num_train_epochs)
-            annealed_sizes = [p ** alpha for p in self._get_data_size(data)]
+            annealed_sizes = [p ** alpha for p in self._get_data_size(data_type)]
             n_samples = sum(annealed_sizes)
             probs = [p / n_samples for p in annealed_sizes]
+        else:
+            raise Exception(f'Unsupported sampling mode {self.sampling_mode}')
         return probs
 
     def _extract_data_type(self, data_type):

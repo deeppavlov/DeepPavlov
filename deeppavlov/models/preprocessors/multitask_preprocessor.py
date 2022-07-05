@@ -16,9 +16,10 @@ class MultiTaskPipelinePreprocessor(Component):
     Then splits the input and performs tokenization
     """
 
-    def __init__(self, possible_keys_to_extract: Union[List[int], List[List[int]],
-                 vocab_file: str, do_lower_case: bool = True,
-                 preprocessor_name: str='TorchTransformerPreprocessor',
+    def __init__(self, possible_keys_to_extract,
+                 vocab_file,
+                 do_lower_case: bool = True,
+                 preprocessor_name: str='TorchTransformersPreprocessor',
                  preprocessor_names=None, 
                  max_seq_length: int = 512, 
                  return_tokens: bool = False, 
@@ -37,17 +38,17 @@ class MultiTaskPipelinePreprocessor(Component):
         else:
             self.input_splitters = [InputSplitter(keys_to_extract=possible_keys_to_extract)
                                     for _ in range(self.n_task)]
-        self.id_extractor = MultitaskPreprocessor()
+        self.id_extractor = MultiTaskPreprocessor()
         if preprocessor_names is None:
             log.info(f'Assuming the same preprocessors name for all for all {preprocessor_name}')
             preprocessor_name = eval(preprocessor_name)
-            self.preprocessors=[preprocessor_name(vocab_file, do_lower_case, max_seq_length, return_tokens)
+            self.preprocessors=[preprocessor_name(vocab_file, do_lower_case, max_seq_length)
                                 for _ in range(self.n_task)]
         else:
             assert len(preprocessor_names) == self.n_task
-            for i in range(len(preprocessor_names):
+            for i in range(len(preprocessor_names)):
                 preprocessor_names[i] = eval(preprocessor_names[i]) 
-            self.preprocessors = [preprocessor_names[i](vocab_file, do_lower_case, max_seq_length, return_tokens)
+            self.preprocessors = [preprocessor_names[i](vocab_file, do_lower_case, max_seq_length)
                                   for i in range(self.n_task)]
 
 
