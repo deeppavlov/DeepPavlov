@@ -18,17 +18,38 @@ class MultitaskPipelinePreprocessor(Component):
 
     def __init__(self, possible_keys_to_extract: Union[List[int], List[List[int]],
                  vocab_file: str, do_lower_case: bool = True,
-                 preprocessor_name: str='TorchTransformerPreprocessor'
-                 max_seq_length: int = 512, return_tokens: bool = False, *args, **kwargs):
+                 preprocessor_name: str='TorchTransformerPreprocessor',
+                 preprocessor_names=None, 
+                 max_seq_length: int = 512, 
+                 return_tokens: bool = False, 
+                 n_task: int = 2,
+                 *args, **kwargs):
+        self.n_task = n_task
         if isinstance(possible_keys_to_extract, str):
             log.info(f'Assuming {possible_keys_to_extract} can be casted to list or list of lists')
             possible_keys_to_extract = eval(possible_keys_to_extract)
         if not isinstance(possible_keys_to_extract[0], list):
             self.input_splitters = [InputSplitter(keys_to_extract=possible_keys_to_extract)]
-        else:
+        if isinstance(possible_keys_to_extract[0],list):
+            assert len(possible_keys_to_extract) == n_task
+            log.info(f'Utilizing many input splitters with sets {possible_keys_to_extract}')
             self.input_splitters = [InputSplitter(keys_to_extract=keys) for keys in possible_keys_to_extract]
+        else:
+            self.input_splitters = [InputSplitter(keys_to_extract=possible_keys_to_extract)
+                                    for _ in range(self.n_task)]
         self.id_extractor = MultitaskPreprocessor()
-        self.preprocessor = eval(preprocessor_name)(vocab_file, do_lower_case, max_seq_length, return_tokens)
+        if preprocessor_names is None:
+            log.info(f'Assuming the same preprocessors name for all for all {preprocessor_name}')
+            preprocessor_name = eval(preprocessor_name)
+            self.preprocessors=[preprocessor_name(vocab_file, do_lower_case, max_seq_length, return_tokens)
+                                for _ in range(self.n_task)]
+        else:
+            assert len(preprocessor_names) == self.n_task
+            for i in range(len(preprocessor_names):
+                preprocessor_names[i] = eval(preprocessor_names[i]) 
+            self.preprocessors = [preprocessor_names[i](vocab_file, do_lower_case, max_seq_length, return_tokens)
+                                  for i in range(self.n_task)]
+
 
     def __call__(self, *args):
         """Returns batches of values from ``inp``. Every batch contains values that have same key from 
@@ -40,22 +61,14 @@ class MultitaskPipelinePreprocessor(Component):
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        # breakpoint()
-        print('ARGS')
-        print(args)
         self.id_extractor.n_task = len(args)
         values = self.id_extractor(*args)
-        # breakpoint()
-        for i in range(1, len(values)):
-            try:
-                texts_a, texts_b = self.input_splitters[1](values[i])
-            except:
-                texts_a = self.input_splitters[0](values[i])
-                texts_b = None
-            values[i] = self.preprocessor(texts_a, texts_b)
-        print('ANSWERS ARE ')
-        print(values)
-        # breakpoint()
+        task_id = values[0]
+        all_task_data = values[1:]
+        for i in range(len(all_task_data)):
+            texts_a, texts_b = self.input_splitters[i](values[i])
+            #input splitters to return None if not found
+            values[i] = self.preprocessors[i](texts_a, texts_b)
         return values
 
  
