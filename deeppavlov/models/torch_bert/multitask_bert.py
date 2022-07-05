@@ -315,18 +315,10 @@ class MultiTaskPalBert(TorchModel):
         self.tasks_type = []
         self.backbone_model = backbone_model
         self.max_seq_len=max_seq_len
-        self.pool = pool
-        self.gsa_mode = gsa_mode
         self.tasks_num_classes = []
-        self.all_hidden = all_hidden
-        self.use_taskspecific_token = use_taskspecific_token
         self.include_preprocessors = include_preprocessors
         self.task_names = []
-        if self.use_taskspecific_token == 'only':
-            print('Using no cls - only task specific token')
-            self.use_only_taskspecific_token = True
-        else:
-            self.use_only_taskspecific_token = False
+
         for task in tasks:
             self.task_names.append(task)
             if 'question_answering' not in tasks[task]:
@@ -410,15 +402,9 @@ class MultiTaskPalBert(TorchModel):
         `self.lr_scheduler` as `self.lr_scheduler_name` from
         `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
         """
-        only_low_rank = False
-        dense_transforms = True
-        if self.attention_type == 'plain':
-            only_low_rank = True
-        elif self.attention_type=='no':
-            dense_transforms=False
 
-        if self.use_new_model:
-            self.model = NewBertForMultiTask(
+    
+        self.model = NewBertForMultiTask(
                 backbone_model=self.backbone_model,
                 tasks = self.tasks_num_classes,
                 task_types=self.tasks_type,
@@ -429,39 +415,8 @@ class MultiTaskPalBert(TorchModel):
                 all_hidden=self.all_hidden,use_taskspecific_token=self.use_taskspecific_token,
                 use_only_taskspecific_token = self.use_only_taskspecific_token,
                 gsa_mode=self.gsa_mode)
-        elif self.config and os.path.exists(self.config):
-            self.bert_config = BertConfig.from_json_file(self.config)
-            self.bert_config.num_tasks = len(self.task_names)
-            self.model = BertForMultiTask(
-                self.bert_config, tasks=self.tasks_num_classes,tasks_type=self.tasks_type)
-            self.model.to(self.device)
-        else:
-            raise ValueError("Config File does not exist at", self.config)
+        
 
-        if self.pretrained_bert and not self.use_new_model:
-            partial = torch.load(self.pretrained_bert, map_location="cpu")
-            model_dict = self.model.bert.state_dict()
-            if 'LayerNorm.bias' in str(partial.keys()) and 'LayerNorm.beta' in str(model_dict.keys()):
-                partial={key.replace('LayerNorm.bias','LayerNorm.beta').replace('LayerNorm.weight','LayerNorm.gamma'): partial[key]
-                         for key in partial}
-            elif 'LayerNorm.beta' in str(partial.keys()) and 'LayerNorm.bias' in str(model_dict.keys()):
-                partial={key.replace('LayerNorm.beta','LayerNorm.bias').replace('LayerNorm.gamma','LayerNorm.weight'): partial[key]
-                         for key in partial}            
-            update = {}
-            for n, p in model_dict.items():
-                if "aug" in n or "mult" in n:
-                    update[n] = p
-                    if "pooler.mult" in n and "bias" in n:
-                        update[n] = partial["pooler.dense.bias"]
-                    if "pooler.mult" in n and "weight" in n:
-                        update[n] = partial["pooler.dense.weight"]
-                else:
-                    for val in [n, "bert." + n, "cls." + n]:
-                        if val in partial:
-                            update[n] = partial[val]
-            #breakpoint()
-            #self.model.bert.load_state_dict(update)
-            log.info("Bert Model Weights Loaded.")
 
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
