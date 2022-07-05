@@ -144,7 +144,7 @@ PARAMS = {
             (["Моё тело отбрасывает тень на траву. Что было причиной этого?", "Моё тело отбрасывает тень на траву. Что было причиной этого?"],
              ["Солнце уже поднялось.", "Трава уже подстрижена."], ("choice1",))],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
-   },
+    },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
             [
