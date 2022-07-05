@@ -20,7 +20,10 @@ class MultitaskPipelinePreprocessor(Component):
                  vocab_file: str, do_lower_case: bool = True,
                  preprocessor_name: str='TorchTransformerPreprocessor'
                  max_seq_length: int = 512, return_tokens: bool = False, *args, **kwargs):
-        if isinstance(possible_keys_to_extract[0], int):
+        if isinstance(possible_keys_to_extract, str):
+            log.info(f'Assuming {possible_keys_to_extract} can be casted to list or list of lists')
+            possible_keys_to_extract = eval(possible_keys_to_extract)
+        if not isinstance(possible_keys_to_extract[0], list):
             self.input_splitters = [InputSplitter(keys_to_extract=possible_keys_to_extract)]
         else:
             self.input_splitters = [InputSplitter(keys_to_extract=keys) for keys in possible_keys_to_extract]
