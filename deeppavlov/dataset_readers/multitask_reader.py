@@ -29,7 +29,7 @@ log = getLogger(__name__)
 class MultiTaskReader(DatasetReader):
     """Class to read several datasets simultaneuosly"""
 
-    def read(self, data_path, tasks: Dict[str, Dict[str, str]] = None, names=None, path=None,
+    def read(self, data_path, tasks: Dict[str, Dict[str, str]] = None, task_names=None, path=None,
              train=None, validation=None, reader_class_name=None):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
         Args:
@@ -54,7 +54,7 @@ class MultiTaskReader(DatasetReader):
         data = {}
         if tasks is None:
             tasks = {}
-            for name in names:
+            for name in task_names:
                 if 'mnli' in name and '_' not in validation:
                     log.warning(f'MNLI task used in default setting. Validation on MNLI-matched assumed')
                     validation_name = validation + '_matched'
