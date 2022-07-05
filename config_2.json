@@ -44,7 +44,7 @@
         "pipe": [
             {
                 "class_name": "multitask_pal_bert_pipeline_preprocessor",
-                "possible_keys_to_extract":[0,1] , #eval(x) to preproxessor
+                "possible_keys_to_extract":[0,1],
                 "preprocessor":"TorchTransformersPreprocessor",
                 "vocab_file":"{BACKBONE}", 
                 "max_seq_length":128,
