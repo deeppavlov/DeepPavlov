@@ -5,7 +5,7 @@
         "reader_class_name":"huggingface_dataset_reader", 
         "train" :"train", 
         "validation" :"validation", 
-        "names" :["mrpc", "rte"]           
+        "names" :["cola", "rte"]           
         }, 
 
     "dataset_iterator": {
@@ -17,49 +17,58 @@
         "use_label_name": false,
          "seed": 42, 
         "tasks": {
-            "mrpc": {
+            
+            "cola": {
                 "features": [
                     "sentence1",
                     "sentence2"
-                ],
-
-            },
+                ]}, 
             "rte": {
                 "features": [
                     "sentence1",
                     "sentence2"
-                ],} 
-            
+                ]}           
         }
     },
     "chainer": {
         "in": [
-            "x_mrpc_with_id",
+            "x_cola_with_id",
             "x_rte_with_id"
         ],
         "in_y": [
-            "y_mrpc",
+            "y_cola",
             "y_rte"
         ],
         "pipe": [
             {
                 "class_name": "multitask_pal_bert_pipeline_preprocessor",
-                "possible_keys_to_extract":[0,1],
+                "possible_keys_to_extract":[0,1] , #eval(x) to preproxessor
                 "preprocessor":"TorchTransformersPreprocessor",
                 "vocab_file":"{BACKBONE}", 
                 "max_seq_length":128,
                 "do_lower_case":true, 
                 "in": [
-                    "x_mrpc_with_id",
+                    "x_cola_with_id",
                     "x_rte_with_id"
                 ],
                 "out": [
-                    "task_id",
-                    "bert_features_mrpc",
-                    "bert_features_rte"
+                    "task_id_pipelined",
+                    "bert_features_cola_pipelined",
+                    "bert_features_rte_pipelined"
                 ]
             },
-            
+          {"class_name" :"multitask_preprocessor", "keys_to_extract":[0, 1],"in":["x_cola_with_id", "x_rte_with_id"],"out":["task_id", "x_cola", "x_rte"]},
+          {"class_name" :"InputSplitter", "keys_to_extract":[0, 1],"in":["x_rte"],"out":["x1_rte",",x2_rte"]},
+          {"class_name" :"TorchTransformersPreprocessor", 
+                "vocab_file":"{BACKBONE}", 
+                "max_seq_length":128,
+                "do_lower_case":true, 
+                "in" :["x_cola"], "out":["bert_features_cola"]},     
+          {"class_name" :"TorchTransformersPreprocessor", 
+                "vocab_file":"{BACKBONE}", 
+                "max_seq_length":128,
+                "do_lower_case":true, 
+                "in" :["x1_rte", "x2_rte"], "out":["bert_features_rte"]},           
             {
                 "id": "multitask_bert",
                 "class_name": "multitask_bert",
@@ -77,7 +86,7 @@
                 "save_path": "{SAVE_LOAD_PATH}",
                 "load_path": "{SAVE_LOAD_PATH}",
                 "tasks": {
-                    "mrpc": {
+                    "cola": {
                         "n_classes": 2
                     },
                     "rte": {
@@ -86,24 +95,24 @@
                 },
                 "in": [
                     "task_id",
-                    "bert_features_mrpc",
+                    "bert_features_cola",
                     "bert_features_rte"
                 ],
                 "in_y": [
-                    "y_mrpc",
+                    "y_cola",
                     "y_rte"
                 ],
                 "out": [
-                    "y_mrpc_pred_probas",
+                    "y_cola_pred_probas",
                     "y_rte_pred_probas"
                 ]
             },
             {
                 "in": [
-                    "y_mrpc_pred_probas"
+                    "y_cola_pred_probas"
                 ],
                 "out": [
-                    "y_mrpc_pred_ids"
+                    "y_cola_pred_ids"
                 ],
                 "class_name": "proba2labels",
                 "max_proba": true
@@ -120,7 +129,7 @@
             }
         ],
         "out": [
-            "y_mrpc_pred_ids",
+            "y_cola_pred_ids",
             "y_rte_pred_ids"
         ]
     },
@@ -132,17 +141,17 @@
                 "name": "multitask_accuracy",
                 "inputs": [
                     "y_rte",
-                    "y_mrpc",
+                    "y_cola",
                     "y_rte_pred_ids",
-                    "y_mrpc_pred_ids"
+                    "y_cola_pred_ids"
                 ]
             },
             {
                 "name": "accuracy",
-                "alias":"accuracy_mrpc",
+                "alias":"accuracy_cola",
                 "inputs": [
-                    "y_mrpc",
-                    "y_mrpc_pred_ids"
+                    "y_cola",
+                    "y_cola_pred_ids"
                 ]
             },
             {
