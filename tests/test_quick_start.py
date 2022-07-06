@@ -13,7 +13,7 @@ from struct import unpack
 from time import sleep
 from typing import Optional, Union
 from urllib.parse import urljoin
-
+import itertools
 import pexpect
 import pexpect.popen_spawn
 import pytest
@@ -141,8 +141,8 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [
-            (["Моё тело отбрасывает тень на траву. Что было причиной этого?", "Моё тело отбрасывает тень на траву. Что было причиной этого?"],
-             ["Солнце уже поднялось.", "Трава уже подстрижена."], ("choice1",))],
+            ([["Моё тело отбрасывает тень на траву. Что было причиной этого?", "Моё тело отбрасывает тень на траву. Что было причиной этого?"]],
+             [["Солнце уже поднялось.", "Трава уже подстрижена."]], ("choice1",))],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
     "entity_extraction": {
@@ -412,6 +412,7 @@ class TestQuickStart(object):
     def infer(config_path, qr_list=None, check_outputs=True):
 
         *inputs, expected_outputs = zip(*qr_list) if qr_list else ([],)
+        inputs = [list(itertools.chain.from_iterable(inp)) for inp in inputs]
         with ProcessPoolExecutor(max_workers=1) as executor:
             f = executor.submit(_infer, config_path, inputs)
         outputs = list(zip(*f.result()))
@@ -448,7 +449,7 @@ class TestQuickStart(object):
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
             model_args_names = get_response.json()
-            post_payload = dict(zip(model_args_names, inputs))
+            post_payload = {arg: list(itertools.chain.from_iterable(inp)) for arg, inp in zip(model_args_names, inputs)}
 
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
@@ -473,7 +474,7 @@ class TestQuickStart(object):
         host = host.replace('0.0.0.0', '127.0.0.1')
         port = api_port or socket_params['port']
 
-        socket_payload = dict(zip(model_args_names, inputs))
+        socket_payload = {arg: list(itertools.chain.from_iterable(inp)) for arg, inp in zip(model_args_names, inputs)}
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
