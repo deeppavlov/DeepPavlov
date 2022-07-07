@@ -233,7 +233,7 @@ class MultiTaskIterator:
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
         else:
-            eval_batch_size=1
+            eval_batch_size=1#replace to 1
             x = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             y = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             generators = [
@@ -243,6 +243,7 @@ class MultiTaskIterator:
             for step in range(max_task_data_len):
                 for task_id in range(self.n_tasks):
                     x[task_id], y[task_id] = generators[task_id].__next__()
+
                 yield self.transform_before_yielding(x, y,eval_batch_size)
 
 

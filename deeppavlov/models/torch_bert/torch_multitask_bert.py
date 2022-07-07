@@ -1,3 +1,12 @@
+# logits output shape [batch_size,max_seq_len,N_CLASSES]
+
+#input ids token type ids attention mask [batch_size,max_seq_len]
+# labels - INITIAL batch_size [batch_size,max_seq_len1] where max_seq_len1 < max_seq_len because max_seq_len1 is about words, while all else about subwords
+
+#input for NER preprocessor - tuple(first list of tokens,second list of tokens)...
+#list of tokens is sentence
+
+
 from logging import getLogger
 from typing import List, Dict, Union, Optional
 from pathlib import Path
@@ -23,6 +32,7 @@ from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
+from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken, token_labels_to_subtoken_labels
 
 log = getLogger(__name__)
 
@@ -81,7 +91,6 @@ class BertForMultiTask(nn.Module):
             breakpoint()
             raise e
         last_hidden_state = outputs[1][-1]
-        sentence_embeddings = outputs[1][0]
         first_token_tensor = last_hidden_state[:, 0]        
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
@@ -119,6 +128,7 @@ class BertForMultiTask(nn.Module):
             else:
                 return logits
         elif name == 'span_classification':
+            raise Exception('Span classification not yet supported')
             assert span1 is not None and span2 is not None
             log.warning('SPAN CLASSIFICATION IS SUPPORTED ONLY EXPERIMENTALLY')
             input_dict = {"input":last_hidden_state, "attention_mask": attention_mask, 
@@ -131,7 +141,7 @@ class BertForMultiTask(nn.Module):
             else:
                 return output_dict['logits']
         elif name == 'question_answering':
-            log.warning('QUESTION ANSWERING IS SUPPORTED ONLY EXPERIMENTALLY')      
+            raise Exception('Question answering not yet supported')      
             sequence_output = self.dropout(last_hidden_state)
             # or logits?
             start_logits, end_logits = last_hidden_state.split(1, dim=-1)
@@ -314,7 +324,7 @@ class TorchMultiTaskBert(TorchModel):
             )(self.optimizer, **self.lr_scheduler_parameters)
             breakpoint()
 
-    @overrides
+    @overrides 
     def load(self, fname: Optional[str] = None) -> None:
         if fname is not None:
             self.load_path = fname
@@ -365,32 +375,17 @@ class TorchMultiTaskBert(TorchModel):
                     continue
                 p.requires_grad = False
                 log.info("Bert Embeddings Freezed")
-    def _one_hot(self, label, num_classes):
-        ans = [0 for _ in range(num_classes)]
-        ans[label]=1
-        return ans
     def _make_input(self,task_features,task_id,labels=None):
-        batch_input_size= None
+        batch_input_size = None
         print(f'Making input from {task_features}')
         if len(task_features) == 1 and isinstance(task_features,list):
             task_features = task_features[0]
+
+        if isinstance(labels,Iterable) and all([k is None for k in labels]):
+            labels=None
         _input = {}
-        element_list = ["input_ids", "attention_mask", "token_type_ids", 'labels']
-        if labels is not None:
-            print(f'Using {labels}')
-            if self.tasks_type[task_id] == "regression":
-                _input["labels"] = torch.tensor(
-                    np.array(labels, dtype=float), dtype=torch.float32
-                )
-            elif self.tasks_type[task_id] == 'multiple_choice':
-                labels = torch.Tensor(labels).long()
-                onehot_labels = torch.nn.functional.one_hot(labels,num_classes=self.tasks_num_classes[task_id]) 
-                _input['labels'] = torch.flatten(onehot_labels, start_dim=0)
-            else:
-                _input["labels"] = torch.from_numpy(np.array(labels))
-            #if _input['labels'].shape[1] == 1:
-            #    _input['labels'] = _input['labels'][:, 0]
-                    
+        element_list = ["input_ids", "attention_mask", "token_type_ids"]
+
         if self.tasks_type[task_id] == 'span_classification':
             element_list = element_list + ['span1', 'span2']
         for elem in element_list:
@@ -401,9 +396,28 @@ class TorchMultiTaskBert(TorchModel):
                 _input[elem] = getattr(task_features,elem)
                 batch_input_size = _input[elem].shape[0]
             if elem in _input:           
-                if self.tasks_type[task_id] in ['sequence_labeling','multiple_choice'] and elem != 'labels':
+                if self.tasks_type[task_id] in ['sequence_labeling','multiple_choice']:
                     _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
-                _input[elem] = _input[elem].to(self.device)
+
+        if labels is not None:
+            print(f'Using {labels}')
+            if self.tasks_type[task_id] == "regression":
+                _input["labels"] = torch.tensor(
+                    np.array(labels, dtype=float), dtype=torch.float32
+                )
+            elif self.tasks_type[task_id] == 'multiple_choice':
+                labels = torch.Tensor(labels).long()
+                onehot_labels = torch.nn.functional.one_hot(labels,num_classes=self.tasks_num_classes[task_id]) 
+                _input['labels'] = torch.flatten(onehot_labels, start_dim=0)
+            elif self.tasks_type[task_id] == 'sequence_labeling':
+                subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
+                           for y_el, y_mask, input_mask in zip(labels,_input['token_type_ids'].numpy(),
+                                                               _input['attention_mask'].numpy())]
+                _input['labels'] = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64)
+            else:
+                _input["labels"] = torch.from_numpy(np.array(labels))
+        for elem in _input:
+            _input[elem] = _input[elem].to(self.device)            
         print('Made input on device')
         print(_input)
         if _input == {}:
@@ -432,17 +446,29 @@ class TorchMultiTaskBert(TorchModel):
                     logits = self.model(
                         task_id=task_id, name=self.tasks_type[task_id], **_input
                     )
-                if self.tasks_type[task_id] == 'regression':
+                #if task_id == 4:
+                #    print(f'{_input["input_ids"].shape} {_input["token_type_ids"].shape} {logits.shape}')
+                #    breakpoint()
+                if self.tasks_type[task_id] == 'sequence_labeling':
+                    if self.return_probas:
+                        log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
+                    y_mask = _input['token_type_ids'].cpu()
+                    logits = token_from_subtoken(logits.cpu(),y_mask)
+                    predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
+                    seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
+                    pred=[prediction[:max_seq_len] for max_seq_len,prediction in zip(seq_lengths, predicted_ids)]
+                    print(pred[0][0])
+                elif self.tasks_type[task_id] == 'regression':
                     pred = logits[:,0]
                     assert len(pred) == len(_input['input_ids']), breakpoint()
                 elif self.return_probas:
                     pred = torch.nn.functional.softmax(logits, dim=-1)
                 else:
                     pred = torch.nn.functional.argmax(logits, dim=1)
-                print(f"{task_id} {_input['input_ids'].shape} {logits.shape} {pred.shape}")
-                if task_id == 4: # ner
-                    assert pred.shape[1]==9,breakpoint()
-                pred = pred.tolist()
+
+                if not isinstance(pred, list):
+                    print(f"{pred.shape}")  # delete this string later
+                    pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
         if len(args) ==1:
             print(f'Predictions {self.validation_predictions[0]}')
@@ -451,7 +477,7 @@ class TorchMultiTaskBert(TorchModel):
             if self.validation_predictions[i] == None:
                 self.validation_predictions[i] = [None for _ in range(batch_input_size)]
         print(f'Predictions {self.validation_predictions}')
-        #if len(args) ==4:
+        #if len(args) ==5:
         #    breakpoint()
         return self.validation_predictions
     def set_gradient_accumulation_interval(self, task_id, interval):
@@ -465,10 +491,6 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             dict with loss for each task
         """
-        if len(args)==4:
-            breakpoint()
-        for i in range(len(args)):
-            print(f'Argument {i} {args[i]}')
         assert len(args) == 2*self.n_tasks, breakpoint() # need to get exact number of x andy
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
         assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
@@ -476,6 +498,8 @@ class TorchMultiTaskBert(TorchModel):
         print('train on batch')
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
+        if len(args) ==5:
+            breakpoint()
         if self.prev_id is None:
             self.prev_id = task_id
         elif self.prev_id != task_id and not self.printed:
@@ -502,4 +526,3 @@ class TorchMultiTaskBert(TorchModel):
         self.train_losses[task_id] = loss.item()
         self.steps_taken += 1
         return {"losses": self.train_losses}
-

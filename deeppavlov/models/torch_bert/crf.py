@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
-from torchcrf import CRF as CRFbase
+from TorchCRF import CRF as CRFbase
 
 
 class CRF(CRFbase):

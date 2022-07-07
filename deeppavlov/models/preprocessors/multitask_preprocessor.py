@@ -61,36 +61,18 @@ class MultiTaskPipelinePreprocessor(Component):
     Then splits the input and performs tokenization
     """
 
-    def __init__(self, possible_keys_to_extract,
+    def __init__(self,
                  vocab_file,
                  do_lower_case: bool = True,
-                 use_input_splitter=None,
                  preprocessor: str='TorchTransformersPreprocessor',
                  preprocessors=None, 
                  max_seq_length: int = 512, 
                  return_tokens: bool = False, 
+                 strict=False,
                  n_task: int = 3,
                  *args, **kwargs):
         self.n_task = n_task
-        if use_input_splitter is None:
-            self.use_input_splitter = [True for _ in range(self.n_task)]
-        else:
-            self.use_input_splitter = use_input_splitter
-            assert len(self.use_input_splitter) == self.n_tasks
-            assert all([type(k)==bool for k in self.use_input_splitter])
-
-        if isinstance(possible_keys_to_extract, str):
-            log.info(f'Assuming {possible_keys_to_extract} can be casted to list or list of lists')
-            possible_keys_to_extract = eval(possible_keys_to_extract)
-        if not isinstance(possible_keys_to_extract[0], list):
-            self.input_splitters = [MultiTaskInputSplitter(keys_to_extract=possible_keys_to_extract)]
-        if isinstance(possible_keys_to_extract[0],list):
-            log.info(f'Utilizing many input splitters with sets {possible_keys_to_extract} Number of sets must be the same as task number')
-            assert len(possible_keys_to_extract) == self.n_task
-            self.input_splitters = [MultiTaskInputSplitter(keys_to_extract=keys) for keys in possible_keys_to_extract]
-        else:
-            self.input_splitters = [MultiTaskInputSplitter(keys_to_extract=possible_keys_to_extract)
-                                    for _ in range(self.n_task)]
+        self.strict=strict
         if preprocessors is None:
             log.info(f'Assuming the same preprocessor name for all : {preprocessor}')
             assert preprocessor is not None
@@ -106,6 +88,29 @@ class MultiTaskPipelinePreprocessor(Component):
             if len(self.preprocessors)>4:#test code delete afterwards
                 assert self.preprocessors[i].return_features == True,breakpoint()
 
+    def split(self, features):
+        print(f'Splitting {features}')
+        if all([isinstance(k,str) for k in features]) or all([k==None for k in features]):
+            # single sentence classification
+            print('Assuming single sentence classification')
+            texts_a, texts_b = features, None
+        elif all([isinstance(k,tuple) and len(k)==2 for k in features]):
+            print('Assuming sentence pair classification or classification for multichoicr')
+            texts_a,texts_b = [], []
+            for feature in features:
+                text_a,text_b=feature
+                texts_a.append(text_a)
+                texts_b.append(text_b)
+        elif all([isinstance(k,list) for k in features]):
+            print('Assuming ner classification')
+            texts_a, texts_b = list(features),None
+        else:
+            if self.strict:
+                raise Exception(f'Unsupported task data {features}')
+            else:
+                log.warning('Data not split.Going without splitting')
+                texts_a,texts_b = features, None
+        return texts_a, texts_b
     def __call__(self, *args):
         """Returns batches of values from ``inp``. Every batch contains values that have same key from 
         ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
@@ -118,29 +123,29 @@ class MultiTaskPipelinePreprocessor(Component):
         """
         #print('calling pipeline')
         #print(args)
-        assert len(args) == self.n_task, "Seen examples from {len(args)} tasks but n_task specified to {self.n_task}"
+        assert len(args) == self.n_task, f"Seen examples from {len(args)} tasks but n_task specified to {self.n_task}"
         print(f'Receiving in preprocessor {args}')
         answer = []
+        input_features = args
+        #delete 2 strings later
+        #breakpoint()
         for i in range(len(args)):
             print(f'Before splitting {args[i]}')
             if all([j== None for j in args[i]]):
                 print('All nones received')
                 answer.append([])
             else:
-                if all([isinstance(k,str) for k in args[i]]):
-                    print('All strings  - not splitting')
-                    texts_a, texts_b = args[i], None
-                elif len(args[i])==1 and isinstance(args[i][0],list) and all([isinstance(k,str) for k in args[i][0]]):
-                    ### for ner
-                    texts_a, texts_b = args[i][0],None
-                elif self.use_input_splitter[i]:
-                    texts_a, texts_b = self.input_splitters[i](args[i])
-                    print(f'After splitting {texts_a} AND {texts_b}')
-                assert texts_a is not None
+                texts_a, texts_b = self.split(args[i])
                 print(f'Preprocessor {self.preprocessors[i]}')
-
-                #    print('CHECK THOROUGHLY THE NER OUTPUT')
-                #    breakpoint()
-                answer.append(self.preprocessors[i](texts_a, texts_b))
+                if all([j==None for j in texts_a]):
+                    print('All nones')
+                    answer.append([])
+                else:
+                    try:
+                        answer.append(self.preprocessors[i](texts_a, texts_b))
+                    except Exception as e:
+                        print(e)
+                        breakpoint()
+                        raise e
         return answer
 
