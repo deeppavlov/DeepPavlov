@@ -50,8 +50,6 @@ class MultiTaskInputSplitter:
             for i, key in enumerate(self.keys_to_extract):
                 if key < len(item):
                     extracted[i].append(item[key])
-        print('got')
-        print(extracted)
         return extracted
 
 @register('multitask_pipeline_preprocessor')
@@ -85,24 +83,21 @@ class MultiTaskPipelinePreprocessor(Component):
                 preprocessors[i] = eval(preprocessors[i]) 
             self.preprocessors = [preprocessors[i](vocab_file, do_lower_case, max_seq_length,*args,**kwargs)
                                   for i in range(self.n_task)]
-            if len(self.preprocessors)>4:#test code delete afterwards
-                assert self.preprocessors[i].return_features == True,breakpoint()
 
     def split(self, features):
-        print(f'Splitting {features}')
         if all([isinstance(k,str) for k in features]) or all([k==None for k in features]):
             # single sentence classification
-            print('Assuming single sentence classification')
+            log.debug('Assuming single sentence classification')
             texts_a, texts_b = features, None
         elif all([isinstance(k,tuple) and len(k)==2 for k in features]):
-            print('Assuming sentence pair classification or classification for multichoicr')
+            log.debug('Assuming sentence pair classification or classification for multichoice')
             texts_a,texts_b = [], []
             for feature in features:
                 text_a,text_b=feature
                 texts_a.append(text_a)
                 texts_b.append(text_b)
         elif all([isinstance(k,list) for k in features]):
-            print('Assuming ner classification')
+            log.debug('Assuming ner classification')
             texts_a, texts_b = list(features),None
         else:
             if self.strict:
@@ -121,23 +116,17 @@ class MultiTaskPipelinePreprocessor(Component):
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        #print('calling pipeline')
-        #print(args)
         assert len(args) == self.n_task, f"Seen examples from {len(args)} tasks but n_task specified to {self.n_task}"
-        print(f'Receiving in preprocessor {args}')
         answer = []
-        #delete 2 strings later
-        #breakpoint()
         for i in range(len(args)):
-            print(f'Before splitting {args[i]}')
             if all([j== None for j in args[i]]):
-                print('All nones received')
+                log.debug('All nones received')
                 answer.append([])
             else:
                 texts_a, texts_b = self.split(args[i])
-                print(f'Preprocessor {self.preprocessors[i]}')
+                log.debug(f'Preprocessor {self.preprocessors[i]}')
                 if all([j==None for j in texts_a]):
-                    print('All nones')
+                    log.debug('All nones')
                     answer.append([])
                 else:
                     try:

@@ -150,9 +150,6 @@ class TorchTransformersPreprocessor(Component):
         """
 
         # in case of iterator's strange behaviour
-        print('texts')
-        print(texts_a)
-        print(texts_b)
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
         elif isinstance(texts_a, str):

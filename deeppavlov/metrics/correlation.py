@@ -20,13 +20,11 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 @register_metric('pearson_correlation')
 def pearson_correlation(y_true, y_predicted) -> float:
-    print(f'pearsonr {y_true[:5]} {y_predicted[:5]}')
     return pearsonr(y_predicted, y_true)[0]
 
 
 @register_metric('spearman_correlation')
 def spearman_correlation(y_true, y_predicted) -> float:
-    print(f'spearmanr {y_true} {y_predicted}')
     return spearmanr(y_predicted, y_true)[0]
 
 

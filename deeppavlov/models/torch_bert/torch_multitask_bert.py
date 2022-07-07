@@ -377,7 +377,6 @@ class TorchMultiTaskBert(TorchModel):
                 log.info("Bert Embeddings Freezed")
     def _make_input(self,task_features,task_id,labels=None):
         batch_input_size = None
-        print(f'Making input from {task_features}')
         if len(task_features) == 1 and isinstance(task_features,list):
             task_features = task_features[0]
 
@@ -400,7 +399,6 @@ class TorchMultiTaskBert(TorchModel):
                     _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
 
         if labels is not None:
-            print(f'Using {labels}')
             if self.tasks_type[task_id] == "regression":
                 _input["labels"] = torch.tensor(
                     np.array(labels, dtype=float), dtype=torch.float32
@@ -418,8 +416,6 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(labels))
         for elem in _input:
             _input[elem] = _input[elem].to(self.device)            
-        print('Made input on device')
-        print(_input)
         if _input == {}:
             breakpoint()
             raise Exception('EMPTY INPUT!!!!')
@@ -446,9 +442,6 @@ class TorchMultiTaskBert(TorchModel):
                     logits = self.model(
                         task_id=task_id, name=self.tasks_type[task_id], **_input
                     )
-                #if task_id == 4:
-                #    print(f'{_input["input_ids"].shape} {_input["token_type_ids"].shape} {logits.shape}')
-                #    breakpoint()
                 if self.tasks_type[task_id] == 'sequence_labeling':
                     if self.return_probas:
                         log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -457,7 +450,6 @@ class TorchMultiTaskBert(TorchModel):
                     predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
                     seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
                     pred=[prediction[:max_seq_len] for max_seq_len,prediction in zip(seq_lengths, predicted_ids)]
-                    print(pred[0][0])
                 elif self.tasks_type[task_id] == 'regression':
                     pred = logits[:,0]
                     assert len(pred) == len(_input['input_ids']), breakpoint()
@@ -467,18 +459,13 @@ class TorchMultiTaskBert(TorchModel):
                     pred = torch.nn.functional.argmax(logits, dim=1)
 
                 if not isinstance(pred, list):
-                    print(f"{pred.shape}")  # delete this string later
                     pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
         if len(args) ==1:
-            print(f'Predictions {self.validation_predictions[0]}')
             return self.validation_predictions[0]
         for i in range(len(self.validation_predictions)):
             if self.validation_predictions[i] == None:
                 self.validation_predictions[i] = [None for _ in range(batch_input_size)]
-        print(f'Predictions {self.validation_predictions}')
-        #if len(args) ==5:
-        #    breakpoint()
         return self.validation_predictions
     def set_gradient_accumulation_interval(self, task_id, interval):
         self.gradient_accumulation_steps[task_id] = interval
@@ -495,11 +482,8 @@ class TorchMultiTaskBert(TorchModel):
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
         assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
         task_id = ids_to_iterate[0]
-        print('train on batch')
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
-        if len(args) ==5:
-            breakpoint()
         if self.prev_id is None:
             self.prev_id = task_id
         elif self.prev_id != task_id and not self.printed:

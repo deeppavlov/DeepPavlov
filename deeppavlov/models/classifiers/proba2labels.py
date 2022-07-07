@@ -70,7 +70,6 @@ class Proba2Labels(Component):
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
-        print(f'Calling proba2labels with {data}')
         if self.confidence_threshold:
             if self.is_binary:
                 return [int(el > self.confidence_threshold) for el in data]
@@ -78,7 +77,6 @@ class Proba2Labels(Component):
                 return [list(np.where(np.array(d) > self.confidence_threshold)[0])
                         for d in data]
         elif self.max_proba:
-            print(f'ANSWER {[np.argmax(d) for d in data]}')
             return [np.argmax(d) for d in data]
         elif self.top_n:
             return [np.argsort(d)[::-1][:self.top_n] for d in data]

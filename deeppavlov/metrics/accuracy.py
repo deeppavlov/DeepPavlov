@@ -33,8 +33,6 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     Returns:
         fraction of absolutely coincidental samples
     """
-
-    print(f'Output in accuracy {y_true[:5]} {y_predicted[:5]}')
     examples_len = len(y_true)
     # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
 
@@ -66,7 +64,6 @@ def multitask_accuracy(*args) -> float:
     answers=[]
     for true,pred in zip(y_true_by_tasks, y_predicted_by_tasks):
         try:
-            print(f'Output in multitask_accuracy {true[:5]} {pred[:5]}')
             answers.append(accuracy(true,pred))
         except Exception as e:
             print(e)

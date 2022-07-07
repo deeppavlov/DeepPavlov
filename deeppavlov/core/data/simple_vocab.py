@@ -65,10 +65,7 @@ class SimpleVocabulary(Estimator):
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
-        print(f'Fitting simple_vocab with {tokens}')
         self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
-        print(f'Frequencies {self.freqs}')
-        #breakpoint()
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -91,9 +88,6 @@ class SimpleVocabulary(Estimator):
                 self.count += 1
 
     def __call__(self, batch, is_top=True, **kwargs):
-
-        print(f'Calling simple_vocab with {batch}')
-        #breakpoint()
         if isinstance(batch, Iterable) and not isinstance(batch, str):
             if all([k==None for k in batch]):
                 # for multitask dummy input. With multitask 1 batch == 1  task but fields for all tasks exists
@@ -104,8 +98,6 @@ class SimpleVocabulary(Estimator):
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
-        print(f'Answer {looked_up_batch}')
-        #breakpoint()
         return looked_up_batch
 
     def save(self):

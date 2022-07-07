@@ -178,7 +178,7 @@ class FitTrainer:
             calculate_metric = True
             for i in metric.inputs:
                 if all([k == None for k in outputs[i]]):
-                    print('Metric is not calculated')
+                    log.info(f'Metric {metric.alias} is not calculated due to absense of true and predicted samples')
                     calculate_metric = False
                     value = -1
             if calculate_metric:
