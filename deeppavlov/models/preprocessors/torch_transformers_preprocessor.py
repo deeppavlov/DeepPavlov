@@ -542,7 +542,7 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
             if self.return_features:
-                feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+                feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
                                               'attention_mask': torch.Tensor(attention_mask),
                                 'token_type_ids': torch.Tensor(startofword_markers),
                                 'labels': torch.Tensor(subword_tags)})
@@ -551,7 +551,7 @@ class TorchTransformersNerPreprocessor(Component):
                 return tokens, subword_tokens, subword_tok_ids, \
                         attention_mask, startofword_markers, subword_tags
         if self.return_features:
-            feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+            feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
                                           'attention_mask': torch.Tensor(attention_mask),
                                           'token_type_ids': torch.Tensor(startofword_markers)
                                          })

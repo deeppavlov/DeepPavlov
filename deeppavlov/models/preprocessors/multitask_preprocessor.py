@@ -64,6 +64,7 @@ class MultiTaskPipelinePreprocessor(Component):
     def __init__(self, possible_keys_to_extract,
                  vocab_file,
                  do_lower_case: bool = True,
+                 use_input_splitter=None,
                  preprocessor: str='TorchTransformersPreprocessor',
                  preprocessors=None, 
                  max_seq_length: int = 512, 
@@ -71,6 +72,13 @@ class MultiTaskPipelinePreprocessor(Component):
                  n_task: int = 3,
                  *args, **kwargs):
         self.n_task = n_task
+        if use_input_splitter is None:
+            self.use_input_splitter = [True for _ in range(self.n_task)]
+        else:
+            self.use_input_splitter = use_input_splitter
+            assert len(self.use_input_splitter) == self.n_tasks
+            assert all([type(k)==bool for k in self.use_input_splitter])
+
         if isinstance(possible_keys_to_extract, str):
             log.info(f'Assuming {possible_keys_to_extract} can be casted to list or list of lists')
             possible_keys_to_extract = eval(possible_keys_to_extract)
@@ -87,15 +95,16 @@ class MultiTaskPipelinePreprocessor(Component):
             log.info(f'Assuming the same preprocessor name for all : {preprocessor}')
             assert preprocessor is not None
             preprocessor = eval(preprocessor)
-            self.preprocessors=[preprocessor(vocab_file, do_lower_case, max_seq_length)
+            self.preprocessors=[preprocessor(vocab_file, do_lower_case, max_seq_length,*args,**kwargs)
                                 for _ in range(self.n_task)]
         else:
             assert len(preprocessors) == self.n_task
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i]) 
-            self.preprocessors = [preprocessors[i](vocab_file, do_lower_case, max_seq_length)
+            self.preprocessors = [preprocessors[i](vocab_file, do_lower_case, max_seq_length,*args,**kwargs)
                                   for i in range(self.n_task)]
-
+            if len(self.preprocessors)>4:#test code delete afterwards
+                assert self.preprocessors[i].return_features == True,breakpoint()
 
     def __call__(self, *args):
         """Returns batches of values from ``inp``. Every batch contains values that have same key from 
@@ -121,14 +130,17 @@ class MultiTaskPipelinePreprocessor(Component):
                 if all([isinstance(k,str) for k in args[i]]):
                     print('All strings  - not splitting')
                     texts_a, texts_b = args[i], None
-                else:
+                elif len(args[i])==1 and isinstance(args[i][0],list) and all([isinstance(k,str) for k in args[i][0]]):
+                    ### for ner
+                    texts_a, texts_b = args[i][0],None
+                elif self.use_input_splitter[i]:
                     texts_a, texts_b = self.input_splitters[i](args[i])
                     print(f'After splitting {texts_a} AND {texts_b}')
                 assert texts_a is not None
                 print(f'Preprocessor {self.preprocessors[i]}')
-                if i == 4:
-                    print('CHECK THOROUGHLY THE NER OUTPUT')
-                    breakpoint()
+
+                #    print('CHECK THOROUGHLY THE NER OUTPUT')
+                #    breakpoint()
                 answer.append(self.preprocessors[i](texts_a, texts_b))
         return answer
 

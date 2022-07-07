@@ -65,7 +65,10 @@ class SimpleVocabulary(Estimator):
         self.reset()
         tokens = chain(*args)
         # filter(None, <>) -- to filter empty tokens
+        print(f'Fitting simple_vocab with {tokens}')
         self.freqs = Counter(filter(None, flatten_str_batch(tokens)))
+        print(f'Frequencies {self.freqs}')
+        #breakpoint()
         for special_token in self.special_tokens:
             self._t2i[special_token] = self.count
             self._i2t.append(special_token)
@@ -88,6 +91,8 @@ class SimpleVocabulary(Estimator):
                 self.count += 1
 
     def __call__(self, batch, is_top=True, **kwargs):
+        print(f'Calling simple_vocab with {batch}')
+        #breakpoint()
         if isinstance(batch, Iterable) and not isinstance(batch, str):
             looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:

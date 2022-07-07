@@ -33,8 +33,8 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     Returns:
         fraction of absolutely coincidental samples
     """
-    print(f'Output in accuracy {y_true[:5]} {y_predicted[:5]}')
 
+    print(f'Output in accuracy {y_true[:5]} {y_predicted[:5]}')
     examples_len = len(y_true)
     # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
 

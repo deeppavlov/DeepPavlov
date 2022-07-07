@@ -69,11 +69,14 @@ class BertForMultiTask(nn.Module):
     ):
         outputs=None
         if name in ['sequence_labeling', 'multiple_choice']:
+            # delete after checking label format
             input_ids = input_ids.view(-1, input_ids.size(-1))
             token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
         try:
-            outputs = self.bert(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
+            outputs = self.bert(input_ids=input_ids.int(),
+                                token_type_ids=token_type_ids.int(),
+                                 attention_mask=attention_mask.int())
         except Exception as e:
             breakpoint()
             raise e
@@ -83,7 +86,7 @@ class BertForMultiTask(nn.Module):
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
-            final_output = self.dropout(top_hidden_state)
+            final_output = self.dropout(last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
                 loss_fct = CrossEntropyLoss()
@@ -91,7 +94,7 @@ class BertForMultiTask(nn.Module):
                 loss=loss_fct(active_logits, labels.view(-1))
                 return loss, logits     
             else:
-                return logits,outputs.hidden_states, final_output
+                return logits
         elif name in ['classification','regression', 'multiple_choice']:
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
@@ -128,9 +131,8 @@ class BertForMultiTask(nn.Module):
             else:
                 return output_dict['logits']
         elif name == 'question_answering':
-            log.warning('QUESTION ANSWERING IS SUPPORTED ONLY EXPERIMENTALLY')
-            sequence_output = outputs.hidden_states[-1]        
-            sequence_output = self.dropout(sequence_output)
+            log.warning('QUESTION ANSWERING IS SUPPORTED ONLY EXPERIMENTALLY')      
+            sequence_output = self.dropout(last_hidden_state)
             # or logits?
             start_logits, end_logits = last_hidden_state.split(1, dim=-1)
             start_logits = start_logits.squeeze(-1)
@@ -368,6 +370,7 @@ class TorchMultiTaskBert(TorchModel):
         ans[label]=1
         return ans
     def _make_input(self,task_features,task_id,labels=None):
+        batch_input_size= None
         print(f'Making input from {task_features}')
         if len(task_features) == 1 and isinstance(task_features,list):
             task_features = task_features[0]
@@ -380,13 +383,9 @@ class TorchMultiTaskBert(TorchModel):
                     np.array(labels, dtype=float), dtype=torch.float32
                 )
             elif self.tasks_type[task_id] == 'multiple_choice':
-                labels_for_all_choices = []
-                for label in labels:
-                    if isinstance(label, int):
-                        labels_for_all_choices = labels_for_all_choices + self._one_hot(label,self.tasks_num_classes[task_id])
-                    elif isinstance(label,Iterable):
-                        labels_for_all_choices = labels_for_all_choices + list(label)
-                _input['labels'] = torch.tensor(np.array(labels,dtype=int),dtype=torch.int32)
+                labels = torch.Tensor(labels).long()
+                onehot_labels = torch.nn.functional.one_hot(labels,num_classes=self.tasks_num_classes[task_id]) 
+                _input['labels'] = torch.flatten(onehot_labels, start_dim=0)
             else:
                 _input["labels"] = torch.from_numpy(np.array(labels))
             #if _input['labels'].shape[1] == 1:
@@ -397,10 +396,12 @@ class TorchMultiTaskBert(TorchModel):
         for elem in element_list:
             if elem in task_features:
                 _input[elem] = task_features[elem]
+                batch_input_size = _input[elem].shape[0]
             elif hasattr(task_features,elem):
                 _input[elem] = getattr(task_features,elem)
+                batch_input_size = _input[elem].shape[0]
             if elem in _input:           
-                if self.tasks_type[task_id] == 'multiple_choice':
+                if self.tasks_type[task_id] in ['sequence_labeling','multiple_choice'] and elem != 'labels':
                     _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
                 _input[elem] = _input[elem].to(self.device)
         print('Made input on device')
@@ -409,11 +410,9 @@ class TorchMultiTaskBert(TorchModel):
             breakpoint()
             raise Exception('EMPTY INPUT!!!!')
         if 'labels' in _input:
-            if self.tasks_type[task_id] == 'multiple_choice':
-                breakpoint()
             assert len(_input['labels'])==len(_input['input_ids']),breakpoint()
 
-        return _input
+        return _input,batch_input_size
 
 
     def __call__(self, *args):
@@ -424,12 +423,10 @@ class TorchMultiTaskBert(TorchModel):
             predicted classes or probabilities of each class
         """
         ### IMPROVE ARGS CHECKING AFTER DEBUG
-
-        self.validation_predictions = [[] for _ in range(len(self.task_names))]
-
+        self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
             if len(args[task_id]):
-                _input = self._make_input(task_features=args[task_id],task_id=task_id)
+                _input, batch_input_size = self._make_input(task_features=args[task_id],task_id=task_id)
                 assert 'input_ids' in _input, breakpoint()
                 with torch.no_grad():
                     logits = self.model(
@@ -443,14 +440,19 @@ class TorchMultiTaskBert(TorchModel):
                 else:
                     pred = torch.nn.functional.argmax(logits, dim=1)
                 print(f"{task_id} {_input['input_ids'].shape} {logits.shape} {pred.shape}")
+                if task_id == 4: # ner
+                    assert pred.shape[1]==9,breakpoint()
                 pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
         if len(args) ==1:
             print(f'Predictions {self.validation_predictions[0]}')
             return self.validation_predictions[0]
+        for i in range(len(self.validation_predictions)):
+            if self.validation_predictions[i] == None:
+                self.validation_predictions[i] = [None for _ in range(batch_input_size)]
         print(f'Predictions {self.validation_predictions}')
-        if len(args) ==4:
-            breakpoint()
+        #if len(args) ==4:
+        #    breakpoint()
         return self.validation_predictions
     def set_gradient_accumulation_interval(self, task_id, interval):
         self.gradient_accumulation_steps[task_id] = interval
@@ -471,7 +473,8 @@ class TorchMultiTaskBert(TorchModel):
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
         assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
         task_id = ids_to_iterate[0]
-        _input = self._make_input(task_features=args[task_id],task_id=task_id,
+        print('train on batch')
+        _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
         if self.prev_id is None:
             self.prev_id = task_id
@@ -479,8 +482,7 @@ class TorchMultiTaskBert(TorchModel):
             log.info('Seen samples from different tasks')
             self.printed = True
         loss, logits = self.model(
-                task_id=task_id, name=self.tasks_type[task_id], **_input
-            )
+                task_id=task_id, name=self.tasks_type[task_id], **_input)
 
         loss = loss / self.gradient_accumulation_steps[task_id]
         loss.backward()

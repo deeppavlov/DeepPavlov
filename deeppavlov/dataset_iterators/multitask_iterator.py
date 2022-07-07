@@ -224,8 +224,8 @@ class MultiTaskIterator:
                     except Exception as e:
                         breakpoint()
                         raise e
-                x = [[None  for sample_id in range(batch_size)] for task_id in range(self.n_tasks)]
-                y = [[None  for sample_id in range(batch_size)] for task_id in range(self.n_tasks)]
+                x = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
+                y = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
                 yield self.transform_before_yielding(x, y,batch_size)
 
@@ -233,9 +233,9 @@ class MultiTaskIterator:
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
         else:
-            x = [() for _ in range(self.n_tasks)]
-            y = [() for _ in range(self.n_tasks)]
             eval_batch_size=1
+            x = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
+            y = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             generators = [
                 RepeatBatchGenerator(iter_, batch_size=eval_batch_size, data_type=data_type, shuffle=shuffle)
                 for iter_ in self.task_iterators.values()

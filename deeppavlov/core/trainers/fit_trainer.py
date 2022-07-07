@@ -175,11 +175,14 @@ class FitTrainer:
         # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
         metrics_values = []
         for metric in metrics:
-            try:
+            calculate_metric = True
+            for i in metric.inputs:
+                if all([k == None for k in outputs[i]]):
+                    print('Metric is not calculated')
+                    calculate_metric = False
+                    value = -1
+            if calculate_metric:
                 value = metric.fn(*[outputs[i] for i in metric.inputs])
-            except Exception as e:
-                print(e) # for STSB different lengths
-                breakpoint()
             metrics_values.append((metric.alias, value))
 
         report = {
