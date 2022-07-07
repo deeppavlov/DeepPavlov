@@ -1,14 +1,25 @@
 {
    "dataset_reader":{
       "class_name":"multitask_reader",
-      "path": "glue",
+      "path":"glue",
       "reader_class_name":"huggingface_dataset_reader",
       "train":"train",
       "validation":"validation",
       "task_names":[
          "cola",
-         "rte"
-      ]
+         "rte",
+         "stsb"
+      ],
+      "tasks":{
+         "copa":{
+            "reader_class_name":"huggingface_dataset_reader",
+            "data_path":"super_glue",
+            "path":"super_glue",
+            "name":"copa",
+            "train":"train",
+            "valid":"validation"
+         }
+      }
    },
    "dataset_iterator":{
       "class_name":"multitask_iterator",
@@ -29,17 +40,33 @@
                "sentence1",
                "sentence2"
             ]
+         },
+         "stsb":{
+            "features":[
+               "sentence1",
+               "sentence2"
+            ]
+         },
+         "copa":{
+            "features":[
+               "contexts",
+               "choices"
+            ]
          }
       }
    },
    "chainer":{
       "in":[
          "x_cola",
-         "x_rte"
+         "x_rte",
+         "x_stsb",
+         "x_copa"
       ],
       "in_y":[
          "y_cola",
-         "y_rte"
+         "y_rte",
+         "y_stsb",
+         "y_copa"
       ],
       "pipe":[
          {
@@ -48,18 +75,27 @@
                0,
                1
             ],
-            "preprocessor":"TorchTransformersPreprocessor",
+            "preprocessors":[
+               "TorchTransformersPreprocessor",
+               "TorchTransformersPreprocessor",
+               "TorchTransformersPreprocessor",
+               "TorchTransformersMultiplechoicePreprocessor"
+            ],
             "vocab_file":"{BACKBONE}",
             "max_seq_length":128,
-            "n_task":2,
             "do_lower_case":true,
+            "n_task":4,
             "in":[
                "x_cola",
-               "x_rte"
+               "x_rte",
+               "x_stsb",
+               "x_copa"
             ],
             "out":[
                "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_rte",
+               "bert_features_stsb",
+               "bert_features_copa"
             ]
          },
          {
@@ -75,8 +111,8 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}2",
-            "load_path":"{SAVE_LOAD_PATH}2",
+            "save_path":"{SAVE_LOAD_PATH}4",
+            "load_path":"{SAVE_LOAD_PATH}4",
             "tasks":{
                "cola":{
                   "type":"classification",
@@ -85,19 +121,33 @@
                "rte":{
                   "type":"classification",
                   "options":2
+               },
+               "stsb":{
+                  "type":"regression",
+                  "options":1
+               },
+               "copa":{
+                  "type":"multiple_choice",
+                  "options":2
                }
             },
             "in":[
                "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_rte",
+               "bert_features_stsb",
+               "bert_features_copa"
             ],
             "in_y":[
                "y_cola",
-               "y_rte"
+               "y_rte",
+               "y_stsb",
+               "y_copa"
             ],
             "out":[
                "y_cola_pred_probas",
-               "y_rte_pred_probas"
+               "y_rte_pred_probas",
+               "y_stsb_pred",
+               "y_copa_pred_probas"
             ]
          },
          {
@@ -119,24 +169,38 @@
             ],
             "class_name":"proba2labels",
             "max_proba":true
+         },
+         {
+            "in":[
+               "y_copa_pred_probas"
+            ],
+            "out":[
+               "y_copa_pred_ids"
+            ],
+            "class_name":"proba2labels",
+            "max_proba":true
          }
       ],
       "out":[
          "y_cola_pred_ids",
-         "y_rte_pred_ids"
+         "y_rte_pred_ids",
+         "y_stsb_pred",
+         "y_copa_pred_ids"
       ]
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":4,
+      "batch_size":32,
       "metrics":[
          {
             "name":"multitask_accuracy",
             "inputs":[
                "y_rte",
                "y_cola",
+               "y_copa",
                "y_rte_pred_ids",
-               "y_cola_pred_ids"
+               "y_cola_pred_ids",
+               "y_copa_pred_ids"
             ]
          },
          {
@@ -153,6 +217,30 @@
             "inputs":[
                "y_rte",
                "y_rte_pred_ids"
+            ]
+         },
+         {
+            "name":"accuracy",
+            "alias":"accuracy_copa",
+            "inputs":[
+               "y_copa",
+               "y_copa_pred_ids"
+            ]
+         },
+         {
+            "name":"pearson_correlation",
+            "alias":"pearson_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
+            ]
+         },
+         {
+            "name":"spearman_correlation",
+            "alias":"spearman_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
             ]
          }
       ],

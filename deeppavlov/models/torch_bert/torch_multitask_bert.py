@@ -15,6 +15,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss, MSELoss
 from torch.autograd import Variable
+from collections.abc import Iterable
 from torch.nn.parameter import Parameter
 from transformers import AutoConfig, AutoModelForSequenceClassification
 
@@ -34,7 +35,7 @@ class BertForMultiTask(nn.Module):
     ```
     """
 
-    def __init__(self, tasks,task_types,
+    def __init__(self, tasks_num_classes,
                  backbone_model='bert_base_uncased', config_file=None,
                  max_seq_len=320):
 
@@ -42,17 +43,14 @@ class BertForMultiTask(nn.Module):
         config = AutoConfig.from_pretrained(backbone_model,output_hidden_states=True,output_attentions=True)
         self.bert = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=backbone_model,
                                                                            config=config )
+        self.classes = tasks_num_classes  # classes for every task
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.classes = [num_labels for num_labels in tasks]
-        num_tasks = len(self.classes)
         self.max_seq_len =max_seq_len
         self.activation = nn.Tanh()
         OUT_DIM = config.hidden_size
-        self.classifier = nn.ModuleList(
+        self.bert.final_classifier = nn.ModuleList(
             [
-                nn.Linear(OUT_DIM, num_labels) if task_type != 'multiple_choice'
-                else nn.Linear(OUT_DIM, 1)
-                for num_labels, task_type in zip(tasks, task_types)
+                nn.Linear(OUT_DIM, num_labels) for num_labels in self.classes
             ]
         )
         self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
@@ -86,7 +84,7 @@ class BertForMultiTask(nn.Module):
         pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
             final_output = self.dropout(top_hidden_state)
-            logits = self.classifier[task_id](final_output)
+            logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
                 loss_fct = CrossEntropyLoss()
                 active_logits = logits.view(-1, self.classes[task_id])
@@ -95,8 +93,8 @@ class BertForMultiTask(nn.Module):
             else:
                 return logits,outputs.hidden_states, final_output
         elif name in ['classification','regression', 'multiple_choice']:
-            pooler_output = self.dropout(pooler_output)
-            logits = self.classifier[task_id](pooler_output)
+            pooled_output = self.dropout(pooled_output)
+            logits = self.bert.final_classifier[task_id](pooled_output)
             if name=='multiple_choice':
                 logits = logits.view((-1,self.classes[task_id]))
                 if labels is not None:
@@ -104,9 +102,7 @@ class BertForMultiTask(nn.Module):
             if labels is not None:
                 if name != "regression":
                     loss_fct = CrossEntropyLoss()
-                    loss = loss_fct(logits, labels)
-                    if self.gsa_mode == 'no_2loss':
-                        loss = loss + task_classification_loss
+                    loss = loss_fct(logits, labels.view(-1))
                     return loss, logits
                 elif  name == "regression":
                     loss_fct = MSELoss()
@@ -126,7 +122,7 @@ class BertForMultiTask(nn.Module):
                           "span1s":span1, "span2s":span2}
             if labels is not None:
                 input_dict["labels"] = labels
-            output_dict = self.classifier[task_id].forward(input_dict)
+            output_dict = self.bert.final_classifier[task_id].forward(input_dict)
             if 'loss' in output_dict:
                 return output_dict['loss'], output_dict['logits']
             else:
@@ -205,7 +201,7 @@ class TorchMultiTaskBert(TorchModel):
         one_hot_labels: bool = False,
         multilabel: bool = False,
         return_probas: bool = False,
-        test_pipeline=True,#delete later
+        flatten_multiplechoice_labels: bool=True,
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         *args,
@@ -225,7 +221,6 @@ class TorchMultiTaskBert(TorchModel):
         self.max_seq_len=max_seq_len
         self.tasks_num_classes = []
         self.task_names = []
-        self.test_pipeline = test_pipeline
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
@@ -259,6 +254,7 @@ class TorchMultiTaskBert(TorchModel):
                 "Set return_probas to True for multilabel classification!"
             )
 
+        assert not self.multilabel, 'Multilabel not supported yet'
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
             lr_scheduler=self.lr_scheduler_name,
@@ -279,9 +275,8 @@ class TorchMultiTaskBert(TorchModel):
     
         self.model = BertForMultiTask(
                 backbone_model=self.backbone_model,
-                tasks = self.tasks_num_classes,
-                task_types=self.tasks_type)
-
+                tasks_num_classes = self.tasks_num_classes)
+        self.model = self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
         get_non_decay_params = lambda model: [
@@ -368,6 +363,58 @@ class TorchMultiTaskBert(TorchModel):
                     continue
                 p.requires_grad = False
                 log.info("Bert Embeddings Freezed")
+    def _one_hot(self, label, num_classes):
+        ans = [0 for _ in range(num_classes)]
+        ans[label]=1
+        return ans
+    def _make_input(self,task_features,task_id,labels=None):
+        print(f'Making input from {task_features}')
+        if len(task_features) == 1 and isinstance(task_features,list):
+            task_features = task_features[0]
+        _input = {}
+        element_list = ["input_ids", "attention_mask", "token_type_ids", 'labels']
+        if labels is not None:
+            print(f'Using {labels}')
+            if self.tasks_type[task_id] == "regression":
+                _input["labels"] = torch.tensor(
+                    np.array(labels, dtype=float), dtype=torch.float32
+                )
+            elif self.tasks_type[task_id] == 'multiple_choice':
+                labels_for_all_choices = []
+                for label in labels:
+                    if isinstance(label, int):
+                        labels_for_all_choices = labels_for_all_choices + self._one_hot(label,self.tasks_num_classes[task_id])
+                    elif isinstance(label,Iterable):
+                        labels_for_all_choices = labels_for_all_choices + list(label)
+                _input['labels'] = torch.tensor(np.array(labels,dtype=int),dtype=torch.int32)
+            else:
+                _input["labels"] = torch.from_numpy(np.array(labels))
+            #if _input['labels'].shape[1] == 1:
+            #    _input['labels'] = _input['labels'][:, 0]
+                    
+        if self.tasks_type[task_id] == 'span_classification':
+            element_list = element_list + ['span1', 'span2']
+        for elem in element_list:
+            if elem in task_features:
+                _input[elem] = task_features[elem]
+            elif hasattr(task_features,elem):
+                _input[elem] = getattr(task_features,elem)
+            if elem in _input:           
+                if self.tasks_type[task_id] == 'multiple_choice':
+                    _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
+                _input[elem] = _input[elem].to(self.device)
+        print('Made input on device')
+        print(_input)
+        if _input == {}:
+            breakpoint()
+            raise Exception('EMPTY INPUT!!!!')
+        if 'labels' in _input:
+            if self.tasks_type[task_id] == 'multiple_choice':
+                breakpoint()
+            assert len(_input['labels'])==len(_input['input_ids']),breakpoint()
+
+        return _input
+
 
     def __call__(self, *args):
         """Make prediction for given features (texts).
@@ -377,63 +424,33 @@ class TorchMultiTaskBert(TorchModel):
             predicted classes or probabilities of each class
         """
         ### IMPROVE ARGS CHECKING AFTER DEBUG
-        if args.test_pipeline:
-            ggg=args
-            breakpoint()
-            assert gg[2] == ggg[0]
-            assert ggg[3] == ggg[1]
-            print('Pipelining ok')
-            breakpoint()
 
-        self.validation_predictions = []
+        self.validation_predictions = [[] for _ in range(len(self.task_names))]
 
         for task_id in range(len(self.task_names)):
-            if not len(args_in[task_id]):
-                self.validation_predictions.append([])
-            else:
-                task_features = args_in[task_id]
-                if len(task_features) == 1 and isinstance(task_features[0],list):
-                    task_features = task_features[0]
-                _input = {}
-                for elem in ["input_ids", "attention_mask", "token_type_ids"]:
-                    if elem in task_features[0] or hasattr(task_features[0], elem):
-                        try:
-                            _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in task_features]
-                        except Exception as e:
-                            breakpoint()
-                            raise e
-                        _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-                        if self.tasks_type[task_id] == 'multiple_choice':
-                            _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
-                if self.tasks_type[task_id] == "span_classification":
-                    for elem in ["span1", "span2"]:
-                        tmp = [getattr(f,elem) for f in task_features] 
-                        try:
-                            _input[elem] = torch.cat(tmp, dim=0).to(self.device)
-                        except Exception as e:
-                            breakpoint()
-                            raise e
+            if len(args[task_id]):
+                _input = self._make_input(task_features=args[task_id],task_id=task_id)
+                assert 'input_ids' in _input, breakpoint()
                 with torch.no_grad():
                     logits = self.model(
                         task_id=task_id, name=self.tasks_type[task_id], **_input
                     )
-                    if isinstance(logits,tuple) or logits.shape[0]==1:
-                        logits=logits[0]
-                if self.return_probas:
-                    if not self.multilabel and self.tasks_type[task_id] != 'regression':
-                        pred = torch.nn.functional.softmax(logits, dim=-1)
-                    elif self.tasks_type[task_id] == 'regression':
-                        pred = logits
-                    pred = pred.detach().cpu().numpy()
-                elif self.tasks_num_classes[task_id] > 1:
-                    logits = logits.detach().cpu().numpy()
-                    pred = np.argmax(logits, axis=1)
-                else: 
-                    # regression
-                    pred = logits.squeeze(-1).detach().cpu().numpy()
-                self.validation_predictions.append([pred])
+                if self.tasks_type[task_id] == 'regression':
+                    pred = logits[:,0]
+                    assert len(pred) == len(_input['input_ids']), breakpoint()
+                elif self.return_probas:
+                    pred = torch.nn.functional.softmax(logits, dim=-1)
+                else:
+                    pred = torch.nn.functional.argmax(logits, dim=1)
+                print(f"{task_id} {_input['input_ids'].shape} {logits.shape} {pred.shape}")
+                pred = pred.tolist()
+                self.validation_predictions[task_id] = pred
         if len(args) ==1:
+            print(f'Predictions {self.validation_predictions[0]}')
             return self.validation_predictions[0]
+        print(f'Predictions {self.validation_predictions}')
+        if len(args) ==4:
+            breakpoint()
         return self.validation_predictions
     def set_gradient_accumulation_interval(self, task_id, interval):
         self.gradient_accumulation_steps[task_id] = interval
@@ -446,66 +463,41 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             dict with loss for each task
         """
-        if args.test_pipeline:
-            ggg=args
+        if len(args)==4:
             breakpoint()
-            assert gg[2] == ggg[0]
-            assert ggg[3] == ggg[1]
-            print('Pipelining ok')
-            breakpoint()
-        if not args.test_pipeline:
-            assert len(features) == 2*self.n_tasks
-        for i in range(self.n_tasks):
-            args_in[i].labels = args_in_y[i + self.n_tasks] 
-        args_in = args_in[:self.n_tasks]
-        ids_to_iterate = [k for k in range(self.n_tasks) if args_in[k]]
-        assert len(ids_to_iterate) > 1, breakpoint()
-        for task_id in range(self.n_tasks):
-            _input = {}
-            for elem in ["input_ids", "attention_mask", "token_type_ids","labels"]:
-                _input[elem] = [getattr(f, elem) if not isinstance(f,dict) else f[elem] for f in args_in[task_id]]
-                _input[elem] = torch.cat(_input[elem], dim=0).to(self.device)
-            if self.tasks_type[task_id] == "span_classification":
-                for elem in ["span1", "span2"]:
-                    tmp = [getattr(f,elem) for f in task_features] 
-                    try:
-                        _input[elem] = torch.cat(tmp, dim=1).to(self.device)
-                    except Exception as e:
-                        breakpoint()
-                        raise e
-            if self.tasks_type[task_id] == "regression":
-                _input["labels"] = torch.tensor(
-                    np.array(task_labels[0], dtype=float), dtype=torch.float32
-                ).to(self.device)
-            else:
-                _input["labels"] = torch.from_numpy(np.array(task_labels[0])).to(
-                    self.device
-                )
-            if self.prev_id is None:
-                self.prev_id = task_id
-            elif self.prev_id != task_id and not self.printed:
-                log.info('Seen samples from different tasks')
-                self.printed = True
-            loss, logits = self.model(
+        for i in range(len(args)):
+            print(f'Argument {i} {args[i]}')
+        assert len(args) == 2*self.n_tasks, breakpoint() # need to get exact number of x andy
+        ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
+        assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
+        task_id = ids_to_iterate[0]
+        _input = self._make_input(task_features=args[task_id],task_id=task_id,
+                                labels=args[task_id+self.n_tasks])
+        if self.prev_id is None:
+            self.prev_id = task_id
+        elif self.prev_id != task_id and not self.printed:
+            log.info('Seen samples from different tasks')
+            self.printed = True
+        loss, logits = self.model(
                 task_id=task_id, name=self.tasks_type[task_id], **_input
             )
 
-            loss = loss / self.gradient_accumulation_steps[task_id]
-            loss.backward()
+        loss = loss / self.gradient_accumulation_steps[task_id]
+        loss.backward()
 
-            # Clip the norm of the gradients to 1.0.
-            # This is to help prevent the "exploding gradients" problem.
-            if self.clip_norm:
-                torch.nn.utils.clip_grad_norm_(
-                    self.model.parameters(), self.clip_norm)
+        # Clip the norm of the gradients to 1.0.
+        # This is to help prevent the "exploding gradients" problem.
+        if self.clip_norm:
+            torch.nn.utils.clip_grad_norm_(
+                self.model.parameters(), self.clip_norm)
 
-            if (self.steps_taken + 1) % self.gradient_accumulation_steps[task_id] == 0 or (
-                self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
-                self.optimizer.step()
-                if self.lr_scheduler:
-                    self.lr_scheduler.step()  # Update learning rate schedule
-                self.optimizer.zero_grad()
-            self.train_losses[task_id] = loss.item()
-            self.steps_taken += 1
+        if (self.steps_taken + 1) % self.gradient_accumulation_steps[task_id] == 0 or (
+            self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
+            self.optimizer.step()
+            if self.lr_scheduler:
+                self.lr_scheduler.step()  # Update learning rate schedule
+            self.optimizer.zero_grad()
+        self.train_losses[task_id] = loss.item()
+        self.steps_taken += 1
         return {"losses": self.train_losses}
 

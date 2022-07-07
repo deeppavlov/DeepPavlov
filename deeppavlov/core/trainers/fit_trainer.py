@@ -175,7 +175,11 @@ class FitTrainer:
         # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
         metrics_values = []
         for metric in metrics:
-            value = metric.fn(*[outputs[i] for i in metric.inputs])
+            try:
+                value = metric.fn(*[outputs[i] for i in metric.inputs])
+            except Exception as e:
+                print(e) # for STSB different lengths
+                breakpoint()
             metrics_values.append((metric.alias, value))
 
         report = {

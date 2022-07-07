@@ -29,7 +29,7 @@ log = getLogger(__name__)
 class MultiTaskReader(DatasetReader):
     """Class to read several datasets simultaneuosly"""
 
-    def read(self, data_path, tasks: Dict[str, Dict[str, str]] = None, task_names=None, path=None,
+    def read(self, data_path, tasks: Dict[str, Dict[str, str]] = {}, task_names=None, path=None,
              train=None, validation=None, reader_class_name=None):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
         Args:
@@ -54,28 +54,31 @@ class MultiTaskReader(DatasetReader):
         data = {}
         if tasks is None:
             tasks = {}
-            for name in task_names:
-                if 'mnli' in name and '_' not in validation:
-                    log.warning(f'MNLI task used in default setting. Validation on MNLI-matched assumed')
-                    validation_name = validation + '_matched'
-                else:
-                    validation_name = validation
-                reader_params = {'path': path,
-                                 'data_path': data_path,
-                                 'name': name,
-                                 'train': train,
-                                 'valid': validation_name}
-                for key in reader_params:
-                    assert reader_params[key] is not None, f'Set value for {key} if tasks argument is None'
-                assert reader_class_name is not None
-                tasks[name] = from_params({"class_name": reader_class_name})
-                reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
-                data[name] = tasks[name].read(**reader_params)
-        else:
-            for task_name, reader_params in tasks.items():
-                reader_params = copy.deepcopy(reader_params)
-                tasks[task_name] = from_params({"class_name": reader_params['reader_class_name']})
-                reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
-                del reader_params['reader_class_name']
-                data[task_name] = tasks[task_name].read(**reader_params)
+
+        for task_name, reader_params in tasks.items():
+            log.info('Processing explicitly set tasks')
+            reader_params = copy.deepcopy(reader_params)
+            tasks[task_name] = from_params({"class_name": reader_params['reader_class_name']})
+            reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
+            del reader_params['reader_class_name']
+            data[task_name] = tasks[task_name].read(**reader_params)
+        log.info('For all tasks set in task_names,process those that were not explicitly cet')
+        task_names = [k for k in task_names if k not in data]
+        for name in task_names:
+            if 'mnli' in name and '_' not in validation:
+                log.warning(f'MNLI task used in default setting. Validation on MNLI-matched assumed')
+                validation_name = validation + '_matched'
+            else:
+                validation_name = validation
+            reader_params = {'path': path,
+                                'data_path': data_path,
+                                'name': name,
+                                'train': train,
+                                'valid': validation_name}
+            for key in reader_params:
+                assert reader_params[key] is not None, f'Set value for {key} if tasks argument is None'
+            assert reader_class_name is not None
+            tasks[name] = from_params({"class_name": reader_class_name})
+            reader_params['data_path'] = Path(reader_params['data_path']).expanduser()
+            data[name] = tasks[name].read(**reader_params)
         return data

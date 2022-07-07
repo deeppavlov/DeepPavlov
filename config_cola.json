@@ -6,8 +6,7 @@
       "train":"train",
       "validation":"validation",
       "task_names":[
-         "cola",
-         "rte"
+         "cola"
       ]
    },
    "dataset_iterator":{
@@ -23,23 +22,15 @@
             "features":[
                "sentence"
             ]
-         },
-         "rte":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
          }
       }
    },
    "chainer":{
       "in":[
-         "x_cola",
-         "x_rte"
+         "x_cola"
       ],
       "in_y":[
-         "y_cola",
-         "y_rte"
+         "y_cola"
       ],
       "pipe":[
          {
@@ -51,15 +42,13 @@
             "preprocessor":"TorchTransformersPreprocessor",
             "vocab_file":"{BACKBONE}",
             "max_seq_length":128,
-            "n_task":2,
+            "n_task":1,
             "do_lower_case":true,
             "in":[
-               "x_cola",
-               "x_rte"
+               "x_cola"
             ],
             "out":[
-               "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_cola"
             ]
          },
          {
@@ -75,29 +64,22 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}2",
-            "load_path":"{SAVE_LOAD_PATH}2",
+            "save_path":"{SAVE_LOAD_PATH}3",
+            "load_path":"{SAVE_LOAD_PATH}3",
             "tasks":{
                "cola":{
-                  "type":"classification",
-                  "options":2
-               },
-               "rte":{
                   "type":"classification",
                   "options":2
                }
             },
             "in":[
-               "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_cola"
             ],
             "in_y":[
-               "y_cola",
-               "y_rte"
+               "y_cola"
             ],
             "out":[
-               "y_cola_pred_probas",
-               "y_rte_pred_probas"
+               "y_cola_pred_probas"
             ]
          },
          {
@@ -109,50 +91,22 @@
             ],
             "class_name":"proba2labels",
             "max_proba":true
-         },
-         {
-            "in":[
-               "y_rte_pred_probas"
-            ],
-            "out":[
-               "y_rte_pred_ids"
-            ],
-            "class_name":"proba2labels",
-            "max_proba":true
          }
       ],
       "out":[
-         "y_cola_pred_ids",
-         "y_rte_pred_ids"
+         "y_cola_pred_ids"
       ]
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":4,
+      "batch_size":32,
       "metrics":[
-         {
-            "name":"multitask_accuracy",
-            "inputs":[
-               "y_rte",
-               "y_cola",
-               "y_rte_pred_ids",
-               "y_cola_pred_ids"
-            ]
-         },
          {
             "name":"accuracy",
             "alias":"accuracy_cola",
             "inputs":[
                "y_cola",
                "y_cola_pred_ids"
-            ]
-         },
-         {
-            "name":"accuracy",
-            "alias":"accuracy_rte",
-            "inputs":[
-               "y_rte",
-               "y_rte_pred_ids"
             ]
          }
       ],
@@ -170,7 +124,7 @@
          "ROOT_PATH":"/cephfs/home/karpov.d",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model2_clean",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean_cola3",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }

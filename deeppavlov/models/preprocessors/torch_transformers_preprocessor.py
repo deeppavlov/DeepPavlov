@@ -153,9 +153,10 @@ class TorchTransformersPreprocessor(Component):
         print('texts')
         print(texts_a)
         print(texts_b)
-
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
+        elif isinstance(texts_a, str):
+            raise Exception(f'Received string {texts_a} as an input! Check the iterator output')
 
         input_features = self.tokenizer(text=texts_a,
                                         text_pair=texts_b,
@@ -459,6 +460,7 @@ class TorchTransformersNerPreprocessor(Component):
                  token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  subword_mask_mode: str = "first",
+                 return_features: bool = False,
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -466,6 +468,7 @@ class TorchTransformersNerPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         self.subword_mask_mode = subword_mask_mode
+        self.return_features = return_features
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
@@ -538,9 +541,23 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
+            if self.return_features:
+                feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+                                              'attention_mask': torch.Tensor(attention_mask),
+                                'token_type_ids': torch.Tensor(startofword_markers),
+                                'labels': torch.Tensor(subword_tags)})
+                return feature_list
+            else:
                 return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
+                        attention_mask, startofword_markers, subword_tags
+        if self.return_features:
+            feature_list = BatchEncoding({'input_ids': torch.Tensor(subword_tok_ids),
+                                          'attention_mask': torch.Tensor(attention_mask),
+                                          'token_type_ids': torch.Tensor(startofword_markers)
+                                         })
+            return feature_list
+        else:
+            return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],

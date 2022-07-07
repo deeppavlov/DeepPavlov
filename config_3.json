@@ -7,7 +7,8 @@
       "validation":"validation",
       "task_names":[
          "cola",
-         "rte"
+         "rte",
+         "stsb"
       ]
    },
    "dataset_iterator":{
@@ -29,17 +30,25 @@
                "sentence1",
                "sentence2"
             ]
-         }
+         },
+         "stsb":{
+            "features":[
+               "sentence1",
+               "sentence2"
+            ]
+         }        
       }
    },
    "chainer":{
       "in":[
          "x_cola",
-         "x_rte"
+         "x_rte",
+         "x_stsb"
       ],
       "in_y":[
          "y_cola",
-         "y_rte"
+         "y_rte",
+         "y_stsb"
       ],
       "pipe":[
          {
@@ -51,17 +60,20 @@
             "preprocessor":"TorchTransformersPreprocessor",
             "vocab_file":"{BACKBONE}",
             "max_seq_length":128,
-            "n_task":2,
             "do_lower_case":true,
+            "n_task":3,
             "in":[
                "x_cola",
-               "x_rte"
+               "x_rte",
+               "x_stsb"
             ],
             "out":[
                "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_rte",
+               "bert_features_stsb"
             ]
          },
+
          {
             "id":"multitask_bert",
             "class_name":"multitask_bert",
@@ -75,8 +87,8 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}2",
-            "load_path":"{SAVE_LOAD_PATH}2",
+            "save_path":"{SAVE_LOAD_PATH}3",
+            "load_path":"{SAVE_LOAD_PATH}3",
             "tasks":{
                "cola":{
                   "type":"classification",
@@ -85,19 +97,23 @@
                "rte":{
                   "type":"classification",
                   "options":2
-               }
+               },
+               "stsb":{"type":"regression","options":1}
             },
             "in":[
                "bert_features_cola",
-               "bert_features_rte"
+               "bert_features_rte",
+               "bert_features_stsb"
             ],
             "in_y":[
                "y_cola",
-               "y_rte"
+               "y_rte",
+               "y_stsb"
             ],
             "out":[
                "y_cola_pred_probas",
-               "y_rte_pred_probas"
+               "y_rte_pred_probas",
+               "y_stsb_pred"
             ]
          },
          {
@@ -123,12 +139,14 @@
       ],
       "out":[
          "y_cola_pred_ids",
-         "y_rte_pred_ids"
+         "y_rte_pred_ids",
+         "y_stsb_pred"
+         
       ]
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":4,
+      "batch_size":32,
       "metrics":[
          {
             "name":"multitask_accuracy",
@@ -153,6 +171,22 @@
             "inputs":[
                "y_rte",
                "y_rte_pred_ids"
+            ]
+         },
+         {
+            "name":"pearson_correlation",
+            "alias":"pearson_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
+            ]
+         },
+         {
+            "name":"spearman_correlation",
+            "alias":"spearman_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
             ]
          }
       ],

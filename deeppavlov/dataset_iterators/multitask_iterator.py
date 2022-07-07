@@ -59,7 +59,7 @@ class MultiTaskIterator:
             seed=42,
             label=None,
             features=None,
-            clear_nans=True
+            one_element_tuples=False
     ):
         #breakpoint()
         self.task_iterators = {}
@@ -67,19 +67,24 @@ class MultiTaskIterator:
             task_iterator_params = copy.deepcopy(task_iterator_params)
             for param_name in ['use_label_name', 'seed','label','features', 'iterator_class_name']:
                 if param_name not in task_iterator_params:
-                    assert eval(param_name) is not None, f'Set {param_name} either in scope for {param_name} or as default_params'
-                    log.info(f'Using {param_name} as set on the reader level')
-                    if param_name != 'iterator_class_name':
-                        task_iterator_params[param_name] = eval(param_name)
-                    else:
-                        task_iterator_params['class_name'] = iterator_class_name
+                    if param_name != 'features':
+                        assert eval(param_name) is not None, f'Set {param_name} either in scope for {param_name} or as default_params'
+                        log.info(f'Using {param_name} as set on the reader level')
+                        if param_name != 'iterator_class_name':
+                            task_iterator_params[param_name] = eval(param_name)  
+                        else:
+                            task_iterator_params['class_name'] = iterator_class_name
+                    elif param_name == 'features':
+                        log.warning('Features nos specified. Experimentally not passing it on as a param')
                 elif param_name == 'iterator_class_name' and 'iterator_class_name' in task_iterator_params:
                     task_iterator_params["class_name"] = task_iterator_params[
                     "iterator_class_name"]
                     del task_iterator_params["iterator_class_name"]
             self.task_iterators[task_name] = from_params(
                 task_iterator_params, data=data[task_name]
-            )                
+            )
+            #if task_name == 'conll':
+            #    breakpoint()             
         self.n_tasks = len(tasks.keys())
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
@@ -104,15 +109,17 @@ class MultiTaskIterator:
             self.steps_per_epoch = sum(self.train_sizes)// batch_size
         else:
             self.steps_per_epoch = steps_per_epoch
-        if clear_nans:
-            for mode in ['train', 'valid', 'test']:
-                for task in self.data[mode]:
-                    for i in range(len(self.data[mode][task]) - 1, -1, -1):
-                        x = self.data[mode][task][i][0]
-                        y = self.data[mode][task][i][1]
-                        if any([is_nan(z) for z in x]) or is_nan(y):
-                            del self.data['train'][task][i]
-                            log.info(f'NAN for mode {mode} task {task} element {i} CLEARED')
+        for mode in ['train', 'valid', 'test']:
+            for task in self.data[mode]:
+                for i in range(len(self.data[mode][task]) - 1, -1, -1):
+                    x = self.data[mode][task][i][0]
+                    y = self.data[mode][task][i][1]
+                    if any([is_nan(z) for z in x]) or is_nan(y):
+                        del self.data['train'][task][i]
+                        log.info(f'NAN for mode {mode} task {task} element {i} CLEARED')
+                    elif isinstance(x, tuple) and len(x)==1  and not one_element_tuples:
+                        # x is a tuple consisting of 1 element. return it as string
+                        self.data[mode][task][i] = (x[0], y)
         self.max_task_data_len = dict()
         for data_type in self.data:
             sizes = self._get_data_size(data_type)
@@ -163,15 +170,17 @@ class MultiTaskIterator:
                 else:
                     united[task] = united[task] + data
         return united
-
-    def _init_sample_tasks_batch(self, batch_size=1):
-        iters = [iter_ for iter_ in self.task_iterators.values()]
-        sample_batch = [i.gen_batches(batch_size).__next__() for i in iters]
-        self.sample_x_instances = []
-        self.sample_y_instances = []
-        for sample_task_batch in sample_batch:
-            self.sample_x_instances.append(sample_task_batch[0])
-            self.sample_y_instances.append(sample_task_batch[1])
+    
+    def transform_before_yielding(self,x,y,batch_size):
+        assert len(x) == len(y)
+        new_x,new_y=[],[]
+        for i in range(batch_size):
+            new_x.append(tuple([x[id][i] for id in range(self.n_tasks)]))
+            new_y.append(tuple([y[id][i] for id in range(self.n_tasks)]))
+        batchs = (tuple(new_x), tuple(new_y))
+        print('Sending in iterator')
+        print(batchs)
+        return batchs
 
     def gen_batches(
             self, batch_size: int, data_type: str = "train", shuffle: bool = None
@@ -201,75 +210,42 @@ class MultiTaskIterator:
 
         if data_type == "train":
             generators = [
-                RepeatBatchGenerator(iter_, batch_size, data_type, shuffle)
-                for iter_ in self.task_iterators.values()
-            ]
-
-            # one sample batch of batch_size 1 for each task
-            if not self.sample_x_instances or not self.sample_y_instances:
-                self._init_sample_tasks_batch(batch_size)
-
+            RepeatBatchGenerator(iter_, batch_size, data_type, shuffle)
+            for iter_ in self.task_iterators.values()
+        ]
             # probs only required while training
             probs = self._get_probs("train")
             for step in range(self.steps_per_epoch):
-                if (
-                        self.steps_taken + 1
-                ) % self.gradient_accumulation_steps == 0 or self.task_id is None:
+
+                if (self.steps_taken + 1 ) % self.gradient_accumulation_steps == 0 or self.task_id is None:
                     try:
                         self.task_id = np.random.choice(self.n_tasks, p=probs)
                         self.chosen_batchs[self.task_id] += 1
                     except Exception as e:
                         breakpoint()
                         raise e
-                batch = generators[self.task_id].__next__()
-                x_instances = self.sample_x_instances.copy()
-                y_instances = self.sample_y_instances.copy()
-                x_instances[self.task_id] = batch[0]
-                y_instances[self.task_id] = batch[1]
-                assert len(x_instances[self.task_id]) == len(y_instances[self.task_id]), breakpoint()
-                batchs = (
-                    self.add_task_id(self.task_id, x_instances),
-                    tuple(zip(*y_instances)),
-                )
-                self.steps_taken += 1
-                print(f'Yielding {batchs}')
-                breakpoint()
-                print("ПРИМЕРЫ ДОЛЖНЫ БЫТЬ ТОЛЬКО ДЛЯ ОДНОЙ ТАСКИ")
-                yield batchs
+                x = [[None  for sample_id in range(batch_size)] for task_id in range(self.n_tasks)]
+                y = [[None  for sample_id in range(batch_size)] for task_id in range(self.n_tasks)]
+                x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
+                yield self.transform_before_yielding(x, y,batch_size)
+
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
         else:
-            repeat_batch_generators = []
-            for iter_ in self.task_iterators.values():
-                generator = RepeatBatchGenerator(
-                    iter_,
-                    batch_size,
-                    data_type,
-                    shuffle,
-                    n_batches,
-                    size_of_last_batch,
-                )
-                repeat_batch_generators.append(generator)
+            x = [() for _ in range(self.n_tasks)]
+            y = [() for _ in range(self.n_tasks)]
+            eval_batch_size=1
+            generators = [
+                RepeatBatchGenerator(iter_, batch_size=eval_batch_size, data_type=data_type, shuffle=shuffle)
+                for iter_ in self.task_iterators.values()
+            ]
+            for step in range(max_task_data_len):
+                for task_id in range(self.n_tasks):
+                    x[task_id], y[task_id] = generators[task_id].__next__()
+                yield self.transform_before_yielding(x, y,eval_batch_size)
 
-            for task_batches in zip(*repeat_batch_generators):
-                x_instances, y_instances = [], []
-                for task_batch in task_batches:
-                    assert len(task_batch[0]) == len(task_batch[1]), breakpoint()
-                    x_instances.append(task_batch[0])
-                    y_instances.append(task_batch[1])
-                batchs = (self.add_task_id(-1, x_instances),
-                          tuple(zip(*y_instances)))
-                yield batchs
 
-    def add_task_id(self, task_id, x_instances):
-        x_in = []
-        for examples in zip(*x_instances):
-            task_examples = []
-            for task_example in examples:
-                task_examples.append((task_id, task_example))
-            x_in.append(tuple(task_examples))
-        return tuple(x_in)
 
     def get_instances(self, data_type: str = "train"):
         """Returns a tuple of inputs and outputs from all datasets. Lengths of
