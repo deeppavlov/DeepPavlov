@@ -90,5 +90,5 @@ def save_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
     filepath = f'{json_name}.jsonl'
     with open(filepath, 'w') as f:
         for item in data:
-            f.write(f"{json.dumps(item)}\n")
+            f.write(f"{json.dumps(item, ensure_ascii=False)}\n")
     log.info(f'Prediction saved to {filepath}')
