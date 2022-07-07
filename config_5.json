@@ -99,7 +99,7 @@
             "do_lower_case":true,
             "n_task":5,
             "vocab_file":"{BACKBONE}",
-            "max_seq_length":128,
+            "max_seq_length":200,
             "max_subword_length":15,
             "token_masking_prob":0.0,
             "return_features":true,
@@ -317,7 +317,6 @@
       "validation_patience":3,
       "val_every_n_epochs":1,
       "log_every_n_epochs":1,
-      "max_test_batches":5,
       "show_examples":false,
       "evaluation_targets":[
          "valid"

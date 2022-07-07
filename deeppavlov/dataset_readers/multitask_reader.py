@@ -72,7 +72,7 @@ class MultiTaskReader(DatasetReader):
                 if 'mnli' in name and '_' not in validation:
                     log.warning(f'MNLI task used in default setting. Validation on MNLI-matched assumed')
                     validation_name = validation + '_matched'
-                    if test_name is not None:
+                    if test is not None:
                     	test_name = test+'_matched'
                 else:
                     validation_name = validation
@@ -82,8 +82,9 @@ class MultiTaskReader(DatasetReader):
                                     'data_path': data_path,
                                     'name': name,
                                     'train': train,
-                                    'valid': validation_name,
-                                    'test':test_name}
+                                    'valid': validation_name}
+                if test is not None:
+                    reader_params['test'] = test_name
                 for key in reader_params:
                     assert reader_params[key] is not None, f'Set value for {key} if tasks argument is None'
                 assert reader_class_name is not None

@@ -175,8 +175,13 @@ class MultiTaskIterator:
         assert len(x) == len(y)
         new_x,new_y=[],[]
         for i in range(batch_size):
-            new_x.append(tuple([x[id][i] for id in range(self.n_tasks)]))
-            new_y.append(tuple([y[id][i] for id in range(self.n_tasks)]))
+            x_tuple = tuple([x[id][i] for id in range(self.n_tasks)])
+            y_tuple = tuple([y[id][i] for id in range(self.n_tasks)])
+            if self.n_tasks==1:
+                x_tuple = x_tuple[0]
+                y_tuple = y_tuple[0]
+            new_x.append(x_tuple)
+            new_y.append(y_tuple)
         batchs = (tuple(new_x), tuple(new_y))
         print('Sending in iterator')
         print(batchs)

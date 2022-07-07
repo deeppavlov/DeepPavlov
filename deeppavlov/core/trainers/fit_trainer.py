@@ -184,7 +184,6 @@ class FitTrainer:
             if calculate_metric:
                 value = metric.fn(*[outputs[i] for i in metric.inputs])
             metrics_values.append((metric.alias, value))
-
         report = {
             'eval_examples_count': examples,
             'metrics': prettify_metrics(metrics_values),

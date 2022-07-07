@@ -126,7 +126,6 @@ class MultiTaskPipelinePreprocessor(Component):
         assert len(args) == self.n_task, f"Seen examples from {len(args)} tasks but n_task specified to {self.n_task}"
         print(f'Receiving in preprocessor {args}')
         answer = []
-        input_features = args
         #delete 2 strings later
         #breakpoint()
         for i in range(len(args)):
