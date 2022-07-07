@@ -22,6 +22,7 @@ from itertools import islice
 from logging import getLogger
 from typing import Iterable, Optional, Union, Any
 from collections import defaultdict
+from datasets import get_dataset_config_names
 
 from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
@@ -179,7 +180,7 @@ def predict_on_stream(config: Union[str, Path, dict]) -> None:
     
         submission = list(output.values())
 
-    else:
+    elif task_name in get_dataset_config_names("super_glue")+get_dataset_config_names("russian_super_glue"):
         for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)
 
