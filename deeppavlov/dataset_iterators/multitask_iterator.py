@@ -183,6 +183,7 @@ class MultiTaskIterator:
             new_x.append(x_tuple)
             new_y.append(y_tuple)
         batchs = (tuple(new_x), tuple(new_y))
+        print(batchs)
         return batchs
 
     def gen_batches(
@@ -230,6 +231,8 @@ class MultiTaskIterator:
                 x = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 y = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
+                if all([s==None for s in x[self.task_id]]):
+                    breakpoint()
                 yield self.transform_before_yielding(x, y,batch_size)
 
             self.epochs_done += 1
@@ -329,7 +332,7 @@ class SingleTaskBatchGenerator:
             raise StopIteration
         x, y = (), ()
         stop_iteration = False
-        while not stop_iteration and (len(x) < self.batch_size or len(y) < self.batch_size):
+        while  (len(x) < self.batch_size or len(y) < self.batch_size):
             try:
                 xx, yy = next(self.gen)
                 x += xx

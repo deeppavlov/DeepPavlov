@@ -135,5 +135,6 @@ class MultiTaskPipelinePreprocessor(Component):
                         print(e)
                         breakpoint()
                         raise e
+        assert answer != [[]], breakpoint()
         return answer
 

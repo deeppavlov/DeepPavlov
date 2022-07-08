@@ -379,9 +379,6 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(labels))
         for elem in _input:
             _input[elem] = _input[elem].to(self.device)            
-        if _input == {}:
-            breakpoint()
-            raise Exception('EMPTY INPUT!!!!')
         if 'labels' in _input:
             assert len(_input['labels'])==len(_input['input_ids']),breakpoint()
 
@@ -445,6 +442,10 @@ class TorchMultiTaskBert(TorchModel):
         task_id = ids_to_iterate[0]
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
+        if _input == {}:
+            breakpoint()
+            raise Exception('EMPTY INPUT!!!!')
+
         if self.prev_id is None:
             self.prev_id = task_id
         elif self.prev_id != task_id and not self.printed:
