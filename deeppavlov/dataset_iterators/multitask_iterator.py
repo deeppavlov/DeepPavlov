@@ -1,4 +1,4 @@
-# Copyright 2021 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2022 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -233,7 +233,9 @@ class MultiTaskIterator:
                 x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
                 if all([s==None for s in x[self.task_id]]):
                     breakpoint()
-                yield self.transform_before_yielding(x, y,batch_size)
+                batch_to_yield = self.transform_before_yielding(x, y,batch_size)
+                if not all([example is None for example in batch_to_yield[0]]):
+                    yield batch_to_yield
 
             self.epochs_done += 1
             # one additional step is taken while logging training metrics
