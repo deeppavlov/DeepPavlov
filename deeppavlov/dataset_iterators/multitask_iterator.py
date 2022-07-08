@@ -335,7 +335,9 @@ class SingleTaskBatchGenerator:
                 x += xx
                 y += yy
             except StopIteration:
-                return (None,), (None,)
+                x_nones = tuple([None for _ in range(self.batch_size)])
+                y_nones = x_nones
+                return x_nones, y_nones
 
 
         assert len(x) == self.batch_size and len(y) == self.batch_size
