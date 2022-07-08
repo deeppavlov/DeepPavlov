@@ -56,11 +56,8 @@ class Proba2Labels(Component):
         self.is_binary = is_binary
 
     def __call__(self,
-                 data: Union[np.ndarray,
-                             List[List[float]],
-                             List[List[int]]],
                  *args,
-                 **kwargs) -> Union[List[List[int]], List[int]]:
+                 **kwargs):
         """
         Process probabilities to labels
 
@@ -70,17 +67,23 @@ class Proba2Labels(Component):
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification)
         """
-        if self.confidence_threshold:
-            if self.is_binary:
-                return [int(el > self.confidence_threshold) for el in data]
+        answer = []
+        for data in args:
+
+            if self.confidence_threshold:
+                if self.is_binary:
+                    answer.append([int(el > self.confidence_threshold) for el in data])
+                else:
+                    answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0])
+                            for d in data])
+            elif self.max_proba:
+                answer.append([np.argmax(d) for d in data])
+            elif self.top_n:
+                answer.append([np.argsort(d)[::-1][:self.top_n] for d in data])
             else:
-                return [list(np.where(np.array(d) > self.confidence_threshold)[0])
-                        for d in data]
-        elif self.max_proba:
-            return [np.argmax(d) for d in data]
-        elif self.top_n:
-            return [np.argsort(d)[::-1][:self.top_n] for d in data]
-        else:
-            raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
-                              "float `confidence_threshold` for multi-label classification or"
-                              "integer `top_n` for choosing several labels with the highest probabilities")
+                raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
+                                "float `confidence_threshold` for multi-label classification or"
+                                "integer `top_n` for choosing several labels with the highest probabilities")
+        if len(answer) == 1:
+            answer = answer[0]
+        return answer
