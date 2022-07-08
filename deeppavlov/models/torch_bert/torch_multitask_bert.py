@@ -127,43 +127,6 @@ class BertForMultiTask(nn.Module):
                     return loss, logits
             else:
                 return logits
-        elif name == 'span_classification':
-            raise Exception('Span classification not yet supported')
-            assert span1 is not None and span2 is not None
-            log.warning('SPAN CLASSIFICATION IS SUPPORTED ONLY EXPERIMENTALLY')
-            input_dict = {"input":last_hidden_state, "attention_mask": attention_mask, 
-                          "span1s":span1, "span2s":span2}
-            if labels is not None:
-                input_dict["labels"] = labels
-            output_dict = self.bert.final_classifier[task_id].forward(input_dict)
-            if 'loss' in output_dict:
-                return output_dict['loss'], output_dict['logits']
-            else:
-                return output_dict['logits']
-        elif name == 'question_answering':
-            raise Exception('Question answering not yet supported')      
-            sequence_output = self.dropout(last_hidden_state)
-            # or logits?
-            start_logits, end_logits = last_hidden_state.split(1, dim=-1)
-            start_logits = start_logits.squeeze(-1)
-            end_logits = end_logits.squeeze(-1)
-
-            if labels is not None:
-            # If we are on multi-GPU, split add a dimension - if not this is a no-op
-                start_positions, end_positions = labels
-                start_positions = start_positions.squeeze(-1)
-                end_positions = end_positions.squeeze(-1)
-            # sometimes the start/end positions are outside our model inputs, we ignore these terms
-                ignored_index = start_logits.size(1)
-                start_positions.clamp_(0, ignored_index)
-                end_positions.clamp_(0, ignored_index)
-                loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
-                start_loss = loss_fct(start_logits, start_positions)
-                end_loss = loss_fct(end_logits, end_positions)
-                total_loss = (start_loss + end_loss) / 2
-                return total_loss
-            else:
-                return start_logits, end_logits
             
 
 @register('multitask_bert')
@@ -387,8 +350,6 @@ class TorchMultiTaskBert(TorchModel):
         _input = {}
         element_list = ["input_ids", "attention_mask", "token_type_ids"]
 
-        if self.tasks_type[task_id] == 'span_classification':
-            element_list = element_list + ['span1', 'span2']
         for elem in element_list:
             if elem in task_features:
                 _input[elem] = task_features[elem]
