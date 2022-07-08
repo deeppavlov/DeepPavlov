@@ -186,7 +186,7 @@ class MultiTaskIterator:
         return batchs
 
     def gen_batches(
-            self, batch_size: int, data_type: str = "train",
+            self, batch_size: int, data_type: str = "train", shuffle: bool = None
     ) -> Iterator[Tuple[tuple, tuple]]:
         """Generate batches and expected output to train neural networks. Batches from
         task iterators are united into one batch. Every element of the largest dataset
@@ -196,6 +196,7 @@ class MultiTaskIterator:
         Args:
             batch_size: number of samples in batch
             data_type: can be either 'train', 'test', or 'valid'
+            shuffle: whether to shuffle dataset before batching
 
         Yields:
             A tuple of a batch of inputs and a batch of expected outputs.
@@ -212,7 +213,7 @@ class MultiTaskIterator:
 
         if data_type == "train":
             generators = [
-            SingleTaskBatchGenerator(iter_, batch_size, data_type)
+            SingleTaskBatchGenerator(iter_, batch_size, data_type, shuffle)
             for iter_ in self.task_iterators.values()
         ]
             # probs only required while training
@@ -239,7 +240,7 @@ class MultiTaskIterator:
             x = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             y = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             generators = [
-                SingleTaskBatchGenerator(iter_, batch_size=eval_batch_size, data_type=data_type)
+                SingleTaskBatchGenerator(iter_, batch_size=eval_batch_size, data_type=data_type, shuffle=shuffle)
                 for iter_ in self.task_iterators.values()
             ]
             for step in range(max_task_data_len):
@@ -290,6 +291,7 @@ class SingleTaskBatchGenerator:
         dataset_iterator: dataset iterator from which batches are drawn.
         batch_size: size fo the batch.
         data_type: "train", "valid", or "test"
+        shuffle: whether dataset will be shuffled.
         n_batches: the number of batches that will be generated.
         size_of_the_last_batch: used if dataset size not evenly divisible by batch size.
     """
@@ -299,12 +301,14 @@ class SingleTaskBatchGenerator:
             dataset_iterator: Union[DataLearningIterator],
             batch_size: int,
             data_type: str,
+            shuffle: bool,
             n_batches: Optional[int] = None,
             size_of_last_batch: Optional[int] = None,
     ):
         self.dataset_iterator = dataset_iterator
         self.batch_size = batch_size
         self.data_type = data_type
+        self.shuffle = shuffle
         self.n_batches = n_batches
         self.size_of_last_batch = (
             self.batch_size if size_of_last_batch is None else size_of_last_batch)
@@ -313,7 +317,7 @@ class SingleTaskBatchGenerator:
             len(self.dataset_iterator.data[data_type]), batch_size
         )
         self.gen = self.dataset_iterator.gen_batches(
-            self.inner_batch_size, self.data_type
+            self.inner_batch_size, self.data_type, self.shuffle
         )
         self.batch_count = 0
 
