@@ -1,6 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "conll2003_reader",
+    "data_path": "{DOWNLOADS_PATH}/conll2003/",
     "dataset_name": "conll2003",
     "provide_pos": false
   },
