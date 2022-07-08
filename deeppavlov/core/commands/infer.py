@@ -22,7 +22,6 @@ from itertools import islice
 from logging import getLogger
 from typing import Iterable, Optional, Union, Any
 from collections import defaultdict
-from datasets import get_dataset_config_names
 
 from deeppavlov.core.commands.utils import import_packages, parse_config
 from deeppavlov.core.common.chainer import Chainer
@@ -36,6 +35,9 @@ from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.download import deep_download
 
 log = getLogger(__name__)
+SUPER_GLUE_TASKS = {'boolq','cb','copa','multirc','record','rte','wic',
+                    'wsc','wsc.fixed','axb','axg','lidirus','rcb','parus',
+                    'muserc','terra','russe','rwsd','danetqa','rucos'}
 
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
@@ -180,7 +182,7 @@ def predict_on_stream(config: Union[str, Path, dict]) -> None:
     
         submission = list(output.values())
 
-    elif task_name in get_dataset_config_names("super_glue")+get_dataset_config_names("russian_super_glue"):
+    elif task_name in SUPER_GLUE_TASKS:
         for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)
 
