@@ -237,6 +237,8 @@ class TorchMultiTaskBert(TorchModel):
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
             self.tasks_type.append(tasks[task]['type'])
+        if self.return_probas and 'sequence_labeling' in self.tasks_type:
+            log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
         self.n_tasks = len(tasks)
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
@@ -443,8 +445,6 @@ class TorchMultiTaskBert(TorchModel):
                         task_id=task_id, name=self.tasks_type[task_id], **_input
                     )
                 if self.tasks_type[task_id] == 'sequence_labeling':
-                    if self.return_probas:
-                        log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(),y_mask)
                     predicted_ids = torch.argmax(logits, dim=-1).int().tolist()

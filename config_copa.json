@@ -49,7 +49,7 @@
             ],
             "preprocessor":"TorchTransformersMultiplechoicePreprocessor",
             "vocab_file":"{BACKBONE}",
-            "max_seq_length":128,
+            "max_seq_length":320,
             "do_lower_case":true,
             "n_task":1,
             "in":[
@@ -107,7 +107,7 @@
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":32,
+      "batch_size":8,
       "metrics":[
          {
             "name":"accuracy",
@@ -132,7 +132,7 @@
          "ROOT_PATH":"/cephfs/home/karpov.d",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_copa2",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_copa3",
          "NUM_TRAIN_EPOCHS":25,
          "GRADIENT_ACC_STEPS":1
       }

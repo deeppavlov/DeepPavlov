@@ -330,23 +330,16 @@ class RepeatBatchGenerator:
         if self.n_batches is not None and self.batch_count > self.n_batches:
             raise StopIteration
         x, y = (), ()
-        while len(x) < self.batch_size or len(y) < self.batch_size:
+        stop_iteration = False
+        while not stop_iteration and (len(x) < self.batch_size or len(y) < self.batch_size):
             try:
                 xx, yy = next(self.gen)
+                x += xx
+                y += yy
             except StopIteration:
-                self.gen = self.dataset_iterator.gen_batches(
-                    self.inner_batch_size, self.data_type, self.shuffle
-                )
-                continue
-            assert (
-                    len(xx) == self.inner_batch_size and len(yy) == self.inner_batch_size
-            ), (
-                "self.inner_batch_size equals greatest common divisor of dataset size "
-                "and required batch size so dataset size has to divisible by task batch "
-                "size evenly."
-            )
-            x += xx
-            y += yy
+                return (None,), (None,)
+
+
         assert len(x) == self.batch_size and len(y) == self.batch_size
         self.batch_count += 1
         if self.batch_count == self.n_batches:
