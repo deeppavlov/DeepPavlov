@@ -186,7 +186,7 @@ def get_glue_metric(task,tasks_to_train,submit_dir,test_mode='test', mode=None, 
 
 def obtain_glue_predicts(tasks,tasks_to_train, test_mode='test', mode=None, MAX_LEN=1000000, log_dict=True):
     global model, CONFIG, old_args
-    submit_dir = 'predicts/'+CONFIG.split('.json')[0]
+    submit_dir = 'predicts/'+MODE
     if not os.path.exists(submit_dir):
         os.mkdir(submit_dir)
     accuracies = dict()
@@ -200,14 +200,14 @@ np.random.seed(1488666)
 
 csv_file_dict = {'train': 'train.tsv', 'validation': 'val.tsv', 'test': 'test.tsv'}
 
-CONFIG = f'{sys.argv[1]}'
+MODE = f'{sys.argv[1]}'
 
-if CONFIG == 'onetask':
+if MODE == 'onetask':
    CONFIGS = ['config_'+k+'.json' for k in ['mrpc','rte','stsb','cola','sst2','qqp','mnli','qnli']]
-elif CONFIG == 'multitask':
+elif MODE == 'multitask':
    CONFIGS = ['config_glue.json']
-elif CONFIG == 'all':
-   CONFIGS = ['config_'+k+'.json' for k in ['mrpc','rte','stsb','cola','sst2','qqp','mnli','qnli', 'all']]
+elif MODE == 'all':
+   CONFIGS = ['config_'+k+'.json' for k in ['mrpc','rte','stsb','cola','sst2','qqp','mnli','qnli', 'glueclean']]
 for CONFIG in CONFIGS:
     print(f'Eval for {CONFIG}')
     TASK_NAME = CONFIG.split('config_')[1].split('.json')[0]

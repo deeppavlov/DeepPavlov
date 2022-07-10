@@ -45,7 +45,7 @@ class BertForMultiTask(nn.Module):
     ```
     """
 
-    def __init__(self, tasks_num_classes,
+    def __init__(self, tasks_num_classes,task_types,
                  backbone_model='bert_base_uncased', config_file=None,
                  max_seq_len=320):
 
@@ -57,10 +57,12 @@ class BertForMultiTask(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
         self.max_seq_len =max_seq_len
         self.activation = nn.Tanh()
+        self.task_types = task_types
         OUT_DIM = config.hidden_size
         self.bert.final_classifier = nn.ModuleList(
             [
-                nn.Linear(OUT_DIM, num_labels) for num_labels in self.classes
+                nn.Linear(OUT_DIM, num_labels) if self.task_types[i] not in ['multiple_choice','regression']
+                else nn.Linear(OUT_DIM,1) for i, num_labels in enumerate(self.classes)
             ]
         )
         self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
@@ -72,11 +74,11 @@ class BertForMultiTask(nn.Module):
         token_type_ids,
         attention_mask,
         task_id,
-        name="classification",
         labels=None,
         span1=None,
         span2=None
     ):
+        name = self.task_types[task_id]
         outputs=None
         if name in ['sequence_labeling', 'multiple_choice']:
             # delete after checking label format
@@ -87,6 +89,7 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.int(),
                                 token_type_ids=token_type_ids.int(),
                                  attention_mask=attention_mask.int())
+
         except Exception as e:
             breakpoint()
             raise e
@@ -127,6 +130,8 @@ class BertForMultiTask(nn.Module):
                     return loss, logits
             else:
                 return logits
+        else:
+            raise Exception(f'Unsupported name {name}')
             
 
 @register('multitask_bert')
@@ -191,7 +196,7 @@ class TorchMultiTaskBert(TorchModel):
         self.multilabel = multilabel
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
-        self.tasks_type = []
+        self.task_types = []
         self.backbone_model = backbone_model
         self.max_seq_len=max_seq_len
         self.tasks_num_classes = []
@@ -199,8 +204,8 @@ class TorchMultiTaskBert(TorchModel):
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
-            self.tasks_type.append(tasks[task]['type'])
-        if self.return_probas and 'sequence_labeling' in self.tasks_type:
+            self.task_types.append(tasks[task]['type'])
+        if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
         self.n_tasks = len(tasks)
         self.train_losses = [[] for task in self.task_names]
@@ -252,7 +257,8 @@ class TorchMultiTaskBert(TorchModel):
     
         self.model = BertForMultiTask(
                 backbone_model=self.backbone_model,
-                tasks_num_classes = self.tasks_num_classes)
+                tasks_num_classes = self.tasks_num_classes,
+                task_types=self.task_types)
         self.model = self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
@@ -358,19 +364,18 @@ class TorchMultiTaskBert(TorchModel):
                 _input[elem] = getattr(task_features,elem)
                 batch_input_size = _input[elem].shape[0]
             if elem in _input:           
-                if self.tasks_type[task_id] in ['sequence_labeling','multiple_choice']:
+                if self.task_types[task_id] in ['sequence_labeling','multiple_choice']:
                     _input[elem] = _input[elem].view((-1, _input[elem].size(-1)))
 
         if labels is not None:
-            if self.tasks_type[task_id] == "regression":
+            if self.task_types[task_id] == "regression":
                 _input["labels"] = torch.tensor(
                     np.array(labels, dtype=float), dtype=torch.float32
                 )
-            elif self.tasks_type[task_id] == 'multiple_choice':
+            elif self.task_types[task_id] == 'multiple_choice':
                 labels = torch.Tensor(labels).long()
-                onehot_labels = torch.nn.functional.one_hot(labels,num_classes=self.tasks_num_classes[task_id]) 
-                _input['labels'] = torch.flatten(onehot_labels, start_dim=0)
-            elif self.tasks_type[task_id] == 'sequence_labeling':
+                _input['labels'] = labels
+            elif self.task_types[task_id] == 'sequence_labeling':
                 subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
                            for y_el, y_mask, input_mask in zip(labels,_input['token_type_ids'].numpy(),
                                                                _input['attention_mask'].numpy())]
@@ -379,7 +384,7 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(labels))
         for elem in _input:
             _input[elem] = _input[elem].to(self.device)            
-        if 'labels' in _input:
+        if 'labels' in _input and self.task_types[task_id] != 'multiple_choice':
             assert len(_input['labels'])==len(_input['input_ids']),breakpoint()
 
         return _input,batch_input_size
@@ -397,18 +402,19 @@ class TorchMultiTaskBert(TorchModel):
         for task_id in range(len(self.task_names)):
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(task_features=args[task_id],task_id=task_id)
+                
                 assert 'input_ids' in _input, breakpoint()
                 with torch.no_grad():
                     logits = self.model(
-                        task_id=task_id, name=self.tasks_type[task_id], **_input
+                        task_id=task_id, **_input
                     )
-                if self.tasks_type[task_id] == 'sequence_labeling':
+                if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(),y_mask)
                     predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
                     seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
                     pred=[prediction[:max_seq_len] for max_seq_len,prediction in zip(seq_lengths, predicted_ids)]
-                elif self.tasks_type[task_id] == 'regression':
+                elif self.task_types[task_id] == 'regression':
                     pred = logits[:,0]
                     assert len(pred) == len(_input['input_ids']), breakpoint()
                 elif self.return_probas:
@@ -452,7 +458,7 @@ class TorchMultiTaskBert(TorchModel):
             log.info('Seen samples from different tasks')
             self.printed = True
         loss, logits = self.model(
-                task_id=task_id, name=self.tasks_type[task_id], **_input)
+                task_id=task_id, **_input)
 
         loss = loss / self.gradient_accumulation_steps[task_id]
         loss.backward()

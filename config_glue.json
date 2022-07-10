@@ -142,7 +142,7 @@
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
             "save_path":"{SAVE_LOAD_PATH}8taskv2",
-            "load_path":"{SAVE_LOAD_PATH}8task2",
+            "load_path":"{SAVE_LOAD_PATH}8taskv2",
             "tasks":{
                "cola":{
                   "type":"classification",
