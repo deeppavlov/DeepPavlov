@@ -66,8 +66,8 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}3",
-            "load_path":"{SAVE_LOAD_PATH}3",
+            "save_path":"{SAVE_LOAD_PATH}stsb",
+            "load_path":"{SAVE_LOAD_PATH}stsb",
             "tasks":{
                "stsb":{"type":"regression","options":1}
             },

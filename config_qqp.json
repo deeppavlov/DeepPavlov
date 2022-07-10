@@ -1,12 +1,12 @@
 {
    "dataset_reader":{
       "class_name":"multitask_reader",
-      "path": "glue",
+      "path":"glue",
       "reader_class_name":"huggingface_dataset_reader",
       "train":"train",
       "validation":"validation",
       "task_names":[
-         "rte"
+         "qqp"
       ]
    },
    "dataset_iterator":{
@@ -18,19 +18,21 @@
       "use_label_name":false,
       "seed":42,
       "tasks":{
-         "rte":{
+         "qqp":{
             "features":[
-               "sentence1","sentence2"
+               "question1",
+               "question2"
             ]
          }
+
       }
    },
    "chainer":{
       "in":[
-         "x_rte"
+            "x_qqp"
       ],
       "in_y":[
-         "y_rte"
+            "y_qqp"
       ],
       "pipe":[
          {
@@ -42,13 +44,13 @@
             "preprocessor":"TorchTransformersPreprocessor",
             "vocab_file":"{BACKBONE}",
             "max_seq_length":128,
-            "n_task":1,
             "do_lower_case":true,
+            "n_task":1,
             "in":[
-               "x_rte"
+            "x_qqp"
             ],
             "out":[
-               "bert_features_rte"
+                    "bert_features_qqp"
             ]
          },
          {
@@ -64,51 +66,51 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}rte",
-            "load_path":"{SAVE_LOAD_PATH}rte",
+            "save_path":"{SAVE_LOAD_PATH}qqp",
+            "load_path":"{SAVE_LOAD_PATH}qqp",
             "tasks":{
-               "rte":{
+              "qqp":{
                   "type":"classification",
                   "options":2
                }
             },
             "in":[
-               "bert_features_rte"
+                    "bert_features_qqp"
             ],
             "in_y":[
-               "y_rte"
+                    "y_qqp"
             ],
             "out":[
-               "y_rte_pred_probas"
+                    "y_qqp_pred_probas"
             ]
          },
          {
             "in":[
-               "y_rte_pred_probas"
+                    "y_qqp_pred_probas"
             ],
             "out":[
-               "y_rte_pred_ids"
+                    "y_qqp_pred_ids"
             ],
             "class_name":"proba2labels",
             "max_proba":true
          }
       ],
       "out":[
-         "y_rte_pred_ids"
+                    "y_qqp_pred_ids"
       ]
    },
    "train":{
       "epochs":"{NUM_TRAIN_EPOCHS}",
       "batch_size":32,
       "metrics":[
-         {
-            "name":"accuracy",
-            "alias":"accuracy_rte",
-            "inputs":[
-               "y_rte",
-               "y_rte_pred_ids"
-            ]
-         }
+            {
+                "name": "accuracy",
+                "alias":"accuracy_qqp",
+                "inputs": [
+                    "y_qqp",
+                    "y_qqp_pred_ids"
+                ]
+            }
       ],
       "validation_patience":3,
       "val_every_n_epochs":1,
@@ -124,7 +126,7 @@
          "ROOT_PATH":"/cephfs/home/karpov.d",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean_rte2",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model2_clean",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }

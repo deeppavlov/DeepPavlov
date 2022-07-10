@@ -64,8 +64,8 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}3",
-            "load_path":"{SAVE_LOAD_PATH}3",
+            "save_path":"{SAVE_LOAD_PATH}cola",
+            "load_path":"{SAVE_LOAD_PATH}cola",
             "tasks":{
                "cola":{
                   "type":"classification",

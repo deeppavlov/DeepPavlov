@@ -6,7 +6,7 @@
       "train":"train",
       "validation":"validation",
       "task_names":[
-         "rte"
+         "sst2"
       ]
    },
    "dataset_iterator":{
@@ -18,19 +18,19 @@
       "use_label_name":false,
       "seed":42,
       "tasks":{
-         "rte":{
+         "sst2":{
             "features":[
-               "sentence1","sentence2"
+               "sentence"
             ]
          }
       }
    },
    "chainer":{
       "in":[
-         "x_rte"
+         "x_sst2"
       ],
       "in_y":[
-         "y_rte"
+         "y_sst2"
       ],
       "pipe":[
          {
@@ -45,10 +45,10 @@
             "n_task":1,
             "do_lower_case":true,
             "in":[
-               "x_rte"
+               "x_sst2"
             ],
             "out":[
-               "bert_features_rte"
+               "bert_features_sst2"
             ]
          },
          {
@@ -64,37 +64,37 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}rte",
-            "load_path":"{SAVE_LOAD_PATH}rte",
+            "save_path":"{SAVE_LOAD_PATH}sst2",
+            "load_path":"{SAVE_LOAD_PATH}sst2",
             "tasks":{
-               "rte":{
+               "sst2":{
                   "type":"classification",
                   "options":2
                }
             },
             "in":[
-               "bert_features_rte"
+               "bert_features_sst2"
             ],
             "in_y":[
-               "y_rte"
+               "y_sst2"
             ],
             "out":[
-               "y_rte_pred_probas"
+               "y_sst2_pred_probas"
             ]
          },
          {
             "in":[
-               "y_rte_pred_probas"
+               "y_sst2_pred_probas"
             ],
             "out":[
-               "y_rte_pred_ids"
+               "y_sst2_pred_ids"
             ],
             "class_name":"proba2labels",
             "max_proba":true
          }
       ],
       "out":[
-         "y_rte_pred_ids"
+         "y_sst2_pred_ids"
       ]
    },
    "train":{
@@ -103,10 +103,10 @@
       "metrics":[
          {
             "name":"accuracy",
-            "alias":"accuracy_rte",
+            "alias":"accuracy_sst2",
             "inputs":[
-               "y_rte",
-               "y_rte_pred_ids"
+               "y_sst2",
+               "y_sst2_pred_ids"
             ]
          }
       ],
@@ -124,7 +124,7 @@
          "ROOT_PATH":"/cephfs/home/karpov.d",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean_rte2",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean_sst23",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }

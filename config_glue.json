@@ -55,8 +55,8 @@
          },
          "mnli":{
             "features":[
-               "hypothesis",
-               "premise"
+               "premise",
+               "hypothesis"
             ]
          },
          "qnli":{
@@ -141,8 +141,8 @@
             "return_probas":true,
             "test_pipeline":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}4",
-            "load_path":"{SAVE_LOAD_PATH}4",
+            "save_path":"{SAVE_LOAD_PATH}8taskv2",
+            "load_path":"{SAVE_LOAD_PATH}8task2",
             "tasks":{
                "cola":{
                   "type":"classification",
@@ -352,7 +352,7 @@
          "ROOT_PATH":"/cephfs/home/karpov.d",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model2_clean",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_glue",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }

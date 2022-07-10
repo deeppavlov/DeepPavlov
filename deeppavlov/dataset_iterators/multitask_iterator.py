@@ -231,10 +231,8 @@ class MultiTaskIterator:
                 x = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 y = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
-                if all([s==None for s in x[self.task_id]]):
-                    breakpoint()
-                batch_to_yield = self.transform_before_yielding(x, y,batch_size)
-                if not all([example is None for example in batch_to_yield[0]]):
+                if not all([s==None for s in x[self.task_id]]):
+                    batch_to_yield = self.transform_before_yielding(x, y,batch_size)
                     yield batch_to_yield
 
             self.epochs_done += 1
