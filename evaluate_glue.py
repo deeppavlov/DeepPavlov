@@ -202,9 +202,11 @@ MODE = f'{sys.argv[1]}'
 if MODE == 'onetask':
    CONFIGS = ['config_'+k+'.json' for k in ['mrpc','rte','stsb','cola','sst2','qqp','mnli','qnli']]
 elif MODE == 'multitask':
-   CONFIGS = ['config_glue.json']
+   CONFIGS = ['config_glueclean.json']
 elif MODE == 'all':
    CONFIGS = ['config_'+k+'.json' for k in ['mrpc','rte','stsb','cola','sst2','qqp','mnli','qnli', 'glueclean']]
+else:
+    CONFIG = ['config_'+MODE+'.json']
 for CONFIG in CONFIGS:
     print(f'Eval for {CONFIG}')
     TASK_NAME = CONFIG.split('config_')[1].split('.json')[0]
@@ -230,7 +232,8 @@ for CONFIG in CONFIGS:
         curr_tasks_to_train[0].task_id = 0
         if curr_tasks_to_train[0].name == 'mnli':
             curr_tasks = [Task('mnli-m', 'MNLI-m.tsv',  ['entailment', 'neutral', 'contradiction'], 0),
-		     Task('mnli-mm', 'MNLI-mm.tsv',  ['entailment', 'neutral', 'contradiction'], 0)]
+		     Task('mnli-mm', 'MNLI-mm.tsv',  ['entailment', 'neutral', 'contradiction'], 0),
+             Task('ax', 'AX.tsv', ['entailment', 'neutral','contradiction'], 0)]
         else:
             curr_tasks = curr_tasks_to_train
     else:
