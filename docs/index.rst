@@ -37,7 +37,7 @@ Welcome to DeepPavlov's documentation!
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
-   SuperGlue Submission <features/models/superglue>
+   SuperGLUE Submission <features/models/superglue>
 
 
 .. toctree::

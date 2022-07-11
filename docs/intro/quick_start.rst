@@ -73,6 +73,7 @@ There are even more actions you can perform with configs:
           </integrations/socket_api>`),
         * ``predict`` to get prediction for samples from `stdin` or from
           `<file_path>` if ``-f <file_path>`` is specified.
+        * ``submit`` to get submission-ready prediction for :doc:`Russian SuperGLUE models </features/models/superglue>`.
     * ``<config_path>`` specifies path (or name) of model's config file
     * ``-d`` downloads required data
 

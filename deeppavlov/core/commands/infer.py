@@ -12,32 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import pickle
 import sys
+from collections import defaultdict
+from itertools import islice
+from logging import getLogger
+from pathlib import Path
+from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
-from pathlib import Path
-from itertools import islice
-from logging import getLogger
-from typing import Iterable, Optional, Union, Any
-from collections import defaultdict
 
-from deeppavlov.core.commands.utils import import_packages, parse_config
-from deeppavlov.core.common.chainer import Chainer
-from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.params import from_params
-from deeppavlov.core.common.file import save_jsonl
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
-from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+from deeppavlov.core.commands.utils import import_packages, parse_config, expand_path
+from deeppavlov.core.common.chainer import Chainer
+from deeppavlov.core.common.file import save_jsonl
+from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.download import deep_download
 
 log = getLogger(__name__)
-SUPER_GLUE_TASKS = {'boolq','cb','copa','multirc','record','rte','wic',
-                    'wsc','wsc.fixed','axb','axg','lidirus','rcb','parus',
-                    'muserc','terra','russe','rwsd','danetqa','rucos'}
+
+SUPER_GLUE_TASKS = {
+    'boolq': 'BoolQ',
+    'copa': 'COPA',
+    'danetqa': 'DaNetQA',
+    'lidirus': 'LiDiRus',
+    'multirc': 'MultiRC',
+    'muserc': 'MuSeRC',
+    'parus': 'PARus',
+    'rcb': 'RCB',
+    'record': 'ReCoRD',
+    'rucos': 'RuCoS',
+    'russe': 'RUSSE',
+    'rwsd': 'RWSD',
+    'terra': 'TERRa'
+}
 
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
@@ -105,8 +116,15 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         print('>>', *pred)
 
 
-def predict_on_stream(config: Union[str, Path, dict]) -> None:
-    """Make a prediction with the component described in corresponding configuration file."""
+def submit(config: Union[str, Path, dict], output_path: Optional[Union[str, Path]] = None) -> None:
+    """Creates submission file for the Russian SuperGLUE task. Supported tasks list will be extended in the future.
+
+    Args:
+        config: Configuration of the model.
+        output_path: Path to output file. If None, file name is selected according corresponding task name.
+
+    """
+
     config = parse_config(config)
     data = read_data_by_config(config)
     iterator = get_iterator_from_config(config, data)
@@ -190,5 +208,48 @@ def predict_on_stream(config: Union[str, Path, dict]) -> None:
                 prediction = prediction[0]                
 
             submission.append({'idx': idx, 'label': prediction})
+    else:
+        raise ValueError(f'Unexpected SuperGLUE task name: {task_name}')
 
-    save_jsonl(submission, task_name)
+    save_path = output_path if output_path is not None else f'{SUPER_GLUE_TASKS[task_name]}.jsonl'
+    save_path = expand_path(save_path)
+    save_path.parent.mkdir(parents=True, exist_ok=True)
+    save_jsonl(submission, save_path)
+    log.info(f'Prediction saved to {save_path}')
+
+
+def predict_on_stream(config: Union[str, Path, dict],
+                      batch_size: Optional[int] = None,
+                      file_path: Optional[str] = None) -> None:
+    """Make a prediction with the component described in corresponding configuration file."""
+
+    batch_size = batch_size or 1
+    if file_path is None or file_path == '-':
+        if sys.stdin.isatty():
+            raise RuntimeError('To process data from terminal please use interact mode')
+        f = sys.stdin
+    else:
+        f = open(file_path, encoding='utf8')
+
+    model: Chainer = build_model(config)
+
+    args_count = len(model.in_x)
+    while True:
+        batch = list((l.strip() for l in islice(f, batch_size * args_count)))
+
+        if not batch:
+            break
+
+        args = []
+        for i in range(args_count):
+            args.append(batch[i::args_count])
+
+        res = model(*args)
+        if len(model.out_params) == 1:
+            res = [res]
+        for res in zip(*res):
+            res = json.dumps(jsonify_data(res), ensure_ascii=False)
+            print(res, flush=True)
+
+    if f is not sys.stdin:
+        f.close()

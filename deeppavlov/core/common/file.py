@@ -17,7 +17,7 @@ import pickle
 from collections import OrderedDict
 from logging import getLogger
 from pathlib import Path
-from typing import Union, Any, Iterable, Optional
+from typing import Union, Any, Iterable
 
 from deeppavlov.core.common.aliases import ALIASES
 
@@ -31,22 +31,6 @@ DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
                   "# Automatic name resolving will be disabled in the deeppavlov 1.2.0,\n" \
                   "# and if you try to use '{0}' you will get an ERROR.\n" \
                   f"{_sharp_line}{_reset_text_color}\n"
-
-task_name_dict = {
-    'danetqa': 'DaNetQA',
-    'rcb': 'RCB',
-    'parus': 'PARus',
-    'muserc': 'MuSeRC',
-    'rucos': 'RuCoS',
-    'russe': 'RUSSE',
-    'rwsd': 'RWSD',
-    'lidirus': 'LiDiRus',
-    'terra': 'TERRa',
-    'record': 'ReCoRD',
-    'copa': 'COPA',
-    'multirc': 'MultiRC',
-    'boolq': 'BoolQ'
-}
 
 
 def find_config(pipeline_config_path: Union[str, Path]) -> Path:
@@ -85,10 +69,7 @@ def load_pickle(fpath: Union[str, Path]) -> Any:
         return pickle.load(fin)
 
 
-def save_jsonl(data: Iterable[dict], task_name: Optional[str]) -> None:
-    json_name = task_name_dict[task_name]
-    filepath = f'{json_name}.jsonl'
-    with open(filepath, 'w') as f:
+def save_jsonl(data: Iterable[dict], fpath: Union[str, Path]) -> None:
+    with open(fpath, 'w') as f:
         for item in data:
             f.write(f"{json.dumps(item, ensure_ascii=False)}\n")
-    log.info(f'Prediction saved to {filepath}')
