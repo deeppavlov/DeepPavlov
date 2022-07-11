@@ -291,7 +291,15 @@ class SingleTaskBatchGenerator:
         n_batches: the number of batches that will be generated.
         size_of_the_last_batch: used if dataset size not evenly divisible by batch size.
     """
-    def __init__(self):
+    def __init__(
+            self,
+            dataset_iterator: Union[DataLearningIterator],
+            batch_size: int,
+            data_type: str,
+            shuffle: bool,
+            n_batches: Optional[int] = None,
+            size_of_last_batch: Optional[int] = None,
+    ):
         self.dataset_iterator = dataset_iterator
         self.batch_size = batch_size
         self.data_type = data_type
