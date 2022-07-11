@@ -12,22 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import math
 import numpy as np
 from logging import getLogger
 from collections import defaultdict
 from typing import Iterator, List, Optional, Tuple, Union, Dict
 
-from deeppavlov.core.common.registry import register
-from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
 
-
-def is_nan(a):
-    return a != a
 
 @register('multitask_iterator')
 class MultiTaskIterator:
@@ -61,7 +55,6 @@ class MultiTaskIterator:
             features=None,
             one_element_tuples=False
     ):
-        #breakpoint()
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
@@ -83,8 +76,6 @@ class MultiTaskIterator:
             self.task_iterators[task_name] = from_params(
                 task_iterator_params, data=data[task_name]
             )
-            #if task_name == 'conll':
-            #    breakpoint()             
         self.n_tasks = len(tasks.keys())
         self.num_train_epochs = num_train_epochs
         self.steps_per_epoch = steps_per_epoch
@@ -109,6 +100,8 @@ class MultiTaskIterator:
             self.steps_per_epoch = sum(self.train_sizes)// batch_size
         else:
             self.steps_per_epoch = steps_per_epoch
+
+        is_nan = lambda a: a != a
         for mode in ['train', 'valid', 'test']:
             for task in self.data[mode]:
                 for i in range(len(self.data[mode][task]) - 1, -1, -1):
@@ -238,7 +231,7 @@ class MultiTaskIterator:
             # one additional step is taken while logging training metrics
             self.steps_taken -= 1
         else:
-            eval_batch_size=1#replace to 1
+            eval_batch_size=1
             x = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             y = [[None for _ in range(eval_batch_size)] for task_id in range(self.n_tasks)]
             generators = [
@@ -288,6 +281,7 @@ class MultiTaskIterator:
 
 class SingleTaskBatchGenerator:
     """
+    Batch generator for a single task. If there are no elements in the dataset to form another batch, Nones are returned.
 
     Args:
         dataset_iterator: dataset iterator from which batches are drawn.
@@ -297,16 +291,7 @@ class SingleTaskBatchGenerator:
         n_batches: the number of batches that will be generated.
         size_of_the_last_batch: used if dataset size not evenly divisible by batch size.
     """
-
-    def __init__(
-            self,
-            dataset_iterator: Union[DataLearningIterator],
-            batch_size: int,
-            data_type: str,
-            shuffle: bool,
-            n_batches: Optional[int] = None,
-            size_of_last_batch: Optional[int] = None,
-    ):
+    def __init__(self):
         self.dataset_iterator = dataset_iterator
         self.batch_size = batch_size
         self.data_type = data_type
