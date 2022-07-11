@@ -438,7 +438,7 @@ class TorchMultiTaskBert(TorchModel):
                      f'Correct is {2*self.n_tasks} as n_tasks is {self.n_tasks}'
         assert len(args) == 2*self.n_tasks, error_msg
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
-        assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
+        assert len(ids_to_iterate) == 1, 'Samples from more than 1 task in train_on_batch'
         task_id = ids_to_iterate[0]
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
