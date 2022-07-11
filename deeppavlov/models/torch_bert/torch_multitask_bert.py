@@ -449,7 +449,7 @@ class TorchMultiTaskBert(TorchModel):
         task_id = ids_to_iterate[0]
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
-        assert _input != {}, 'Empty input!
+        assert _input != {}, 'Empty input!'
 
         if self.prev_id is None:
             self.prev_id = task_id
