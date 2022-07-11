@@ -210,8 +210,8 @@ class TorchTransformersEntityRankerPreprocessor(Component):
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
             batch of indices of special token ids in input ids sequence
         """
-        # in case of iterator's strange behaviour
 
+        # in case of iterator's strange behaviour
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
         if self.do_lower_case:
