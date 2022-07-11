@@ -91,7 +91,7 @@ class Task:
 
 
 
-tasks = [Task('cola', 'CoLA.tsv', ['not_entailment', 'entailment'], 0),
+tasks = [Task('cola', 'CoLA.tsv', [0,1], 0),
 	     Task('sst2', 'SST-2.tsv', [0, 1], 1),
 	     Task('qqp', 'QQP.tsv', [0, 1], 2),
 	     Task('mrpc', 'MRPC.tsv',[0, 1], 3),
@@ -101,7 +101,7 @@ tasks = [Task('cola', 'CoLA.tsv', ['not_entailment', 'entailment'], 0),
 	     Task('qnli', 'QNLI.tsv', ['entailment', 'not_entailment'], 6),
 	     Task('stsb', 'STS-B.tsv', [1], 7),
 	     Task('ax', 'AX.tsv', ['entailment', 'neutral','contradiction'], 5)]
-tasks_to_train = [Task('cola', 'CoLA.tsv', ['not_entailment', 'entailment'], 0),
+tasks_to_train = [Task('cola', 'CoLA.tsv', [0,1], 0),
 	              Task('sst2', 'SST-2.tsv',  [0, 1], 1),
 	              Task('qqp', 'QQP.tsv',[0, 1], 2),
 	              Task('mrpc', 'MRPC.tsv', [0, 1], 3),
@@ -168,10 +168,7 @@ def get_glue_metric(task,tasks_to_train,submit_dir,test_mode='test', mode=None, 
                     new_pred = [np.argmax(preds)]
                 else:
                     new_pred = [preds]
-                if test_mode == 'test' and 'mnli' in task.name:
-                    classes =['entailment', 'contradiction', 'neutral']
-                else:
-                    classes = task.classes
+                classes = task.classes
                 predictions = predictions + [classes[int(k)] for k in new_pred]
 
         except Exception as e:

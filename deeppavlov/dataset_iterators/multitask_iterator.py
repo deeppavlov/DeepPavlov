@@ -183,7 +183,6 @@ class MultiTaskIterator:
             new_x.append(x_tuple)
             new_y.append(y_tuple)
         batchs = (tuple(new_x), tuple(new_y))
-        print(batchs)
         return batchs
 
     def gen_batches(
