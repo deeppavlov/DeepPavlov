@@ -15,7 +15,6 @@
 import datetime
 import json
 import time
-from tqdm import tqdm
 from itertools import islice
 from logging import getLogger
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
@@ -161,7 +160,7 @@ class FitTrainer:
 
         data = islice(data, self.max_test_batches)
 
-        for x, y_true in tqdm(data):
+        for x, y_true in data:
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
