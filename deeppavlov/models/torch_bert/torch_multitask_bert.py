@@ -110,7 +110,7 @@ class BertForMultiTask(nn.Module):
                 logits = logits.view((-1, self.classes[task_id]))
                 if labels is not None:
                     l1, l2 = len(logits), len(labels)
-                    assert len(logits)==len(labels),f'Len of logits {l1} and labels {l2} not match'
+                    assert len(logits)==len(labels), f'Len of logits {l1} and labels {l2} not match'
             if labels is not None:
                 if name != "regression":
                     loss_fct = CrossEntropyLoss()
@@ -120,10 +120,7 @@ class BertForMultiTask(nn.Module):
                     loss_fct = MSELoss()
                     logits=logits.cpu()
                     labels=labels.cpu()
-                    try:
-                        loss = loss_fct(logits, labels.unsqueeze(1))
-                    except:
-                        breakpoint()
+                    loss = loss_fct(logits, labels.unsqueeze(1))
                     return loss, logits
             else:
                 return logits
@@ -290,7 +287,6 @@ class TorchMultiTaskBert(TorchModel):
             self.lr_scheduler = getattr(
                 torch.optim.lr_scheduler, self.lr_scheduler_name
             )(self.optimizer, **self.lr_scheduler_parameters)
-            breakpoint()
 
     @overrides 
     def load(self, fname: Optional[str] = None) -> None:
