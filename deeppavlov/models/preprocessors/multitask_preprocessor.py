@@ -129,12 +129,7 @@ class MultiTaskPipelinePreprocessor(Component):
                     log.debug('All nones')
                     answer.append([])
                 else:
-                    try:
-                        answer.append(self.preprocessors[i](texts_a, texts_b))
-                    except Exception as e:
-                        print(e)
-                        breakpoint()
-                        raise e
-        assert answer != [[]], breakpoint()
+                    answer.append(self.preprocessors[i](texts_a, texts_b))
+        assert answer != [[]], 'Empty answer'
         return answer
 
