@@ -385,7 +385,8 @@ class TorchMultiTaskBert(TorchModel):
         for elem in _input:
             _input[elem] = _input[elem].to(self.device)            
         if 'labels' in _input and self.task_types[task_id] != 'multiple_choice':
-            assert len(_input['labels'])==len(_input['input_ids']),breakpoint()
+            error_msg = f'Len of labels {len(_input["labels"])} does not match len of ids {len(_input["input_ids"])}'
+            assert len(_input['labels'])==len(_input['input_ids']), error_msg
 
         return _input,batch_input_size
 
@@ -403,7 +404,7 @@ class TorchMultiTaskBert(TorchModel):
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(task_features=args[task_id],task_id=task_id)
                 
-                assert 'input_ids' in _input, breakpoint()
+                assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 with torch.no_grad():
                     logits = self.model(
                         task_id=task_id, **_input
@@ -416,12 +417,10 @@ class TorchMultiTaskBert(TorchModel):
                     pred=[prediction[:max_seq_len] for max_seq_len,prediction in zip(seq_lengths, predicted_ids)]
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:,0]
-                    assert len(pred) == len(_input['input_ids']), breakpoint()
                 elif self.return_probas:
                     pred = torch.nn.functional.softmax(logits, dim=-1)
                 else:
                     pred = torch.nn.functional.argmax(logits, dim=1)
-
                 if not isinstance(pred, list):
                     pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
@@ -442,15 +441,15 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             dict with loss for each task
         """
-        assert len(args) == 2*self.n_tasks, breakpoint() # need to get exact number of x andy
+        error_msg =  f'Len of arguments {len(args)} is WRONG. ' \
+                     f'Correct is {2*self.n_tasks} as n_tasks is {self.n_tasks}'
+        assert len(args) == 2*self.n_tasks, error_msg
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k])>0]
         assert len(ids_to_iterate) == 1, breakpoint() # 1 batch 1 task
         task_id = ids_to_iterate[0]
         _input,batch_size = self._make_input(task_features=args[task_id],task_id=task_id,
                                 labels=args[task_id+self.n_tasks])
-        if _input == {}:
-            breakpoint()
-            raise Exception('EMPTY INPUT!!!!')
+        assert _input != {}, 'Empty input!
 
         if self.prev_id is None:
             self.prev_id = task_id
