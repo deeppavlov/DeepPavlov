@@ -85,14 +85,10 @@ class BertForMultiTask(nn.Module):
             input_ids = input_ids.view(-1, input_ids.size(-1))
             token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
-        try:
-            outputs = self.bert(input_ids=input_ids.int(),
-                                token_type_ids=token_type_ids.int(),
-                                 attention_mask=attention_mask.int())
+        outputs = self.bert(input_ids=input_ids.int(),
+                            token_type_ids=token_type_ids.int(),
+                            attention_mask=attention_mask.int())
 
-        except Exception as e:
-            breakpoint()
-            raise e
         last_hidden_state = outputs[1][-1]
         first_token_tensor = last_hidden_state[:, 0]        
         pooled_output = self.bert.pooler(first_token_tensor)
@@ -111,9 +107,10 @@ class BertForMultiTask(nn.Module):
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
             if name=='multiple_choice':
-                logits = logits.view((-1,self.classes[task_id]))
+                logits = logits.view((-1, self.classes[task_id]))
                 if labels is not None:
-                    assert len(logits)==len(labels),breakpoint()
+                    l1, l2 = len(logits), len(labels)
+                    assert len(logits)==len(labels),f'Len of logits {l1} and labels {l2} not match'
             if labels is not None:
                 if name != "regression":
                     loss_fct = CrossEntropyLoss()
