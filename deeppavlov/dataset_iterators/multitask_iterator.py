@@ -218,12 +218,8 @@ class MultiTaskIterator:
             for step in range(self.steps_per_epoch):
 
                 if (self.steps_taken + 1 ) % self.gradient_accumulation_steps == 0 or self.task_id is None:
-                    try:
-                        self.task_id = np.random.choice(self.n_tasks, p=probs)
-                        self.chosen_batchs[self.task_id] += 1
-                    except Exception as e:
-                        breakpoint()
-                        raise e
+                    self.task_id = np.random.choice(self.n_tasks, p=probs)
+                    self.chosen_batchs[self.task_id] += 1
                 x = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 y = [[None for _ in range(batch_size)] for task_id in range(self.n_tasks)]
                 x[self.task_id], y[self.task_id] = generators[self.task_id].__next__()
@@ -278,7 +274,8 @@ class MultiTaskIterator:
             y *= n_repeats
             x_instances.append(x[:max_task_data_len])
             y_instances.append(y[:max_task_data_len])
-        assert len(x_instances)==len(y_instances),breakpoint()
+        error_msg = f'Len of x_instances {len(x_instances)} and y_instances {len(y_instances)} dont match'
+        assert len(x_instances)==len(y_instances), error_msg
         instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
         return instances
 
