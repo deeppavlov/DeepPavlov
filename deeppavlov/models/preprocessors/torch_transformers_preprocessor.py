@@ -542,11 +542,11 @@ class TorchTransformersNerPreprocessor(Component):
                 feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
                                               'attention_mask': torch.Tensor(attention_mask),
                                 'token_type_ids': torch.Tensor(startofword_markers),
-                                'labels': torch.Tensor(subword_tags)})
+                                'labels': torch.Tensor(nonmasked_tags)})
                 return feature_list
             else:
                 return tokens, subword_tokens, subword_tok_ids, \
-                        attention_mask, startofword_markers, subword_tags
+                       attention_mask, startofword_markers, nonmasked_tags
         if self.return_features:
             feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
                                           'attention_mask': torch.Tensor(attention_mask),
@@ -554,7 +554,8 @@ class TorchTransformersNerPreprocessor(Component):
                                          })
             return feature_list
         else:
-            return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask
+            return tokens, subword_tokens, subword_tok_ids, \
+                   startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
