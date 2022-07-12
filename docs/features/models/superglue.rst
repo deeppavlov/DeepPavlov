@@ -44,7 +44,7 @@ Note that the name of the Russian SuperGLUE task should be defined in the ``["me
 
 .. code:: bash
 
-    python -m deeppavlov submit <config_name> [-d] [-o <output_file_name.jsonl>]
+    python -m deeppavlov.utils.benchmarks.superglue <config_name> [-d] [-o <output_file_name.jsonl>]
 
 * ``-d``: downloads model specific data before starting submission generation.
 * ``-o <output_file_name.jsonl>``: set output file name. By default for Russian SuperGLUE models output filenames are
@@ -55,7 +55,7 @@ Following command will generate ``DaNetQA.jsonl`` ready for submission:
 
 .. code:: bash
 
-    python -m deeppavlov submit russian_superglue_danetqa_rubert
+    python -m deeppavlov.utils.benchmarks.superglue russian_superglue_danetqa_rubert -d
 
 The prediction results will be saved in the correct format and the file will be automatically named with the name required by the system and saved to the current directory. All you have to do next 
 is to zip the files you want into one archive and `submit them to leaderboard <https://russiansuperglue.com/guide/>`__.

@@ -15,7 +15,7 @@
 import argparse
 from logging import getLogger
 
-from deeppavlov.core.commands.infer import interact_model, predict_on_stream, submit
+from deeppavlov.core.commands.infer import interact_model, predict_on_stream
 from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.file import find_config
@@ -31,7 +31,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument("mode", help="select a mode, train or interact", type=str,
                     choices={'train', 'evaluate', 'interact', 'predict', 'riseapi', 'risesocket', 'agent-rabbit',
-                             'download', 'install', 'crossval', 'submit'})
+                             'download', 'install', 'crossval'})
 parser.add_argument("config_path", help="path to a pipeline json config", type=str)
 
 parser.add_argument("-e", "--start-epoch-num", dest="start_epoch_num", default=None,
@@ -40,7 +40,6 @@ parser.add_argument("--recursive", action="store_true", help="Train nested confi
 
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=None, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
-parser.add_argument("-o", "--output-file", default=None, help="path to save output", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
@@ -103,8 +102,6 @@ def main():
             log.error('Minimum number of Folds is 2')
         else:
             calc_cv_score(pipeline_config_path, n_folds=args.folds, is_loo=False)
-    elif args.mode == 'submit':
-        submit(pipeline_config_path, args.output_file)
 
 
 if __name__ == "__main__":
