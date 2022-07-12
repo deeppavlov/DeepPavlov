@@ -89,7 +89,7 @@ class SimpleVocabulary(Estimator):
 
     def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
-            if all([k==None for k in batch]):
+            if all([k is None for k in batch]):
                 # for multitask dummy input. With multitask 1 batch == 1  task but fields for all tasks exists
                 return batch
             else:
