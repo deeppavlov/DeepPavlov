@@ -338,7 +338,11 @@ class TorchMultiTaskBert(TorchModel):
                 ):
                     continue
                 p.requires_grad = False
-                log.info("Bert Embeddings Freezed")
+                log.info("Bert Embeddings Freezed")        
+
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
+
     def _make_input(self,task_features,task_id,labels=None):
         batch_input_size = None
         if len(task_features) == 1 and isinstance(task_features,list):
