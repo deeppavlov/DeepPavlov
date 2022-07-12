@@ -94,7 +94,7 @@ def main():
                              rabbit_password=args.rabbit_password,
                              rabbit_virtualhost=args.rabbit_virtualhost)
     elif args.mode == 'predict':
-        predict_on_stream(pipeline_config_path)
+        predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
     elif args.mode == 'install':
         install_from_config(pipeline_config_path)
     elif args.mode == 'crossval':

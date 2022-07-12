@@ -13,6 +13,7 @@ from struct import unpack
 from time import sleep
 from typing import Optional, Union
 from urllib.parse import urljoin
+
 import pexpect
 import pexpect.popen_spawn
 import pytest
