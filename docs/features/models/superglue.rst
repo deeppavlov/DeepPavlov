@@ -64,24 +64,24 @@ Scores
 ------
 The scores for DeepPavlov's pretrained models on the tasks are presented in the table.
     
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-| Model                                                                                                 |     Metric     |      Score      |
-+=======================================================================================================+================+=================+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_danetqa_rubert.json>`|    Accuracy    |      0.647      |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_parus_rubert.json>`  |    Accuracy    |      0.588      |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_russe_rubert.json>`  |    Accuracy    |      0.688      |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_lidirus_rubert.json>`| Matthew`s Corr |      0.251      |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_rcb_rubert.json>`    |     F1/Acc     |  0.336 / 0.486  |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_rwsd_rubert.json>`   |    Accuracy    |      0.669      |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_muserc_rubert.json>` |     F1a/Em     |   0.685 / 0.29  |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_rucos_rubert.json>`  |      F1/EM     |   0.77 / 0.768  |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
-|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_terra_rubert.json>`  |    Accuracy    |      0.65       |
-+-------------------------------------------------------------------------------------------------------+----------------+-----------------+
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+| Model                                                                                                  |     Metric     |      Score      |
++========================================================================================================+================+=================+
+|  :config:`russian_superglue_danetqa_rubert <russian_super_glue/russian_superglue_danetqa_rubert.json>` |    Accuracy    |      0.647      |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_parus_rubert <russian_super_glue/russian_superglue_parus_rubert.json>`     |    Accuracy    |       0.588     |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_russe_rubert <russian_super_glue/russian_superglue_russe_rubert.json>`     |    Accuracy    |      0.641      |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_lidirus_rubert <russian_super_glue/russian_superglue_lidirus_rubert.json>` | Matthew's Corr |      0.251      |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_rcb_rubert <russian_super_glue/russian_superglue_rcb_rubert.json>`         |     F1/Acc     |  0.336 / 0.486  |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_rwsd_rubert <russian_super_glue/russian_superglue_rwsd_rubert.json>`       |    Accuracy    |      0.669      |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_muserc_rubert <russian_super_glue/russian_superglue_muserc_rubert.json>`   |     F1a/Em     |  0.689 / 0.298  |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_rucos_rubert <russian_super_glue/russian_superglue_rucos_rubert.json>`     |      F1/EM     |   0.77 / 0.768  |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
+|  :config:`russian_superglue_terra_rubert <russian_super_glue/russian_superglue_terra_rubert.json>`     |    Accuracy    |      0.65       |
++--------------------------------------------------------------------------------------------------------+----------------+-----------------+
