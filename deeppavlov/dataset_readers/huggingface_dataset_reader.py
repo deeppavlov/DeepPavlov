@@ -407,7 +407,7 @@ def binary_downsample(dataset: Dataset,
     # `test` split shouldn't be downsampled
     if dataset_labels == [-1]:
         return dataset
-    elif dataset_labels == [0, 1]:
+    elif set(dataset_labels) == {0, 1}:
         # positive examples are denoted with `1`
         num_positive: int = sum(dataset[label_column])
         num_total: int = len(dataset)
