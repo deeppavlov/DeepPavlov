@@ -17,7 +17,7 @@ import pickle
 from collections import OrderedDict
 from logging import getLogger
 from pathlib import Path
-from typing import Union, Any
+from typing import Union, Any, Iterable
 
 from deeppavlov.core.common.aliases import ALIASES
 
@@ -28,7 +28,7 @@ DEPRECATOIN_MSG = f"{_red_text}\n\n{_sharp_line}\n" \
                   "# The model '{0}' has been removed from the DeepPavlov configs.\n" \
                   "# The model '{1}' is used instead.\n" \
                   "# To disable this message please switch to '{1}'.\n" \
-                  "# Automatic name resolving will be disabled in the next release,\n" \
+                  "# Automatic name resolving will be disabled in the deeppavlov 1.2.0,\n" \
                   "# and if you try to use '{0}' you will get an ERROR.\n" \
                   f"{_sharp_line}{_reset_text_color}\n"
 
@@ -67,3 +67,9 @@ def save_pickle(data: dict, fpath: Union[str, Path]) -> None:
 def load_pickle(fpath: Union[str, Path]) -> Any:
     with open(fpath, 'rb') as fin:
         return pickle.load(fin)
+
+
+def save_jsonl(data: Iterable[dict], fpath: Union[str, Path]) -> None:
+    with open(fpath, 'w') as f:
+        for item in data:
+            f.write(f"{json.dumps(item, ensure_ascii=False)}\n")
