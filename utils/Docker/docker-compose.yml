@@ -1,6 +1,7 @@
 version: '3.7'
 services:
   py36:
+    network_mode: host
     build:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
@@ -11,9 +12,11 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - DP_PYTEST_API_PORT=$DP_PYTEST_API_PORT_0
       - PYTEST_ARGS=$PYTEST_ARGS
       - DP_PYTEST_NO_CACHE=True
   py37:
+    network_mode: host
     build:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
@@ -24,9 +27,11 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - DP_PYTEST_API_PORT=$DP_PYTEST_API_PORT_1
       - PYTEST_ARGS=$PYTEST_ARGS
       - DP_PYTEST_NO_CACHE=True
   py38:
+    network_mode: host
     build:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
@@ -37,10 +42,11 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - DP_PYTEST_API_PORT=$DP_PYTEST_API_PORT_0
       - PYTEST_ARGS=$PYTEST_ARGS
-      - SKIP_TF=True
       - DP_PYTEST_NO_CACHE=True
   py39:
+    network_mode: host
     build:
       context: ../../
       dockerfile: utils/Docker/Dockerfile
@@ -51,6 +57,6 @@ services:
     user: '${UID}:${GID}'
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - DP_PYTEST_API_PORT=$DP_PYTEST_API_PORT_1
       - PYTEST_ARGS=$PYTEST_ARGS
-      - SKIP_TF=True
       - DP_PYTEST_NO_CACHE=True
