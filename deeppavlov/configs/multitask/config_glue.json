@@ -349,7 +349,7 @@
    },
    "metadata":{
       "variables":{
-         "ROOT_PATH":"/cephfs/home/karpov.d",
+         "ROOT_PATH":"~",
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
          "SAVE_LOAD_PATH":"{MODELS_PATH}/model_glue",
