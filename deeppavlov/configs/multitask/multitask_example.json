@@ -23,7 +23,7 @@
          },
       "conll": {
         "reader_class_name": "conll2003_reader",
-        "data_path": "{NER_DATA_PATH}",
+        "data_path": "{DOWNLOADS_PATH}/conll2003/",
         "dataset_name": "conll2003",
         "provide_pos": false
       }
@@ -325,12 +325,11 @@
    },
    "metadata":{
       "variables":{
-         "ROOT_PATH":"/cephfs/home/karpov.d",
+         "ROOT_PATH":"~/.deeppavlov",
          "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/.deeppavlov/models_glue_clean",
+         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
          "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
          "NUM_TRAIN_EPOCHS":5,
-         "NER_DATA_PATH":"{ROOT_PATH}/GLUE/CONLL2003",
          "GRADIENT_ACC_STEPS":1
       }
    }
