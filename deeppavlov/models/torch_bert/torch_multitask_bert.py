@@ -26,7 +26,7 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from torch.autograd import Variable
 from collections.abc import Iterable
 from torch.nn.parameter import Parameter
-from transformers import AutoConfig, AutoModelForSequenceClassification
+from transformers import AutoConfig, AutoModel
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
@@ -51,7 +51,7 @@ class BertForMultiTask(nn.Module):
 
         super(BertForMultiTask, self).__init__()
         config = AutoConfig.from_pretrained(backbone_model,output_hidden_states=True,output_attentions=True)
-        self.bert = AutoModelForSequenceClassification.from_pretrained(pretrained_model_name_or_path=backbone_model,
+        self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
                                                                            config=config )
         self.classes = tasks_num_classes  # classes for every task
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
@@ -134,7 +134,6 @@ class TorchMultiTaskBert(TorchModel):
     Args:
         tasks: Dict of task names along with the labels for each task,
         pretrained_bert: path of the pretrained bert embeddings
-        freeze_embeddings: set True if bert embeddings are to be freezed,
         optimizer: optimizer name defaults to AdamW,
         optimizer_parameters: optimizer parameters,
         lr_scheduler: name of the lr scheduler,
@@ -161,11 +160,9 @@ class TorchMultiTaskBert(TorchModel):
         self,
         tasks: Dict[str, Dict],
         pretrained_bert: str = None,
-        freeze_embeddings: bool = False,
         max_seq_len: str = 320,
         optimizer: str = "AdamW",
         optimizer_parameters: dict = {"lr": 2e-5},
-        config: str = "configs/top_config.json",
         lr_scheduler: Optional[str] = None,
         lr_scheduler_parameters: dict = {},
         gradient_accumulation_steps: Optional[int] = 1,
@@ -175,7 +172,6 @@ class TorchMultiTaskBert(TorchModel):
         one_hot_labels: bool = False,
         multilabel: bool = False,
         return_probas: bool = False,
-        flatten_multiplechoice_labels: bool=True,
         in_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         in_y_distribution: Optional[Union[Dict[str, int], Dict[str, List[str]]]] = None,
         *args,
