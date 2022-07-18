@@ -270,7 +270,8 @@ class AutoModelForBinaryClassification(torch.nn.Module):
         self.pretrained_bert = pretrained_bert
         self.config = config
 
-        self.model = AutoModel.from_pretrained(self.pretrained_bert, self.config)
+#       self.model = AutoModel.from_pretrained(self.pretrained_bert, self.config)
+        self.model = AutoModel.from_pretrained(self.pretrained_bert)
         self.classifier = BinaryClassificationHead(config)
 
         self.classifier.init_weights()
@@ -291,8 +292,8 @@ class AutoModelForBinaryClassification(torch.nn.Module):
 
         outputs = self.model(input_ids,
                              attention_mask=attention_mask,
-                             token_type_ids=token_type_ids,
-                             position_ids=position_ids,
+                             #token_type_ids=token_type_ids,
+                             #position_ids=position_ids,
                              head_mask=head_mask,
                              inputs_embeds=inputs_embeds,
                              output_attentions=output_attentions,
@@ -323,7 +324,8 @@ class BinaryClassificationHead(torch.nn.Module):
         self.config = config
 
         self.dense = torch.nn.Linear(config.hidden_size, config.hidden_size)
-        self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
+        #self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
+        self.dropout = torch.nn.Dropout(0.1)
         self.out_proj = torch.nn.Linear(config.hidden_size, 1)
 
     def init_weights(self):
