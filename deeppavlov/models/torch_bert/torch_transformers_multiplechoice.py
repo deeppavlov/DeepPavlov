@@ -165,7 +165,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
+            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes,
                                                 output_attentions=False, output_hidden_states=False)
 
             self.model = AutoModelForMultipleChoice.from_pretrained(self.pretrained_bert, config=config)

@@ -1,0 +1,882 @@
+{
+    "dataset_reader": {
+        "class_name": "multitask_reader",
+        "data_path": "null",
+        "tasks": {
+              "wsc":{
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "wsc",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "multirc":{
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "multirc",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+            "cb": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "cb",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "record": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "record",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "boolq": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "boolq",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "copa": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "copa",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "rte": {
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "rte",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              },
+              "wic":{
+                "reader_class_name": "huggingface_dataset_reader",
+                "data_path": "super_glue",
+                "path": "super_glue",
+                "name": "wic",
+                "train": "train",
+                "valid": "validation",
+                "test": "test"
+              }                                     
+        }
+    },
+    "dataset_iterator": {
+        "class_name": "multitask_pal_bert_iterator",
+        "num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+        "batch_size":"{BATCH_SIZE}",
+        "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+        "prob_cap":"{PROB_CAP}",
+        "tasks": {
+            "wsc": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":["text", "answer"],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "multirc": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":["context", "answer"],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "cb": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":["premise", "hypothesis"],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "record": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":[
+                    "idx",
+                    "query",
+                    "passage",
+                    "entities",
+                    "num_examples"
+                  ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "boolq": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":[
+                    "question",
+                    "passage"
+                  ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "copa": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":[
+                    "premise",
+                    "choices"
+                  ],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "rte": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":["premise", "hypothesis"],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            },
+            "wic": {
+                "iterator_class_name": "huggingface_dataset_iterator",
+                "features":["sentence1", "sentence2"],
+                "label": "label",
+                "use_label_name": false,
+                "seed": "{SEED}"
+            }                               
+                                          
+          }
+    },
+    "chainer": {
+        "in": [
+            "x_wsc_with_id",
+            "x_multirc_with_id",
+            "x_cb_with_id",
+            "x_record_with_id",
+            "x_boolq_with_id",
+            "x_copa_with_id",
+            "x_rte_with_id",
+            "x_wic_with_id"
+        ],
+        "in_y": [
+            "y_wsc",
+            "y_multirc",
+            "y_cb",
+            "y_record",
+            "y_boolq",
+            "y_copa",
+            "y_rte",
+            "y_wic"
+        ],
+        "pipe": [
+            {
+                "class_name": "multitask_pal_bert_preprocessor",
+                "in": [
+                    "x_wsc_with_id",
+                    "x_multirc_with_id",
+            "x_cb_with_id",
+            "x_record_with_id",
+            "x_boolq_with_id",
+            "x_copa_with_id",
+            "x_rte_with_id",
+            "x_wic_with_id"
+
+
+                ],
+                "out": [
+                    "task_id",
+                    "x_wsc",
+                    "x_multirc",
+                    "x_cb",
+                    "x_record",
+                    "x_boolq",
+                    "x_copa",
+                    "x_rte",
+                    "x_wic"
+
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_wsc"
+                ],
+                "out": [
+                    "text_wsc",
+                    "answer_wsc"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "text_wsc",
+                  "answer_wsc"
+                    ],
+                "out": [
+                  "bert_features_wsc"
+                ]
+            },
+            {
+                "id": "vocab_wsc",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_wsc"
+                ],
+                "save_path": "{MODELS_PATH}/wsc.dict",
+                "load_path": "{MODELS_PATH}/wsc.dict",
+                "in": [
+                    "y_wsc"
+                ],
+                "out":[
+                    "y_ids_wsc"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_multirc"
+                ],
+                "out": [
+                    "context_multirc",
+                    "answer_multirc"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "context_multirc",
+                  "answer_multirc"
+                ],
+                "out": [
+                  "bert_features_multirc"
+                ]
+            },
+            {
+                "id": "vocab_multirc",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_multirc"
+                ],
+                "save_path": "{MODELS_PATH}/multirc.dict",
+                "load_path": "{MODELS_PATH}/multirc.dict",
+                "in": [
+                    "y_multirc"
+                ],
+                "out":[
+                    "y_ids_multirc"
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_cb"
+                ],
+                "out": [
+                    "premise_cb",
+                    "hypothesis_cb"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "premise_cb",
+                  "hypothesis_cb"
+                ],
+                "out": [
+                  "bert_features_cb"
+                ]
+            },
+            {
+                "id": "vocab_cb",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_cb"
+                ],
+                "save_path": "{MODELS_PATH}/cb.dict",
+                "load_path": "{MODELS_PATH}/cb.dict",
+                "in": [
+                    "y_cb"
+                ],
+                "out":[
+                    "y_ids_cb"
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1,
+                    2,
+                    3,4
+                ],
+                "in": [
+                    "x_record"
+                ],
+                "out": [
+                    "idx_record",
+                    "query_record",
+                    "passage_record",
+                    "entities_record",
+                    "num_examples_record"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "query_record",
+                  "passage_record"
+                ],
+                "out": [
+                  "bert_features_record"
+                ]
+            },
+            {
+                "id": "vocab_record",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_record"
+                ],
+                "save_path": "{MODELS_PATH}/record.dict",
+                "load_path": "{MODELS_PATH}/record.dict",
+                "in": [
+                    "y_record"
+                ],
+                "out":[
+                    "y_ids_record"
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_boolq"
+                ],
+                "out": [
+                    "text_boolq",
+                    "question_boolq"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "text_boolq",
+                  "question_boolq"
+                ],
+                "out": [
+                  "bert_features_boolq"
+                ]
+            },
+            {
+                "id": "vocab_boolq",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_boolq"
+                ],
+                "save_path": "{MODELS_PATH}/boolq.dict",
+                "load_path": "{MODELS_PATH}/boolq.dict",
+                "in": [
+                    "y_boolq"
+                ],
+                "out":[
+                    "y_ids_boolq"
+                ]
+            },
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_copa"
+                ],
+                "out": [
+                    "premise_copa",
+                    "choices_copa"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_multiplechoice_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "premise_copa",
+                  "choices_copa"
+                ],
+                "out": [
+                  "bert_features_copa"
+                ]
+            },
+            {
+                "id": "vocab_copa",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_copa"
+                ],
+                "save_path": "{MODELS_PATH}/copa.dict",
+                "load_path": "{MODELS_PATH}/copa.dict",
+                "in": [
+                    "y_copa"
+                ],
+                "out":[
+                    "y_ids_copa"
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_rte"
+                ],
+                "out": [
+                    "premise_rte",
+                    "hypothesis_rte"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "premise_rte",
+                  "hypothesis_rte"
+                ],
+                "out": [
+                  "bert_features_rte"
+                ]
+            },
+            {
+                "id": "vocab_rte",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_rte"
+                ],
+                "save_path": "{MODELS_PATH}/rte.dict",
+                "load_path": "{MODELS_PATH}/rte.dict",
+                "in": [
+                    "y_rte"
+                ],
+                "out":[
+                    "y_ids_rte"
+                ]
+            },
+
+            {
+                "class_name": "input_splitter",
+                "keys_to_extract": [
+                    0,
+                    1
+                ],
+                "in": [
+                    "x_wic"
+                ],
+                "out": [
+                    "premise_wic",
+                    "hypothesis_wic"
+                ]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "premise_wic",
+                  "hypothesis_wic"
+                ],
+                "out": [
+                  "bert_features_wic"
+                ]
+            },
+            {
+                "id": "vocab_wic",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_wic"
+                ],
+                "save_path": "{MODELS_PATH}/wic.dict",
+                "load_path": "{MODELS_PATH}/wic.dict",
+                "in": [
+                    "y_wic"
+                ],
+                "out":[
+                    "y_ids_wic"
+                ]
+            },
+            {
+                "id": "vocab_wic",
+                "class_name": "simple_vocab",
+                "fit_on": [
+                    "y_wic"
+                ],
+                "save_path": "{MODELS_PATH}/wic.dict",
+                "load_path": "{MODELS_PATH}/wic.dict",
+                "in": [
+                    "y_wic"
+                ],
+                "out":[
+                    "y_ids_wic"
+                ]
+            },
+
+            {
+                "id": "multitask_pal_bert",
+                "class_name": "multitask_pal_bert",
+                "backbone_model":"{MODEL}",
+                "use_new_model":true,
+                "optimizer_parameters": {
+                    "lr": 2e-5
+                },
+                "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+                "learning_rate_drop_patience": 2,
+                "learning_rate_drop_div": 2.0,
+                "log_model_summary": false,
+                "return_probas": true,
+                "max_seq_len":"{SEQ_LEN}",
+                "attention_type": "{ATTENTION_TYPE}",
+                "save_path": "{MODELS_PATH}/enberten{PROB_CAP}_7pat",
+                "load_path": "{MODELS_PATH}/enberten{PROB_CAP}_7pat",
+                "tasks": {
+                    "wsc":{"n_classes": 2},
+                    "multirc":{"n_classes": 2},
+                    "cb": {"n_classes": 3},
+                    "record":{"n_classes":2},
+                    "boolq":{"n_classes":2},
+                    "copa": {"n_choices": 2},
+                    "rte":{"n_classes":2},
+                    "wic":{"n_classes":2}
+                },
+                "in_distribution": {
+                    "wsc": 1,
+                    "multirc": 1,
+                    "cb": 1,
+                    "record": 1,
+                    "boolq": 1,
+                    "copa": 1,
+                    "rte": 1,
+                    "wic": 1
+                },
+                "in": [
+                    "task_id",
+                    "bert_features_wsc",
+                    "bert_features_multirc",
+                    "bert_features_cb",
+                    "bert_features_record",
+                    "bert_features_boolq",
+                    "bert_features_copa",
+                    "bert_features_rte",
+                    "bert_features_wic"
+                ],
+                "in_y_distribution": {
+                    "wsc": 1,
+                    "multirc": 1,
+                    "cb": 1,
+                    "record": 1,
+                    "boolq": 1,
+                    "copa": 1,
+                    "rte": 1,
+                    "wic": 1
+                },
+                "in_y": [
+                    "y_ids_wsc",
+                    "y_ids_multirc",
+                    "y_ids_cb",
+                    "y_ids_record",
+                    "y_ids_boolq",
+                    "y_ids_copa",
+                    "y_ids_rte",
+                    "y_ids_wic"
+                ],
+                "out": [
+                    "y_wsc_pred_probas",
+                    "y_multirc_pred_probas",
+                    "y_cb_pred_probas",
+                    "y_record_pred_probas",
+                    "y_boolq_pred_probas",
+                    "y_copa_pred_probas",
+                    "y_rte_pred_probas",
+                    "y_wic_pred_probas"
+                ]
+            },
+            {
+                "in": [
+                    "y_wsc_pred_probas"
+                ],
+                "out": [
+                    "y_wsc_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_multirc_pred_probas"
+                ],
+                "out": [
+                    "y_multirc_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_cb_pred_probas"
+                ],
+                "out": [
+                    "y_cb_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_record_pred_probas"
+                ],
+                "out": [
+                    "y_record_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "class_name": "torch_record_postprocessor",
+                "in": [
+                  "idx_record",
+                  "y_record",
+                  "y_record_pred_probas",
+                  "entities_record",
+                  "num_examples_record"
+                ],
+                "out": [
+                  "record_examples"
+                ]
+              },
+              {
+                "in": [
+                    "y_boolq_pred_probas"
+                ],
+                "out": [
+                    "y_boolq_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_copa_pred_probas"
+                ],
+                "out": [
+                    "y_copa_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_rte_pred_probas"
+                ],
+                "out": [
+                    "y_rte_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "in": [
+                    "y_wic_pred_probas"
+                ],
+                "out": [
+                    "y_wic_pred_ids"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            }
+        ],
+        "out": [
+            "y_wsc_pred_ids",
+            "y_multirc_pred_ids",
+            "y_cb_pred_ids",
+            "record_examples",
+            "y_boolq_pred_ids",
+            "y_copa_pred_ids",
+            "y_rte_pred_ids",
+            "y_wic_pred_ids"
+        ]
+    },
+    "train": {
+        "epochs": "{NUM_TRAIN_EPOCHS}",
+        "batch_size": "{BATCH_SIZE}",
+        "metrics": [
+            {
+                "name": "multitask_accuracy",
+                "inputs": [
+                    "y_ids_wsc",
+                    "y_ids_multirc",
+                    "y_ids_cb",
+                    "y_ids_record",
+                    "y_ids_boolq",
+                    "y_ids_copa",
+                    "y_ids_rte",
+                    "y_ids_wic",
+                    "y_wsc_pred_ids",
+                    "y_multirc_pred_ids",
+                    "y_cb_pred_ids",
+                    "y_record_pred_ids",
+                    "y_boolq_pred_ids",
+                    "y_copa_pred_ids",
+                    "y_rte_pred_ids",
+                    "y_wic_pred_ids"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_wsc",
+                "inputs": [
+                    "y_ids_wsc",
+                    "y_wsc_pred_ids"
+                ]
+            },                               
+            {
+                "name": "accuracy",
+                "alias":"accuracy_multirc",
+                "inputs": [
+                    "y_ids_multirc",
+                    "y_multirc_pred_ids"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_cb",
+                "inputs": [
+                    "y_ids_cb",
+                    "y_cb_pred_ids"
+                ]
+            },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_record",
+                "inputs": [
+                  "y_ids_record",
+                  "y_record_pred_ids"
+                ]
+              },
+              {
+                "name": "record_em_score",
+                "inputs": [
+                  "record_examples"
+                ]
+              },
+              {
+                "name": "record_f1_score",
+                "inputs": [
+                  "record_examples"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_boolq",
+                "inputs": [
+                  "y_ids_boolq",
+                  "y_boolq_pred_ids"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_copa",
+                "inputs": [
+                  "y_ids_copa",
+                  "y_copa_pred_ids"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias":"accuracy_rte",
+                "inputs": [
+                    "y_ids_rte",
+                    "y_rte_pred_ids"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_wic",
+                "inputs": [
+                    "y_ids_wic",
+                    "y_wic_pred_ids"
+                ]
+            }
+        ],
+        "validation_patience": 7,
+        "val_every_n_epochs": 1,
+        "log_every_n_epochs": 1,
+        "val_every_n_batches":10000,
+        "max_test_batches":300,
+        "show_examples": true,
+        "evaluation_targets": [
+            "valid", "train"
+        ],
+        "class_name": "torch_trainer"
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "/cephfs/home/karpov.d",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/.deeppavlov/downloads",
+            "MODELS_PATH": "{ROOT_PATH}/.deeppavlov/models_en",
+            "ATTENTION_TYPE": "no",
+            "NUM_TRAIN_EPOCHS": 25,
+            "SEQ_LEN": 320,
+            "GRADIENT_ACC_STEPS": 1,
+            "PROB_CAP":1,
+            "BATCH_SIZE": 8,
+            "MODEL":"bert-base-cased",
+            "SEED": 42
+        }
+    }
+}

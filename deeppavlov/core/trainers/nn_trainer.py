@@ -89,7 +89,7 @@ class NNTrainer(FitTrainer):
 
     """
 
-    def __init__(self, chainer_config: dict, *, 
+    def __init__(self, chainer_config: dict, *,
                  batch_size: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,

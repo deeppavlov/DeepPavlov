@@ -61,9 +61,9 @@ def multitask_accuracy(*args) -> float:
     """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
-    answers=[]
-    for true,pred in zip(y_true_by_tasks, y_predicted_by_tasks):
-        answers.append(accuracy(true,pred))
+    answers = []
+    for true, pred in zip(y_true_by_tasks, y_predicted_by_tasks):
+        answers.append(accuracy(true, pred))
     return sum(answers)/len(answers)
 
 

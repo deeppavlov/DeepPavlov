@@ -148,8 +148,8 @@
             "learning_rate_drop_div":2.0,
             "return_probas":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}5",
-            "load_path":"{SAVE_LOAD_PATH}5",
+            "save_path":"{SAVE_LOAD_PATH}5distil",
+            "load_path":"{SAVE_LOAD_PATH}5distil",
             "tasks":{
                "cola":{
                   "type":"classification",
@@ -324,7 +324,7 @@
    "metadata":{
       "variables":{
          "ROOT_PATH":"~/.deeppavlov",
-         "BACKBONE":"bert-base-uncased",
+         "BACKBONE":"distilbert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
          "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
          "NUM_TRAIN_EPOCHS":5,
