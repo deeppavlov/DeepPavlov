@@ -423,7 +423,7 @@ class TorchMultiTaskBert(TorchModel):
                 else:
                     pred = torch.nn.functional.argmax(logits, dim=1)
                 if not isinstance(pred, list):
-                    pred = pred.tolist()
+                    pred = [k for k in pred.cpu().numpy()]
                 self.validation_predictions[task_id] = pred
         if len(args) == 1:
             return self.validation_predictions[0]
