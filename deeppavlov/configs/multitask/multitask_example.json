@@ -148,8 +148,8 @@
             "learning_rate_drop_div":2.0,
             "return_probas":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}5",
-            "load_path":"{SAVE_LOAD_PATH}5",
+            "save_path":"{SAVE_LOAD_PATH}_5",
+            "load_path":"{SAVE_LOAD_PATH}_5",
             "tasks":{
                "cola":{
                   "type":"classification",
