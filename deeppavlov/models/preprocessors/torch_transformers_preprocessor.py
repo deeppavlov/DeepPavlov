@@ -151,13 +151,14 @@ class TorchTransformersPreprocessor(Component):
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
-
         # in case of iterator's strange behaviour
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
         elif isinstance(texts_a, str):
             raise Exception(
                 f'Received string {texts_a} as an input! Check the iterator output')
+        elif texts_a == [] and texts_b == []:
+            return {}
 
         texts_a = [k for k in texts_a if k is not None]  # handle dummy output
 
