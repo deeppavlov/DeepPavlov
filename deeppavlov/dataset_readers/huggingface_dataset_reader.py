@@ -31,16 +31,17 @@ class HuggingFaceDatasetReader(DatasetReader):
     """
 
     @overrides
-    def read(self,
-             data_path: str,
-             path: str,
-             name: Optional[str] = None,
-             train: str = 'train',
-             valid: Optional[str] = None,
-             test: Optional[str] = None,
-             **kwargs) -> Dict[str, Dataset]:
+    def read(
+            self,
+            data_path: str,
+            path: str,
+            name: Optional[str] = None,
+            train: Optional[str] = None, #for lidirus with no train
+            valid: Optional[str] = None,
+            test: Optional[str] = None,
+            **kwargs
+    ) -> Dict[str, Dataset]:
         """Wraps datasets.load_dataset method
-
         Args:
             data_path: DeepPavlov's data_path argument, is not used, but passed by trainer
             path: datasets.load_dataset path argument (e.g., `glue`)
@@ -48,7 +49,6 @@ class HuggingFaceDatasetReader(DatasetReader):
             train: split name to use as training data.
             valid: split name to use as validation data.
             test: split name to use as test data.
-
         Returns:
             Dict[str, List[Dict]]: Dictionary with train, valid, test datasets
         """
@@ -71,16 +71,24 @@ class HuggingFaceDatasetReader(DatasetReader):
             raise ValueError("The number of downsample ratios must be the same as the number of splits")
 
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
-        if path == "super_glue" and name == "copa":
-            dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
+        if (path == "super_glue" and name == "copa") or (path == "russian_super_glue" and name == "parus"):
+            lang = "en" if name == "copa" else "ru"
+            dataset = [
+                dataset_split.map(preprocess_copa, batched=True, fn_kwargs={"lang": lang}) for dataset_split in dataset
+            ]
         elif path == "super_glue" and name == "boolq":
-            dataset = load_dataset(path=path,
-                                   name=name,
-                                   split=interleave_splits(splits=list(split_mapping.values()),
-                                                           percentage=percentage),
-                                   **kwargs)
+            # danetqa doesn't require the same preprocessing
+            dataset = load_dataset(
+                path=path,
+                name=name,
+                split=interleave_splits(
+                    splits=list(split_mapping.values()),
+                    percentage=percentage
+                ),
+                **kwargs
+            )
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
-        elif path == "super_glue" and name == "record":
+        elif (path == "super_glue" and name == "record") or (path == "russian_super_glue" and name == "rucos"):
             label_column = "label"
             dataset = [
                 binary_downsample(
@@ -99,7 +107,22 @@ class HuggingFaceDatasetReader(DatasetReader):
                 for dataset_split, ratio
                 in zip(dataset, downsample_ratio)
             ]
+        elif (path == "super_glue" and name == "multirc") or (path == "russian_super_glue" and name == "muserc"):
+            dataset = [
+                dataset_split.map(
+                    preprocess_multirc, batched=True, remove_columns=["paragraph", "question"]
+                ) for dataset_split in dataset
+            ]
+        elif (path == "super_glue" and name == "wsc") or (path == "russian_super_glue" and name == "rwsd"):
+            dataset = [
+                dataset_split.map(
+                    preprocess_wsc,
+                    batched=True,
+                    remove_columns=["span1_index", "span2_index", "span1_text", "span2_text"],
+                ) for dataset_split in dataset
+            ]
         return dict(zip(split_mapping.keys(), dataset))
+
 
 
 def interleave_splits(splits: List[str], percentage: int = 50) -> List[str]:
@@ -355,3 +378,34 @@ def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
     """
     num_examples = len(dataset[next(iter(dataset))])
     return {"num_examples": [num_examples] * num_examples}
+
+
+def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> Dict[str, List[str]]:
+    paragraphs: List[str] = examples["paragraph"]
+    questions: List[str] = examples["question"]
+
+    if clean_paragraphs:
+        paragraphs = [
+            re.sub(
+                r"\s+",
+                " ",
+                re.sub(r"\(\d{1,2}\)", "", paragraph).strip()
+            )
+            for paragraph in paragraphs
+        ]
+
+    contexts: List[str] = []
+
+    for paragraph, question in zip(paragraphs, questions):
+        contexts.append(f"{paragraph} {question}")
+
+    return {"context": contexts}
+
+
+def preprocess_wsc(dataset: Dataset) -> Dict[str, List[str]]:
+    spans1: List[str] = dataset["span1_text"]
+    spans2: List[str] = dataset["span2_text"]
+    answers = [
+        f"{s2.capitalize()} {s1}" for s1, s2 in zip(spans1, spans2)
+    ]
+    return {"answer": answers}

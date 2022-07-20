@@ -49,6 +49,8 @@ class MultiTaskPipelinePreprocessor(Component):
     """
     Extracts out the task_id from the first index of each example for each task.
     Then splits the input and performs tokenization
+    Params:
+    vocab_file: vocabulary file for tokenization
     """
 
     def __init__(self,
@@ -59,7 +61,7 @@ class MultiTaskPipelinePreprocessor(Component):
                  max_seq_length: int = 512,
                  return_tokens: bool = False,
                  strict=False,
-                 n_task: int = 3,
+                 n_task=None,
                  *args, **kwargs):
         self.n_task = n_task
         self.strict = strict
@@ -67,15 +69,17 @@ class MultiTaskPipelinePreprocessor(Component):
             log.info(
                 f'Assuming the same preprocessor name for all : {preprocessor}')
             assert preprocessor is not None
+            error_msg = 'Provide number of tasks if you did not explicitly define preprocessor list'
+            assert self.n_task is not None, error_msg
             preprocessor = eval(preprocessor)
             self.preprocessors = [preprocessor(vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
                                   for _ in range(self.n_task)]
         else:
-            assert len(preprocessors) == self.n_task
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
             self.preprocessors = [preprocessors[i](vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
-                                  for i in range(self.n_task)]
+                                  for i in range(len(preprocessors))]
+            self.n_task = len(preprocessors)
 
     def split(self, features):
         if all([isinstance(k, str) for k in features]) or all([k is None for k in features]):
@@ -126,6 +130,10 @@ class MultiTaskPipelinePreprocessor(Component):
                     log.debug('All nones')
                     answer.append([])
                 else:
+                    if 'choice' in str(self.preprocessors[i]):
+                        if isinstance(texts_a[0], str) and isinstance(texts_b[0],list):
+                            # transform multiple choice to format suitable for preprocessor
+                            texts_a = [[text for _ in range(len(texts_b[0]))] for text in texts_a]
                     answer.append(self.preprocessors[i](texts_a, texts_b))
         assert answer != [[]], 'Empty answer'
         return answer

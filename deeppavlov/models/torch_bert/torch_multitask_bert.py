@@ -8,23 +8,24 @@ import six
 import numpy as np
 from overrides import overrides
 import os
+import inspect
 import _pickle as cPickle
 
 import torch
 import torch.nn as nn
-import nn.functional as F
-from nn import CrossEntropyLoss, MSELoss
+import torch.nn.functional as F
+from torch.nn import CrossEntropyLoss, MSELoss
 from torch.autograd import Variable
 from collections.abc import Iterable
-from nn.parameter import Parameter
+from torch.nn.parameter import Parameter
 from transformers import AutoConfig, AutoModel
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
-from deeppavlov.models.torch_bert import torch_transformers_sequence_tagger
-from torch_transformers_sequence_tagger import token_from_subtoken, token_labels_to_subtoken_labels
+from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken
+from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_labels_to_subtoken_labels
 
 log = getLogger(__name__)
 
@@ -41,7 +42,7 @@ class BertForMultiTask(nn.Module):
     """
 
     def __init__(self, tasks_num_classes, task_types,
-                 backbone_model='bert_base_uncased', config_file=None,
+                 backbone_model='bert_base_uncased',dropout=None,
                  max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
@@ -50,7 +51,12 @@ class BertForMultiTask(nn.Module):
         self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
                                               config=config)
         self.classes = tasks_num_classes  # classes for every task
-        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        if dropout is not None:
+            self.dropout = nn.Dropout(dropout)
+        elif hasattr(config, 'hidden_dropout_prob'):
+            self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        else:
+            self.dropout = nn.Dropout(0)
         self.max_seq_len = max_seq_len
         self.activation = nn.Tanh()
         self.task_types = task_types
@@ -65,31 +71,35 @@ class BertForMultiTask(nn.Module):
 
     def forward(
         self,
-        input_ids,
-        token_type_ids,
-        attention_mask,
         task_id,
+        input_ids,
+        attention_mask,
+        token_type_ids,
         labels=None,
         span1=None,
-        span2=None
+        span2=None,
+        use_token_type_ids=True
     ):
         name = self.task_types[task_id]
         outputs = None
         if name in ['sequence_labeling', 'multiple_choice']:
             # delete after checking label format
             input_ids = input_ids.view(-1, input_ids.size(-1))
-            token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
-        outputs = self.bert(input_ids=input_ids.int(),
-                            token_type_ids=token_type_ids.int(),
-                            attention_mask=attention_mask.int())
-
-        last_hidden_state = outputs[1][-1]
-        first_token_tensor = last_hidden_state[:, 0]
+            if token_type_ids is not None:
+                token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
+        if not use_token_type_ids:
+            outputs = self.bert(input_ids=input_ids.int(),
+                                attention_mask=attention_mask.int())
+        else:
+            outputs = self.bert(input_ids=input_ids.int(),
+                                token_type_ids=token_type_ids.int(),
+                                attention_mask=attention_mask.int())
+        first_token_tensor = outputs.last_hidden_state[:, 0]
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
-            final_output = self.dropout(last_hidden_state)
+            final_output = self.dropout(outputs.last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
                 loss_fct = CrossEntropyLoss()
@@ -136,12 +146,15 @@ class TorchMultiTaskBert(TorchModel):
         optimizer_parameters: optimizer parameters,
         lr_scheduler: name of the lr scheduler,
         lr_scheduler_parameters: lr scheduler parameters for the scheduler,
-        gradient_accumulation_steps: number of gradient accumulation steps,
-        steps_per_epoch: number of steps taken per epoch
+        gradient_accumulation_steps(default:1): number of gradient accumulation steps,
+        steps_per_epoch: number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
         clip_norm: normalization: value for gradient clipping,
-        one_hot_labels: set to true if using one hot labels,
-        multilabel: set true for multilabel class,
-        return_probas: set true to return prediction probas
+        one_hot_labels(default: False): set to true if using one hot labels,
+        multilabel(default: False): set to true for multilabel classification,
+        return_probas(default: False): set true to return prediction probabilities,
+        freeze_embeddings(default: False): set true to freeze BERT embeddings
+        dropout(default: None): dropout for the final model layer. 
+        If not set, defaults to the parameter hidden_dropout_prob of original model
     """
 
     def __init__(
@@ -160,13 +173,12 @@ class TorchMultiTaskBert(TorchModel):
         one_hot_labels: bool = False,
         multilabel: bool = False,
         return_probas: bool = False,
+        freeze_embeddings: bool = False,
+        dropout:Optional[float] = None,
         *args,
         **kwargs,
     ) -> None:
         path_to_current_file = os.path.realpath(__file__)
-        current_directory = os.path.split(path_to_current_file)[0]
-        self.config = os.path.join(
-            current_directory, config)
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
@@ -191,12 +203,13 @@ class TorchMultiTaskBert(TorchModel):
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler
         self.lr_scheduler_parameters = lr_scheduler_parameters
-        self.gradient_accumulation_steps = [
-            gradient_accumulation_steps for _ in self.task_names]
+        self.gradient_accumulation_steps = [gradient_accumulation_steps for _ in self.task_names]
         self.steps_per_epoch = steps_per_epoch
         self.steps_taken = 0
         self.prev_id = None
         self.printed = False
+        self.freeze_embeddings = freeze_embeddings
+        self.dropout = dropout
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError(
                 "Use one-hot encoded labels for multilabel classification!"
@@ -229,7 +242,9 @@ class TorchMultiTaskBert(TorchModel):
         self.model = BertForMultiTask(
             backbone_model=self.backbone_model,
             tasks_num_classes=self.tasks_num_classes,
-            task_types=self.task_types)
+            task_types=self.task_types,
+            dropout=self.dropout)
+        self.use_token_type_ids = 'token_type_ids' in str(inspect.signature(self.model.bert.forward))
         self.model = self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
@@ -363,12 +378,15 @@ class TorchMultiTaskBert(TorchModel):
                     np.array(subtoken_labels)).to(torch.int64)
             else:
                 _input["labels"] = torch.from_numpy(np.array(labels))
-        for elem in _input:
-            _input[elem] = _input[elem].to(self.device)
+            element_list = element_list + ['labels']
+        for elem in element_list:
+            if elem == 'token_type_ids' and not self.use_token_type_ids and self.task_types[task_id] != 'sequence_labeling':
+                _input[elem] = None
+            else:
+                _input[elem] = _input[elem].to(self.device)
         if 'labels' in _input and self.task_types[task_id] != 'multiple_choice':
             error_msg = f'Len of labels {len(_input["labels"])} does not match len of ids {len(_input["input_ids"])}'
             assert len(_input['labels']) == len(_input['input_ids']), error_msg
-
         return _input, batch_input_size
 
     def __call__(self, *args):
@@ -388,8 +406,9 @@ class TorchMultiTaskBert(TorchModel):
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 with torch.no_grad():
                     logits = self.model(
-                        task_id=task_id, **_input
-                    )
+                        task_id=task_id,
+                        use_token_type_ids=self.use_token_type_ids,
+                        **_input)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
@@ -442,8 +461,9 @@ class TorchMultiTaskBert(TorchModel):
         elif self.prev_id != task_id and not self.printed:
             log.info('Seen samples from different tasks')
             self.printed = True
-        loss, logits = self.model(
-            task_id=task_id, **_input)
+        if 'token_type_ids' not in _input:
+            _input['token_type_ids'] = None
+        loss, logits = self.model(task_id=task_id,use_token_type_ids=self.use_token_type_ids,**_input)
 
         loss = loss / self.gradient_accumulation_steps[task_id]
         loss.backward()

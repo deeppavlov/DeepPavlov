@@ -23,7 +23,7 @@
          },
       "conll": {
         "reader_class_name": "conll2003_reader",
-        "data_path": "{DOWNLOADS_PATH}/conll2003/",
+        "data_path": "{NER_DATA_PATH}/conll2003/",
         "dataset_name": "conll2003",
         "provide_pos": false
       }
@@ -327,6 +327,7 @@
          "BACKBONE":"bert-base-uncased",
          "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
          "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
+         "NER_DATA_PATH":"~/GLUE/CONLL2003",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }

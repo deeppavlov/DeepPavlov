@@ -138,7 +138,6 @@ class MultiTaskIterator:
         self.sample_x_instances = None
         self.sample_y_instances = None
 
-    @staticmethod
     def _get_data_size(self, data_type):
         """
         Returns list of sizes of each dataset for the given data_type: train,test or valid.
@@ -146,13 +145,12 @@ class MultiTaskIterator:
 
         return [len(self.data[data_type][key]) for key in self.data[data_type]]
 
-    @staticmethod
     def _get_probs(self, data_type):
         """
         Returns sampling probabilities for different sampling modes - plain, uniform or anneal
         """
 
-        assert data_type in data
+        assert data_type in self.data
         curr_data = self.data[data_type]
 
         if self.sampling_mode == 'uniform':
@@ -174,7 +172,6 @@ class MultiTaskIterator:
             raise Exception(f'Unsupported sampling mode {self.sampling_mode}')
         return probs
 
-    @staticmethod
     def _extract_data_type(self, data_type):
         """
         Function that merges data of the current daata_type(e.g train) from all task_iterators into one dict
@@ -185,7 +182,6 @@ class MultiTaskIterator:
             dataset_part[task] = getattr(iterator, data_type)
         return dataset_part
 
-    @staticmethod
     def _transform_before_yielding(self, x, y, batch_size):
         """
         Function that transforms data from dataset before yielding

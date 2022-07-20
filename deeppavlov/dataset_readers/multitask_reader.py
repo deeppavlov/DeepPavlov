@@ -51,6 +51,10 @@ class MultiTaskReader(DatasetReader):
                   }
                 }
                 ```
+            reader_class_name - name of default dataset reader
+            path - parameter path for dataset reader reader_class_name
+            task_names: tasks from path for which we use the params train, validation and test
+            train,validation, test - parameters for dataset reader reader_class_name
         Returns:
             dictionary which keys are task names and values are what task readers `read()` methods returned.
         """
