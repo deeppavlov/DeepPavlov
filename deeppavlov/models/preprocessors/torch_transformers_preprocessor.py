@@ -139,7 +139,7 @@ class TorchTransformersPreprocessor(Component):
         self.tokenizer = AutoTokenizer.from_pretrained(
             vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
+    def __call__(self, texts_a: List, texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
                                                                                          Tuple[List[InputFeatures],
                                                                                                List[List[str]]]]:
         """Tokenize and create masks.
@@ -158,6 +158,8 @@ class TorchTransformersPreprocessor(Component):
         elif isinstance(texts_a, str):
             raise Exception(
                 f'Received string {texts_a} as an input! Check the iterator output')
+
+        texts_a = [k for k in texts_a if k is not None]  # handle dummy output
 
         input_features = self.tokenizer(text=texts_a,
                                         text_pair=texts_b,
