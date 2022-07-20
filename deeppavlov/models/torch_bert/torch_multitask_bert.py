@@ -187,7 +187,6 @@ class TorchMultiTaskBert(TorchModel):
         self.n_tasks = len(tasks)
         self.train_losses = [[] for task in self.task_names]
         self.pretrained_bert = pretrained_bert
-        self.freeze_embeddings = freeze_embeddings
         self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler
