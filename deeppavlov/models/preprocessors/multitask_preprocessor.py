@@ -32,8 +32,8 @@ class MultiTaskInputSplitter:
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        if all([isinstance(k, str) or isinstance(k, None) for k in inp]):
-            log.warning('You want to split an input that is already string')
+        if all([isinstance(k, str) or k is None for k in inp]):
+            log.warning(f'You want to split an input that is already {type(inp[0])}')
             return inp
 
         extracted = [[] for _ in self.keys_to_extract]

@@ -75,15 +75,15 @@ class Proba2Labels(Component):
                     answer.append([int(el > self.confidence_threshold) for el in data])
                 else:
                     answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0])
-                            for d in data])
+                                   for d in data])
             elif self.max_proba:
                 answer.append([np.argmax(d) for d in data])
             elif self.top_n:
                 answer.append([np.argsort(d)[::-1][:self.top_n] for d in data])
             else:
                 raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
-                                "float `confidence_threshold` for multi-label classification or"
-                                "integer `top_n` for choosing several labels with the highest probabilities")
+                                  "float `confidence_threshold` for multi-label classification or"
+                                  "integer `top_n` for choosing several labels with the highest probabilities")
         if len(answer) == 1:
             answer = answer[0]
         return answer

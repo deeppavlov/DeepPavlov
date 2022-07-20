@@ -42,7 +42,7 @@ class BertForMultiTask(nn.Module):
     """
 
     def __init__(self, tasks_num_classes, task_types,
-                 backbone_model='bert_base_uncased',dropout=None,
+                 backbone_model='bert_base_uncased', dropout=None,
                  max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
@@ -153,7 +153,7 @@ class TorchMultiTaskBert(TorchModel):
         multilabel(default: False): set to true for multilabel classification,
         return_probas(default: False): set true to return prediction probabilities,
         freeze_embeddings(default: False): set true to freeze BERT embeddings
-        dropout(default: None): dropout for the final model layer. 
+        dropout(default: None): dropout for the final model layer.
         If not set, defaults to the parameter hidden_dropout_prob of original model
     """
 
@@ -174,7 +174,7 @@ class TorchMultiTaskBert(TorchModel):
         multilabel: bool = False,
         return_probas: bool = False,
         freeze_embeddings: bool = False,
-        dropout:Optional[float] = None,
+        dropout: Optional[float] = None,
         *args,
         **kwargs,
     ) -> None:
@@ -380,7 +380,9 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(labels))
             element_list = element_list + ['labels']
         for elem in element_list:
-            if elem == 'token_type_ids' and not self.use_token_type_ids and self.task_types[task_id] != 'sequence_labeling':
+            if all([elem == 'token_type_ids',
+                    not self.use_token_type_ids,
+                    self.task_types[task_id] != 'sequence_labeling']):
                 _input[elem] = None
             else:
                 _input[elem] = _input[elem].to(self.device)
@@ -463,7 +465,7 @@ class TorchMultiTaskBert(TorchModel):
             self.printed = True
         if 'token_type_ids' not in _input:
             _input['token_type_ids'] = None
-        loss, logits = self.model(task_id=task_id,use_token_type_ids=self.use_token_type_ids,**_input)
+        loss, logits = self.model(task_id=task_id, use_token_type_ids=self.use_token_type_ids, **_input)
 
         loss = loss / self.gradient_accumulation_steps[task_id]
         loss.backward()
