@@ -709,6 +709,8 @@ class TorchRecordPostprocessor:
         Returns:
             List[RecordNestedExample]: processed but not previously returned examples (may be empty in some cases)
         """
+        if isinstance(y_pred_probas, list):
+            y_pred_probas = np.array(y_pred_probas)
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
             y_pred_probas = y_pred_probas[:, 1]
@@ -827,4 +829,3 @@ class RecordExampleAccumulator:
             int: the expected number of examples for this index
         """
         return int(index.split("-")[-1])
-

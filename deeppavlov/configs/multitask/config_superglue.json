@@ -92,8 +92,8 @@
                 "learning_rate_drop_div": 2.0,
                 "return_probas": true,
                 "max_seq_len":"{SEQ_LEN}",
-                "save_path": "{MODELS_PATH}/enbertsuperglue1",
-                "load_path": "{MODELS_PATH}/enbertsuperglue1",
+                "save_path": "{MODELS_PATH}/en_bertsuperglue1",
+                "load_path": "{MODELS_PATH}/en_bertsuperglue1",
                 "tasks": {
                     "wsc":{"type":"classification","options": 2},
                     "multirc":{"type":"classification","options": 2},
