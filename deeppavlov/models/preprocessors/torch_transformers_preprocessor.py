@@ -62,8 +62,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def tokenize_mc_examples(self,
                              contexts: List[List[str]],
@@ -91,8 +90,7 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
             return_tensors='pt',
         )
 
-        padded_examples = {k: v.view(batch_size, num_choices, -1)
-                           for k, v in padded_examples.items()}
+        padded_examples = {k: v.view(batch_size, num_choices, -1) for k, v in padded_examples.items()}
 
         return padded_examples
 
@@ -136,8 +134,7 @@ class TorchTransformersPreprocessor(Component):
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            vocab_file, do_lower_case=do_lower_case)
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List, texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
                                                                                          Tuple[List[InputFeatures],
@@ -151,6 +148,7 @@ class TorchTransformersPreprocessor(Component):
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
+
         # in case of iterator's strange behaviour
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
@@ -201,8 +199,7 @@ class TorchTransformersEntityRankerPreprocessor(Component):
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         if special_tokens is not None:
             special_tokens_dict = {'additional_special_tokens': special_tokens}
             self.tokenizer.add_special_tokens(special_tokens_dict)
@@ -218,7 +215,6 @@ class TorchTransformersEntityRankerPreprocessor(Component):
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
             batch of indices of special token ids in input ids sequence
         """
-
         # in case of iterator's strange behaviour
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
@@ -286,8 +282,7 @@ class TorchSquadTransformersPreprocessor(Component):
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, question_batch: List[str], context_batch: Optional[List[str]] = None) -> Union[
         List[InputFeatures],
@@ -317,8 +312,7 @@ class TorchSquadTransformersPreprocessor(Component):
             question_subtokens = self.tokenizer.tokenize(question)
             max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
             if 0 < max_chunk_len < len(context_subtokens):
-                number_of_chunks = math.ceil(
-                    len(context_subtokens) / max_chunk_len)
+                number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
                 sentences = nltk.sent_tokenize(context)
                 for chunk in np.array_split(sentences, number_of_chunks):
                     context_list += [' '.join(chunk)]
@@ -341,8 +335,7 @@ class TorchSquadTransformersPreprocessor(Component):
                     if self.add_token_type_ids:
                         input_ids = encoded_dict['input_ids']
                         seq_len = input_ids.size(1)
-                        sep = torch.where(input_ids == self.tokenizer.sep_token_id)[
-                            1][0].item()
+                        sep = torch.where(input_ids == self.tokenizer.sep_token_id)[1][0].item()
                         len_a = min(sep + 1, seq_len)
                         len_b = seq_len - len_a
                         encoded_dict['token_type_ids'] = torch.cat((torch.zeros(1, len_a, dtype=int),
@@ -355,8 +348,7 @@ class TorchSquadTransformersPreprocessor(Component):
                                               token_type_ids=encoded_dict['token_type_ids'],
                                               label=None)
                 input_features_list.append(curr_features)
-                tokens_list.append(self.tokenizer.convert_ids_to_tokens(
-                    encoded_dict['input_ids'][0]))
+                tokens_list.append(self.tokenizer.convert_ids_to_tokens(encoded_dict['input_ids'][0]))
 
             input_features_batch.append(input_features_list)
             tokens_batch.append(tokens_list)
@@ -382,8 +374,7 @@ class RelRankingPreprocessor(Component):
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            vocab_file, do_lower_case=do_lower_case)
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.add_special_tokens = add_special_tokens
         special_tokens_dict = {'additional_special_tokens': add_special_tokens}
         self.tokenizer.add_special_tokens(special_tokens_dict)
@@ -421,19 +412,19 @@ class RelRankingPreprocessor(Component):
                 rels_str = rels_list
             text_input = f"{self.add_special_tokens[0]} {question} {self.add_special_tokens[1]} {rels_str}"
             encoding = self.tokenizer.encode_plus(text=text_input,
-                                                  truncation=True, max_length=max_len,
-                                                  pad_to_max_length=True, return_attention_mask=True)
+                                                  truncation = True, max_length=max_len,
+                                                  pad_to_max_length=True, return_attention_mask = True)
             input_ids_batch.append(encoding["input_ids"])
             attention_mask_batch.append(encoding["attention_mask"])
             if "token_type_ids" in encoding:
                 token_type_ids_batch.append(encoding["token_type_ids"])
             else:
                 token_type_ids_batch.append([0])
-
+            
         input_features = {"input_ids": torch.LongTensor(input_ids_batch),
                           "attention_mask": torch.LongTensor(attention_mask_batch),
                           "token_type_ids": torch.LongTensor(token_type_ids_batch)}
-
+            
         return input_features
 
 
@@ -455,6 +446,7 @@ class TorchTransformersNerPreprocessor(Component):
         provide_subword_tags: output tags for subwords or for words
         subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
             (default="first")
+        return_features: if True, returns answer in features format (default: False)
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -478,14 +470,12 @@ class TorchTransformersNerPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.max_subword_length = max_subword_length
         self.subword_mask_mode = subword_mask_mode
-        self.return_features = return_features
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(
-                vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
 
     def __call__(self,
@@ -524,8 +514,7 @@ class TorchTransformersNerPreprocessor(Component):
                     raise RuntimeError(f"input sequence after bert tokenization"
                                        f" shouldn't exceed {self.max_seq_length} tokens.")
             subword_tokens.append(sw_toks)
-            subword_tok_ids.append(
-                self.tokenizer.convert_tokens_to_ids(sw_toks))
+            subword_tok_ids.append(self.tokenizer.convert_tokens_to_ids(sw_toks))
             startofword_markers.append(sw_marker)
             subword_tags.append(sw_ys)
             assert len(sw_marker) == len(sw_toks) == len(subword_tok_ids[-1]) == len(sw_ys), \
@@ -534,14 +523,13 @@ class TorchTransformersNerPreprocessor(Component):
                 f" for tokens = `{toks}` should match"
 
         subword_tok_ids = zero_pad(subword_tok_ids, dtype=int, padding=0)
-        startofword_markers = zero_pad(
-            startofword_markers, dtype=int, padding=0)
+        startofword_markers = zero_pad(startofword_markers, dtype=int, padding=0)
         attention_mask = Mask()(subword_tokens)
 
         if tags is not None:
             if self.provide_subword_tags:
                 return tokens, subword_tokens, subword_tok_ids, \
-                    attention_mask, startofword_markers, subword_tags
+                       attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
                 for swts, swids, swms, ts in zip(subword_tokens,
@@ -549,12 +537,9 @@ class TorchTransformersNerPreprocessor(Component):
                                                  startofword_markers,
                                                  nonmasked_tags):
                     if (len(swids) != len(swms)) or (len(ts) != sum(swms)):
-                        log.warning(
-                            'Not matching lengths of the tokenization!')
-                        log.warning(
-                            f'Tokens len: {len(swts)}\n Tokens: {swts}')
-                        log.warning(
-                            f'Markers len: {len(swms)}, sum: {sum(swms)}')
+                        log.warning('Not matching lengths of the tokenization!')
+                        log.warning(f'Tokens len: {len(swts)}\n Tokens: {swts}')
+                        log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
             if self.return_features:
@@ -575,6 +560,7 @@ class TorchTransformersNerPreprocessor(Component):
         else:
             return tokens, subword_tokens, subword_tok_ids, \
                 startofword_markers, attention_mask, tokens_offsets_batch
+
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
@@ -602,11 +588,9 @@ class TorchTransformersNerPreprocessor(Component):
                 else:
                     tokens_subword.extend(subwords)
                 if subword_mask_mode == "last":
-                    startofword_markers.extend(
-                        [0] * (len(subwords) - 1) + [token_marker])
+                    startofword_markers.extend([0] * (len(subwords) - 1) + [token_marker])
                 else:
-                    startofword_markers.extend(
-                        [token_marker] + [0] * (len(subwords) - 1))
+                    startofword_markers.extend([token_marker] + [0] * (len(subwords) - 1))
                 tags_subword.extend([tag] + ['X'] * (len(subwords) - 1))
 
         tokens_subword.append('[SEP]')
@@ -727,8 +711,6 @@ class TorchRecordPostprocessor:
         """
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
-            if isinstance(y_pred_probas, list):
-                y_pred_probas = np.array(y_pred_probas)
             y_pred_probas = y_pred_probas[:, 1]
         if self.total_examples != num_examples[0]:
             # start over if num_examples is different
@@ -736,8 +718,7 @@ class TorchRecordPostprocessor:
             self.reset_accumulator()
             self.total_examples = num_examples[0]
         for index, label, probability, entity in zip(idx, y, y_pred_probas, entities):
-            self.record_example_accumulator.add_flat_example(
-                index, label, probability, entity)
+            self.record_example_accumulator.add_flat_example(index, label, probability, entity)
             self.record_example_accumulator.collect_nested_example(index)
             if self.record_example_accumulator.examples_processed >= self.total_examples:
                 # start over if all examples were processed
@@ -767,8 +748,7 @@ class RecordExampleAccumulator:
         self.examples_processed: int = 0
         self.record_counter: Dict[str, int] = defaultdict(lambda: 0)
         self.nested_len: Dict[str, int] = dict()
-        self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [
-        ])
+        self.flat_examples: Dict[str, List[RecordFlatExample]] = defaultdict(lambda: [])
         self.nested_examples: Dict[str, RecordNestedExample] = dict()
         self.collected_indices: Set[str] = set()
         self.returned_indices: Set[str] = set()
@@ -782,8 +762,7 @@ class RecordExampleAccumulator:
             probability: predicted probability
             entity: candidate entity
         """
-        self.flat_examples[index].append(
-            RecordFlatExample(index, label, probability, entity))
+        self.flat_examples[index].append(RecordFlatExample(index, label, probability, entity))
         if index not in self.nested_len:
             self.nested_len[index] = self.get_expected_len(index)
         self.record_counter[index] += 1
@@ -821,8 +800,7 @@ class RecordExampleAccumulator:
             prediction_index = np.argmax(probabilities)
             prediction = entities[prediction_index]
 
-            self.nested_examples[index] = RecordNestedExample(
-                index, prediction, answers)
+            self.nested_examples[index] = RecordNestedExample(index, prediction, answers)
             self.collected_indices.add(index)
 
     def return_examples(self) -> List[RecordNestedExample]:
@@ -832,8 +810,7 @@ class RecordExampleAccumulator:
         Returns:
             List[RecordNestedExample]: zero or more nested examples
         """
-        indices_to_return: Set[str] = self.collected_indices.difference(
-            self.returned_indices)
+        indices_to_return: Set[str] = self.collected_indices.difference(self.returned_indices)
         examples_to_return: List[RecordNestedExample] = []
         for index in indices_to_return:
             examples_to_return.append(self.nested_examples[index])
@@ -850,3 +827,4 @@ class RecordExampleAccumulator:
             int: the expected number of examples for this index
         """
         return int(index.split("-")[-1])
+

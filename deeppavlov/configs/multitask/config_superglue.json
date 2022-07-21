@@ -90,7 +90,6 @@
                 "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
                 "learning_rate_drop_patience": 2,
                 "learning_rate_drop_div": 2.0,
-                "log_model_summary": false,
                 "return_probas": true,
                 "max_seq_len":"{SEQ_LEN}",
                 "save_path": "{MODELS_PATH}/enbertsuperglue1",
