@@ -93,8 +93,8 @@
                 "log_model_summary": false,
                 "return_probas": true,
                 "max_seq_len":"{SEQ_LEN}",
-                "save_path": "{MODELS_PATH}/enbertsuperglue",
-                "load_path": "{MODELS_PATH}/enbertsuperglue",
+                "save_path": "{MODELS_PATH}/enbertsuperglue1",
+                "load_path": "{MODELS_PATH}/enbertsuperglue1",
                 "tasks": {
                     "wsc":{"type":"classification","options": 2},
                     "multirc":{"type":"classification","options": 2},
