@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import Counter, defaultdict, Iterable
+from collections import Counter, defaultdict
+try:
+    from collections.abc import Iterable
+except ImportError:
+    from collections import Iterable
 from itertools import chain
 from logging import getLogger
 from typing import Optional, Tuple, List
