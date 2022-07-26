@@ -108,7 +108,7 @@
   },
   "train": {
     "epochs": 100,
-    "batch_size": 50,
+    "batch_size": 64,
     "metrics": [
       {
         "name": "f1_macro",
@@ -146,18 +146,19 @@
     "show_examples": false,
     "evaluation_targets": [
       "train",
-      "valid"
+      "valid",
+      "test"
     ],
     "tensorboard_log_dir": "{MODEL_PATH}/logs",
     "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
-      "TRANSFORMER": "bert-base-multilingual-uncased",
+      "TRANSFORMER": "distilbert-base-uncased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/topic_bert_base_multilingual_v0"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/topic_distilbert_base_v0"
     },
     "download": [
       {
@@ -165,7 +166,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_bert_base_multilingual_v0.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/topic_distilbert_base_v0.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers"
       }
     ]
