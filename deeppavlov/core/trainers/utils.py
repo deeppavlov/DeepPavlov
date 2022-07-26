@@ -66,10 +66,5 @@ class NumpyArrayEncoder(JSONEncoder):
             return float(obj)
         elif 'NestedExample' in str(obj.__class__):
             return obj.__dict__
-        else: 
-            try:
-                JSONEncoder.default(self, obj)
-            except Exception as e:
-                print(e)
-                breakpoint()
-                raise e
+        else:
+            JSONEncoder.default(self, obj)

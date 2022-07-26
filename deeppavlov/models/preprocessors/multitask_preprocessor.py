@@ -132,7 +132,7 @@ class MultiTaskPipelinePreprocessor(Component):
                     answer.append([])
                 else:
                     if 'choice' in str(self.preprocessors[i]):
-                        if isinstance(texts_a[0], str) and isinstance(texts_b[0],list):
+                        if isinstance(texts_a[0], str) and isinstance(texts_b[0], list):
                             # transform multiple choice to format suitable for preprocessor
                             texts_a = [[text for _ in range(len(texts_b[0]))] for text in texts_a]
                     answer.append(self.preprocessors[i](texts_a, texts_b))

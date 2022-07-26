@@ -137,8 +137,8 @@ class TorchTransformersPreprocessor(Component):
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self, texts_a: List, texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
-                                                                                         Tuple[List[InputFeatures],
-                                                                                               List[List[str]]]]:
+                                                                                    Tuple[List[InputFeatures],
+                                                                                    List[List[str]]]]:
         """Tokenize and create masks.
         texts_a and texts_b are separated by [SEP] token
         Args:
@@ -561,7 +561,6 @@ class TorchTransformersNerPreprocessor(Component):
             return tokens, subword_tokens, subword_tok_ids, \
                 startofword_markers, attention_mask, tokens_offsets_batch
 
-
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
                            tags: List[str],
@@ -710,7 +709,11 @@ class TorchRecordPostprocessor:
             List[RecordNestedExample]: processed but not previously returned examples (may be empty in some cases)
         """
         if isinstance(y_pred_probas, list):
+            y_pred_probas = [k for k in y_pred_probas if k is not None]
+            y = [k for k in y if k is not None]
             y_pred_probas = np.array(y_pred_probas)
+        if not y_pred_probas:
+            return []
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
             y_pred_probas = y_pred_probas[:, 1]
@@ -725,6 +728,7 @@ class TorchRecordPostprocessor:
             if self.record_example_accumulator.examples_processed >= self.total_examples:
                 # start over if all examples were processed
                 self.reset_accumulator()
+
         return self.record_example_accumulator.return_examples()
 
     def reset_accumulator(self):
@@ -817,6 +821,7 @@ class RecordExampleAccumulator:
         for index in indices_to_return:
             examples_to_return.append(self.nested_examples[index])
         self.returned_indices.update(indices_to_return)
+        log.debug(f'Returning {examples_to_return}')
         return examples_to_return
 
     @staticmethod

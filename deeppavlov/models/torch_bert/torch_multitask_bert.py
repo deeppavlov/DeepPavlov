@@ -399,6 +399,7 @@ class TorchMultiTaskBert(TorchModel):
             predicted classes or probabilities of each class
         """
         # IMPROVE ARGS CHECKING AFTER DEBUG
+        log.debug(f'Calling {args}')
         self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
             if len(args[task_id]):
@@ -407,6 +408,7 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 with torch.no_grad():
+                    log.debug(f'Input {_input}')
                     logits = self.model(
                         task_id=task_id,
                         use_token_type_ids=self.use_token_type_ids,
@@ -427,6 +429,7 @@ class TorchMultiTaskBert(TorchModel):
                 if not isinstance(pred, list):
                     pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
+        log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
             return self.validation_predictions[0]
         for i in range(len(self.validation_predictions)):
@@ -447,6 +450,7 @@ class TorchMultiTaskBert(TorchModel):
         Returns:
             dict with loss for each task
         """
+        log.debug(f'Training for {args}')
         error_msg = f'Len of arguments {len(args)} is WRONG. ' \
             f'Correct is {2*self.n_tasks} as n_tasks is {self.n_tasks}'
         assert len(args) == 2*self.n_tasks, error_msg

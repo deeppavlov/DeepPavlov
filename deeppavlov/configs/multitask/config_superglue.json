@@ -21,6 +21,7 @@
         "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
         "iterator_class_name":"huggingface_dataset_iterator",
         "label":"label",
+        "sampling_mode":"plain",
         "use_label_name":false,
         "seed":42,
         "tasks":{
@@ -92,8 +93,8 @@
                 "learning_rate_drop_div": 2.0,
                 "return_probas": true,
                 "max_seq_len":"{SEQ_LEN}",
-                "save_path": "{MODELS_PATH}/en_bertsuperglue1",
-                "load_path": "{MODELS_PATH}/en_bertsuperglue1",
+                "save_path": "{MODELS_PATH}/en____bertsuperglue1",
+                "load_path": "{MODELS_PATH}/en____bertsuperglue1",
                 "tasks": {
                     "wsc":{"type":"classification","options": 2},
                     "multirc":{"type":"classification","options": 2},
@@ -177,6 +178,7 @@
             "y_wsc_pred",
             "y_multirc_pred",
             "y_cb_pred",
+            "y_record_pred",
             "record_examples",
             "y_boolq_pred",
             "y_copa_pred",
@@ -286,11 +288,9 @@
                 ]
             }
         ],
-        "validation_patience": 7,
+        "validation_patience": 2,
         "val_every_n_epochs": 1,
         "log_every_n_epochs": 1,
-        "val_every_n_batches":10000,
-        "max_test_batches":300,
         "show_examples": true,
         "evaluation_targets": [
             "valid", "train"
@@ -300,8 +300,8 @@
     "metadata": {
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
-            "MODELS_PATH": "{ROOT_PATH}/.deeppavlov/models_en",
-            "NUM_TRAIN_EPOCHS": 25,
+            "MODELS_PATH": "{ROOT_PATH}/models_en",
+            "NUM_TRAIN_EPOCHS": 5,
             "SEQ_LEN": 320,
             "GRADIENT_ACC_STEPS": 1,
             "BATCH_SIZE": 8,
