@@ -712,7 +712,7 @@ class TorchRecordPostprocessor:
             y_pred_probas = [k for k in y_pred_probas if k is not None]
             y = [k for k in y if k is not None]
             y_pred_probas = np.array(y_pred_probas)
-        if not y_pred_probas:
+        if y == []:
             return []
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
