@@ -129,7 +129,7 @@ def simple_download(url: str, destination: Union[Path, str], headers: Optional[d
                             downloaded += len(chunk)
                             pbar.update(len(chunk))
                             f.write(chunk)
-                except ConnectionResetError:
+                except requests.exceptions.ChunkedEncodingError:
                     if downloaded == 0:
                         r = requests.get(url, stream=True, headers=headers)
 
