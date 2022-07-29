@@ -109,12 +109,11 @@ def simple_download(url: str, destination: Union[Path, str], headers: Optional[d
         temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
 
     with temporary.open('ab') as f:
-        done = False
         downloaded = f.tell()
         if downloaded != 0:
             log.warning(f'Found a partial download {temporary}')
         with tqdm(initial=downloaded, total=total_length, unit='B', unit_scale=True) as pbar:
-            while not done:
+            while True:
                 if downloaded != 0:
                     log.warning(f'Download stopped abruptly, trying to resume from {downloaded} '
                                 f'to reach {total_length}')
@@ -122,17 +121,22 @@ def simple_download(url: str, destination: Union[Path, str], headers: Optional[d
                     r = requests.get(url, headers=headers, stream=True)
                     if 'content-length' not in r.headers or \
                             total_length - downloaded != int(r.headers['content-length']):
-                        raise RuntimeError(f'It looks like the server does not support resuming '
-                                           f'downloads.')
-                for chunk in r.iter_content(chunk_size=chunk_size):
-                    if chunk:  # filter out keep-alive new chunks
-                        downloaded += len(chunk)
-                        pbar.update(len(chunk))
-                        f.write(chunk)
+                        raise RuntimeError('It looks like the server does not support resuming downloads.')
+
+                try:
+                    for chunk in r.iter_content(chunk_size=chunk_size):
+                        if chunk:  # filter out keep-alive new chunks
+                            downloaded += len(chunk)
+                            pbar.update(len(chunk))
+                            f.write(chunk)
+                except ConnectionResetError:
+                    if downloaded == 0:
+                        r = requests.get(url, stream=True, headers=headers)
+
                 if downloaded >= total_length:
                     # Note that total_length is 0 if the server didn't return the content length,
                     # in this case we perform just one iteration and assume that we are done.
-                    done = True
+                    break
 
     temporary.rename(destination)
 
