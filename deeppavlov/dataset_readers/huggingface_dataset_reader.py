@@ -142,6 +142,15 @@ class HuggingFaceDatasetReader(DatasetReader):
                 else:
                     tmp_dataset.append(d.remove_columns(["verb", "negation"]))
             dataset = tmp_dataset
+
+        elif path == "go_emotions":
+            dataset = [
+                dataset_split.filter(lambda example: len(example["labels"]) == 1) for dataset_split in dataset
+            ]
+
+            dataset = [
+                dataset_split.map(preprocess_go_emotions, batched=True) for dataset_split in dataset
+            ]
         elif path == "russian_super_glue" and name == "danetqa_mixed" and "train" in list(split_mapping.values()):
             tmp_dataset = []
             for d, split in zip(dataset, split_mapping.values()):
@@ -158,6 +167,16 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = tmp_dataset
         return dict(zip(split_mapping.keys(), dataset))
 
+
+def preprocess_go_emotions(examples: Dataset):
+
+    text = [a for idx, a in enumerate(examples['text'])]
+    labels = [str(a) for a in examples['labels']]
+    ids = [a for idx, a in enumerate(examples['id'])]
+
+    return {"text": text,
+            "labels": labels,
+             "id": ids}
 
 def interleave_splits(splits: List[str], percentage: int = 50) -> List[str]:
     """Adds a portion of `dev` (or, `test` if there's only `train` and `test`) set to the `train` set.
