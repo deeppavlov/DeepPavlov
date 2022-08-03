@@ -170,8 +170,10 @@ class HuggingFaceDatasetReader(DatasetReader):
 
 def preprocess_go_emotions(examples: Dataset):
 
+    emotions = ["admiration","amusement","anger","annoyance","approval","caring","confusion","curiosity","desire","disappointment","disapproval","disgust","embarrassment","excitement","fear","gratitude","grief","joy","love","nervousness","optimism","pride","realization","relief","remorse","sadness","surprise","neutral"]
+
     text = [a for idx, a in enumerate(examples['text'])]
-    labels = [str(a) for a in examples['labels']]
+    labels = [emotions[a[0]] for a in examples['labels']]
     ids = [a for idx, a in enumerate(examples['id'])]
 
     return {"text": text,
