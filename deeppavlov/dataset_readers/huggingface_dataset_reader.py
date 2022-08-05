@@ -151,6 +151,17 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = [
                 dataset_split.map(preprocess_go_emotions, batched=True) for dataset_split in dataset
             ]
+
+            dataset = [dataset_split.map(change_to_ekman, batched=True) for dataset_split in dataset]
+            dataset = [dataset_split.filter(lambda example: example["labels"] not in ['neutral', 'disgust']) for
+                       dataset_split in dataset]
+
+            split_mapping2 = {'train': 'train', 'test': 'test', 'valid': None}
+            split_mapping2 = {el: split_mapping2[el] for el in split_mapping2 if split_mapping2[el]}
+            cedr = load_dataset(path='cedr', name='main', split=list(split_mapping2.values()))
+            cedr = [dataset_split.filter(lambda example: len(example["labels"]) == 1) for dataset_split in cedr]
+            cedr = [dataset_split.map(preprocess_cedr, batched=True) for dataset_split in cedr]
+
         elif path == "russian_super_glue" and name == "danetqa_mixed" and "train" in list(split_mapping.values()):
             tmp_dataset = []
             for d, split in zip(dataset, split_mapping.values()):
@@ -167,6 +178,37 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = tmp_dataset
         return dict(zip(split_mapping.keys(), dataset))
 
+ekman_mapping = {'anger': 'anger', 'annoyance': 'anger', 'disapproval': 'anger',
+                'disgust': 'disgust',
+                'fear': 'fear', 'nervousness': 'fear',
+                'sadness': 'sadness', 'disappointment': 'sadness', 'embarrassment': 'sadness',
+                'grief': 'sadness', 'remorse': 'sadness',
+                'confusion': 'surprise', 'curiosity': 'surprise', 'realization': 'surprise', 'surprise': 'surprise',
+                'neutral': 'neutral',
+                "admiration": 'joy', "amusement": 'joy', "approval": 'joy', "caring": 'joy', "desire": 'joy',
+                "excitement": 'joy', "gratitude": 'joy', "joy": 'joy', "love": 'joy', "optimism": 'joy',
+                "pride": 'joy', "relief": 'joy'}
+
+
+def preprocess_cedr(examples):
+    cedr_emotions = ["joy", "sadness", "surprise", "fear", "anger"]
+
+    text = [a for idx, a in enumerate(examples['text'])]
+    labels = [cedr_emotions[a[0]] for a in examples['labels']]
+    sources = [a for idx, a in enumerate(examples['source'])]
+
+    return {"text": text,
+            "labels": labels,
+            "source": sources}
+
+
+def change_to_ekman(examples):
+    labels = [ekman_mapping[a] for a in examples['labels']]
+
+    return {"text": examples['text'],
+            "labels": labels,
+            "id": examples['id']}
+
 
 def preprocess_go_emotions(examples: Dataset):
 
@@ -179,6 +221,7 @@ def preprocess_go_emotions(examples: Dataset):
     return {"text": text,
             "labels": labels,
              "id": ids}
+
 
 def interleave_splits(splits: List[str], percentage: int = 50) -> List[str]:
     """Adds a portion of `dev` (or, `test` if there's only `train` and `test`) set to the `train` set.
