@@ -22,7 +22,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('classification_report')
-def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
+def classification_report(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
                   y_pred: Union[List[List[float]], List[List[int]], np.ndarray],
                   target_names: Union[List[List[str]], List[List[int]], np.ndarray]) -> float:
     try:
