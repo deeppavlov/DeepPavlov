@@ -28,6 +28,6 @@ def classification_report(y_true: Union[List[List[float]], List[List[int]], np.n
     try:
         return sklearn.metrics.classification_report(np.squeeze(np.array(y_true)),
                                                      np.squeeze(np.array(y_pred)),
-                                                     np.squeeze(np.array(target_names)))
+                                                     target_names=np.squeeze(np.array(target_names)))
     except ValueError:
         return 0.
