@@ -73,6 +73,13 @@ class HuggingFaceDatasetReader(DatasetReader):
         if path == "russian_super_glue" and "_mixed" in name:
             name = name.replace("_mixed", "")
 
+        elif path == "cedr":
+            split_mapping = {'train': 'train', 'test': 'test', 'valid': None}
+            split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
+
+        elif path == "go_emotion+cedr":
+            name = "go_emotion"
+
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
 
         if (path == "super_glue" and name == "copa") or (path == "russian_super_glue" and name == "parus"):
@@ -156,11 +163,41 @@ class HuggingFaceDatasetReader(DatasetReader):
             dataset = [dataset_split.filter(lambda example: example["labels"] not in ['neutral', 'disgust']) for
                        dataset_split in dataset]
 
+        elif path == "cedr":
+            dataset = [dataset_split.filter(lambda example: len(example["labels"]) == 1) for dataset_split in dataset]
+            dataset = [dataset_split.map(preprocess_cedr, batched=True) for dataset_split in dataset]
+
+        elif path == "go_emotions+cedr":
+            dataset = [
+                dataset_split.filter(lambda example: len(example["labels"]) == 1) for dataset_split in dataset
+            ]
+
+            dataset = [
+                dataset_split.map(preprocess_go_emotions, batched=True) for dataset_split in dataset
+            ]
+
+            dataset = [dataset_split.map(change_to_ekman, batched=True) for dataset_split in dataset]
+            dataset = [dataset_split.filter(lambda example: example["labels"] not in ['neutral', 'disgust']) for
+                       dataset_split in dataset]
+
             split_mapping2 = {'train': 'train', 'test': 'test', 'valid': None}
             split_mapping2 = {el: split_mapping2[el] for el in split_mapping2 if split_mapping2[el]}
             cedr = load_dataset(path='cedr', name='main', split=list(split_mapping2.values()))
             cedr = [dataset_split.filter(lambda example: len(example["labels"]) == 1) for dataset_split in cedr]
             cedr = [dataset_split.map(preprocess_cedr, batched=True) for dataset_split in cedr]
+            tmp_dataset = []
+            for d, split in zip(dataset, split_mapping.values()):
+                if split == "train":
+                    to_mix = cedr[0]
+                    combined = concatenate_datasets([to_mix, d])
+                    tmp_dataset.append(combined)
+                elif split == "test":
+                    to_mix = cedr[1]
+                    combined = concatenate_datasets([to_mix, d])
+                    tmp_dataset.append(combined)
+                else:
+                    tmp_dataset.append(d)
+            dataset = tmp_dataset
 
         elif path == "russian_super_glue" and name == "danetqa_mixed" and "train" in list(split_mapping.values()):
             tmp_dataset = []
