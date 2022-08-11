@@ -73,9 +73,9 @@ class HuggingFaceDatasetReader(DatasetReader):
         if path == "russian_super_glue" and "_mixed" in name:
             name = name.replace("_mixed", "")
 
-        elif path == "cedr":
-            split_mapping = {'train': 'train', 'test': 'test', 'valid': None}
-            split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
+  #      elif path == "cedr":
+#            split_mapping = {'train': 'train', 'test': 'test', 'valid': None}
+ #           split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
 
         elif path == "go_emotion+cedr":
             name = "go_emotion"
