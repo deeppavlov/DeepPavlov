@@ -77,10 +77,11 @@ class HuggingFaceDatasetReader(DatasetReader):
 #            split_mapping = {'train': 'train', 'test': 'test', 'valid': None}
  #           split_mapping = {el: split_mapping[el] for el in split_mapping if split_mapping[el]}
 
-        elif path == "go_emotion+cedr":
-            name = "go_emotion"
-
-        dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
+        elif path == "go_emotions+cedr":
+            dataset = load_dataset(path="go_emotions", name=name, split=list(split_mapping.values()), **kwargs)
+        
+        else:
+            dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
 
         if (path == "super_glue" and name == "copa") or (path == "russian_super_glue" and name == "parus"):
             lang = "en" if name == "copa" else "ru"
@@ -190,13 +191,15 @@ class HuggingFaceDatasetReader(DatasetReader):
                 if split == "train":
                     to_mix = cedr[0]
                     combined = concatenate_datasets([to_mix, d])
-                    tmp_dataset.append(combined)
+                    tmp_dataset.append(combined.shuffle(seed=42))
                 elif split == "test":
                     to_mix = cedr[1]
                     combined = concatenate_datasets([to_mix, d])
-                    tmp_dataset.append(combined)
+                    tmp_dataset.append(combined.shuffle(seed=42))
                 else:
-                    tmp_dataset.append(d)
+                    to_mix = cedr[1]
+                    combined = concatenate_datasets([to_mix, d])
+                    tmp_dataset.append(combined.shuffle(seed=42))
             dataset = tmp_dataset
 
         elif path == "russian_super_glue" and name == "danetqa_mixed" and "train" in list(split_mapping.values()):
