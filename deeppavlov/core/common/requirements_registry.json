@@ -86,6 +86,11 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
+  "torch_generative_qa_fid": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+    "{DEEPPAVLOV_PATH}/requirements/sacrebleu.txt"
+  ],
   "torch_record_postprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
@@ -110,6 +115,10 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_entity_ranker_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_fid_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],

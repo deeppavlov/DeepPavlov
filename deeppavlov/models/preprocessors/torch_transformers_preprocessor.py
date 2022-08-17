@@ -421,6 +421,68 @@ class RelRankingPreprocessor(Component):
         return input_features
 
 
+@register('torch_transformers_fid_preprocessor')
+class TorchTransformersFiDPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 512,
+                 return_tokens: bool = False,
+                 answer_maxlength: int = 20,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+        self.return_tokens = return_tokens
+        self.answer_maxlength = answer_maxlength
+
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        
+    
+    def encode_question_passages(self, passages_batch: List[List[str]]):
+        passage_ids, passage_masks = [], []
+        for text_passages in passages_batch:
+            passages_encoding = self.tokenizer(
+                text_passages,
+                max_length=self.max_seq_length if self.max_seq_length > 0 else None,
+                pad_to_max_length=True,
+                return_tensors='pt',
+                truncation=True if self.max_seq_length > 0 else False,
+            )
+            passage_ids.append(passages_encoding['input_ids'][None])
+            passage_masks.append(passages_encoding['attention_mask'][None])
+
+        passage_ids = torch.cat(passage_ids, dim=0)
+        passage_masks = torch.cat(passage_masks, dim=0)
+        return passage_ids, passage_masks
+    
+    def encode_targets(self, targets_batch: List[str] = None):
+        target_ids, target_masks = None, None
+        if targets_batch is not None:
+            target_encoding = self.tokenizer(
+                targets_batch,
+                max_length=self.answer_maxlength if self.answer_maxlength > 0 else None,
+                pad_to_max_length=True,
+                return_tensors='pt',
+                truncation=True if self.answer_maxlength > 0 else False,
+            )
+            target_ids = target_encoding["input_ids"]
+            target_mask = target_encoding["attention_mask"].bool()
+        return target_ids, target_masks
+
+    def __call__(self, questions_batch: List[str], passages_batch: List[List[str]], targets_batch: List[str] = None):       
+        prepare_data = lambda q, c: f"question: {q}, context: {c}"
+        question_passages_batch = [[prepare_data(question, passage) for passage in text_passages] 
+                                    for (question, text_passages) in zip(questions_batch, passages_batch)]
+
+        question_passages_ids, question_passage_masks = self.encode_question_passages(question_passages_batch)
+
+        target_ids, target_masks = self.encode_targets(targets_batch)
+
+        return question_passages_ids, question_passage_masks, target_ids
+
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):
     """
