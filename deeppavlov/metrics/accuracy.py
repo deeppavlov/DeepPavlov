@@ -22,7 +22,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 
 @register_metric('accuracy')
-def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
+def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray], exclude_oos: bool = False) -> float:
     """
     Calculate accuracy in terms of absolute coincidence
 
@@ -33,6 +33,15 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     Returns:
         fraction of absolutely coincidental samples
     """
+    if exclude_oos:
+        y_true = np.array(y_true)
+        y_predicted = np.array(y_predicted)
+
+        ind_mask = np.where(y_true == 'oos')
+        
+        y_true = np.delete(y_true, ind_mask, 0)
+        y_predicted = np.delete(y_predicted, ind_mask, 0)
+
     examples_len = len(y_true)
     # if y1 and y2 are both arrays, == can be erroneously interpreted as element-wise equality
 
