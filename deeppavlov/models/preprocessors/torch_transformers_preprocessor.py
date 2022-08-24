@@ -441,7 +441,7 @@ class TorchTransformersFiDPreprocessor(Component):
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         
     
-    def encode_question_passages(self, passages_batch: List[List[str]]):
+    def encode_passages(self, passages_batch: List[List[str]]):
         passage_ids, passage_masks = [], []
         for text_passages in passages_batch:
             passages_encoding = self.tokenizer(
@@ -472,16 +472,19 @@ class TorchTransformersFiDPreprocessor(Component):
             target_mask = target_encoding["attention_mask"].bool()
         return target_ids, target_masks
 
-    def __call__(self, questions_batch: List[str], passages_batch: List[List[str]], targets_batch: List[str] = None):       
-        prepare_data = lambda q, c: f"question: {q}, context: {c}"
-        question_passages_batch = [[prepare_data(question, passage) for passage in text_passages] 
-                                    for (question, text_passages) in zip(questions_batch, passages_batch)]
+    def __call__(self,
+                 questions_batch: List[str],
+                 contexts_batch: List[List[str]],
+                 targets_batch: List[str] = None):
+        prepare_data = lambda q, c,: f"question: {q} context: {c}"
+        passages_batch = [[prepare_data(question, context) for context in contexts] 
+                            for (question, contexts) in zip(questions_batch, contexts_batch)]
 
-        question_passages_ids, question_passage_masks = self.encode_question_passages(question_passages_batch)
+        passage_ids, passage_masks = self.encode_passages(passages_batch)
 
         target_ids, target_masks = self.encode_targets(targets_batch)
 
-        return question_passages_ids, question_passage_masks, target_ids
+        return passage_ids, passage_masks, target_ids
 
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):

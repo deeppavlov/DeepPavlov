@@ -45,8 +45,8 @@ class TorchFiD(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
-                 generate_max_length: int = 20,
-                 **kwargs): 
+                 generate_max_length: int = 50,
+                 **kwargs) -> None:        
 
         if not optimizer_parameters:
             optimizer_parameters = {"lr": 0.01,
@@ -71,10 +71,7 @@ class TorchFiD(TorchModel):
                          min_learning_rate=min_learning_rate,
                          **kwargs)
 
-    def train_on_batch(self,
-                       input_ids_batch: List[List[float]],
-                       attention_mask_batch: List[List[float]],
-                       target_ids_batch: List[List[float]]) -> Dict:
+    def train_on_batch(self, input_ids_batch, attention_mask_batch, target_ids_batch) -> Dict:
         input_ids_batch = torch.LongTensor(input_ids_batch).to(self.device)
         attention_mask_batch = torch.LongTensor(attention_mask_batch).to(self.device)
         target_ids_batch = torch.LongTensor(target_ids_batch).to(self.device)
@@ -101,14 +98,14 @@ class TorchFiD(TorchModel):
         self.optimizer.step()
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
-
+        
         return {'loss': loss.item()}
 
     @property
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
-    def __call__(self, input_ids_batch: List[List[float]], attention_mask_batch: List[List[float]]) -> List[str]:
+    def __call__(self, input_ids_batch, attention_mask_batch):
         input_ids_batch = torch.LongTensor(input_ids_batch).to(self.device)
         attention_mask_batch = torch.LongTensor(attention_mask_batch).to(self.device)
         input_ = {
@@ -120,11 +117,11 @@ class TorchFiD(TorchModel):
         with torch.no_grad():
             answer_ids_batch = model.generate(max_length=self.generate_max_length, **input_)
 
-        answers_batch = self.tokenizer.batch_decode(answer_ids_batch, skip_special_tokens=True)        
+        answers_batch = self.tokenizer.batch_decode(answer_ids_batch, skip_special_tokens=True)
         return answers_batch
     
     @overrides
-    def save(self, fname: Optional[str] = None):
+    def save(self, fname: Optional[str] = None, *args, **kwargs):
         if fname is None:
             fname = self.save_path
         os.makedirs(fname, exist_ok=True)
@@ -136,7 +133,7 @@ class TorchFiD(TorchModel):
         model_to_save.save_pretrained(model_dir_path)
         
         # Save optimizer and scheduler
-        optimizer_path = os.path.join(fname, "optimizer.pth.tar")
+        optimizer_path = str(Path(fname, "optimizer.pth.tar").resolve())
         optimizer_state = {
             "optimizer": self.optimizer.state_dict()
         }
@@ -154,47 +151,53 @@ class TorchFiD(TorchModel):
         if self.opt.get("criterion", None):
             self.criterion = getattr(torch.nn, self.opt.get("criterion", None))()
 
-    def init_from_scratch(self) -> None:
+    def init_model_from_scratch(self) -> None:
         logger.info(f"From pretrained {self.pretrained_transformer}.")
         self.tokenizer = T5Tokenizer.from_pretrained(self.pretrained_transformer, return_dict=False)
         t5 = T5ForConditionalGeneration.from_pretrained(self.pretrained_transformer)
 
         self.model = FiDT5(t5.config)
         self.model.load_t5(t5.state_dict())
-        self.model.to(self.device)
-
-        self.init_optimizer_from_scratch()
+        self.model.to(self.device) # TODO: model = self.model.to(self.device) ?
     
 
-    def load_from_checkpoint(self, model_dir_path: str, optimizer_path: str) -> None:
+    def load_model_from_checkpoint(self, model_dir_path: str):
         logger.info(f"Loading model from {model_dir_path}.")
         self.model = FiDT5.from_pretrained(model_dir_path)
         self.model = self.model.to(self.device)
 
+    def load_optimizer_from_checkpoint(self, optimizer_path: str):
         logger.info(f"Loading optimizer from {optimizer_path}.")
         self.init_optimizer_from_scratch()
         optimizer_state = torch.load(optimizer_path, map_location=self.device)
         self.optimizer.load_state_dict(optimizer_state["optimizer"])
 
     @overrides
-    def load(self, fname: Optional[str] = None) -> None:
+    def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         if fname is not None:
             self.load_path = fname
 
-        # Loading weights from checkpoint
         if self.load_path is not None:
             logger.info(f"Load path {self.load_path} is given.")
-            model_dir_path = self.load_path
-            optimizer_path = os.path.join(self.load_path, "optimizer.pth.tar")
+            model_config_path = Path(self.load_path) / "config.json"
+            model_weights_path = Path(self.load_path) / "pytorch_model.bin"
+            optimizer_path = Path(self.load_path) / "optimizer.pth.tar"
 
-            if Path(model_dir_path).exists() and Path(optimizer_path).exists():
-                self.load_from_checkpoint(model_dir_path, optimizer_path)
+            if model_config_path.exists() and model_weights_path.exists():
+                self.load_model_from_checkpoint(self.load_path)
             else:
-                self.init_from_scratch()
-                logger.info(f"Init from scratch. Model_path: {model_dir_path} or optimizer_path: {optimizer_path} does not exist.")
+                self.init_model_from_scratch()
+                logger.info(f"Init model from scratch: {model_config_path} or {model_weights_path} does not exist.")
+        
+            if optimizer_path.exists():
+                self.load_optimizer_from_checkpoint(str(optimizer_path.resolve()))
+            else:
+                self.init_optimizer_from_scratch()
+                logger.info(f"Init optimizer from scratch: {optimizer_path} does not exist.")
         else:
-            self.init_from_scratch()
-            logger.info(f"Init from scratch. Load path {self.load_path} does not exist.")
+            self.init_model_from_scratch()
+            self.init_optimizer_from_scratch()
+            logger.info(f"Init model and optimizer from scratch: \"load_path\" and \"fname\" are not given.")
 
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
