@@ -25,7 +25,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 
 
-from deeppavlov.models.kbqa.fusion_in_decoder import FiDT5
+from deeppavlov.models.torch_bert.fusion_in_decoder import FiDT5
 
 
 logger = getLogger(__name__)
@@ -158,7 +158,7 @@ class TorchFiD(TorchModel):
 
         self.model = FiDT5(t5.config)
         self.model.load_t5(t5.state_dict())
-        self.model.to(self.device) # TODO: model = self.model.to(self.device) ?
+        self.model.to(self.device)
     
 
     def load_model_from_checkpoint(self, model_dir_path: str):

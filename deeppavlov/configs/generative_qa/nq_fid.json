@@ -1,8 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "json_reader",
-    "valid_size": 1,
-    "data_path": "{DATASET_PATH}/natural_questions_dataset.json"
+    "data_path": "/archive/savkin/parsed_datasets/natural_questions/fid/nq_dataset.json"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator",
@@ -10,7 +9,7 @@
     "shuffle": true
   },
   "chainer": {
-    "in": ["question", "contexts"],
+    "in": ["question", "contexts", "titles"],
     "in_y": ["target", "gold_answers"],
     "pipe": [
       {
@@ -57,7 +56,7 @@
     ],
     "log_every_n_batches": 100,
     "val_every_n_batches": 600,
-    "batch_size": 1,
+    "batch_size": 8,
     "validation_patience": 50,
     "metrics": [
       {
