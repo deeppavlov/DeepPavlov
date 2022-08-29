@@ -234,27 +234,23 @@ the floating point labels are converted to integer labels according to the inter
 corresponding to `very negative`, `negative`, `neutral`, `positive`, `very positive` classes.
 
 
-+------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-| Task             | Dataset            | Lang | Model                                                                                           | Metric      | Valid        | Test         | Downloads |
-+==================+====================+======+=================================================================================================+=============+==============+==============+===========+
-| Insult detection | `Insults`_         | En   | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   | ROC-AUC     | 0.9327       | 0.8602       |  1.1 Gb   |
-+------------------+--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-| Sentiment        |`SST`_              |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6293       | 0.6626       |  1.1 Gb   |
-+------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-| Sentiment        |`Twitter mokoron`_  | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               | F1-macro    | 0.9965       | 0.9961       |  6.2 Gb   |
-+                  +--------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-|                  |`RuSentiment`_      |      | :config:`Multilingual BERT <classifiers/rusentiment_bert.json>`                                 | F1-weighted | 0.6787       | 0.7005       |  1.3 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
-|                  |                    |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.739        | 0.7724       |  1.5 Gb   |
-+------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-| Topics           | DeepPavlov Topics  | En   | :config:`BERT base uncased  <classifiers/topics_bert_base_uncased.json>`                        | F1-weighted | 0.881/0.835  | 0.883/0.836  |  1.1 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
-|                  |                    |      | :config:`Distil BERT base uncased <classifiers/topics_distilbert_base_uncased.json>`            | / F1-macro  | 0.877/0.830  | 0.878/0.831  |  0.7 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
-|                  |                    |      | :config:`Conversational BERT cased <classifiers/topics_bert_base_cased_conversational.json>`    |             | 0.885/0.843  | 0.886/0.843  |  1.1 Gb   |
-+                  +                    +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
-|                  |                    |      | :config:`Multilingual BERT uncased <classifiers/topics_bert_base_multilingual_uncased.json>`    |             | 0.874/0.826  | 0.876/0.829  |  1.1 Gb   |
-+------------------+--------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
++------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
+| Task             | Dataset              | Lang | Model                                                                                           | Metric      | Valid        | Test         | Downloads |
++==================+======================+======+=================================================================================================+=============+==============+==============+===========+
+| Insult detection | `Insults`_           | En   | :config:`English BERT <classifiers/insults_kaggle_bert.json>`                                   | ROC-AUC     | 0.9327       | 0.8602       |  1.1 Gb   |
++------------------+----------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
+| Sentiment        |`SST`_                |      | :config:`5-classes SST on conversational BERT <classifiers/sentiment_sst_conv_bert.json>`       | Accuracy    | 0.6293       | 0.6626       |  1.1 Gb   |
++------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
+| Sentiment        |`Twitter mokoron`_    | Ru   | :config:`RuWiki+Lenta emb w/o preprocessing <classifiers/sentiment_twitter.json>`               | F1-macro    | 0.9965       | 0.9961       |  6.2 Gb   |
++                  +----------------------+      +-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
+|                  |`RuSentiment`_        |      | :config:`Multilingual BERT <classifiers/rusentiment_bert.json>`                                 | F1-weighted | 0.6787       | 0.7005       |  1.3 Gb   |
++                  +                      +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
+|                  |                      |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.739        | 0.7724       |  1.5 Gb   |
++------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
+| Topics           | `DeepPavlov Topics`_ | En   | :config:`Distil BERT base uncased <classifiers/topics_distilbert_base_uncased.json>`            | F1-weighted | 0.877/0.830  | 0.878/0.831  |  0.7 Gb   |
++                  +                      +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
+|                  |                      |      | :config:`Multilingual BERT uncased <classifiers/topics_bert_base_multilingual_uncased.json>`    | / F1-macro  | 0.874/0.826  | 0.876/0.829  |  1.1 Gb   |
++------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
 .. _`Insults`: https://www.kaggle.com/c/detecting-insults-in-social-commentary
@@ -265,6 +261,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`SST`: https://nlp.stanford.edu/sentiment/index.html
+.. _`DeepPavlov Topics`: A new dataset for topic classification from DeepPavlov in English, contains 33 classes. Paper will be available soon. Available for downloading http://files.deeppavlov.ai/datasets/dp_topics_downsampled_dataset_v0.tar.gz
 
 GLUE Benchmark
 --------------
