@@ -31,7 +31,6 @@
   "r@5": "deeppavlov.metrics.recall_at_k:r_at_5",
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
   "roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score",
-  "sacrebleu": "deeppavlov.metrics.bleu:sacrebleu",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
   "spearman_correlation": "deeppavlov.metrics.correlation:spearman_correlation",

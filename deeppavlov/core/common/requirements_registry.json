@@ -88,8 +88,7 @@
   ],
   "torch_generative_qa_fid": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers_3.0.2.txt",
-    "{DEEPPAVLOV_PATH}/requirements/sacrebleu.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers_3.0.2.txt"
   ],
   "torch_record_postprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
