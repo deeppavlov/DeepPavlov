@@ -115,16 +115,17 @@ class TorchModel(NNModel):
         """
         if callable(model_func):
             self.model = model_func(**self.opt).to(self.device)
-            self.optimizer = getattr(torch.optim, self.optimizer_name)(
-                self.model.parameters(), **self.optimizer_parameters)
-            if self.lr_scheduler_name:
-                self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                    self.optimizer, **self.lr_scheduler_parameters)
-
+            self.init_optimizer_and_scheduler()
             if self.opt.get("criterion", None):
                 self.criterion = getattr(torch.nn, self.opt.get("criterion", None))()
         else:
             raise AttributeError("Model is not defined.")
+
+    def init_optimizer_and_scheduler(self):
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(self.model.parameters(), **self.optimizer_parameters)
+        if self.lr_scheduler_name is not None:
+            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
+                self.optimizer, **self.lr_scheduler_parameters)
 
     @property
     def is_data_parallel(self) -> bool:

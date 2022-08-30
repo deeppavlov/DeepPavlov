@@ -294,11 +294,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         if self.use_crf:
             self.crf = CRF(self.n_classes).to(self.device)
 
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
+        self.init_optimizer_and_scheduler()
 
         if self.load_path:
             super().load()
