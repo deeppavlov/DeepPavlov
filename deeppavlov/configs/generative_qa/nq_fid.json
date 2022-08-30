@@ -1,7 +1,7 @@
 {
   "dataset_reader": {
     "class_name": "json_reader",
-    "data_path": "/archive/savkin/parsed_datasets/natural_questions/fid/nq_dataset.json"
+    "data_path": "{DATASET_PATH}/natural_questions_dataset.json"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator",
@@ -38,7 +38,7 @@
           "betas": [0.9, 0.999],
           "eps": 1e-08
         },
-        "learning_rate_drop_patience": 8,
+        "learning_rate_drop_patience": 24,
         "learning_rate_drop_div": 2,
         "min_learning_rate": 1e-5,
         "generate_max_length" : 50,
@@ -56,8 +56,8 @@
     ],
     "log_every_n_batches": 100,
     "val_every_n_batches": 600,
-    "batch_size": 8,
-    "validation_patience": 50,
+    "batch_size": 1,
+    "validation_patience": 100,
     "metrics": [
       {
         "name": "squad_v2_em",
