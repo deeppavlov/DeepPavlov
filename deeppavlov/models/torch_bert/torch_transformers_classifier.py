@@ -190,11 +190,6 @@ class TorchTransformersClassifierModel(TorchModel):
             accepted_keys = self.model.forward.__code__.co_varnames
         return accepted_keys
 
-    # TODO move to the super class
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
     # TODO this method requires massive refactoring
     @overrides
     def load(self, fname=None):
