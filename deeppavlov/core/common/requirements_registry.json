@@ -88,7 +88,7 @@
   ],
   "torch_generative_qa_fid": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers_3.0.2.txt",
     "{DEEPPAVLOV_PATH}/requirements/sacrebleu.txt"
   ],
   "torch_record_postprocessor": [
@@ -118,9 +118,13 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
-  "torch_transformers_fid_preprocessor": [
+  "fid_input_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+    "{DEEPPAVLOV_PATH}/requirements/transformers_3.0.2.txt"
+  ],
+  "fid_target_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers_3.0.2.txt"
   ],
   "torch_transformers_multiplechoice": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
