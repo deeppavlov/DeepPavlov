@@ -444,7 +444,7 @@ class TestQuickStart(object):
             response_code = get_response.status_code
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
-            model_args_names = get_response.json()
+            model_args_names = get_response.json()['in']
             post_payload = dict()
             for arg_name in model_args_names:
                 arg_value = ' '.join(['qwerty'] * 10)
