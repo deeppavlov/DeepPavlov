@@ -53,6 +53,7 @@ class BasicClassificationDatasetReader(DatasetReader):
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
             lines (boolean): read the file as a json object per line. Default: ``False``
+            label_type(str): expected type of labels. Default: ``"str"``
 
         Returns:
             dictionary with types from data_types.
