@@ -14,6 +14,8 @@ output of the BERT encoder. If multi-task BERT has :math:`T` heads, one training
 
 - :math:`T` gradient steps, one gradient step for each task.
 
+Note that by default, on every train iteration mini-batches for all tasks except for one are empty.
+
 When one of BERT heads is being trained, other heads' parameters do not change. On each training step both BERT head
 and body parameters are modified. You may specify different learning rates for a head and a body.
 
