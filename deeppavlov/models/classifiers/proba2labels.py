@@ -62,10 +62,11 @@ class Proba2Labels(Component):
         Process probabilities to labels
 
         Args:
-            data: list of vectors with probability distribution
+            Every argument is a list of vectors with probability distribution
 
         Returns:
-            list of labels (only label classification) or list of lists of labels (multi-label classification)
+            list of labels (only label classification) or list of lists of labels (multi-label classification),
+            or list of the following lists (in multitask setting) for every argument
         """
         answer = []
         for data in args:
