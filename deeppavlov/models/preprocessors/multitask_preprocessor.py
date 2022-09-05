@@ -54,9 +54,11 @@ class MultiTaskPipelinePreprocessor(Component):
     
     vocab_file(str): vocabulary file for tokenization
     do_lower_case(bool): if True, tokenization is lower-cased. Default: True
-    preprocessor(str): name of class that is used 
+    preprocessor(str): name of DeepPavlov class that is used for tokenization. 
+    Default: TorchTransformersPreprocessor
+    preprocessors(List[str]): list of names of DeepPavlov classes that are used for tokenization.
+    Overrides preprocessor . The length of list must be equal to the number of tasks
     max_seq_length(int): Maximum sequence length for tokenizer. Default: 512
-    n_task
     strict(bool): if True, we always try to split data assuming predefined modes as in multitask_example.json  
     If False, we go without splitting if we are not sure how to split the data. Default, False
     """
@@ -65,7 +67,7 @@ class MultiTaskPipelinePreprocessor(Component):
                  vocab_file,
                  do_lower_case: bool = True,
                  preprocessor: str = 'TorchTransformersPreprocessor',
-                 preprocessors=None,
+                 preprocessors: List[str] = None,
                  max_seq_length: int = 512,
                  strict=False,
                  *args, **kwargs):
