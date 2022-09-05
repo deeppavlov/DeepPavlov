@@ -10,113 +10,98 @@ The idea is to share BERT body between several tasks. This is necessary if a mod
 components using BERT and the amount of GPU memory is limited. Each task has its own 'head' part attached to the
 output of the BERT encoder. If multi-task BERT has :math:`T` heads, one training iteration consists of
 
-- composing :math:`T` mini-batches, one for each task,
+- composing :math:`T` lists of examples, one for each task,
 
 - :math:`T` gradient steps, one gradient step for each task.
 
-Note that by default, on every train iteration mini-batches for all tasks except for one are empty.
+By default, on every training steps lists of examples for all but one tasks are empty, as if in the original MT-DNN repository. 
 
 When one of BERT heads is being trained, other heads' parameters do not change. On each training step both BERT head
-and body parameters are modified. You may specify different learning rates for a head and a body.
+and body parameters are modified.
 
-Currently there are heads for classification (``mt_bert_classification_task``) and sequence tagging
-(``mt_bert_seq_tagging_task``).
+Currently multitask bert heads support classification, regression, NER and multiple choice tasks. 
 
-At this page, multi-task BERT usage is explained on a toy configuration file of a model that detects
-insults, analyzes sentiment, and recognises named entities. Multi-task BERT configuration files for training
-:config:`mt_bert_train_tutorial.json <tutorials/mt_bert/mt_bert_train_tutorial.json>` and for inference
-:config:`mt_bert_inference_tutorial.json <tutorials/mt_bert/mt_bert_inference_tutorial.json>` are based on configs
-:config:`insults_kaggle_bert.json <classifiers/insults_kaggle_bert.json>`,
-:config:`sentiment_sst_multi_bert.json <classifiers/sentiment_sst_multi_bert.json>`,
-:config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`.
+At this page, multi-task BERT usage is explained on a toy configuration file of a model that is trained for the single-sentence classification, sentence pair classification, regression, multiple choice and NER. The config for this nodel is :config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>`. This config is based on the single-task configs :config:`multitask_distilbert_rte.json <configs/multitask/multitask_distilbert_rte.json>` (sentence pair classification) , :config:`multitask_distilbert_sst.json <configs/multitask/multitask_distilbert_sst. json>`(single sentence classificarion), :config:`multitask_distilbert_copa.json <configs/multitask/multitask_distilbert_copa.json>`(multiple choice), :config:`multitask_distilbert_conll.json <configs/multitask/multitask_distilbert_conll.json>`(ner) , :config:`multitask_distilbert_stsb.json <configs/multitask/multitask_distilbert_stsb.json>` (regression). These single-task files show that the nodel can be used in single-task mode as well. 
 
-We start with the ``metadata`` field of the configuration file. Multi-task BERT model is saved in
-``{"MT_BERT_PATH": "{MODELS_PATH}/mt_bert"}``. Classes and tag vocabularies are saved in
-``{"INSULTS_PATH": "{MT_BERT_PATH}/insults"}``, ``{"SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment"}``. ``downloads``
-field of Multitask BERT configuration file is a union of ``downloads`` fields of original configs without pre-trained
-models. The ``metadata`` field of our config is given below.
+Other examples of using multitask models can be found in :config:`config_glue.json <configs/multitask/config_glue.json>`.
 
+We start with the ``metadata`` field of the configuration file.
+Multi-task BERT model is saved in
+``{"SAVE_LOAD_PATH": "{MODELS_PATH}/model_clean"}``. Number of train epochs is defined as ``NUM_TRAIN_EPOCHS``, number of gradient accumulation steps - as ``GRADIENT_ACC_STEPS``, backbone model to use - as ``BACKBONE`` . The metadata file is given below.
 .. code:: json
 
   {
     "metadata": {
       "variables": {
-        "ROOT_PATH": "~/.deeppavlov",
-        "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-        "MODELS_PATH": "{ROOT_PATH}/models",
-        "BERT_PATH": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12",
-        "MT_BERT_PATH": "{MODELS_PATH}/mt_bert_tutorial",
-        "INSULTS_PATH": "{MT_BERT_PATH}/insults",
-        "SENTIMENT_PATH": "{MT_BERT_PATH}/sentiment",
-        "NER_PATH": "{MT_BERT_PATH}/ner"
-      },
+        ROOT_PATH":"~/.deeppavlov",
+         "BACKBONE":"bert-base-uncased",
+         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
+         "NER_DATA_PATH":"~/GLUE/CONLL2003",
+         "NUM_TRAIN_EPOCHS":5,
+         "GRADIENT_ACC_STEPS":1
+    }, 
       "download": [
         {
-          "url": "http://files.deeppavlov.ai/datasets/insults_data.tar.gz",
-          "subdir": "{DOWNLOADS_PATH}"
-        },
-        {
-          "url": "http://files.deeppavlov.ai/datasets/yelp_review_full_csv.tar.gz",
-          "subdir": "{DOWNLOADS_PATH}"
-        },
-        {
-          "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-          "subdir": "{DOWNLOADS_PATH}/bert_models"
+          "url": { "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz", "subdir": "{MODELS_PATH}" 
         }
-      ]
-    }
-  }
+} 
+
 
 Train config
 ------------
 
-When using ``multitask_bert`` component, you need **separate train and inference configuration files**.
+When using ``multitask_bert`` component, you can use the same inference file as the train file. 
 
 Data reading and iteration is performed by ``multitask_reader`` and ``multitask_iterator``. These classes are composed
 of task readers and iterators and generate batches that contain data from heterogeneous datasets.
 
-A ``multitask_reader`` configuration has parameters ``class_name``, ``data_path``, and ``tasks``.
+A ``datset_reader`` configuration has parameters ``class_name``, ``path``, ``reader_class_name``,``task_names``, ``tasks``, ``train``, ``validation`` and ``test``
+``train``,``validation``,
+ and ``tasks``. ``class_name`` for multitask setting is equal to 
+``multitask_reader``.
+ ``path`` is a path where data, by default, are stored. This parameter can be overwriten in ``tasks`` as ``data_path``. By default, for reading data, ``reader_class_name`` is used. This
+ parameter also can be overwriten in ``tasks``as ``class_name``
 ``data_path`` field may be any string because data paths are passed for tasks individually in ``tasks``
-parameter. However, you can not drop a ``data_path`` parameter because it is obligatory for dataset reader
-configuration. ``tasks`` parameter is a dictionary of task dataset readers configurations. In configurations of
-task readers, ``reader_class_name`` parameter is used instead of ``class_name``. The dataset reader configuration is
-provided:
+parameter. ``train``,``validation`` and ``test`` fields denote the train, validation and test fields of dataset, respectively. ``task_names`` is a list of tasks for which, all of the default above mentioned parameters are applied. For tasks where we want to overwrite any of these parameters, we do it in the dictionary ``tasks``. All other parameters that are specific for the certain dataset reader also need to be written there as subfields. 
+
+The dataset_reader code is given below. 
 
 .. code:: json
 
-  {
-    "dataset_reader": {
-      "class_name": "multitask_reader",
-      "data_path": "null",
-      "tasks": {
-        "insults": {
-          "reader_class_name": "basic_classification_reader",
-          "x": "Comment",
-          "y": "Class",
-          "data_path": "{DOWNLOADS_PATH}/insults_data"
-        },
-        "sentiment": {
-          "reader_class_name": "basic_classification_reader",
-          "x": "text",
-          "y": "label",
-          "data_path": "{DOWNLOADS_PATH}/yelp_review_full_csv",
-          "train": "train.csv",
-          "test": "test.csv",
-          "header": null,
-          "names": [
-            "label",
-            "text"
-          ]
-        },
-        "ner": {
-          "reader_class_name": "conll2003_reader",
-          "data_path": "{DOWNLOADS_PATH}/conll2003/",
-          "dataset_name": "conll2003",
-          "provide_pos": false
-        }
+
+{
+   "dataset_reader":{
+      "class_name":"multitask_reader",
+      "path":"glue",
+      "reader_class_name":"huggingface_dataset_reader",
+      "train":"train",
+      "validation":"validation",
+      "test":"test",
+      "task_names":[
+         "cola",
+         "rte",
+         "stsb"
+      ],
+      "tasks":{
+         "copa":{
+            "reader_class_name":"huggingface_dataset_reader",
+            "data_path":"super_glue",
+            "path":"super_glue",
+            "name":"copa",
+            "train":"train",
+            "valid":"validation",
+            "test":"test"
+         },
+      "conll": {
+        "reader_class_name": "conll2003_reader",
+        "data_path": "{NER_DATA_PATH}/conll2003/",
+        "dataset_name": "conll2003",
+        "provide_pos": false
       }
-    }
-  }
+      }
+
+..... START FROM HERE!!!!..... 
 
 A ``multitask_iterator`` configuration  has parameters ``class_name`` and ``tasks``. ``tasks`` is a dictionary of
 configurations of task iterators. In configurations of task iterators, ``iterator_class_name`` is used instead of
@@ -348,3 +333,335 @@ of the tasks would be sequential and take approximately 2 times more time.
         "out": ["y_insults_pred_probas", "y_sentiment_pred_probas"]
       }
 
+
+
+
+{
+   "dataset_reader":{
+      "class_name":"multitask_reader",
+      "path":"glue",
+      "reader_class_name":"huggingface_dataset_reader",
+      "train":"train",
+      "validation":"validation",
+      "test":"test",
+      "task_names":[
+         "cola",
+         "rte",
+         "stsb"
+      ],
+      "tasks":{
+         "copa":{
+            "reader_class_name":"huggingface_dataset_reader",
+            "data_path":"super_glue",
+            "path":"super_glue",
+            "name":"copa",
+            "train":"train",
+            "valid":"validation",
+            "test":"test"
+         },
+      "conll": {
+        "reader_class_name": "conll2003_reader",
+        "data_path": "{NER_DATA_PATH}/conll2003/",
+        "dataset_name": "conll2003",
+        "provide_pos": false
+      }
+      }
+   },
+   "dataset_iterator":{
+      "class_name":"multitask_iterator",
+      "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
+      "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
+      "iterator_class_name":"huggingface_dataset_iterator",
+      "label":"label",
+      "use_label_name":false,
+      "seed":42,
+      "tasks":{
+         "cola":{
+            "features":[
+               "sentence"
+            ]
+         },
+         "rte":{
+            "features":[
+               "sentence1",
+               "sentence2"
+            ]
+         },
+         "stsb":{
+            "features":[
+               "sentence1",
+               "sentence2"
+            ]
+         },
+         "copa":{
+            "features":[
+               "contexts",
+               "choices"
+            ]
+         },
+         "conll":{
+            "iterator_class_name":"basic_classification_iterator"
+
+         }
+      }
+   },
+   "chainer":{
+      "in":[
+         "x_cola",
+         "x_rte",
+         "x_stsb",
+         "x_copa",
+         "x_conll"
+      ],
+      "in_y":[
+         "y_cola",
+         "y_rte",
+         "y_stsb",
+         "y_copa",
+         "y_conll"
+      ],
+      "pipe":[
+         {
+            "class_name":"multitask_pipeline_preprocessor",
+            "possible_keys_to_extract":[
+               0,
+               1
+            ],
+            "preprocessors":[
+               "TorchTransformersPreprocessor",
+               "TorchTransformersPreprocessor",
+               "TorchTransformersPreprocessor",
+               "TorchTransformersMultiplechoicePreprocessor",
+               "TorchTransformersNerPreprocessor"
+            ],
+            "do_lower_case":true,
+            "n_task":5,
+            "vocab_file":"{BACKBONE}",
+            "max_seq_length":200,
+            "max_subword_length":15,
+            "token_masking_prob":0.0,
+            "return_features":true,
+            "in":[
+               "x_cola",
+               "x_rte",
+               "x_stsb",
+               "x_copa",
+               "x_conll"
+            ],
+            "out":[
+               "bert_features_cola",
+               "bert_features_rte",
+               "bert_features_stsb",
+               "bert_features_copa",
+               "bert_features_conll"
+            ]
+         },
+         {
+            "id":"vocab_conll",
+            "class_name":"simple_vocab",
+            "unk_token":[
+               "O"
+            ],
+            "pad_with_zeros":true,
+            "save_path":"{MODELS_PATH}/tag.dict",
+            "load_path":"{MODELS_PATH}/tag.dict",
+            "fit_on":[
+               "y_conll"
+            ],
+            "in":[
+               "y_conll"
+            ],
+            "out":[
+               "y_ids_conll"
+            ]
+         },
+         {
+            "id":"multitask_bert",
+            "class_name":"multitask_bert",
+            "optimizer_parameters":{
+               "lr":2e-5
+            },
+            "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
+            "learning_rate_drop_patience":2,
+            "learning_rate_drop_div":2.0,
+            "return_probas":true,
+            "backbone_model":"{BACKBONE}",
+            "save_path":"{SAVE_LOAD_PATH}_5",
+            "load_path":"{SAVE_LOAD_PATH}_5",
+            "tasks":{
+               "cola":{
+                  "type":"classification",
+                  "options":2
+               },
+               "rte":{
+                  "type":"classification",
+                  "options":2
+               },
+               "stsb":{
+                  "type":"regression",
+                  "options":1
+               },
+               "copa":{
+                  "type":"multiple_choice",
+                  "options":2
+               },
+               "conll":{
+                  "type":"sequence_labeling",
+                  "options":"#vocab_conll.len"
+               }
+            },
+            "in":[
+               "bert_features_cola",
+               "bert_features_rte",
+               "bert_features_stsb",
+               "bert_features_copa",
+               "bert_features_conll"
+            ],
+            "in_y":[
+               "y_cola",
+               "y_rte",
+               "y_stsb",
+               "y_copa",
+               "y_ids_conll"
+            ],
+            "out":[
+               "y_cola_pred_probas",
+               "y_rte_pred_probas",
+               "y_stsb_pred",
+               "y_copa_pred_probas",
+               "y_conll_pred_ids"
+            ]
+         },
+         {
+            "in":[
+               "y_cola_pred_probas"
+            ],
+            "out":[
+               "y_cola_pred_ids"
+            ],
+            "class_name":"proba2labels",
+            "max_proba":true
+         },
+         {
+            "in":[
+               "y_rte_pred_probas"
+            ],
+            "out":[
+               "y_rte_pred_ids"
+            ],
+            "class_name":"proba2labels",
+            "max_proba":true
+         },
+         {
+            "in":[
+               "y_copa_pred_probas"
+            ],
+            "out":[
+               "y_copa_pred_ids"
+            ],
+            "class_name":"proba2labels",
+            "max_proba":true
+         },
+         {
+            "in":[
+               "y_conll_pred_ids"
+            ],
+            "out":[
+               "y_conll_pred_labels"
+            ],
+            "ref":"vocab_conll"
+         }
+      ],
+      "out":[
+         "y_cola_pred_ids",
+         "y_rte_pred_ids",
+         "y_stsb_pred",
+         "y_copa_pred_ids",
+         "y_conll_pred_labels"
+      ]
+   },
+   "train":{
+      "epochs":"{NUM_TRAIN_EPOCHS}",
+      "batch_size":32,
+      "metrics":[
+         {
+            "name":"multitask_accuracy",
+            "inputs":[
+               "y_rte",
+               "y_cola",
+               "y_copa",
+               "y_rte_pred_ids",
+               "y_cola_pred_ids",
+               "y_copa_pred_ids"
+            ]
+         },
+         {
+            "name":"ner_f1",
+            "inputs":[
+               "y_conll",
+               "y_conll_pred_labels"
+            ]
+         },
+         {
+            "name":"ner_token_f1",
+            "inputs":[
+               "y_conll",
+               "y_conll_pred_labels"
+            ]
+         },
+         {
+            "name":"accuracy",
+            "alias":"accuracy_cola",
+            "inputs":[
+               "y_cola",
+               "y_cola_pred_ids"
+            ]
+         },
+         {
+            "name":"accuracy",
+            "alias":"accuracy_rte",
+            "inputs":[
+               "y_rte",
+               "y_rte_pred_ids"
+            ]
+         },
+         {
+            "name":"accuracy",
+            "alias":"accuracy_copa",
+            "inputs":[
+               "y_copa",
+               "y_copa_pred_ids"
+            ]
+         },
+         {
+            "name":"pearson_correlation",
+            "alias":"pearson_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
+            ]
+         },
+         {
+            "name":"spearman_correlation",
+            "alias":"spearman_stsb",
+            "inputs":[
+               "y_stsb",
+               "y_stsb_pred"
+            ]
+         }
+      ],
+      "validation_patience":3,
+      "val_every_n_epochs":1,
+      "log_every_n_epochs":1,
+      "show_examples":false,
+      "evaluation_targets":[
+         "valid"
+      ],
+      "class_name":"torch_trainer"
+   },
+   "metadata":{
+      "variables":{
+          "
+      }
+   }
+}
