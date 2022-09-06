@@ -160,6 +160,10 @@
          "NER_DATA_PATH":"~/GLUE/CONLL2003",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
-      }
-   }
+      } 
+      "download": {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz",
+        "subdir": "~/GLUE"
+      },
+   } 
 }

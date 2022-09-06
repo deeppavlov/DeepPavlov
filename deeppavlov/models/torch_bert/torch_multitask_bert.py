@@ -37,7 +37,11 @@ class BertForMultiTask(nn.Module):
     BERT model for multiple choice,sequence labeling, ner, classification or regression
     This module is composed of the BERT model with a linear layer on top of
     the pooled output.
-
+    Params:
+    
+    task_num_classes
+    task_types
+    backbone_model - na
     """
 
     def __init__(self, tasks_num_classes, task_types,
@@ -140,14 +144,15 @@ class TorchMultiTaskBert(TorchModel):
 
     Args:
         tasks: Dict of task names along with the labels for each task,
-        pretrained_bert: path of the pretrained bert embeddings
-        optimizer: optimizer name defaults to AdamW,
-        optimizer_parameters: optimizer parameters,
-        lr_scheduler: name of the lr scheduler,
-        lr_scheduler_parameters: lr scheduler parameters for the scheduler,
+        max_seq_len(int): maximum length of the input token sequence.
+        optimizer(str): optimizer name defaults to AdamW,
+        optimizer_parameters(dict): optimizer parameters,
+        lr_scheduler(str): name of the lr scheduler,if it is used
+        lr_scheduler_parameters(dict): lr scheduler parameters for the scheduler, if the scheduler is used
         gradient_accumulation_steps(default:1): number of gradient accumulation steps,
-        steps_per_epoch: number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
-        clip_norm: normalization: value for gradient clipping,
+        steps_per_epoch(int): number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
+        backbone_model(str): name of HuggingFace.Transformers backbone model. Default: 'bert-base-cased'
+        clip_norm(float): normalization: value for gradient clipping. Specify only if gradient clipping is used
         one_hot_labels(default: False): set to true if using one hot labels,
         multilabel(default: False): set to true for multilabel classification,
         return_probas(default: False): set true to return prediction probabilities,
@@ -159,7 +164,6 @@ class TorchMultiTaskBert(TorchModel):
     def __init__(
         self,
         tasks: Dict[str, Dict],
-        pretrained_bert: str = None,
         max_seq_len: str = 320,
         optimizer: str = "AdamW",
         optimizer_parameters: dict = {"lr": 2e-5},
@@ -197,7 +201,6 @@ class TorchMultiTaskBert(TorchModel):
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
         self.n_tasks = len(tasks)
         self.train_losses = [[] for task in self.task_names]
-        self.pretrained_bert = pretrained_bert
         self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler

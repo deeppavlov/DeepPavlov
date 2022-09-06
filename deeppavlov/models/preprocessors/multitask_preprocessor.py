@@ -51,30 +51,37 @@ class MultiTaskPipelinePreprocessor(Component):
     Extracts out the task_id from the first index of each example for each task.
     Then splits the input and performs tokenization
     Params:
-    vocab_file: vocabulary file for tokenization
+    
+    vocab_file(str): vocabulary file for tokenization
+    do_lower_case(bool): if True, tokenization is lower-cased. Default: True
+    preprocessor(str): name of DeepPavlov class that is used for tokenization. 
+    Default: TorchTransformersPreprocessor
+    preprocessors(List[str]): list of names of DeepPavlov classes that are used for tokenization.
+    Overrides preprocessor . The length of list must be equal to the number of tasks
+    max_seq_length(int): Maximum sequence length for tokenizer. Default: 512
+    strict(bool): if True, we always try to split data assuming predefined modes as in multitask_example.json  
+    If False, we go without splitting if we are not sure how to split the data. Default, False
     """
 
     def __init__(self,
                  vocab_file,
                  do_lower_case: bool = True,
                  preprocessor: str = 'TorchTransformersPreprocessor',
-                 preprocessors=None,
+                 preprocessors: List[str] = None,
                  max_seq_length: int = 512,
-                 return_tokens: bool = False,
                  strict=False,
-                 n_task=None,
                  *args, **kwargs):
         self.n_task = n_task
         self.strict = strict
         if preprocessors is None:
             log.info(
                 f'Assuming the same preprocessor name for all : {preprocessor}')
-            assert preprocessor is not None
-            error_msg = 'Provide number of tasks if you did not explicitly define preprocessor list'
-            assert self.n_task is not None, error_msg
-            preprocessor = eval(preprocessor)
-            self.preprocessors = [preprocessor(vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
-                                  for _ in range(self.n_task)]
+            self.preprocessor = eval(preprocessor)
+            if self.n_task is not None:
+                self.preprocessors = [self.preprocessor(vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
+                                      for _ in range(self.n_task)]
+            else:
+                self.preprocessors = None
         else:
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
@@ -117,8 +124,12 @@ class MultiTaskPipelinePreprocessor(Component):
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        assert len(
-            args) == self.n_task, f"Seen examples from {len(args)} tasks but n_task specified to {self.n_task}"
+        self.n_task = len(args)
+        if self.preprocessors is None:
+             # Defining preprocessor list while we call the function, as only he
+             self.preprocessors = [self.preprocessor(vocab_file, do_lower_case,
+                                                     max_seq_length, *args, **kwargs)
+                                   for _ in range(self.n_task)]
         answer = []
         for i in range(len(args)):
             if all([j is None for j in args[i]]):
