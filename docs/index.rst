@@ -27,6 +27,7 @@ Welcome to DeepPavlov's documentation!
    :caption: Models
    
    BERT-based models <features/models/bert>
+   Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
    Entity Extraction <features/models/entity_extraction>

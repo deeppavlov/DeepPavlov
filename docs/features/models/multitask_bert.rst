@@ -28,24 +28,25 @@ Other examples of using multitask models can be found in :config:`config_glue.js
 We start with the ``metadata`` field of the configuration file.
 Multi-task BERT model is saved in
 ``{"SAVE_LOAD_PATH": "{MODELS_PATH}/model_clean"}``. Number of train epochs is defined as ``NUM_TRAIN_EPOCHS``, number of gradient accumulation steps - as ``GRADIENT_ACC_STEPS``, backbone model to use - as ``BACKBONE`` . The metadata file for config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>` is given below.
+
 .. code:: json
 
-  {
-    "metadata": {
-      "variables": {
-        ROOT_PATH":"~/.deeppavlov",
-         "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
-         "NER_DATA_PATH":"~/GLUE/CONLL2003",
-         "NUM_TRAIN_EPOCHS":5,
-         "GRADIENT_ACC_STEPS":1
-    }, 
-      "download": [
-        {
-          "url": { "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz", "subdir": "{MODELS_PATH}" 
-        }
-} 
+		{
+	"metadata": {
+		"variables": {
+		"ROOT_PATH":"~/.deeppavlov",
+		"BACKBONE":"bert-base-uncased",
+		"MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
+		"SAVE_LOAD_PATH":"{MODELS_PATH}/model_clean",
+		"NER_DATA_PATH":"~/GLUE/CONLL2003",
+		"NUM_TRAIN_EPOCHS":5,
+		"GRADIENT_ACC_STEPS":1
+		}, 
+	"download": [{
+		"url": "http://files.deeppavlov.ai/deeppavlov_data/ner_conll2003_v5.tar.gz",
+		"subdir": "{MODELS_PATH}" }]
+		}
+		}
 
 
 Train config
@@ -56,19 +57,14 @@ When using ``multitask_bert`` component, you can use the same inference file as 
 Data reading and iteration is performed by ``multitask_reader`` and ``multitask_iterator``. These classes are composed
 of task readers and iterators and generate batches that contain data from heterogeneous datasets.
 
-A ``datset_reader`` configuration has parameters ``class_name``, ``path``, ``reader_class_name``,``task_names``, ``tasks``, ``train``, ``validation`` and ``test``
-``train``,``validation``,
- and ``tasks``. ``class_name`` for multitask setting is equal to 
-``multitask_reader``.
- ``path`` is a path where data, by default, are stored. This parameter can be overwriten in ``tasks`` as ``data_path``. By default, for reading data, ``reader_class_name`` is used. This
- parameter also can be overwriten in ``tasks``as ``class_name``
-``data_path`` field may be any string because data paths are passed for tasks individually in ``tasks``
+The ``datset_reader`` configuration has parameters ``class_name``, ``path``, ``reader_class_name``,``task_names``, ``tasks``, ``train``, ``validation`` and ``test``.
+``train``,``validation``, and ``tasks``. ``class_name`` for multitask setting is equal to ``multitask_reader``. Also ``path`` is a path where data, by default, are stored. This parameter can be overwriten in ``tasks`` as ``data_path``. By default, for reading data, ``reader_class_name`` is used. This parameter also can be overwriten in ``tasks``as ``class_name``
+The ``data_path`` field may be any string because data paths are passed for tasks individually in ``tasks``
 parameter. ``train``,``validation`` and ``test`` fields denote the train, validation and test fields of dataset, respectively. ``task_names`` is a list of tasks for which, all of the default above mentioned parameters are applied. For tasks where we want to overwrite any of these parameters, we do it in the dictionary ``tasks``. All other parameters that are specific for the certain dataset reader also need to be written there as subfields. 
 
 The dataset_reader code for config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>` is given below. 
 
 .. code:: json
-
 
 {
    "dataset_reader":{
@@ -78,26 +74,22 @@ The dataset_reader code for config:`multitask_example.json <configs/multitask/mu
       "train":"train",
       "validation":"validation",
       "test":"test",
-      "task_names":[
-         "cola",
-         "rte",
-         "stsb"
-      ],
-      "tasks":{
-         "copa":{
-            "reader_class_name":"huggingface_dataset_reader",
-            "data_path":"super_glue",
-            "path":"super_glue",
-            "name":"copa",
-            "train":"train",
-            "valid":"validation",
-            "test":"test"
-         },
+      "task_names":["cola", "rte", "stsb"],
+      "tasks":
+      {"copa":
+      {"reader_class_name":"huggingface_dataset_reader",
+      "data_path":"super_glue",
+      "path":"super_glue",
+      "name":"copa",
+      "train":"train",
+      "valid":"validation",
+      "test":"test"
+      },
       "conll": {
-        "reader_class_name": "conll2003_reader",
-        "data_path": "{NER_DATA_PATH}/conll2003/",
-        "dataset_name": "conll2003",
-        "provide_pos": false
+      "reader_class_name": "conll2003_reader",
+      "data_path": "{NER_DATA_PATH}/conll2003/",
+      "dataset_name": "conll2003",
+      "provide_pos": false
       }
       }
 
@@ -108,51 +100,49 @@ configurations of task iterators. In configurations of task iterators, ``iterato
 The dataset iterator configuration for config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>` is as follows:
 
 .. code:: json
- "dataset_iterator":{
-      "class_name":"multitask_iterator",
-      "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
-      "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
-      "iterator_class_name":"huggingface_dataset_iterator",
-      "label":"label",
-      "use_label_name":false,
-      "seed":42,
-      "tasks":{
-         "cola":{
-            "features":[
-               "sentence"
-            ]
-         },
-         "rte":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },
-         "stsb":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },
-         "copa":{
-            "features":[
-               "contexts",
-               "choices"
-            ]
-         },
-         "conll":{
-            "iterator_class_name":"basic_classification_iterator"
 
-         }
-      }
-   }
+{
+      "dataset_iterator":{
+	      "class_name":"multitask_iterator",
+	      "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
+	      "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
+	      "iterator_class_name":"huggingface_dataset_iterator",
+	      "label":"label",
+	      "use_label_name":false,
+	      "seed":42,
+	      "tasks":{
+	      "cola":{
+	      "features":[
+	      "sentence"
+	      ]
+	      },
+	      "rte":{
+	      "features":[
+	      "sentence1",
+	      "sentence2"
+	      ]
+	      },
+	      "stsb":{
+	      "features":[
+	      "sentence1",
+	      "sentence2"
+	      ]
+	      },
+	      "copa":{
+	      "features":[
+	      "contexts",
+	      "choices"
+	      ]
+	      },
+	      "conll":{
+	      "iterator_class_name":"basic_classification_iterator"
+	      }
+	      }
+	      }
 
     
-Batches generated by ``multitask_iterator`` are tuples
- of two elements: inputs of the model and labels. Both inputs
-and labels are lists of tuples. The inputs have following format: ``[(first_task_inputs[0], second_task_inputs[0],
-...), (first_task_inputs[1], second_task_inputs[1], ...), ...]`` where ``first_task_inputs``, ``second_task_inputs``,
-and so on are x values of batches from task dataset iterators. The labels in the second element have the similar format.
+Batches generated by ``multitask_iterator`` are tuples of two elements: inputs of the model and labels. 
+Both inputsand labels are lists of tuples. The inputs have following format: ``[(first_task_inputs[0], second_task_inputs[0],...), (first_task_inputs[1], second_task_inputs[1], ...), ...]`` where ``first_task_inputs``, ``second_task_inputs``, and so on are x values of batches from task dataset iterators. The labels in the second element have the similar format.
 
 If task datasets have different sizes, then for smaller datasets the lists are padded with ``None``s. For example, if the first task dataset inputs are
 ``[0, 1, 2, 3, 4, 5, 6]``, the second task dataset inputs are ``[7, 8, 9]``, and the batch size is ``2``, then
@@ -162,8 +152,10 @@ In this tutorial, there are 5 datasets. Considering the batch structure, ``chain
 
 .. code:: json
 
- "in":[ "x_cola",  "x_rte", "x_stsb", "x_copa",  "x_conll"   ],
-      "in_y":["y_cola", "y_rte",   "y_stsb",  "y_copa",  "y_conll"    ]
+{
+	"in":["x_cola",  "x_rte", "x_stsb", "x_copa",  "x_conll"],
+	"in_y":["y_cola", "y_rte", "y_stsb", "y_copa",  "y_conll"]
+        }
 
 Sometimes a task dataset iterator returns inputs or labels consisting of more than one element. For example, in model
 :config:`mt_bert_train_tutorial.json <kbqa/kbqa_mt_bert_train.json>` ``siamese_iterator`` input
@@ -176,16 +168,13 @@ For streamlining the code, however, ``input_splitter``and ``tokenizer`` can be u
 ..code:: json
          {
             "class_name":"multitask_pipeline_preprocessor",
-            "possible_keys_to_extract":[
-               0,
-               1
-            ],
+            "possible_keys_to_extract":[0, 1],
             "preprocessors":[
-               "TorchTransformersPreprocessor",
-               "TorchTransformersPreprocessor",
-               "TorchTransformersPreprocessor",
-               "TorchTransformersMultiplechoicePreprocessor",
-               "TorchTransformersNerPreprocessor"
+            "TorchTransformersPreprocessor",
+            "TorchTransformersPreprocessor",
+            "TorchTransformersPreprocessor",
+            "TorchTransformersMultiplechoicePreprocessor",
+            "TorchTransformersNerPreprocessor"
             ],
             "do_lower_case":true,
             "n_task":5,
@@ -194,42 +183,30 @@ For streamlining the code, however, ``input_splitter``and ``tokenizer`` can be u
             "max_subword_length":15,
             "token_masking_prob":0.0,
             "return_features":true,
-            "in":[
-               "x_cola",
-               "x_rte",
-               "x_stsb",
-               "x_copa",
-               "x_conll"
-            ],
+            "in":["x_cola", "x_rte", "x_stsb", "x_copa", "x_conll"],
             "out":[
-               "bert_features_cola",
-               "bert_features_rte",
-               "bert_features_stsb",
-               "bert_features_copa",
-               "bert_features_conll"
+            "bert_features_cola",
+            "bert_features_rte",
+            "bert_features_stsb",
+            "bert_features_copa",
+            "bert_features_conll"
             ]
-         }
-
-START FROM HERE
-
-A ``multitask_bert`` component has task-specific parameters and parameters that are common for all tasks. The first
-are provided inside the ``tasks`` parameter. The ``tasks`` is a dictionary that keys are task names and values are 
-task-specific parameters(type, options).
-Common parameters, among those absent in the torch_bert, are ``backbone_model``(same as in the tokenizer). 
- **The order of tasks MATTERS. **
+            }
 
 
+The multitask_bert component has common and task_specific parameters. Shared parameters are provided inside the tasks parameter.
+The tasks is a dictionary that keys are task names and values are task-specific parameters(type, options).
+Common parameters, are backbone_model(same parameter as in the tokenizer) and all parameters from torch_bert. 
+**The order of tasks MATTERS.**
 
-AND END THERE
+
 Here is the definition of ``multitask_bert`` from the config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>`.
 .. code:: json
 
         {
             "id":"multitask_bert",
             "class_name":"multitask_bert",
-            "optimizer_parameters":{
-               "lr":2e-5
-            },
+            "optimizer_parameters":{"lr":2e-5},
             "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
             "learning_rate_drop_patience":2,
             "learning_rate_drop_div":2.0,
@@ -238,67 +215,68 @@ Here is the definition of ``multitask_bert`` from the config:`multitask_example.
             "save_path":"{SAVE_LOAD_PATH}_5",
             "load_path":"{SAVE_LOAD_PATH}_5",
             "tasks":{
-               "cola":{
-                  "type":"classification",
-                  "options":2
-               },
-               "rte":{
-                  "type":"classification",
-                  "options":2
-               },
-               "stsb":{
-                  "type":"regression",
-                  "options":1
-               },
-               "copa":{
-                  "type":"multiple_choice",
-                  "options":2
-               },
-               "conll":{
-                  "type":"sequence_labeling",
-                  "options":"#vocab_conll.len"
-               }
+            "cola":{
+            "type":"classification",
+            "options":2
+            },
+            "rte":{
+            "type":"classification",
+            "options":2
+            },
+            "stsb":{
+            "type":"regression",
+            "options":1
+            },
+            "copa":{
+            "type":"multiple_choice",
+            "options":2
+            },
+            "conll":{
+            "type":"sequence_labeling",
+            "options":"#vocab_conll.len"
+            }
             },
             "in":[
-               "bert_features_cola",
-               "bert_features_rte",
-               "bert_features_stsb",
-               "bert_features_copa",
-               "bert_features_conll"
+            "bert_features_cola",
+            "bert_features_rte",
+            "bert_features_stsb",
+            "bert_features_copa",
+            "bert_features_conll"
             ],
             "in_y":[
-               "y_cola",
-               "y_rte",
-               "y_stsb",
-               "y_copa",
-               "y_ids_conll"
+            "y_cola",
+            "y_rte",
+            "y_stsb",
+            "y_copa",
+            "y_ids_conll"
             ],
             "out":[
-               "y_cola_pred_probas",
-               "y_rte_pred_probas",
-               "y_stsb_pred",
-               "y_copa_pred_probas",
-               "y_conll_pred_ids"
+            "y_cola_pred_probas",
+            "y_rte_pred_probas",
+            "y_stsb_pred",
+            "y_copa_pred_probas",
+            "y_conll_pred_ids"
             ]
-         }
+            }
          
 Note that ``proba2labels`` can now take several arguments. 
 
 .. code:: json
-{
+
+        {
             "in":[
-               "y_cola_pred_probas", 
-               "y_rte_pred_probas", 
-               "y_copa_pred_probas"             
+            "y_cola_pred_probas", 
+            "y_rte_pred_probas", 
+            "y_copa_pred_probas"             
             ],
             "out":[
-               "y_cola_pred_ids", 
-               "y_rte_pred_ids", 
-              "y_copa_pred_ids" 
+            "y_cola_pred_ids", 
+            "y_rte_pred_ids", 
+            "y_copa_pred_ids" 
             ],
             "class_name":"proba2labels",
             "max_proba":true
- }
+            }
       
 
 You may need to design your own metric for early stopping. In this example, the target metric is an average of AUC ROC
@@ -317,8 +295,6 @@ metric. To register metric, add the decorator ``register_metric`` and run the co
         ner_f1_3 = ner_f1(ner_true3, ner_pred3) / 100
         return (roc_auc1 + roc_auc2 + ner_f1_3) / 3
 
-Inference-only config
-----------------
 
 You can make an inference-only config. In this config, there is no need in dataset reader and dataset iterator. A ``train`` field and components
 preparing ``in_y`` are removed. In ``multitask_bert`` component configuration all training parameters (learning rate,
