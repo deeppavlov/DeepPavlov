@@ -100,7 +100,6 @@ class BasicClassificationDatasetReader(DatasetReader):
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
                 row_list_process = lambda row, y: [label_type(label) for label in str(row[y]).split(class_sep)]
-                
                 for _, row in df.iterrows():
                     try:
                         if isinstance(x, list):
@@ -114,6 +113,8 @@ class BasicClassificationDatasetReader(DatasetReader):
                         data[data_type].append((x_text, y_label))
                     except Exception as e:
                         print(f'Error processing {row}: {e}')
+                        breakpoint()
+                        raise e
             else:
                 log.warning("Cannot find {} file".format(file))
 

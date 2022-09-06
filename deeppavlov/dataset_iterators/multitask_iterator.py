@@ -124,7 +124,7 @@ class MultiTaskIterator:
                 for i in range(len(self.data[mode][task]) - 1, -1, -1):
                     x = self.data[mode][task][i][0]
                     y = self.data[mode][task][i][1]
-                    if any([is_nan(z) for z in x]) or is_nan(y):
+                    if is_nan(x) or any([is_nan(z) for z in x]) or is_nan(y):
                         del self.data['train'][task][i]
                         log.info(
                             f'NAN for mode {mode} task {task} element {i} CLEARED')

@@ -13,7 +13,6 @@ import _pickle as cPickle
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss, MSELoss
 from torch.autograd import Variable
 from collections.abc import Iterable
@@ -423,9 +422,9 @@ class TorchMultiTaskBert(TorchModel):
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
                 elif self.return_probas:
-                    pred = torch.nn.functional.softmax(logits, dim=-1)
+                    pred = torch.softmax(logits, dim=-1)
                 else:
-                    pred = torch.nn.functional.argmax(logits, dim=1)
+                    pred = torch.argmax(logits, dim=1)
                 if not isinstance(pred, list):
                     pred = pred.tolist()
                 self.validation_predictions[task_id] = pred

@@ -18,7 +18,7 @@ from itertools import chain
 from logging import getLogger
 
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, confusion_matrix
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
@@ -235,7 +235,7 @@ def round_f1_weighted(y_true, y_predicted):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-
+    print(f'Confusion_matrix {confusion_matrix(np.array(y_true), np.array(y_predicted))}')
     return f1_score(np.array(y_true), np.array(predictions), average="weighted")
 
 
