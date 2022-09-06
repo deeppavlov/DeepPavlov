@@ -38,7 +38,6 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
       - PYTEST_ARGS=$PYTEST_ARGS
-      - SKIP_TF=True
       - DP_PYTEST_NO_CACHE=True
   py39:
     build:
@@ -52,5 +51,4 @@ services:
     environment:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
       - PYTEST_ARGS=$PYTEST_ARGS
-      - SKIP_TF=True
       - DP_PYTEST_NO_CACHE=True

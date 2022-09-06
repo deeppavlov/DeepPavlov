@@ -25,7 +25,6 @@ from deeppavlov.core.commands.utils import parse_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -132,6 +131,17 @@ PARAMS = {
         ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
+    },
+    "russian_super_glue": {
+        ("russian_super_glue/russian_superglue_lidirus_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_danetqa_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_terra_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rcb_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
@@ -434,11 +444,14 @@ class TestQuickStart(object):
             response_code = get_response.status_code
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
-            model_args_names = get_response.json()
+            model_args_names = get_response.json()['in']
             post_payload = dict()
             for arg_name in model_args_names:
                 arg_value = ' '.join(['qwerty'] * 10)
                 post_payload[arg_name] = [arg_value]
+            # TODO: remove this if from here and socket
+            if 'parus' in str(config_path):
+                post_payload = {k: [v] for k, v in post_payload.items()}
 
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
@@ -466,6 +479,9 @@ class TestQuickStart(object):
         for arg_name in model_args_names:
             arg_value = ' '.join(['qwerty'] * 10)
             socket_payload[arg_name] = [arg_value]
+
+        if 'parus' in str(config_path):
+            socket_payload = {k: [v] for k, v in socket_payload.items()}
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]

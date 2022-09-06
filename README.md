@@ -26,17 +26,15 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html)
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |
 
-[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |  [Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) 
-
-[Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
+[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) | [Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
 
 [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
 
-[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)
+[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)
 
-[Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)
+[Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
 
 **Skills**
 
@@ -66,18 +64,12 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 0. We support `Linux` platform, `Python 3.6`, `3.7`, `3.8` and `3.9`
     * **`Python 3.5` is not supported!**
-    * **installation for `Windows` requires `Git`(for example, [git](https://git-scm.com/download/win)) and  `Visual Studio 2015/2017` with `C++` build tools installed!**
 
 1. Create and activate a virtual environment:
     * `Linux`
     ```
     python -m venv env
     source ./env/bin/activate
-    ```
-    * `Windows`
-    ```
-    python -m venv env
-    .\env\Scripts\activate.bat
     ```
 2. Install the package inside the environment:
     ```
