@@ -47,7 +47,11 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
             if isinstance(features, str):
                 feat = example[features]
             elif isinstance(features, list):
-                feat = tuple(example[f] for f in features)
+                if not all([f in example for f in features]):
+                    raise Exception(f'Tried to find keys {features} in {example}')
+                else:
+                    feat = tuple(example[f] for f in features)
+
             else:
                 raise RuntimeError(f"features should be str or list, but found: {features}")
             lb = example[label]

@@ -136,9 +136,9 @@ class TorchTransformersPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
-    def __call__(self, texts_a: List[str], texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
-                                                                                         Tuple[List[InputFeatures],
-                                                                                               List[List[str]]]]:
+    def __call__(self, texts_a: List, texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
+                                                                                    Tuple[List[InputFeatures],
+                                                                                    List[List[str]]]]:
         """Tokenize and create masks.
         texts_a and texts_b are separated by [SEP] token
         Args:
@@ -152,6 +152,13 @@ class TorchTransformersPreprocessor(Component):
         # in case of iterator's strange behaviour
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
+        elif isinstance(texts_a, str):
+            raise Exception(
+                f'Received string {texts_a} as an input! Check the iterator output')
+        elif texts_a == [] and texts_b == []:
+            return {}
+
+        texts_a = [k for k in texts_a if k is not None]  # handle dummy output
 
         input_features = self.tokenizer(text=texts_a,
                                         text_pair=texts_b,
@@ -439,6 +446,7 @@ class TorchTransformersNerPreprocessor(Component):
         provide_subword_tags: output tags for subwords or for words
         subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
             (default="first")
+        return_features: if True, returns answer in features format (default: False)
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -454,6 +462,7 @@ class TorchTransformersNerPreprocessor(Component):
                  token_masking_prob: float = 0.0,
                  provide_subword_tags: bool = False,
                  subword_mask_mode: str = "first",
+                 return_features: bool = False,
                  **kwargs):
         self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
@@ -533,9 +542,24 @@ class TorchTransformersNerPreprocessor(Component):
                         log.warning(f'Markers len: {len(swms)}, sum: {sum(swms)}')
                         log.warning(f'Masks: {swms}')
                         log.warning(f'Tags len: {len(ts)}\n Tags: {ts}')
+            if self.return_features:
+                feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
+                                 'attention_mask': torch.Tensor(attention_mask),
+                                'token_type_ids': torch.Tensor(startofword_markers),
+                                 'labels': torch.Tensor(nonmasked_tags)})
+                return feature_list
+            else:
                 return tokens, subword_tokens, subword_tok_ids, \
-                       attention_mask, startofword_markers, nonmasked_tags
-        return tokens, subword_tokens, subword_tok_ids, startofword_markers, attention_mask, tokens_offsets_batch
+                    attention_mask, startofword_markers, nonmasked_tags
+        if self.return_features:
+            feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
+                             'attention_mask': torch.Tensor(attention_mask),
+                             'token_type_ids': torch.Tensor(startofword_markers)
+                             })
+            return feature_list
+        else:
+            return tokens, subword_tokens, subword_tok_ids, \
+                startofword_markers, attention_mask, tokens_offsets_batch
 
     @staticmethod
     def _ner_bert_tokenize(tokens: List[str],
@@ -684,6 +708,12 @@ class TorchRecordPostprocessor:
         Returns:
             List[RecordNestedExample]: processed but not previously returned examples (may be empty in some cases)
         """
+        if isinstance(y_pred_probas, list):
+            y_pred_probas = [k for k in y_pred_probas if k is not None]
+            y = [k for k in y if k is not None]
+            y_pred_probas = np.array(y_pred_probas)
+        if y == []:
+            return []
         if not self.is_binary:
             # if we have outputs for both classes `0` and `1`
             y_pred_probas = y_pred_probas[:, 1]
@@ -698,6 +728,7 @@ class TorchRecordPostprocessor:
             if self.record_example_accumulator.examples_processed >= self.total_examples:
                 # start over if all examples were processed
                 self.reset_accumulator()
+
         return self.record_example_accumulator.return_examples()
 
     def reset_accumulator(self):
@@ -790,6 +821,7 @@ class RecordExampleAccumulator:
         for index in indices_to_return:
             examples_to_return.append(self.nested_examples[index])
         self.returned_indices.update(indices_to_return)
+        log.debug(f'Returning {examples_to_return}')
         return examples_to_return
 
     @staticmethod

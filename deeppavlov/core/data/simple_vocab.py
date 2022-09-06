@@ -89,12 +89,15 @@ class SimpleVocabulary(Estimator):
 
     def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
-            looked_up_batch = [self(sample, is_top=False) for sample in batch]
+            if all([k is None for k in batch]):
+                # for multitask dummy input. With multitask 1 batch == 1  task but fields for all tasks exists
+                return batch
+            else:
+                looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
-
         return looked_up_batch
 
     def save(self):

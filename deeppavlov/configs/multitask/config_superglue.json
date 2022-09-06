@@ -1,0 +1,312 @@
+{
+   "dataset_reader":{
+    "class_name":"multitask_reader",
+    "path":"super_glue",
+    "reader_class_name":"huggingface_dataset_reader",
+    "train":"train",
+    "validation":"validation",
+    "task_names":[
+       "wsc",
+       "multirc",
+       "cb",
+       "record",
+       "boolq",
+       "copa",
+       "rte",
+       "wic"
+    ] },  
+    "dataset_iterator":{
+        "class_name":"multitask_iterator",
+        "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
+        "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
+        "iterator_class_name":"huggingface_dataset_iterator",
+        "label":"label",
+        "sampling_mode":"plain",
+        "use_label_name":false,
+        "seed":42,
+        "tasks":{
+           "wsc":{"features":["text","answer"]},
+           "multirc":{"features":["context","answer"]},
+           "cb":{"features":["premise","hypothesis"]},
+           "record":{"features":["idx","query","passage","entities","num_examples"]},         
+           "boolq":{"features":["question","passage"]},
+           "copa":{"features":["premise","choices"]},
+           "rte":{"features":["premise", "hypothesis"]},
+           "wic":{"features":["sentence1", "sentence2"]}
+        }
+     },
+    "chainer": {
+        "in": ["x_wsc","x_multirc","x_cb","x_record","x_boolq","x_copa","x_rte","x_wic"],
+        "in_y": ["y_wsc","y_multirc","y_cb","y_record","y_boolq","y_copa","y_rte","y_wic"],
+        "pipe": [
+                {
+                   "class_name":"multitask_pipeline_preprocessor",
+                   "possible_keys_to_extract":[
+                      0,
+                      1
+                   ],
+                   "preprocessors":[
+                    "TorchTransformersPreprocessor",
+                    "TorchTransformersPreprocessor",
+                    "TorchTransformersPreprocessor",
+                    "TorchTransformersPreprocessor",
+                    "TorchTransformersMultiplechoicePreprocessor",
+                    "TorchTransformersPreprocessor",
+                    "TorchTransformersPreprocessor"
+                 ],
+                   "vocab_file":"{BACKBONE_MODEL}",
+                   "max_seq_length":128,
+                   "do_lower_case":true,
+                   "in":["x_wsc","x_multirc","x_cb","x_boolq","x_copa","x_rte","x_wic"],
+                   "out":["bert_features_wsc","bert_features_multirc","bert_features_cb",
+                          "bert_features_boolq","bert_features_copa","bert_features_rte","bert_features_wic"]
+                },
+            {
+                "class_name": "multitask_input_splitter",
+                "keys_to_extract": [0,1,2,3,4],
+                "in": ["x_record"],
+                "out": ["idx_record","query_record","passage_record","entities_record","num_examples_record"]
+            },
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "vocab_file": "{BACKBONE_MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": "{SEQ_LEN}",
+                "in": [
+                  "query_record",
+                  "passage_record"
+                ],
+                "out": [
+                  "bert_features_record"
+                ]
+            },
+
+            {
+                "id": "multitask_bert",
+                "class_name": "multitask_bert",
+                "backbone_model":"{BACKBONE_MODEL}",
+                "optimizer_parameters": {
+                    "lr": 2e-5
+                },
+                "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+                "learning_rate_drop_patience": 2,
+                "learning_rate_drop_div": 2.0,
+                "return_probas": true,
+                "max_seq_len":"{SEQ_LEN}",
+                "save_path": "{MODELS_PATH}/engbertsuperglue1",
+                "load_path": "{MODELS_PATH}/engbertsuperglue1",
+                "tasks": {
+                    "wsc":{"type":"classification","options": 2},
+                    "multirc":{"type":"classification","options": 2},
+                    "cb": {"type":"classification","options": 3},
+                    "record":{"type":"classification","options": 2},
+                    "boolq":{"type":"classification","options": 2},
+                    "copa": {"type":"multiple_choice","options": 2},
+                    "rte":{"type":"classification","options": 2},
+                    "wic":{"type":"classification","options": 2}
+                },
+                "in": [
+                    "bert_features_wsc",
+                    "bert_features_multirc",
+                    "bert_features_cb",
+                    "bert_features_record",
+                    "bert_features_boolq",
+                    "bert_features_copa",
+                    "bert_features_rte",
+                    "bert_features_wic"
+                ],
+                "in_y": [
+                    "y_wsc",
+                    "y_multirc",
+                    "y_cb",
+                    "y_record",
+                    "y_boolq",
+                    "y_copa",
+                    "y_rte",
+                    "y_wic"
+                ],
+                "out": [
+                    "y_wsc_pred_probas",
+                    "y_multirc_pred_probas",
+                    "y_cb_pred_probas",
+                    "y_record_pred_probas",
+                    "y_boolq_pred_probas",
+                    "y_copa_pred_probas",
+                    "y_rte_pred_probas",
+                    "y_wic_pred_probas"
+                ]
+            },
+            {
+                "in": [
+                    "y_wsc_pred_probas",
+                    "y_multirc_pred_probas",
+                    "y_cb_pred_probas",
+                    "y_record_pred_probas",
+                    "y_boolq_pred_probas",
+                    "y_copa_pred_probas",
+                    "y_rte_pred_probas",
+                    "y_wic_pred_probas"
+                ],
+                "out": [
+                    "y_wsc_pred",
+                    "y_multirc_pred",
+                    "y_cb_pred",
+                    "y_record_pred",
+                    "y_boolq_pred",
+                    "y_copa_pred",
+                    "y_rte_pred",
+                    "y_wic_pred"
+                ],
+                "class_name": "proba2labels",
+                "max_proba": true
+            },
+            {
+                "class_name": "torch_record_postprocessor",
+                "in": [
+                  "idx_record",
+                  "y_record",
+                  "y_record_pred_probas",
+                  "entities_record",
+                  "num_examples_record"
+                ],
+                "out": [
+                  "record_examples"
+                ]
+              }
+        ],
+        "out": [
+            "y_wsc_pred",
+            "y_multirc_pred",
+            "y_cb_pred",
+            "y_record_pred",
+            "record_examples",
+            "y_boolq_pred",
+            "y_copa_pred",
+            "y_rte_pred",
+            "y_wic_pred"
+        ]
+    },
+    "train": {
+        "epochs": "{NUM_TRAIN_EPOCHS}",
+        "batch_size": "{BATCH_SIZE}",
+        "metrics": [
+            {
+                "name": "multitask_accuracy",
+                "inputs": [
+                    "y_wsc",
+                    "y_multirc",
+                    "y_cb",
+                    "y_record",
+                    "y_boolq",
+                    "y_copa",
+                    "y_rte",
+                    "y_wic",
+                    "y_wsc_pred",
+                    "y_multirc_pred",
+                    "y_cb_pred",
+                    "y_record_pred",
+                    "y_boolq_pred",
+                    "y_copa_pred",
+                    "y_rte_pred",
+                    "y_wic_pred"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_wsc",
+                "inputs": [
+                    "y_wsc",
+                    "y_wsc_pred"
+                ]
+            },                               
+            {
+                "name": "accuracy",
+                "alias":"accuracy_multirc",
+                "inputs": [
+                    "y_multirc",
+                    "y_multirc_pred"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_cb",
+                "inputs": [
+                    "y_cb",
+                    "y_cb_pred"
+                ]
+            },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_record",
+                "inputs": [
+                  "y_record",
+                  "y_record_pred"
+                ]
+              },
+              {
+                "name": "record_em_score",
+                "inputs": [
+                  "record_examples"
+                ]
+              },
+              {
+                "name": "record_f1_score",
+                "inputs": [
+                  "record_examples"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_boolq",
+                "inputs": [
+                  "y_boolq",
+                  "y_boolq_pred"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias": "accuracy_copa",
+                "inputs": [
+                  "y_copa",
+                  "y_copa_pred"
+                ]
+              },
+              {
+                "name": "accuracy",
+                "alias":"accuracy_rte",
+                "inputs": [
+                    "y_rte",
+                    "y_rte_pred"
+                ]
+            },
+            {
+                "name": "accuracy",
+                "alias":"accuracy_wic",
+                "inputs": [
+                    "y_wic",
+                    "y_wic_pred"
+                ]
+            }
+        ],
+        "validation_patience": 3,
+        "val_every_n_epochs": 1,
+        "log_every_n_epochs": 1,
+        "show_examples": true,
+        "evaluation_targets": [
+            "valid", "train"
+        ],
+        "class_name": "torch_trainer"
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "~/.deeppavlov",
+            "MODELS_PATH": "{ROOT_PATH}/models_en",
+            "NUM_TRAIN_EPOCHS": 5,
+            "SEQ_LEN": 320,
+            "GRADIENT_ACC_STEPS": 1,
+            "BATCH_SIZE": 8,
+            "BACKBONE_MODEL":"bert-base-uncased",
+            "SEED": 42
+        }
+    }
+}
