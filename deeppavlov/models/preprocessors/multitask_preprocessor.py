@@ -71,17 +71,12 @@ class MultiTaskPipelinePreprocessor(Component):
                  max_seq_length: int = 512,
                  strict=False,
                  *args, **kwargs):
-        self.n_task = n_task
         self.strict = strict
         if preprocessors is None:
             log.info(
                 f'Assuming the same preprocessor name for all : {preprocessor}')
             self.preprocessor = eval(preprocessor)
-            if self.n_task is not None:
-                self.preprocessors = [self.preprocessor(vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
-                                      for _ in range(self.n_task)]
-            else:
-                self.preprocessors = None
+            self.preprocessors = None
         else:
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
