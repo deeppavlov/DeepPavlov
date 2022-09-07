@@ -75,7 +75,8 @@ class MultiTaskPipelinePreprocessor(Component):
         if preprocessors is None:
             log.info(
                 f'Assuming the same preprocessor name for all : {preprocessor}')
-            self.preprocessor = eval(preprocessor)
+            self.preprocessor = eval(preprocessor)(vocab_file, do_lower_case,
+                                                     max_seq_length, *args, **kwargs)
             self.preprocessors = None
         else:
             for i in range(len(preprocessors)):
@@ -122,8 +123,7 @@ class MultiTaskPipelinePreprocessor(Component):
         self.n_task = len(args)
         if self.preprocessors is None:
              # Defining preprocessor list while we call the function, as only he
-             self.preprocessors = [self.preprocessor(vocab_file, do_lower_case,
-                                                     max_seq_length, *args, **kwargs)
+             self.preprocessors = [self.preprocessor
                                    for _ in range(self.n_task)]
         answer = []
         for i in range(len(args)):
