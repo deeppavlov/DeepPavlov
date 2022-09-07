@@ -477,6 +477,7 @@ class TorchTransformersNerPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
+        self.return_features = return_features
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
