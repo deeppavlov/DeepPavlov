@@ -126,9 +126,6 @@ class TorchTransformersElRanker(TorchModel):
         if self.clip_norm:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
-
         return loss.item()
 
     def __call__(self, q_features: List[Dict],

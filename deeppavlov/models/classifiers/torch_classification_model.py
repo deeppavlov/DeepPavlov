@@ -43,8 +43,6 @@ class TorchTextClassificationModel(TorchModel):
         optimizer: optimizer name from `torch.optim`
         optimizer_parameters: dictionary with optimizer's parameters,
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
-        lr_scheduler: string name of scheduler class from `torch.optim.lr_scheduler`
-        lr_scheduler_parameters: parameters for scheduler
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
         vocab_size: vocabulary size in case of `embedded_tokens=False`, and embedding is a layer in the Network
@@ -70,8 +68,6 @@ class TorchTextClassificationModel(TorchModel):
                  criterion: str = "CrossEntropyLoss",
                  optimizer: str = "AdamW",
                  optimizer_parameters: dict = {"lr": 0.1},
-                 lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: dict = {},
                  embedded_tokens: bool = True,
                  vocab_size: Optional[int] = None,
                  lr_decay_every_n_epochs: Optional[int] = None,
@@ -99,8 +95,6 @@ class TorchTextClassificationModel(TorchModel):
             lr_decay_every_n_epochs=lr_decay_every_n_epochs,
             learning_rate_drop_patience=learning_rate_drop_patience,
             learning_rate_drop_div=learning_rate_drop_div,
-            lr_scheduler=lr_scheduler,
-            lr_scheduler_parameters=lr_scheduler_parameters,
             return_probas=return_probas,
             **kwargs)
 
@@ -175,8 +169,6 @@ class TorchTextClassificationModel(TorchModel):
         loss = self.criterion(outputs, labels)
         loss.backward()
         self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
         return loss.item()
 
     def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int, dropout_rate: float = 0.0,

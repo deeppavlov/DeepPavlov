@@ -149,8 +149,6 @@ class TorchTransformersSquad(TorchModel):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
         self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
 
         return {'loss': loss.item()}
 

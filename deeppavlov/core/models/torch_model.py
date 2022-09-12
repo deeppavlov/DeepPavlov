@@ -34,8 +34,6 @@ class TorchModel(NNModel):
         device: `cpu` or `cuda` device to use
         optimizer: name of `torch.optim` optimizer
         optimizer_parameters: dictionary with optimizer parameters
-        lr_scheduler: name of `torch.optim.lr_scheduler` learning rate scheduler or None
-        lr_scheduler_parameters: dictionary with lr_scheduler parameters
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
@@ -51,8 +49,6 @@ class TorchModel(NNModel):
         epochs_done: number of epochs that were done
         optimizer: `torch.optim` instance
         optimizer_parameters: dictionary with optimizer parameters
-        lr_scheduler: `torch.optim.lr_scheduler` instance
-        lr_scheduler_parameters: dictionary with lr_scheduler parameters
         criterion: `torch.nn` criterion instance
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
@@ -64,8 +60,6 @@ class TorchModel(NNModel):
     def __init__(self, device: str = "gpu",
                  optimizer: str = "AdamW",
                  optimizer_parameters: Optional[dict] = None,
-                 lr_scheduler: Optional[str] = None,
-                 lr_scheduler_parameters: Optional[dict] = None,
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
@@ -75,18 +69,13 @@ class TorchModel(NNModel):
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
         self.model = None
         self.optimizer = None
-        self.lr_scheduler = None
         self.criterion = None
         self.epochs_done = 0
 
         if optimizer_parameters is None:
             optimizer_parameters = {"lr": 0.01}
-        if lr_scheduler_parameters is None:
-            lr_scheduler_parameters = dict()
         self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
-        self.lr_scheduler_name = lr_scheduler
-        self.lr_scheduler_parameters = lr_scheduler_parameters
 
         self.learning_rate_drop_patience = learning_rate_drop_patience
         self.learning_rate_drop_div = learning_rate_drop_div
@@ -104,8 +93,7 @@ class TorchModel(NNModel):
     def init_from_opt(self, model_func: str) -> None:
         """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
             along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
-            `self.optimizer_parameters`, optionally initialize `self.lr_scheduler` as `self.lr_scheduler_name` from
-            `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
+            `self.optimizer_parameters`.
 
         Args:
             model_func: string name of this class methods
@@ -123,9 +111,6 @@ class TorchModel(NNModel):
 
     def init_optimizer_and_scheduler(self):
         self.optimizer = getattr(torch.optim, self.optimizer_name)(self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
 
     @property
     def is_data_parallel(self) -> bool:
@@ -134,7 +119,7 @@ class TorchModel(NNModel):
     @overrides
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Load model from `fname` (if `fname` is not given, use `self.load_path`) to `self.model` along with
-            the optimizer `self.optimizer`, optionally `self.lr_scheduler`.
+            the optimizer `self.optimizer`.
             If `fname` (if `fname` is not given, use `self.load_path`) does not exist, initialize model from scratch.
 
         Args:

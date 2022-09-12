@@ -105,8 +105,6 @@ class TorchBertRankerModel(TorchModel):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
 
         self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
 
         return {'loss': loss.item()}
 
