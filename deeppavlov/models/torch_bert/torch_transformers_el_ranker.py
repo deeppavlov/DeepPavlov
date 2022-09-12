@@ -44,9 +44,6 @@ class TorchTransformersElRanker(TorchModel):
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         criterion: name of loss function
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         return_probas: set this to `True` if you need the probabilities instead of raw answers
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
@@ -63,8 +60,6 @@ class TorchTransformersElRanker(TorchModel):
             pretrained_bert: str = None,
             bert_config_file: Optional[str] = None,
             criterion: str = "CrossEntropyLoss",
-            optimizer: str = "AdamW",
-            optimizer_parameters: Dict = None,
             return_probas: bool = False,
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
@@ -84,9 +79,7 @@ class TorchTransformersElRanker(TorchModel):
 
         super().__init__(
             model_name=model_name,
-            optimizer=optimizer,
             criterion=criterion,
-            optimizer_parameters=optimizer_parameters,
             return_probas=return_probas,
             **kwargs)
 
