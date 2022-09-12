@@ -60,7 +60,6 @@ class TorchTransformersSquad(TorchModel):
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
-        min_learning_rate: min value of learning rate if learning rate decay is used
         batch_size: batch size for inference of squad model
     """
 
@@ -75,7 +74,6 @@ class TorchTransformersSquad(TorchModel):
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
-                 min_learning_rate: float = 1e-06,
                  batch_size: int = 10,
                  **kwargs) -> None:
 
@@ -98,7 +96,6 @@ class TorchTransformersSquad(TorchModel):
                          learning_rate_drop_patience=learning_rate_drop_patience,
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
-                         min_learning_rate=min_learning_rate,
                          **kwargs)
 
     def train_on_batch(self, features: List[List[InputFeatures]],

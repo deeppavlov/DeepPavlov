@@ -63,7 +63,7 @@ class TorchModel(NNModel):
                  learning_rate_drop_patience: Optional[int] = None,
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
-                 min_learning_rate: float = 0.,
+                 min_learning_rate: float = 1e-07,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")

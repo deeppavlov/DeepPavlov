@@ -150,7 +150,6 @@ class TorchTransformersSequenceTagger(TorchModel):
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
-        min_learning_rate: min value of learning rate if learning rate decay is used
         use_crf: whether to use Conditional Ramdom Field to decode tags
     """
 
@@ -166,7 +165,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
-                 min_learning_rate: float = 1e-07,
                  use_crf: bool = False,
                  **kwargs) -> None:
 
@@ -184,7 +182,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                          learning_rate_drop_patience=learning_rate_drop_patience,
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
-                         min_learning_rate=min_learning_rate,
                          **kwargs)
 
     def train_on_batch(self,
