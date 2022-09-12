@@ -105,9 +105,6 @@ class SimpleVocabulary(Estimator):
                 cnt = self.freqs[token]
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
-    def serialize(self) -> List[Tuple[str, int]]:
-        return [(token, self.freqs[token]) for token in self._i2t]
-
     def load(self):
         self.reset()
         if self.load_path:
@@ -124,12 +121,6 @@ class SimpleVocabulary(Estimator):
                     self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
-
-    def deserialize(self, data: List[Tuple[str, int]]) -> None:
-        self.reset()
-        if data:
-            tokens, counts = zip(*data)
-            self._add_tokens_with_freqs(tokens, counts)
 
     def load_line(self, ln):
         if self.freq_drop_load:
