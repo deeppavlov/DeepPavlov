@@ -30,6 +30,7 @@
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "model_name": "re_model",
+        "optimizer_parameters": {"lr": 5e-5, "weight_decay": 0.01, "eps": 1e-6},
         "n_classes": 30,
         "num_ner_tags": 29,
         "pretrained_bert": "{TRANSFORMER}"

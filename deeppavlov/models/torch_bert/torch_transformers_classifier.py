@@ -46,9 +46,6 @@ class TorchTransformersClassifierModel(TorchModel):
         return_probas: set True if return class probabilites instead of most probable label needed
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
         is_binary: whether classification task is binary or multi-class
@@ -62,19 +59,11 @@ class TorchTransformersClassifierModel(TorchModel):
                  return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: Optional[dict] = None,
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  is_binary: Optional[bool] = False,
                  num_special_tokens: int = None,
                  **kwargs) -> None:
-
-        if not optimizer_parameters:
-            optimizer_parameters = {"lr": 1e-3,
-                                    "weight_decay": 0.01,
-                                    "betas": (0.9, 0.999),
-                                    "eps": 1e-6},
 
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
@@ -98,9 +87,7 @@ class TorchTransformersClassifierModel(TorchModel):
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.

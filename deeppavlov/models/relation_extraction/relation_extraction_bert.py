@@ -23,8 +23,6 @@ class REBertModel(TorchModel):
             num_ner_tags: int,
             pretrained_bert: str = None,
             criterion: str = "CrossEntropyLoss",
-            optimizer: str = "AdamW",
-            optimizer_parameters: Dict = None,
             return_probas: bool = False,
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
@@ -42,8 +40,6 @@ class REBertModel(TorchModel):
             num_ner_tags: number of NER tags
             pretrained_bert: key title of pretrained Bert model (e.g. "bert-base-uncased")
             criterion: criterion name from `torch.nn`
-            optimizer: optimizer name from `torch.optim`
-            optimizer_parameters: dictionary with optimizer's parameters
             return_probas: set this to `True` if you need the probabilities instead of raw answers
             attention_probs_keep_prob: keep_prob for Bert self-attention layers
             hidden_keep_prob: keep_prob for Bert hidden layers
@@ -64,15 +60,10 @@ class REBertModel(TorchModel):
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
 
-        if optimizer_parameters is None:
-            optimizer_parameters = {"lr": 5e-5, "weight_decay": 0.01, "eps": 1e-6}
-
         super().__init__(
             n_classes=n_classes,
             model_name=model_name,
-            optimizer=optimizer,
             criterion=criterion,
-            optimizer_parameters=optimizer_parameters,
             return_probas=return_probas,
             device=self.device,
             **kwargs)

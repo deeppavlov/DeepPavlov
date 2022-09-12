@@ -40,9 +40,6 @@ class TorchTextClassificationModel(TorchModel):
         embedding_size: size of vector representation of words
         multilabel: is multi-label classification (if so, `sigmoid` activation will be used, otherwise, softmax)
         criterion: criterion name from `torch.nn`
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
         vocab_size: vocabulary size in case of `embedded_tokens=False`, and embedding is a layer in the Network
@@ -57,7 +54,6 @@ class TorchTextClassificationModel(TorchModel):
         n_classes: number of considered classes
         model: torch model itself
         epochs_done: number of epochs that were done
-        optimizer: torch optimizer instance
         criterion: torch criterion instance
     """
 
@@ -66,8 +62,6 @@ class TorchTextClassificationModel(TorchModel):
                  embedding_size: Optional[int] = None,
                  multilabel: bool = False,
                  criterion: str = "CrossEntropyLoss",
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 0.1},
                  embedded_tokens: bool = True,
                  vocab_size: Optional[int] = None,
                  lr_decay_every_n_epochs: Optional[int] = None,
@@ -86,10 +80,8 @@ class TorchTextClassificationModel(TorchModel):
             embedding_size=embedding_size,
             n_classes=n_classes,
             model_name=model_name,
-            optimizer=optimizer,
             criterion=criterion,
             multilabel=multilabel,
-            optimizer_parameters=optimizer_parameters,
             embedded_tokens=embedded_tokens,
             vocab_size=vocab_size,
             lr_decay_every_n_epochs=lr_decay_every_n_epochs,

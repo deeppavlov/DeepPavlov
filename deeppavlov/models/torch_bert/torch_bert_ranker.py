@@ -42,25 +42,14 @@ class TorchBertRankerModel(TorchModel):
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
         n_classes: number of classes
         return_probas: set True if class probabilities are returned instead of the most probable label
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
     """
 
     def __init__(self, pretrained_bert: str = None,
                  bert_config_file: Optional[str] = None,
                  n_classes: int = 2,
                  return_probas: bool = True,
-                 optimizer: str = "AdamW",
                  clip_norm: Optional[float] = None,
-                 optimizer_parameters: Optional[dict] = None,
                  **kwargs) -> None:
-
-        if not optimizer_parameters:
-            optimizer_parameters = {"lr": 2e-5,
-                                    "weight_decay": 0.01,
-                                    "betas": (0.9, 0.999),
-                                    "eps": 1e-6}
 
         self.return_probas = return_probas
         self.pretrained_bert = pretrained_bert
@@ -71,9 +60,7 @@ class TorchBertRankerModel(TorchModel):
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train the model on the given batch.

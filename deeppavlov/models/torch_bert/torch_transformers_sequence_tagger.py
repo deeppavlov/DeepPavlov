@@ -142,9 +142,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
@@ -159,8 +156,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 1e-6},
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
                  load_before_drop: bool = True,
@@ -177,9 +172,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         self.bert_config_file = bert_config_file
         self.use_crf = use_crf
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         learning_rate_drop_patience=learning_rate_drop_patience,
+        super().__init__(learning_rate_drop_patience=learning_rate_drop_patience,
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
                          **kwargs)

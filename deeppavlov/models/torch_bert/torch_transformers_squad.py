@@ -51,9 +51,6 @@ class TorchTransformersSquad(TorchModel):
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
@@ -67,8 +64,6 @@ class TorchTransformersSquad(TorchModel):
                  pretrained_bert: str,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: Optional[dict] = None,
                  bert_config_file: Optional[str] = None,
                  learning_rate_drop_patience: int = 20,
                  learning_rate_drop_div: float = 2.0,
@@ -76,12 +71,6 @@ class TorchTransformersSquad(TorchModel):
                  clip_norm: Optional[float] = None,
                  batch_size: int = 10,
                  **kwargs) -> None:
-
-        if not optimizer_parameters:
-            optimizer_parameters = {"lr": 0.01,
-                                    "weight_decay": 0.01,
-                                    "betas": (0.9, 0.999),
-                                    "eps": 1e-6}
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
@@ -91,9 +80,7 @@ class TorchTransformersSquad(TorchModel):
         self.bert_config_file = bert_config_file
         self.batch_size = batch_size
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         learning_rate_drop_patience=learning_rate_drop_patience,
+        super().__init__(learning_rate_drop_patience=learning_rate_drop_patience,
                          learning_rate_drop_div=learning_rate_drop_div,
                          load_before_drop=load_before_drop,
                          **kwargs)
