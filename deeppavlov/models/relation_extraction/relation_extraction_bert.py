@@ -19,7 +19,6 @@ class REBertModel(TorchModel):
     def __init__(
             self,
             n_classes: int,
-            model_name: str,
             num_ner_tags: int,
             pretrained_bert: str = None,
             criterion: str = "CrossEntropyLoss",
@@ -36,7 +35,6 @@ class REBertModel(TorchModel):
         text sample (one or several sentences).
         Args:
             n_classes: number of output classes
-            model_name: the model which will be used for extracting the relations
             num_ner_tags: number of NER tags
             pretrained_bert: key title of pretrained Bert model (e.g. "bert-base-uncased")
             criterion: criterion name from `torch.nn`
@@ -48,25 +46,25 @@ class REBertModel(TorchModel):
             device: cpu/gpu device to use for training the model
         """
         self.n_classes = n_classes
-        self.num_ner_tags = num_ner_tags
-        self.pretrained_bert = pretrained_bert
         self.return_probas = return_probas
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
-        self.threshold = threshold
         self.device = device
 
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
 
-        super().__init__(
-            n_classes=n_classes,
-            model_name=model_name,
-            criterion=criterion,
-            return_probas=return_probas,
-            device=self.device,
-            **kwargs)
+        self.model = BertWithAdaThresholdLocContextPooling(
+            n_classes=self.n_classes,
+            pretrained_bert=pretrained_bert,
+            bert_tokenizer_config_file=pretrained_bert,
+            num_ner_tags=num_ner_tags,
+            threshold=threshold,
+            device=self.device
+        )
+
+        super().__init__(criterion=criterion, **kwargs)
 
     def train_on_batch(
             self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List, labels: List
@@ -133,27 +131,3 @@ class REBertModel(TorchModel):
             pred = indices.cpu().numpy()
             pred[np.isnan(pred)] = 0
         return pred
-
-    def re_model(self, **kwargs) -> nn.Module:
-        """
-        BERT tokenizer -> Input features -> BERT (self.model) -> hidden states -> taking the mean of entities; bilinear
-        formula -> return the whole model.
-        model <= BERT + additional processing
-        """
-        return BertWithAdaThresholdLocContextPooling(
-            n_classes=self.n_classes,
-            pretrained_bert=self.pretrained_bert,
-            bert_tokenizer_config_file=self.pretrained_bert,
-            num_ner_tags=self.num_ner_tags,
-            threshold=self.threshold,
-            device=self.device
-        )
-
-    def collate_fn(self, batch: List[Dict]) -> Tuple[Tensor, Tensor, List, List, List]:
-        input_ids = torch.tensor([f["input_ids"] for f in batch], dtype=torch.long)
-        label = [f["label"] for f in batch]
-        entity_pos = [f["entity_pos"] for f in batch]
-        ner_tags = [f["ner_tags"] for f in batch]
-        attention_mask = torch.tensor([f["attention_mask"] for f in batch], dtype=torch.float)
-        out = (input_ids, attention_mask, entity_pos, ner_tags, label)
-        return out

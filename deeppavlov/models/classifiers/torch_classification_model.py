@@ -36,37 +36,26 @@ class TorchTextClassificationModel(TorchModel):
 
     Args:
         n_classes: number of classes
-        model_name: name of `TorchTextClassificationModel` methods which initializes model architecture
         embedding_size: size of vector representation of words
         multilabel: is multi-label classification (if so, `sigmoid` activation will be used, otherwise, softmax)
         criterion: criterion name from `torch.nn`
         embedded_tokens: True, if input contains embedded tokenized texts;
                          False, if input containes indices of words in the vocabulary
         vocab_size: vocabulary size in case of `embedded_tokens=False`, and embedding is a layer in the Network
-        lr_decay_every_n_epochs: how often to decay lr
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
         return_probas: whether to return probabilities or index of classes (only for `multilabel=False`)
 
     Attributes:
-        opt: dictionary with all model parameters
-        n_classes: number of considered classes
         model: torch model itself
         epochs_done: number of epochs that were done
         criterion: torch criterion instance
     """
 
     def __init__(self, n_classes: int,
-                 model_name: str,
                  embedding_size: Optional[int] = None,
                  multilabel: bool = False,
                  criterion: str = "CrossEntropyLoss",
                  embedded_tokens: bool = True,
                  vocab_size: Optional[int] = None,
-                 lr_decay_every_n_epochs: Optional[int] = None,
-                 learning_rate_drop_patience: Optional[int] = None,
-                 learning_rate_drop_div: Optional[float] = None,
                  return_probas: bool = True,
                  **kwargs):
 
@@ -76,19 +65,15 @@ class TorchTextClassificationModel(TorchModel):
         if multilabel and not return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')
 
-        super().__init__(
-            embedding_size=embedding_size,
-            n_classes=n_classes,
-            model_name=model_name,
-            criterion=criterion,
-            multilabel=multilabel,
-            embedded_tokens=embedded_tokens,
-            vocab_size=vocab_size,
-            lr_decay_every_n_epochs=lr_decay_every_n_epochs,
-            learning_rate_drop_patience=learning_rate_drop_patience,
-            learning_rate_drop_div=learning_rate_drop_div,
-            return_probas=return_probas,
-            **kwargs)
+        self.multilabel = multilabel
+        self.return_probas = return_probas
+        self.model = ShallowAndWideCnn(n_classes=n_classes, embedding_size=embedding_size,
+                                       kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
+                                       dense_size=dense_size, dropout_rate=dropout_rate,
+                                       embedded_tokens=embedded_tokens,
+                                       vocab_size=vocab_size)
+
+        super().__init__(criterion=criterion, **kwargs)
 
     def __call__(self, texts: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.
@@ -108,35 +93,16 @@ class TorchTextClassificationModel(TorchModel):
             inputs = torch.from_numpy(features)
             inputs = inputs.to(self.device)
             outputs = self.model(inputs)
-            if self.opt["multilabel"]:
+            if self.multilabel:
                 outputs = torch.nn.functional.sigmoid(outputs)
             else:
                 outputs = torch.nn.functional.softmax(outputs, dim=-1)
 
         outputs = outputs.cpu().detach().numpy()
-        if self.opt["return_probas"]:
+        if self.return_probas:
             return outputs.tolist()
         else:
             return np.argmax(outputs, axis=-1).tolist()
-
-    @overrides
-    def process_event(self, event_name: str, data: dict):
-        """Process event after epoch
-
-        Args:
-            event_name: whether event is send after epoch or batch.
-                    Set of values: ``"after_epoch", "after_batch"``
-            data: event data (dictionary)
-        Returns:
-            None
-        """
-        super().process_event(event_name, data)
-
-        if event_name == "after_epoch" and self.opt.get("lr_decay_every_n_epochs", None) is not None:
-            if self.epochs_done % self.opt["lr_decay_every_n_epochs"] == 0:
-                log.info(f"----------Current LR is decreased in 10 times----------")
-                for param_group in self.optimizer.param_groups:
-                    param_group['lr'] = param_group['lr'] / 10
 
     def train_on_batch(self, texts: List[List[np.ndarray]], labels: list) -> Union[float, List[float]]:
         """Train the model on the given batch.
@@ -162,24 +128,3 @@ class TorchTextClassificationModel(TorchModel):
         loss.backward()
         self.optimizer.step()
         return loss.item()
-
-    def cnn_model(self, kernel_sizes_cnn: List[int], filters_cnn: int, dense_size: int, dropout_rate: float = 0.0,
-                  **kwargs) -> nn.Module:
-        """Build un-compiled model of shallow-and-wide CNN.
-
-        Args:
-            kernel_sizes_cnn: list of kernel sizes of convolutions.
-            filters_cnn: number of filters for convolutions.
-            dense_size: number of units for dense layer.
-            dropout_rate: dropout rate, after convolutions and between dense.
-            kwargs: other parameters
-
-        Returns:
-            torch.models.Model: instance of torch Model
-        """
-        model = ShallowAndWideCnn(n_classes=self.opt["n_classes"], embedding_size=self.opt["embedding_size"],
-                                  kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
-                                  dense_size=dense_size, dropout_rate=dropout_rate,
-                                  embedded_tokens=self.opt["embedded_tokens"],
-                                  vocab_size=self.opt["vocab_size"])
-        return model

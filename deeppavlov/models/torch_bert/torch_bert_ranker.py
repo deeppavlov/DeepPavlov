@@ -187,5 +187,4 @@ class TorchBertRankerModel(TorchModel):
 
         self.model.to(self.device)
 
-        self.init_optimizer_and_scheduler()
         super().load()

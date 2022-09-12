@@ -64,10 +64,19 @@ class TorchModel(NNModel):
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
                  min_learning_rate: float = 1e-07,
+                 criterion: Optional[str] = None,
                  *args, **kwargs):
+
         super().__init__(*args, **kwargs)
+
+        if not hasattr(self, 'model'):
+            raise AttributeError("Model is not defined.")
+
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
-        self.model = None
+        self.model.to(self.device)
+        self.optimizer = getattr(torch.optim, self.optimizer_name)(self.model.parameters(), **self.optimizer_parameters)
+        if criterion is not None:
+            self.criterion = getattr(torch.nn, criterion)()
         self.optimizer = None
         self.criterion = None
         self.epochs_done = 0
@@ -90,28 +99,6 @@ class TorchModel(NNModel):
         self.model.eval()
         log.debug(f"Model was successfully initialized! Model summary:\n {self.model}")
 
-    def init_from_opt(self, model_func: str) -> None:
-        """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
-            along with `self.optimizer` as `self.optimizer_name` from `torch.optim` and parameters
-            `self.optimizer_parameters`.
-
-        Args:
-            model_func: string name of this class methods
-
-        Returns:
-            None
-        """
-        if callable(model_func):
-            self.model = model_func(**self.opt).to(self.device)
-            self.init_optimizer_and_scheduler()
-            if self.opt.get("criterion", None):
-                self.criterion = getattr(torch.nn, self.opt.get("criterion", None))()
-        else:
-            raise AttributeError("Model is not defined.")
-
-    def init_optimizer_and_scheduler(self):
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(self.model.parameters(), **self.optimizer_parameters)
-
     @property
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
@@ -133,8 +120,6 @@ class TorchModel(NNModel):
         if fname is not None:
             self.load_path = fname
 
-        model_func = getattr(self, self.opt.get("model_name", ""), None)
-
         if self.load_path:
             log.debug(f"Load path {self.load_path} is given.")
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
@@ -145,10 +130,6 @@ class TorchModel(NNModel):
             if weights_path.exists():
                 log.debug(f"Load path {weights_path} exists.")
                 log.debug(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # firstly, initialize with random weights and previously saved parameters
-                if model_func:
-                    self.init_from_opt(model_func)
 
                 # now load the weights, optimizer from saved
                 log.debug(f"Loading weights from {weights_path}.")
@@ -166,12 +147,10 @@ class TorchModel(NNModel):
                     self.model.load_state_dict(model_state)
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
-            elif model_func:
+            else:
                 log.debug(f"Init from scratch. Load path {weights_path} does not exist.")
-                self.init_from_opt(model_func)
-        elif model_func:
+        else:
             log.debug(f"Init from scratch. Load path {self.load_path} is not provided.")
-            self.init_from_opt(model_func)
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:

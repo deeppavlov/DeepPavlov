@@ -274,5 +274,4 @@ class TorchTransformersSquad(TorchModel):
             self.model = torch.nn.DataParallel(self.model)
 
         self.model.to(self.device)
-        self.init_optimizer_and_scheduler()
         super().load()

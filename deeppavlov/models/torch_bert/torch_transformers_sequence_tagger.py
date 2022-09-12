@@ -282,8 +282,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         if self.use_crf:
             self.crf = CRF(self.n_classes).to(self.device)
 
-        self.init_optimizer_and_scheduler()
-
         if self.load_path:
             super().load()
             if self.use_crf:

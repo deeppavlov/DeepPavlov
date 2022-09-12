@@ -170,8 +170,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
 
         self.model.to(self.device)
 
-        self.init_optimizer_and_scheduler()
-
         if self.load_path:
             log.debug(f"Load path {self.load_path} is given.")
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
