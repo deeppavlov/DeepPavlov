@@ -85,10 +85,6 @@
       "pipe":[
          {
             "class_name":"multitask_pipeline_preprocessor",
-            "possible_keys_to_extract":[
-               0,
-               1
-            ],
             "preprocessors":[
                "TorchTransformersPreprocessor",
                "TorchTransformersPreprocessor",

@@ -45,6 +45,27 @@ class MultiTaskInputSplitter:
         return extracted
 
 
+@register("multitask_input_joiner")
+class MultiTaskInputJoiner:
+    """
+    The instance of these class in pipe joins inputs to one list
+    """
+
+    def __init__(self, **kwargs):
+        pass
+    def __call__(self, *args):
+        """
+        Returns list of joined values
+        Args:
+            inp: any values
+
+        Returns:
+            A list of these values
+        """
+        return [k for k in args]
+        
+
+
 @register('multitask_pipeline_preprocessor')
 class MultiTaskPipelinePreprocessor(Component):
     """
