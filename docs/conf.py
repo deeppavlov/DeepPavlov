@@ -196,7 +196,7 @@ autodoc_mock_imports = ['bert_dp', 'bs4', 'faiss', 'fastText', 'fasttext', 'gens
                         'torch', 'transformers', 'udapi', 'ufal_udpipe', 'whapi', 'xeger']
 
 extlinks = {
-    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+    'config': (f'https://github.com/deeppavlovteam/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
 }
 
 # -- Options for intersphinx extension ---------------------------------------

@@ -217,7 +217,7 @@ Advanced: Using Entity Linking and Wiki Parser As Standalone Services For KBQA
 ------------------------------------------------------------------------------
 Default configuration for KBQA was designed to use all of the supporting models together as a part of the KBQA pipeline. However, there might be a case when you want to work with some of these models in addition to KBQA.
 
-For example, you might want to use Entity Linking as an annotator in your `Deepy-based <https://github.com/deepmipt/assistant-base>`_ multiskill AI Assistant. Or, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.
+For example, you might want to use Entity Linking as an annotator in your `Deepy-based <https://github.com/deeppavlovteam/assistant-base>`_ multiskill AI Assistant. Or, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.
 
 Config :config:`kbqa_entity_linking <kbqa/kbqa_entity_linking.json>` can be used as service with the following command:
 

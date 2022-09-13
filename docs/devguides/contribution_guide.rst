@@ -16,14 +16,14 @@ you can receive an invitation to one of our events or an opportunity to become a
 How to contribute:
 
 #. Don't start the coding first.
-   You should do a quick search over `existing issues <https://github.com/deepmipt/DeepPavlov/issues?q=is%3Aissue>`_
+   You should do a quick search over `existing issues <https://github.com/deeppavlovteam/DeepPavlov/issues?q=is%3Aissue>`_
    for the project to see if your suggestion was already discussed or even resolved.
    If nothing relevant was found, please create a new one and state what exactly you would like
    to implement or fix.
    You may proceed with coding once someone on our team accepts your offer.
 
 #. `Fork <https://guides.github.com/activities/forking/>`_ the
-   `DeepPavlov repository <https://github.com/deepmipt/DeepPavlov>`_
+   `DeepPavlov repository <https://github.com/deeppavlovteam/DeepPavlov>`_
 
 #. Checkout the ``dev`` branch from
    `the upstream <https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/configuring-a-remote-for-a-fork>`_
@@ -33,7 +33,7 @@ How to contribute:
 
         git clone https://github.com/<OWNER>/<REPOSITORY>.git
         cd <REPOSITORY>
-        git remote add upstream https://github.com/deepmipt/DeepPavlov.git
+        git remote add upstream https://github.com/deeppavlovteam/DeepPavlov.git
         git fetch upstream
         git checkout -b dev --track upstream/dev
 
@@ -68,7 +68,7 @@ How to contribute:
 #. We ask you to **add some tests**. This will help us maintain the
    framework, and this will help users to understand the feature you introduce.
    Examples of implemented tests are available in `tests/
-   <https://github.com/deepmipt/DeepPavlov/tree/dev/tests>`_
+   <https://github.com/deeppavlovteam/DeepPavlov/tree/dev/tests>`_
    directory.
 
 #. Please, **update the documentation**, if you committed significant changes
@@ -85,7 +85,7 @@ How to contribute:
     Follow the `semantic commit notation <https://seesparkbox.com/foundry/semantic_commit_messages>`_
     for the name of the commit.
 
-#. Create a new `pull request <https://github.com/deepmipt/DeepPavlov/pulls>`_
+#. Create a new `pull request <https://github.com/deeppavlovteam/DeepPavlov/pulls>`_
    to get your feature branch merged into dev for others to use.
    Don't forget to `reference <https://help.github.com/en/github/writing-on-github/autolinked-references-and-urls>`_
    the GitHub issue associated with your task in the description.

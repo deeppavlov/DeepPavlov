@@ -1,1 +1,1 @@
-git+https://github.com/deepmipt/bert.git@feat/multi_gpu
+git+https://github.com/deeppavlovteam/bert.git@feat/multi_gpu
