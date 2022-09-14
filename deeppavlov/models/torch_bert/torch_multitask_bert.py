@@ -91,11 +91,8 @@ class BertForMultiTask(nn.Module):
             if token_type_ids is not None:
                 token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
         if token_type_ids is None:
-            try:
-                outputs = self.bert(input_ids=input_ids.int(),
+            outputs = self.bert(input_ids=input_ids.int(),
                                 attention_mask=attention_mask.int())
-            except Exception as e:
-                breakpoint()
         else:
             outputs = self.bert(input_ids=input_ids.int(),
                                 token_type_ids=token_type_ids.int(),
