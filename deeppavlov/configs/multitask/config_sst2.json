@@ -6,7 +6,7 @@
       "train":"train",
       "validation":"validation",
       "task_names":[
-         "sst2",
+         "sst2"
       ]
    },
    "dataset_iterator":{
@@ -48,7 +48,7 @@
             "x_sst2"
             ],
             "out":[
-                    "bert_features_sst2""
+                    "bert_features_sst2"
             ]
          },
          {

@@ -114,7 +114,6 @@ class BasicClassificationDatasetReader(DatasetReader):
                         data[data_type].append((x_text, y_label))
                     except Exception as e:
                         print(f'Error processing {row}: {e}')
-                        breakpoint()
                         raise e
             else:
                 log.warning("Cannot find {} file".format(file))

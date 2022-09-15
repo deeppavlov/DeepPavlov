@@ -67,10 +67,8 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
     def tokenize_mc_examples(self,
                              contexts: List[List[str]],
                              choices: List[List[str]]) -> Dict[str, torch.tensor]:
-
         num_choices = len(contexts[0])
         batch_size = len(contexts)
-
         # tokenize examples in groups of `num_choices`
         examples = []
         for context_list, choice_list in zip(contexts, choices):
@@ -107,8 +105,9 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
-
-        input_features = self.tokenize_mc_examples(texts_a, texts_b)
+        input_features = []
+        if texts_a and texts_b and texts_a[0] and texts_b[0]:
+            input_features = self.tokenize_mc_examples(texts_a, texts_b)
         return input_features
 
 
@@ -477,6 +476,7 @@ class TorchTransformersNerPreprocessor(Component):
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.token_masking_prob = token_masking_prob
+        self.return_features = return_features
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],

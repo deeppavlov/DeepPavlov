@@ -33,14 +33,16 @@ class ApiRequester(Component):
 
     Attributes:
         url: url of the API.
-        out: count of expected returned values.
+        out_count: count of expected returned values.
         param_names: list of parameter names for API requests.
         debatchify: if True, single instances will be sent to the API endpoint instead of batches.
     """
 
-    def __init__(self, url: str, out: [int, list], param_names: [list, tuple] = (), debatchify: bool = False,
+    def __init__(self, url: str, out: [int, list], param_names: [list, tuple] = None, debatchify: bool = False,
                  *args, **kwargs):
         self.url = url
+        if param_names is None:
+            param_names = kwargs.get('in', ())
         self.param_names = param_names
         self.out_count = out if isinstance(out, int) else len(out)
         self.debatchify = debatchify
@@ -70,12 +72,10 @@ class ApiRequester(Component):
 
             loop = asyncio.get_event_loop()
             response = loop.run_until_complete(collect())
-
+            if self.out_count > 1:
+                response = list(zip(*response))
         else:
             response = requests.post(self.url, json=data).json()
-
-        if self.out_count > 1:
-            response = list(zip(*response))
 
         return response
 

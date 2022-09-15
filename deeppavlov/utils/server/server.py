@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+import os
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
@@ -43,6 +44,13 @@ SSLConfig = namedtuple('SSLConfig', ['version', 'keyfile', 'certfile'])
 
 log = getLogger(__name__)
 dialog_logger = DialogLogger(logger_name='rest_api')
+
+COMPATIBILITY_MODE = os.getenv('COMPATIBILITY_MODE', False)
+
+if COMPATIBILITY_MODE is not False:
+    log.warning('DeepPavlov riseapi mode will use the old model response data format used up and including 1.0.0rc1.\n'
+                'COMPATIBILITY_MODE will be removed in the DeepPavlov 1.2.0.\n'
+                'Please, update your client code according to the new format.')
 
 app = FastAPI()
 
@@ -144,9 +152,13 @@ def interact(model: Chainer, payload: Dict[str, Optional[List]]) -> List:
     model_args = [arg or [None] * batch_size for arg in model_args]
 
     prediction = model(*model_args)
-    if len(model.out_params) == 1:
-        prediction = [prediction]
-    prediction = list(zip(*prediction))
+
+    # TODO: remove in 1.2.0
+    if COMPATIBILITY_MODE is not False:
+        if len(model.out_params) == 1:
+            prediction = [prediction]
+        prediction = list(zip(*prediction))
+
     result = jsonify_data(prediction)
     dialog_logger.log_out(result)
     return result
@@ -204,8 +216,13 @@ def start_model_server(model_config: Path,
         return await loop.run_in_executor(None, test_interact, model, item.dict())
 
     @app.get('/api', summary='Model argument names')
-    async def api() -> List[str]:
-        return model_args_names
+    async def api() -> Dict[str, List[str]]:
+        if COMPATIBILITY_MODE is not False:
+            return model_args_names
+        return {
+            'in': model.in_x,
+            'out': model.out_params
+        }
 
     uvicorn.run(app, host=host, port=port, log_config=log_config, ssl_version=ssl_config.version,
                 ssl_keyfile=ssl_config.keyfile, ssl_certfile=ssl_config.certfile, timeout_keep_alive=20)

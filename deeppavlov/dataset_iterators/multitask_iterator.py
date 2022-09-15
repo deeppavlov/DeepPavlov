@@ -162,6 +162,14 @@ class MultiTaskIterator:
             sizes = self._get_data_size(data_type)
             n_samples = sum(sizes)
             probs = [p / n_samples for p in sizes]
+        elif self.sampling_mode == 'plainiform':
+            sizes = self._get_data_size(data_type)
+            n_samples = sum(sizes)
+            probs_plain = [p / n_samples for p in sizes]
+            probs_uniform = [1 / len(sizes) for _ in sizes]
+            probs = [0.5*(prob_plain + prob_uniform) 
+                     for prob_plain, prob_uniform in zip(probs_plain, probs_uniform)]
+            probs = [k / sum(probs) for k in probs]
         elif self.sampling_mode == 'anneal':
             alpha = 1.0 - 0.8 * (self.epochs_done / self.num_train_epochs)
             annealed_sizes = [

@@ -72,7 +72,7 @@
                }
             },
             "in":[
-                    "bert_features_qqp
+                    "bert_features_qqp"
             ],
             "in_y":[
                     "y_qqp"

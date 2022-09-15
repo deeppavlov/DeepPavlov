@@ -223,7 +223,6 @@ class REPostprocessor:
             relation_name: List of names of found relations
         """
 
-        log.info(str(model_output))
         wikidata_relation_id, relation_name = [], []
 
         for predictions, nf_sample in zip(model_output, nf_samples):

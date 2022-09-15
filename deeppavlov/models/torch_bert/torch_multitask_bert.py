@@ -80,8 +80,7 @@ class BertForMultiTask(nn.Module):
         token_type_ids,
         labels=None,
         span1=None,
-        span2=None,
-        use_token_type_ids=True
+        span2=None
     ):
         name = self.task_types[task_id]
         outputs = None
@@ -91,7 +90,7 @@ class BertForMultiTask(nn.Module):
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
             if token_type_ids is not None:
                 token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
-        if not use_token_type_ids:
+        if token_type_ids is None:
             outputs = self.bert(input_ids=input_ids.int(),
                                 attention_mask=attention_mask.int())
         else:
@@ -246,7 +245,6 @@ class TorchMultiTaskBert(TorchModel):
             tasks_num_classes=self.tasks_num_classes,
             task_types=self.task_types,
             dropout=self.dropout)
-        self.use_token_type_ids = 'token_type_ids' in str(inspect.signature(self.model.bert.forward))
         self.model = self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
@@ -351,7 +349,6 @@ class TorchMultiTaskBert(TorchModel):
             labels = None
         _input = {}
         element_list = ["input_ids", "attention_mask", "token_type_ids"]
-
         for elem in element_list:
             if elem in task_features:
                 _input[elem] = task_features[elem]
@@ -382,9 +379,7 @@ class TorchMultiTaskBert(TorchModel):
                 _input["labels"] = torch.from_numpy(np.array(labels))
             element_list = element_list + ['labels']
         for elem in element_list:
-            if all([elem == 'token_type_ids',
-                    not self.use_token_type_ids,
-                    self.task_types[task_id] != 'sequence_labeling']):
+            if elem not in _input:
                 _input[elem] = None
             else:
                 _input[elem] = _input[elem].to(self.device)
@@ -410,10 +405,8 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 with torch.no_grad():
-                    log.debug(f'Input {_input}')
                     logits = self.model(
                         task_id=task_id,
-                        use_token_type_ids=self.use_token_type_ids,
                         **_input)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
@@ -471,7 +464,7 @@ class TorchMultiTaskBert(TorchModel):
             self.printed = True
         if 'token_type_ids' not in _input:
             _input['token_type_ids'] = None
-        loss, logits = self.model(task_id=task_id, use_token_type_ids=self.use_token_type_ids, **_input)
+        loss, logits = self.model(task_id=task_id, **_input)
 
         loss = loss / self.gradient_accumulation_steps[task_id]
         loss.backward()

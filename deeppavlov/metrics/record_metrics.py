@@ -50,7 +50,7 @@ def record_em_score(record_examples: List[RecordNestedExample]):
         if example_ems:
             em_scores.append(max(example_ems))
         else:
-            breakpoint()
+            print(f'No answer for: {example}')
     return np.mean(em_scores) if em_scores else -1
 
 

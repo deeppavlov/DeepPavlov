@@ -6,7 +6,7 @@
       "train":"train",
       "validation":"validation",
       "task_names":[
-         "cola",
+         "cola"
       ]
    },
    "dataset_iterator":{
@@ -48,7 +48,7 @@
             "x_cola"
             ],
             "out":[
-                    "bert_features_cola""
+                    "bert_features_cola"
             ]
          },
          {
