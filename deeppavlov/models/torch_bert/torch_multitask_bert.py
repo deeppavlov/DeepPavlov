@@ -405,7 +405,6 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 with torch.no_grad():
-                    log.info(f'Input {_input}')
                     logits = self.model(
                         task_id=task_id,
                         **_input)
