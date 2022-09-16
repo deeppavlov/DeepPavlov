@@ -91,12 +91,12 @@ class BertForMultiTask(nn.Module):
             if token_type_ids is not None:
                 token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
         if token_type_ids is None:
-            outputs = self.bert(input_ids=input_ids.int(),
-                                attention_mask=attention_mask.int())
+            outputs = self.bert(input_ids=input_ids.long(),
+                                attention_mask=attention_mask.long())
         else:
-            outputs = self.bert(input_ids=input_ids.int(),
-                                token_type_ids=token_type_ids.int(),
-                                attention_mask=attention_mask.int())
+            outputs = self.bert(input_ids=input_ids.long(),
+                                token_type_ids=token_type_ids.long(),
+                                attention_mask=attention_mask.long())
         first_token_tensor = outputs.last_hidden_state[:, 0]
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
