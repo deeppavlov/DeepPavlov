@@ -36,6 +36,10 @@ class TorchTextClassificationModel(TorchModel):
 
     Args:
         n_classes: number of classes
+        kernel_sizes_cnn: list of kernel sizes of convolutions
+        filters_cnn: number of filters for convolutions
+        dense_size: number of units for dense layer
+        dropout_rate: dropout rate, after convolutions and between dense
         embedding_size: size of vector representation of words
         multilabel: is multi-label classification (if so, `sigmoid` activation will be used, otherwise, softmax)
         criterion: criterion name from `torch.nn`
@@ -51,6 +55,10 @@ class TorchTextClassificationModel(TorchModel):
     """
 
     def __init__(self, n_classes: int,
+                 kernel_sizes_cnn: List[int],
+                 filters_cnn: int,
+                 dense_size: int,
+                 dropout_rate: float = 0.0,
                  embedding_size: Optional[int] = None,
                  multilabel: bool = False,
                  criterion: str = "CrossEntropyLoss",
