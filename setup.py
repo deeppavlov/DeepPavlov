@@ -40,8 +40,8 @@ def read_requirements():
 def readme():
     with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
-    text = re.sub(r']\((?!https?://)', r'](https://github.com/deeppavlovteam/DeepPavlov/blob/master/', text)
-    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deeppavlovteam/DeepPavlov/master/', text)
+    text = re.sub(r']\((?!https?://)', r'](https://github.com/deeppavlov/DeepPavlov/blob/master/', text)
+    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deeppavlov/DeepPavlov/master/', text)
     return text
 
 
@@ -56,8 +56,8 @@ if __name__ == '__main__':
         author=__author__,
         author_email=__email__,
         license=__license__,
-        url='https://github.com/deeppavlovteam/DeepPavlov',
-        download_url=f'https://github.com/deeppavlovteam/DeepPavlov/archive/{__version__}.tar.gz',
+        url='https://github.com/deeppavlov/DeepPavlov',
+        download_url=f'https://github.com/deeppavlov/DeepPavlov/archive/{__version__}.tar.gz',
         keywords=__keywords__,
         include_package_data=True,
         extras_require={
