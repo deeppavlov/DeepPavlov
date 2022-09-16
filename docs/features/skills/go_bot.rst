@@ -222,7 +222,7 @@ Tutorials
 
 We encourage you to explore the tutorials below to get better understanding of how to build basic and more advanced goal-oriented skills with these RASA DSLs:
 
-* `Original Tutorial Notebook Featuring Simple and DSTC2-based Skills <https://github.com/deeppavlovteam/DeepPavlov/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`_
+* `Original Tutorial Notebook Featuring Simple and DSTC2-based Skills <https://github.com/deeppavlov/DeepPavlov/blob/master/examples/gobot_md_yaml_configs_tutorial.ipynb>`_
 
 * `Tutorial Notebook Featuring Harvesters Maintenance Go-Bot Skill from Deepy 3000 Demo <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
 
@@ -232,13 +232,13 @@ How Do I: Integrate Go-Bot-based Goal-Oriented Skill into DeepPavlov Deepy
 
 To integrate your Go-Bot-based goal-oriented skill into your Multiskill AI Assistant built using DeepPavlov Conversational AI Stack, follow the following instructions:
 
-1. Clone `Deepy repository <https://github.com/deeppavlovteam/assistant-base>`_
-2. Replace ``docker-compose.yml`` in the root of the repository and ``pipeline_conf.json`` in the ``/agent/`` subdirectory with the corresponding files from the `deepy_gobot_base <https://github.com/deeppavlovteam/assistant-base/tree/main/assistant_dists/deepy_gobot_base>`_ **Deepy Distribution**
+1. Clone `Deepy repository <https://github.com/deeppavlov/assistant-base>`_
+2. Replace ``docker-compose.yml`` in the root of the repository and ``pipeline_conf.json`` in the ``/agent/`` subdirectory with the corresponding files from the `deepy_gobot_base <https://github.com/deeppavlov/assistant-base/tree/main/assistant_dists/deepy_gobot_base>`_ **Deepy Distribution**
 3. Clone the second `Tutorial Notebook <https://colab.research.google.com/drive/1BdTnDsytEABOU7RbNRQqIVE-rBHOv0kM?usp=sharing>`_
 4. Change its ``domain.yml``, ``nlu.md``, and ``stories.md`` based on your project needs with your custom **intents**, **slots**, **forms**, and write your own **stories**
 5. Train the go-bot model in your copy of the Tutorial Notebook
-6. Download and put saved data from your copy of the Tutorial Notebook into the `Harvesters Maintenance Go-Bot Skill <https://github.com/deeppavlovteam/assistant-base/tree/main/skills/harvesters_maintenance_gobot_skill>`_
-7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deeppavlovteam/assistant-base/tree/main/skills/program-y>`_ from at both the ``/agent/pipeline_conf.json`` and from ``docker-compose.yml``
+6. Download and put saved data from your copy of the Tutorial Notebook into the `Harvesters Maintenance Go-Bot Skill <https://github.com/deeppavlov/assistant-base/tree/main/skills/harvesters_maintenance_gobot_skill>`_
+7. [Optional] Unless you need a Chit-Chat skill remove `it <https://github.com/deeppavlov/assistant-base/tree/main/skills/program-y>`_ from at both the ``/agent/pipeline_conf.json`` and from ``docker-compose.yml``
 8. Use ``docker-compose up --build`` command to build and run your DeepPavlov-based Multiskill AI Assistant
 
 .. note::
@@ -252,7 +252,7 @@ Tutorials
 
 Follow this tutorial to experiment with the Form-Filling functionality in Go-Bot-based goal-oriented skills built using RASA DSLs (v1):
 
-* `Tutorial Notebook Featuring Basic Form-Filling <https://github.com/deeppavlovteam/DeepPavlov/blob/feature/gobot_naive_formfilling/examples/gobot_formfilling_tutorial.ipynb>`_
+* `Tutorial Notebook Featuring Basic Form-Filling <https://github.com/deeppavlov/DeepPavlov/blob/feature/gobot_naive_formfilling/examples/gobot_formfilling_tutorial.ipynb>`_
 
 
 DSTC2 Format Support
