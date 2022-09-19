@@ -376,7 +376,15 @@ class TorchMultiTaskBert(TorchModel):
                 _input['labels'] = torch.from_numpy(
                     np.array(subtoken_labels)).to(torch.int64)
             else:
-                _input["labels"] = torch.from_numpy(np.array(labels))
+                if not self.multilabel:
+                    _input["labels"] = torch.from_numpy(np.array(labels))
+                elif self.multilabel:
+                    # We assume that labels already are one hot encoded
+                    num_classes = self.tasks_num_classes[task_id]
+                    _input['labels'] = torch.zeros((len(labels), num_classes))
+                    for i in range(len(labels)):
+                        for label_ind in labels[i]:
+                            _input['labels'][i][label_ind] = 1
             element_list = element_list + ['labels']
         for elem in element_list:
             if elem not in _input:
@@ -417,10 +425,16 @@ class TorchMultiTaskBert(TorchModel):
                             prediction in zip(seq_lengths, predicted_ids)]
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
-                elif self.return_probas:
-                    pred = torch.softmax(logits, dim=-1)
+                if self.multilabel:
+                    if self.return_probas:
+                        pred = torch.sigmoid(logits, dim=-1)
+                    else:
+                        pred = [torch.where(k>0.5)[0] for k in logits]
                 else:
-                    pred = torch.argmax(logits, dim=1)
+                    if self.return_probas:
+                        pred = torch.softmax(logits, dim=-1)
+                    else:
+                        pred = torch.argmax(logits, dim=1)
                 if not isinstance(pred, list):
                     pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
