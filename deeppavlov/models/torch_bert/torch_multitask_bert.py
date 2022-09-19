@@ -173,7 +173,6 @@ class TorchMultiTaskBert(TorchModel):
         backbone_model: str = "bert-base-cased",
         clip_norm: Optional[float] = None,
         one_hot_labels: bool = False,
-        multilabel: bool = False,
         return_probas: bool = False,
         freeze_embeddings: bool = False,
         dropout: Optional[float] = None,
@@ -183,7 +182,6 @@ class TorchMultiTaskBert(TorchModel):
         path_to_current_file = os.path.realpath(__file__)
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
-        self.multilabel = multilabel
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.task_types = []
@@ -191,10 +189,12 @@ class TorchMultiTaskBert(TorchModel):
         self.max_seq_len = max_seq_len
         self.tasks_num_classes = []
         self.task_names = []
+        self.multilabel = []
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
             self.task_types.append(tasks[task]['type'])
+            self.multilabel.append(tasks[task].get('multilabel',False))
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -211,17 +211,7 @@ class TorchMultiTaskBert(TorchModel):
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError(
-                "Use one-hot encoded labels for multilabel classification!"
-            )
 
-        if self.multilabel and not self.return_probas:
-            raise RuntimeError(
-                "Set return_probas to True for multilabel classification!"
-            )
-
-        assert not self.multilabel, 'Multilabel not supported yet'
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
             lr_scheduler=self.lr_scheduler_name,
@@ -376,9 +366,9 @@ class TorchMultiTaskBert(TorchModel):
                 _input['labels'] = torch.from_numpy(
                     np.array(subtoken_labels)).to(torch.int64)
             else:
-                if not self.multilabel:
+                if not self.multilabel[task_id]:
                     _input["labels"] = torch.from_numpy(np.array(labels))
-                elif self.multilabel:
+                elif self.multilabel[task_id]:
                     # We assume that labels already are one hot encoded
                     num_classes = self.tasks_num_classes[task_id]
                     _input['labels'] = torch.zeros((len(labels), num_classes))
@@ -425,7 +415,7 @@ class TorchMultiTaskBert(TorchModel):
                             prediction in zip(seq_lengths, predicted_ids)]
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
-                if self.multilabel:
+                if self.multilabel[task_id]:
                     if self.return_probas:
                         pred = torch.sigmoid(logits, dim=-1)
                     else:
