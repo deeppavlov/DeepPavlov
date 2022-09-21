@@ -1,0 +1,55 @@
+{
+  "chainer": {
+    "in": ["hypothesis", "premise"],
+    "in_y": ["binary_label"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "in": ["hypothesis", "premise"],
+        "out": ["bert_features"],
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": false,
+        "max_seq_length": 128
+      },
+      {
+        "class_name": "torch_transformers_classifier",
+        "in": ["bert_features"],
+        "in_y": ["binary_label"],
+        "out": ["simmilarity_scores"],
+        "n_classes": 2,
+        "return_probas": true,
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 3e-04,
+          "weight_decay": 0.01,
+          "betas": [0.9, 0.999],
+          "eps": 1e-08
+        },
+        "learning_rate_drop_patience": 24,
+        "learning_rate_drop_div": 2,
+        "min_learning_rate": 1e-5
+      }
+    ],
+    "out": ["simmilarity_scores"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/classification/dnnc",
+      "BASE_MODEL": "roberta-base",
+      "BINARY_CLASSIFICATION": true
+    }
+  },
+  "download": [
+    {
+      "url": "http://files.deeppavlov.ai/v1/classifiers/few_shot_infer.tar.gz",
+      "subdir": "{MODEL_PATH}"
+    }
+  ]
+}
