@@ -273,6 +273,9 @@ PARAMS = {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_bert.json", "squad_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK]
     },
+    "generative_qa": {
+        ("generative_qa/sbersquad_fid.json", "sbersquad_fid", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
+    },
     "odqa": {
         ("odqa/en_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
