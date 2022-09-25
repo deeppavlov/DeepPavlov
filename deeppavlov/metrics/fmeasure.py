@@ -18,7 +18,9 @@ from itertools import chain
 from logging import getLogger
 
 import numpy as np
-from sklearn.metrics import f1_score, confusion_matrix
+np.set_printoptions(threshold=np.inf)
+from sklearn.metrics import f1_score, confusion_matrix, multilabel_confusion_matrix
+from sklearn.preprocessing import MultiLabelBinarizer
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
@@ -239,8 +241,36 @@ def round_f1_weighted(y_true, y_predicted):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-    print(f'Confusion_matrix {confusion_matrix(np.array(y_true), np.array(y_predicted))}')
-    return f1_score(np.array(y_true), np.array(predictions), average="weighted")
+
+    try:
+        matrix = confusion_matrix(np.array(y_true), np.array(y_predicted)).tolist()
+
+    except Exception as e:
+        try:
+            mlb = MultiLabelBinarizer(sparse_output=False)
+            mlb.fit(y_true+y_predicted)
+            y_true_binarized = mlb.transform(y_true)
+            y_predicted_binarized=mlb.transform(y_predicted)
+            matrix = multilabel_confusion_matrix(np.array(y_true_binarized), np.array(y_predicted_binarized)).tolist()
+        except Exception as e:
+            print(e)
+            breakpoint()
+    print(f'Confusion_matrix {matrix}')
+    
+    try:
+        return f1_score(np.array(y_true), np.array(y_predicted), average="weighted")
+    except Exception as e:
+        log.info('Singlelabel classification failed. Assuming multilabel classification')
+        mlb = MultiLabelBinarizer(sparse_output=False)
+        mlb.fit(y_true)
+        y_true_binarized = mlb.transform(y_true)
+        y_predicted_binarized=mlb.transform(y_predicted)   
+        try:
+            return f1_score(np.array(y_true_binarized), np.array(y_predicted_binarized), average="weighted")
+        except Exception as e:
+            breakpoint()
+            assert False
+
 
 
 def chunk_finder(current_token, previous_token, tag):

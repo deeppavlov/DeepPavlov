@@ -33,7 +33,7 @@ class MultiTaskReader(DatasetReader):
     """
 
     def read(self, data_path, tasks: Dict[str, Dict[str, str]] = {}, task_names=None, path=None,
-             train=None, validation=None, test=None, reader_class_name=None):
+             train=None, valid=None, test=None, reader_class_name=None,**kwargs):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
         Args:
             data_path: can be anything since it is not used. `data_path` is present because it is
@@ -65,11 +65,24 @@ class MultiTaskReader(DatasetReader):
         for task_name, reader_params in tasks.items():
             log.info('Processing explicitly set tasks')
             reader_params = copy.deepcopy(reader_params)
+            for default_param in ['train', 'valid', 'reader_class_name']:
+                # checking if parameters are defined either on the task lavel or in the function level. 
+                # Note: no check for test as we can not to define it
+                error_msg = f'Set {default_param} for task {task_name} or for all tasks'
+                assert default_param in reader_params or eval(default_param) is not None, error_msg
+            param_dict = {}
             tasks[task_name] = from_params(
-                {"class_name": reader_params['reader_class_name']})
+                {"class_name": reader_params.get('reader_class_name',reader_class_name),
+                })
+            reader_params = {**reader_params, **kwargs}
             reader_params['data_path'] = Path(
                 reader_params['data_path']).expanduser()
-            del reader_params['reader_class_name']
+            if 'reader_class_name' in reader_params:
+                del reader_params['reader_class_name']
+            for param_ in ['train', 'test', 'valid']:
+                if param_ not in reader_params:
+                    reader_params[param_] = eval(param_)
+            print(reader_params)
             data[task_name] = tasks[task_name].read(**reader_params)
         if task_names is not None:
             assert isinstance(task_names, Iterable)
@@ -92,7 +105,8 @@ class MultiTaskReader(DatasetReader):
                                  'data_path': data_path,
                                  'name': name,
                                  'train': train,
-                                 'valid': validation_name}
+                                 'valid': validation_name,
+                                 **kwargs}
                 if test is not None:
                     reader_params['test'] = test_name
                 for key in reader_params:

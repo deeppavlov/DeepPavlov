@@ -13,7 +13,7 @@ import _pickle as cPickle
 
 import torch
 import torch.nn as nn
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
 from torch.autograd import Variable
 from collections.abc import Iterable
 from torch.nn.parameter import Parameter
@@ -44,7 +44,7 @@ class BertForMultiTask(nn.Module):
     backbone_model - na
     """
 
-    def __init__(self, tasks_num_classes, task_types,
+    def __init__(self, tasks_num_classes, multilabel,task_types,
                  backbone_model='bert_base_uncased', dropout=None,
                  max_seq_len=320):
 
@@ -54,6 +54,7 @@ class BertForMultiTask(nn.Module):
         self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
                                               config=config)
         self.classes = tasks_num_classes  # classes for every task
+        self.multilabel = multilabel
         if dropout is not None:
             self.dropout = nn.Dropout(dropout)
         elif hasattr(config, 'hidden_dropout_prob'):
@@ -104,9 +105,13 @@ class BertForMultiTask(nn.Module):
             final_output = self.dropout(outputs.last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
-                loss_fct = CrossEntropyLoss()
                 active_logits = logits.view(-1, self.classes[task_id])
-                loss = loss_fct(active_logits, labels.view(-1))
+                if not self.multilabel[task_id]:
+                    loss_fct = CrossEntropyLoss()
+                    loss = loss_fct(active_logits, labels.view(-1))
+                elif self.multilabel[task_id]:
+                    loss_fct = BCEWithLogitsLoss()
+                    loss = loss_fct(active_logits, labels)                    
                 return loss, logits
             else:
                 return logits
@@ -121,8 +126,12 @@ class BertForMultiTask(nn.Module):
                         labels), f'Len of logits {l1} and labels {l2} not match'
             if labels is not None:
                 if name != "regression":
-                    loss_fct = CrossEntropyLoss()
-                    loss = loss_fct(logits, labels.view(-1))
+                    if not self.multilabel[task_id]:
+                        loss_fct = CrossEntropyLoss()
+                        loss = loss_fct(logits, labels.view(-1))
+                    elif self.multilabel[task_id]:
+                        loss_fct = BCEWithLogitsLoss()
+                        loss = loss_fct(logits, labels)
                     return loss, logits
                 elif name == "regression":
                     loss_fct = MSELoss()
@@ -233,6 +242,7 @@ class TorchMultiTaskBert(TorchModel):
         self.model = BertForMultiTask(
             backbone_model=self.backbone_model,
             tasks_num_classes=self.tasks_num_classes,
+            multilabel=self.multilabel,
             task_types=self.task_types,
             dropout=self.dropout)
         self.model = self.model.to(self.device)
@@ -416,10 +426,11 @@ class TorchMultiTaskBert(TorchModel):
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
                 if self.multilabel[task_id]:
+                    probs = torch.sigmoid(logits)
                     if self.return_probas:
-                        pred = torch.sigmoid(logits, dim=-1)
+                        pred = probs
                     else:
-                        pred = [torch.where(k>0.5)[0] for k in logits]
+                        pred = [torch.where(k>0.5)[0].cpu().tolist() for k in probs]
                 else:
                     if self.return_probas:
                         pred = torch.softmax(logits, dim=-1)
