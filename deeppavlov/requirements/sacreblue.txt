@@ -1,1 +1,1 @@
-deeppavlov/requirements/sacreblue.txt
+sacrebleu==2.1.0
