@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 import numpy as np
 import sklearn.metrics
@@ -37,22 +37,5 @@ def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
     try:
         return sklearn.metrics.roc_auc_score(np.squeeze(np.array(y_true)),
                                              np.squeeze(np.array(y_pred)), average="macro")
-    except ValueError:
-        return 0.
-
-@register_metric('oos_scores')
-def oos_scores(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
-                  y_pred: Union[List[List[float]], List[List[int]], np.ndarray]) -> float:
-    """
-    Args:
-        y_true: true binary labels
-        y_pred: target scores, can either be probability estimates of the positive class
-
-    Returns:
-    """
-    try:
-        report = sklearn.metrics.classification_report(np.squeeze(np.array(y_true)),
-                                                       np.squeeze(np.array(y_pred)), output_dict=True)
-        return report['oos']
     except ValueError:
         return 0.
