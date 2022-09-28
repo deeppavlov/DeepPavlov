@@ -60,6 +60,12 @@ class BasicClassificationDatasetReader(DatasetReader):
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
         """
+        def row_list_process(row, y):
+            if pd.isna(row[y]):
+                return []
+            else:
+                return [label_type(label) for label in str(row[y]).split(class_sep)]
+
         data_types = ["train", "valid", "test"]
 
         train_file = kwargs.get('train', 'train.csv')
@@ -102,7 +108,7 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                row_list_process = lambda row, y: [label_type(label) for label in str(row[y]).split(class_sep)]
+
                 for _, row in tqdm(df.iterrows()):
                     try:
                         if isinstance(x, list):
