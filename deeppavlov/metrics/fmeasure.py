@@ -226,14 +226,12 @@ def round_f1_macro(y_true, y_predicted):
 
 
 @register_metric('f1_weighted')
-def round_f1_weighted(y_true, y_predicted):
+def round_f1_weighted(y_true, y_predicted, print_matrix=True):
     """
     Calculates F1 weighted measure.
-
     Args:
         y_true: list of true values
         y_predicted: list of predicted values
-
     Returns:
         F1 score
     """
@@ -242,36 +240,21 @@ def round_f1_weighted(y_true, y_predicted):
     except TypeError:
         predictions = y_predicted
     if y_true == y_predicted:
+        # y_true and y_predicted are empty lists
         return 1
-    try:
-        matrix = confusion_matrix(np.array(y_true), np.array(y_predicted)).tolist()
-
-    except Exception as e:
-        try:
-            mlb = MultiLabelBinarizer(sparse_output=False)
-            mlb.fit(y_true+y_predicted)
-            y_true_binarized = mlb.transform(y_true)
-            y_predicted_binarized=mlb.transform(y_predicted)
-            matrix = multilabel_confusion_matrix(np.array(y_true_binarized), np.array(y_predicted_binarized)).tolist()
-        except Exception as e:
-            print(e)
-            return 0
-    print(f'Confusion_matrix {matrix}')
-    
-    try:
-        return f1_score(np.array(y_true), np.array(y_predicted), average="weighted")
-    except Exception as e:
-        log.info('Singlelabel classification failed. Assuming multilabel classification')
+    if all(isinstance(k, list) for k in y_true):
         mlb = MultiLabelBinarizer(sparse_output=False)
-        mlb.fit(y_true)
+        mlb.fit(y_true + y_predicted)
         y_true_binarized = mlb.transform(y_true)
-        y_predicted_binarized=mlb.transform(y_predicted)   
-        try:
-            return f1_score(np.array(y_true_binarized), np.array(y_predicted_binarized), average="weighted")
-        except Exception as e:
-            print(e)
-            return 0
-
+        y_predicted_binarized = mlb.transform(y_predicted)
+        f_score = f1_score(np.array(y_true_binarized), np.array(y_predicted_binarized), average="weighted")
+        if print_matrix:
+            print(multilabel_confusion_matrix(np.array(y_true_binarized), np.array(y_predicted_binarized)).tolist())
+    else:
+        f_score = f1_score(np.array(y_true), np.array(y_predicted), average="weighted")
+        if print_matrix:
+            print(confusion_matrix(np.array(y_true), np.array(y_predicted)).tolist())
+    return f_score
 
 
 def chunk_finder(current_token, previous_token, tag):
