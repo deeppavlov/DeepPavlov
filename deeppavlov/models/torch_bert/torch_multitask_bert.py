@@ -213,7 +213,7 @@ class TorchMultiTaskBert(TorchModel):
         self.optimizer_parameters = optimizer_parameters
         self.lr_scheduler_name = lr_scheduler
         self.lr_scheduler_parameters = lr_scheduler_parameters
-        self.gradient_accumulation_steps = [gradient_accumulation_steps for _ in self.task_names]
+        self.gradient_accumulation_steps = gradient_accumulation_steps
         self.steps_per_epoch = steps_per_epoch
         self.steps_taken = 0
         self.prev_id = None
@@ -339,6 +339,7 @@ class TorchMultiTaskBert(TorchModel):
 
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
+        
 
     def _make_input(self, task_features, task_id, labels=None):
         batch_input_size = None
@@ -480,17 +481,19 @@ class TorchMultiTaskBert(TorchModel):
         if 'token_type_ids' not in _input:
             _input['token_type_ids'] = None
         loss, logits = self.model(task_id=task_id, **_input)
-
-        loss = loss / self.gradient_accumulation_steps[task_id]
+        if self.is_data_parallel:
+            loss = loss.mean()
+        loss = loss / self.gradient_accumulation_steps
         loss.backward()
 
+        
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
             torch.nn.utils.clip_grad_norm_(
                 self.model.parameters(), self.clip_norm)
 
-        if (self.steps_taken + 1) % self.gradient_accumulation_steps[task_id] == 0 or (
+        if (self.steps_taken + 1) % self.gradient_accumulation_steps == 0 or (
                 self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
             self.optimizer.step()
             if self.lr_scheduler:

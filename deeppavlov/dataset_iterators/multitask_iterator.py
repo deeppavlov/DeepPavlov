@@ -231,7 +231,9 @@ class MultiTaskIterator:
         size_of_last_batch = max_task_data_len % batch_size
         if size_of_last_batch == 0:
             size_of_last_batch = batch_size
-
+        log.info(f'Batch size {batch_size} with gradient accumulation steps {self.gradient_accumulation_steps}')
+        log.info(f'Efficient batch size {batch_size//self.gradient_accumulation_steps}')
+        batch_size = batch_size // self.gradient_accumulation_steps
         n_batches = math.ceil(max_task_data_len / batch_size)
 
         if data_type == "train":
