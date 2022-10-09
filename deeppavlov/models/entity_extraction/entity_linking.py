@@ -94,7 +94,7 @@ class EntityLinker(Component, Serializable):
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.not_found_str = "not in wiki"
+        self.not_found_str = "not_in_wiki"
 
         self.load()
 
@@ -277,27 +277,31 @@ class EntityLinker(Component, Serializable):
                 cand_ent_init[cand_entity_id].add((substr_score, cand_entity_rels))
         return cand_ent_init
 
+    def find_title(self, entity_substr):
+        entities_and_ids = []
+        try:
+            res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr))
+            entities_and_ids = res.fetchall()
+        except sqlite3.OperationalError as e:
+            log.debug(f"error in searching an entity {e}")
+        return entities_and_ids
+
     def find_exact_match(self, entity_substr, tag):
         entity_substr_split = entity_substr.split()
         cand_ent_init = defaultdict(set)
-        res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr))
-        entities_and_ids = res.fetchall()
+        entities_and_ids = self.find_title(entity_substr)
         if entities_and_ids:
             cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split, tag)
         if entity_substr.startswith("the "):
             entity_substr = entity_substr.split("the ")[1]
             entity_substr_split = entity_substr_split[1:]
-            res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr))
-            entities_and_ids = res.fetchall()
+            entities_and_ids = self.find_title(entity_substr)
             cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split, tag)
         if self.lang == "@ru":
             entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
             entity_substr_lemm = " ".join(entity_substr_split_lemm)
             if entity_substr_lemm != entity_substr:
-                res = self.cur.execute(
-                    "SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr_lemm)
-                )
-                entities_and_ids = res.fetchall()
+                entities_and_ids = self.find_title(entity_substr_lemm)
                 if entities_and_ids:
                     cand_ent_init = self.process_cand_ent(
                         cand_ent_init, entities_and_ids, entity_substr_split_lemm, tag
@@ -311,14 +315,12 @@ class EntityLinker(Component, Serializable):
             entity_substr_split_lemm = entity_substr_split
         cand_ent_init = defaultdict(set)
         for word in entity_substr_split:
-            res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(word))
-            part_entities_and_ids = res.fetchall()
+            part_entities_and_ids = self.find_title(word)
             cand_ent_init = self.process_cand_ent(cand_ent_init, part_entities_and_ids, entity_substr_split, tag)
             if self.lang == "@ru":
                 word_lemm = self.morph.parse(word)[0].normal_form
                 if word != word_lemm:
-                    res = self.cur.execute("SELECT * FROM inverted_index WHERE title MATCH '{}';".format(word_lemm))
-                    part_entities_and_ids = res.fetchall()
+                    part_entities_and_ids = self.find_title(word_lemm)
                     cand_ent_init = self.process_cand_ent(
                         cand_ent_init,
                         part_entities_and_ids,
