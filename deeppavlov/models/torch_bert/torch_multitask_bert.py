@@ -94,14 +94,15 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
-        return outputs.last_hidden_state
+        if name == 'sequence_labeling':
+            return outputs.last_hidden_state
+        else:
+            return outputs.last_hidden_state[:, 0]
 
     def predict_on_top(self, task_id, last_hidden_state, labels=None):
         name = self.task_types[task_id]
-        first_token_tensor = last_hidden_state[:, 0]
-        pooled_output = self.bert.pooler(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
+            #  last hidden state is all token tensor
             final_output = self.dropout(last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
@@ -116,6 +117,9 @@ class BertForMultiTask(nn.Module):
             else:
                 return logits
         elif name in ['classification', 'regression', 'multiple_choice']:
+            #  last hidden state is a first token tensor
+            pooled_output = self.bert.pooler(last_hidden_state)
+            pooled_output = self.activation(pooled_output)
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
             if name == 'multiple_choice':
@@ -176,7 +180,8 @@ class TorchMultiTaskBert(TorchModel):
         return_probas(default: False): set true to return prediction probabilities,
         freeze_embeddings(default: False): set true to freeze BERT embeddings
         dropout(default: None): dropout for the final model layer.
-        cache_size(default:10): cache size for the last predicts that we use
+        cache_size(default:3): cache size for the last predicts that we use
+        cuda_cache(default:True): if True, store cache on GPU
         If not set, defaults to the parameter hidden_dropout_prob of original model
     """
 
@@ -197,6 +202,7 @@ class TorchMultiTaskBert(TorchModel):
             freeze_embeddings: bool = False,
             dropout: Optional[float] = None,
             cache_size: int = 3,
+            cuda_cache: bool = True,
             *args,
             **kwargs,
     ) -> None:
@@ -232,7 +238,9 @@ class TorchMultiTaskBert(TorchModel):
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
-        self.cache = FixSizeOrderedDict(max=cache_size)
+        self.cache_size = cache_size
+        self.cache = FixSizeOrderedDict(max=self.cache_size)
+        self.cuda_cache = cuda_cache
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -426,14 +434,22 @@ class TorchMultiTaskBert(TorchModel):
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
-                cache_key = (we_transform_input(self.task_names[task_id]),
-                             str(args[task_id]))
-                if cache_key in self.cache:
-                    last_hidden_state = self.cache[cache_key].cuda()
-                else:
+                last_hidden_state, cache_key = None, None
+                if self.cache_size > 0:
+                    cache_key = (we_transform_input(self.task_names[task_id]),
+                                 hash(str(args[task_id]['input_ids'])))
+                    if cache_key in self.cache:
+                        last_hidden_state = self.cache[cache_key]
+                        if not self.cuda_cache:
+                            last_hidden_state = last_hidden_state.cuda()
+                if last_hidden_state is None:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = last_hidden_state.cpu()
+                        if self.cache_size > 0:
+                            if self.cuda_cache:
+                                self.cache[cache_key] = last_hidden_state
+                            else:
+                                self.cache[cache_key] = last_hidden_state.cpu()
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
