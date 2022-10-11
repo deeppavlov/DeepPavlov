@@ -44,7 +44,7 @@ class MultiTaskIterator:
         gradient_accumulation_steps: number of gradient accumulation steps. Default is 1
         steps_per_epoch: number of steps per epoch. Nesessary if gradient_accumulation_steps > 1
         iterator_class_name: name of iterator class.
-        use_label_name, seed, label, features - parameters for the iterator class
+        use_label_name, seed, features - parameters for the iterator class
         one_element_tuples: if True, tuple of x consisting of one element is returned in this element. Default: True
 
 
@@ -64,14 +64,14 @@ class MultiTaskIterator:
             iterator_class_name=None,
             use_label_name=False,
             seed=42,
-            label=None,
             features=None,
-            one_element_tuples=True
+            one_element_tuples=True,
+            *args
     ):
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
             task_iterator_params = copy.deepcopy(task_iterator_params)
-            for param_name in ['use_label_name', 'seed', 'label', 'features', 'iterator_class_name']:
+            for param_name in ['use_label_name', 'seed', 'features', 'iterator_class_name']:
                 if param_name not in task_iterator_params:
                     if param_name != 'features':
                         error_msg = f'Set {param_name} either in scope for {param_name} or as default_params'
