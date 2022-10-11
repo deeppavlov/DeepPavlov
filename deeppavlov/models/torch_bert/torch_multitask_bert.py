@@ -427,7 +427,7 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 cache_key = (we_transform_input(self.task_names[task_id]),
-                             str(args[task_id]))
+                             hash(frozenset(args[task_id])))
                 if cache_key in self.cache:
                     last_hidden_state = self.cache[cache_key].cuda()
                 else:
