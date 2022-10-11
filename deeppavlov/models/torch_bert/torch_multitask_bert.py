@@ -94,14 +94,15 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
-        return outputs.last_hidden_state
+        if name == 'sequence_labeling':
+            return outputs.last_hidden_state
+        else:
+            return outputs.last_hidden_state[:, 0]
 
     def predict_on_top(self, task_id, last_hidden_state, labels=None):
         name = self.task_types[task_id]
-        first_token_tensor = last_hidden_state[:, 0]
-        pooled_output = self.bert.pooler(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
+            #  last hidden state is all token tensor
             final_output = self.dropout(last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
@@ -116,6 +117,9 @@ class BertForMultiTask(nn.Module):
             else:
                 return logits
         elif name in ['classification', 'regression', 'multiple_choice']:
+            #  last hidden state is a first token tensor
+            pooled_output = self.bert.pooler(last_hidden_state)
+            pooled_output = self.activation(pooled_output)
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
             if name == 'multiple_choice':
@@ -429,11 +433,11 @@ class TorchMultiTaskBert(TorchModel):
                 cache_key = (we_transform_input(self.task_names[task_id]),
                              str(args[task_id])))
                 if cache_key in self.cache:
-                    last_hidden_state = self.cache[cache_key].cuda()
+                    last_hidden_state = self.cache[cache_key]
                 else:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = last_hidden_state.cpu()
+                        self.cache[cache_key] = last_hidden_state
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
