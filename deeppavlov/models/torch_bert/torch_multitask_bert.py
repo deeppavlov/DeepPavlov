@@ -240,6 +240,7 @@ class TorchMultiTaskBert(TorchModel):
         self.dropout = dropout
         self.cache_size = cache_size
         self.cache = FixSizeOrderedDict(max=self.cache_size)
+        self.cuda_cache = cuda_cache
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -436,14 +437,19 @@ class TorchMultiTaskBert(TorchModel):
                 last_hidden_state, cache_key = None, None
                 if self.cache_size > 0:
                     cache_key = (we_transform_input(self.task_names[task_id]),
-                                 str(args[task_id]))
+                                 str(args[task_id]['input_ids']))
                     if cache_key in self.cache:
                         last_hidden_state = self.cache[cache_key]
+                        if not self.cuda_cache:
+                            last_hidden_state = last_hidden_state.cuda()
                 if last_hidden_state is None:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
                         if self.cache_size > 0:
-                            self.cache[cache_key] = last_hidden_state
+                            if self.cuda_cache:
+                                self.cache[cache_key] = last_hidden_state
+                            else:
+                                self.cache[cache_key] = last_hidden_state.cpu()
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
