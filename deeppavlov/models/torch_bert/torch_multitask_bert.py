@@ -41,12 +41,10 @@ def we_transform_input(name):
 
 class BertForMultiTask(nn.Module):
     """
-
     BERT model for multiple choice,sequence labeling, ner, classification or regression
     This module is composed of the BERT model with a linear layer on top of
     the pooled output.
     Params:
-
     task_num_classes
     task_types
     backbone_model - na
@@ -96,15 +94,15 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
-        return outputs
+        return outputs.last_hidden_state
 
-    def predict_on_top(self, task_id, outputs, labels=None):
+    def predict_on_top(self, task_id, last_hidden_state, labels=None):
         name = self.task_types[task_id]
-        first_token_tensor = outputs.last_hidden_state[:, 0]
+        first_token_tensor = last_hidden_state[:, 0]
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
-            final_output = self.dropout(outputs.last_hidden_state)
+            final_output = self.dropout(last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
                 active_logits = logits.view(-1, self.classes[task_id])
@@ -154,15 +152,14 @@ class BertForMultiTask(nn.Module):
             token_type_ids,
             labels=None
     ):
-        outputs = self.get_logits(task_id, input_ids, attention_mask, token_type_ids)
-        return self.predict_on_top(task_id, outputs, labels)
+        last_hidden_state = self.get_logits(task_id, input_ids, attention_mask, token_type_ids)
+        return self.predict_on_top(task_id, last_hidden_state, labels)
 
 
 @register('multitask_bert')
 class TorchMultiTaskBert(TorchModel):
     """
     Multi-Task transformer-agnostic model
-
     Args:
         tasks: Dict of task names along with the labels for each task,
         max_seq_len(int): maximum length of the input token sequence.
@@ -199,7 +196,7 @@ class TorchMultiTaskBert(TorchModel):
             return_probas: bool = False,
             freeze_embeddings: bool = False,
             dropout: Optional[float] = None,
-            cache_size: int = 10,
+            cache_size: int = 3,
             *args,
             **kwargs,
     ) -> None:
@@ -432,13 +429,13 @@ class TorchMultiTaskBert(TorchModel):
                 cache_key = (we_transform_input(self.task_names[task_id]),
                              str(args[task_id]))
                 if cache_key in self.cache:
-                    raw_logits = self.cache[cache_key].cuda()
+                    last_hidden_state = self.cache[cache_key].cuda()
                 else:
                     with torch.no_grad():
-                        raw_logits = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = raw_logits.cpu()
+                        last_hidden_state = self.model.get_logits(task_id, **_input)
+                        self.cache[cache_key] = last_hidden_state.cpu()
                 with torch.no_grad():
-                    logits = self.model.predict_on_top(task_id, raw_logits)
+                    logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
