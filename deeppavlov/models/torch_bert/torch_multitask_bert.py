@@ -434,13 +434,13 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 cache_key = (we_transform_input(self.task_names[task_id]),
-                             str(args[task_id]))
+                             hash(frozenset(args[task_id])))
                 if cache_key in self.cache:
-                    last_hidden_state = self.cache[cache_key].cuda()
+                    last_hidden_state = self.cache[cache_key]
                 else:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = last_hidden_state.cpu()
+                        self.cache[cache_key] = last_hidden_state
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
