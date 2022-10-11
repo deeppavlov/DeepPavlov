@@ -47,7 +47,9 @@ class BertForMultiTask(nn.Module):
     Params:
     task_num_classes
     task_types
-    backbone_model - na
+    backbone_model
+    dropout
+    max_seq_len
     """
 
     def __init__(self, tasks_num_classes, multilabel, task_types,
@@ -80,6 +82,7 @@ class BertForMultiTask(nn.Module):
         self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
 
     def get_logits(self, task_id, input_ids, attention_mask, token_type_ids):
+        # return logits we consider as an output of model to process
         name = self.task_types[task_id]
         outputs = None
         if we_transform_input(name):
@@ -94,14 +97,15 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
-        return outputs.last_hidden_state
+        if name == 'sequence_labeling':
+            return outputs.last_hidden_state
+        else:
+            return outputs.last_hidden_state[:, 0]
 
     def predict_on_top(self, task_id, last_hidden_state, labels=None):
         name = self.task_types[task_id]
-        first_token_tensor = last_hidden_state[:, 0]
-        pooled_output = self.bert.pooler(first_token_tensor)
-        pooled_output = self.activation(pooled_output)
         if name == 'sequence_labeling':
+            # last_hidden_state is the tensor of all sentence tokens
             final_output = self.dropout(last_hidden_state)
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
@@ -116,6 +120,9 @@ class BertForMultiTask(nn.Module):
             else:
                 return logits
         elif name in ['classification', 'regression', 'multiple_choice']:
+            # last hidden_state is the first_token_tensor
+            pooled_output = self.bert.pooler(last_hidden_state)
+            pooled_output = self.activation(pooled_output)
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
             if name == 'multiple_choice':
@@ -196,7 +203,7 @@ class TorchMultiTaskBert(TorchModel):
             return_probas: bool = False,
             freeze_embeddings: bool = False,
             dropout: Optional[float] = None,
-            cache_size: int = 3,
+            cache_size: int = 2,
             *args,
             **kwargs,
     ) -> None:
