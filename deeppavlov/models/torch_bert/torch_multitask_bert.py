@@ -180,7 +180,8 @@ class TorchMultiTaskBert(TorchModel):
         return_probas(default: False): set true to return prediction probabilities,
         freeze_embeddings(default: False): set true to freeze BERT embeddings
         dropout(default: None): dropout for the final model layer.
-        cache_size(default:10): cache size for the last predicts that we use
+        cache_size(default:3): cache size for the last predicts that we use
+        cuda_cache(default:True): if True, store cache on GPU
         If not set, defaults to the parameter hidden_dropout_prob of original model
     """
 
@@ -201,6 +202,7 @@ class TorchMultiTaskBert(TorchModel):
             freeze_embeddings: bool = False,
             dropout: Optional[float] = None,
             cache_size: int = 3,
+            cuda_cache: bool = True,
             *args,
             **kwargs,
     ) -> None:
@@ -236,7 +238,8 @@ class TorchMultiTaskBert(TorchModel):
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
-        self.cache = FixSizeOrderedDict(max=cache_size)
+        self.cache_size = cache_size
+        self.cache = FixSizeOrderedDict(max=self.cache_size)
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -430,14 +433,17 @@ class TorchMultiTaskBert(TorchModel):
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
-                cache_key = (we_transform_input(self.task_names[task_id]),
-                             str(args[task_id]))
-                if cache_key in self.cache:
-                    last_hidden_state = self.cache[cache_key]
-                else:
+                last_hidden_state, cache_key = None, None
+                if self.cache_size > 0:
+                    cache_key = (we_transform_input(self.task_names[task_id]),
+                                 str(args[task_id]))
+                    if cache_key in self.cache:
+                        last_hidden_state = self.cache[cache_key]
+                if last_hidden_state is None:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = last_hidden_state
+                        if self.cache_size > 0:
+                            self.cache[cache_key] = last_hidden_state
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
