@@ -436,11 +436,11 @@ class TorchMultiTaskBert(TorchModel):
                 cache_key = (we_transform_input(self.task_names[task_id]),
                              hash(frozenset(args[task_id])))
                 if cache_key in self.cache:
-                    last_hidden_state = self.cache[cache_key]
+                    last_hidden_state = self.cache[cache_key].cuda()
                 else:
                     with torch.no_grad():
                         last_hidden_state = self.model.get_logits(task_id, **_input)
-                        self.cache[cache_key] = last_hidden_state
+                        self.cache[cache_key] = last_hidden_state.cpu()
                 with torch.no_grad():
                     logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
