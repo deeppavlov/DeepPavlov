@@ -1,26 +1,18 @@
 from logging import getLogger
-from typing import List, Dict, Union, Optional
+from typing import Dict, Optional
 from pathlib import Path
-import math
-import copy
-import json
-import six
 import numpy as np
 from overrides import overrides
+from collections import OrderedDict
 import os
-import inspect
-import _pickle as cPickle
 
 import torch
 import torch.nn as nn
 from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
-from torch.autograd import Variable
 from collections.abc import Iterable
-from torch.nn.parameter import Parameter
 from transformers import AutoConfig, AutoModel
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken
@@ -31,6 +23,22 @@ log = getLogger(__name__)
 prev_input = None
 
 
+class FixSizeOrderedDict(OrderedDict):
+    def __init__(self, *args, max=0, **kwargs):
+        self._max = max
+        super().__init__(*args, **kwargs)
+
+    def __setitem__(self, key, value):
+        OrderedDict.__setitem__(self, key, value)
+        if self._max > 0:
+            if len(self) > self._max:
+                self.popitem(False)
+
+
+def we_transform_input(name):
+    return name in ['sequence_labeling', 'multiple_choice']
+
+
 class BertForMultiTask(nn.Module):
     """
 
@@ -38,13 +46,13 @@ class BertForMultiTask(nn.Module):
     This module is composed of the BERT model with a linear layer on top of
     the pooled output.
     Params:
-    
+
     task_num_classes
     task_types
     backbone_model - na
     """
 
-    def __init__(self, tasks_num_classes, multilabel,task_types,
+    def __init__(self, tasks_num_classes, multilabel, task_types,
                  backbone_model='bert_base_uncased', dropout=None,
                  max_seq_len=320):
 
@@ -73,20 +81,10 @@ class BertForMultiTask(nn.Module):
         )
         self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
 
-    def forward(
-        self,
-        task_id,
-        input_ids,
-        attention_mask,
-        token_type_ids,
-        labels=None,
-        span1=None,
-        span2=None
-    ):
+    def get_logits(self, task_id, input_ids, attention_mask, token_type_ids):
         name = self.task_types[task_id]
         outputs = None
-        if name in ['sequence_labeling', 'multiple_choice']:
-            # delete after checking label format
+        if we_transform_input(name):
             input_ids = input_ids.view(-1, input_ids.size(-1))
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
             if token_type_ids is not None:
@@ -98,6 +96,10 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
+        return outputs
+
+    def predict_on_top(self, task_id, outputs, labels=None):
+        name = self.task_types[task_id]
         first_token_tensor = outputs.last_hidden_state[:, 0]
         pooled_output = self.bert.pooler(first_token_tensor)
         pooled_output = self.activation(pooled_output)
@@ -111,7 +113,7 @@ class BertForMultiTask(nn.Module):
                     loss = loss_fct(active_logits, labels.view(-1))
                 elif self.multilabel[task_id]:
                     loss_fct = BCEWithLogitsLoss()
-                    loss = loss_fct(active_logits, labels)                    
+                    loss = loss_fct(active_logits, labels)
                 return loss, logits
             else:
                 return logits
@@ -144,6 +146,17 @@ class BertForMultiTask(nn.Module):
         else:
             raise Exception(f'Unsupported name {name}')
 
+    def forward(
+            self,
+            task_id,
+            input_ids,
+            attention_mask,
+            token_type_ids,
+            labels=None
+    ):
+        outputs = self.get_logits(task_id, input_ids, attention_mask, token_type_ids)
+        return self.predict_on_top(task_id, outputs, labels)
+
 
 @register('multitask_bert')
 class TorchMultiTaskBert(TorchModel):
@@ -166,27 +179,29 @@ class TorchMultiTaskBert(TorchModel):
         return_probas(default: False): set true to return prediction probabilities,
         freeze_embeddings(default: False): set true to freeze BERT embeddings
         dropout(default: None): dropout for the final model layer.
+        cache_size(default:10): cache size for the last predicts that we use
         If not set, defaults to the parameter hidden_dropout_prob of original model
     """
 
     def __init__(
-        self,
-        tasks: Dict[str, Dict],
-        max_seq_len: str = 320,
-        optimizer: str = "AdamW",
-        optimizer_parameters: dict = {"lr": 2e-5},
-        lr_scheduler: Optional[str] = None,
-        lr_scheduler_parameters: dict = {},
-        gradient_accumulation_steps: Optional[int] = 1,
-        steps_per_epoch: Optional[int] = None,
-        backbone_model: str = "bert-base-cased",
-        clip_norm: Optional[float] = None,
-        one_hot_labels: bool = False,
-        return_probas: bool = False,
-        freeze_embeddings: bool = False,
-        dropout: Optional[float] = None,
-        *args,
-        **kwargs,
+            self,
+            tasks: Dict[str, Dict],
+            max_seq_len: str = 320,
+            optimizer: str = "AdamW",
+            optimizer_parameters: dict = {"lr": 2e-5},
+            lr_scheduler: Optional[str] = None,
+            lr_scheduler_parameters: dict = {},
+            gradient_accumulation_steps: Optional[int] = 1,
+            steps_per_epoch: Optional[int] = None,
+            backbone_model: str = "bert-base-cased",
+            clip_norm: Optional[float] = None,
+            one_hot_labels: bool = False,
+            return_probas: bool = False,
+            freeze_embeddings: bool = False,
+            dropout: Optional[float] = None,
+            cache_size: int = 10,
+            *args,
+            **kwargs,
     ) -> None:
         path_to_current_file = os.path.realpath(__file__)
         self.return_probas = return_probas
@@ -203,7 +218,7 @@ class TorchMultiTaskBert(TorchModel):
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
             self.task_types.append(tasks[task]['type'])
-            self.multilabel.append(tasks[task].get('multilabel',False))
+            self.multilabel.append(tasks[task].get('multilabel', False))
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -220,6 +235,7 @@ class TorchMultiTaskBert(TorchModel):
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
+        self.cache = FixSizeOrderedDict(max=cache_size)
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -253,15 +269,16 @@ class TorchMultiTaskBert(TorchModel):
             p
             for n, p in model.named_parameters()
             if not any(nd in n for nd in no_decay)
-            and not any(nd in n for nd in base)
+               and not any(nd in n for nd in base)
         ]
 
         def get_decay_params(model): return [
             p
             for n, p in model.named_parameters()
             if any(nd in n for nd in no_decay)
-            and not any(nd in n for nd in base)
+               and not any(nd in n for nd in base)
         ]
+
         model_parameters = [
             {
                 "params": get_non_decay_params(self.model),
@@ -327,11 +344,11 @@ class TorchMultiTaskBert(TorchModel):
         if self.freeze_embeddings:
             for n, p in self.model.bert.named_parameters():
                 if (
-                    "aug" in n
-                    or "classifier" in n
-                    or "mult" in n
-                    or "gamma" in n
-                    or "beta" in n
+                        "aug" in n
+                        or "classifier" in n
+                        or "mult" in n
+                        or "gamma" in n
+                        or "beta" in n
                 ):
                     continue
                 p.requires_grad = False
@@ -339,7 +356,6 @@ class TorchMultiTaskBert(TorchModel):
 
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
-        
 
     def _make_input(self, task_features, task_id, labels=None):
         batch_input_size = None
@@ -358,7 +374,7 @@ class TorchMultiTaskBert(TorchModel):
                 _input[elem] = getattr(task_features, elem)
                 batch_input_size = _input[elem].shape[0]
             if elem in _input:
-                if self.task_types[task_id] in ['sequence_labeling', 'multiple_choice']:
+                if we_transform_input(self.task_types[task_id]):
                     _input[elem] = _input[elem].view(
                         (-1, _input[elem].size(-1)))
 
@@ -413,32 +429,39 @@ class TorchMultiTaskBert(TorchModel):
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
+                cache_key = (we_transform_input(self.task_names[task_id]),
+                             str(args[task_id]))
+                if cache_key in self.cache:
+                    raw_logits = self.cache[cache_key].cuda()
+                else:
+                    with torch.no_grad():
+                        raw_logits = self.model.get_logits(task_id, **_input)
+                        self.cache[cache_key] = raw_logits.cpu()
                 with torch.no_grad():
-                    logits = self.model(
-                        task_id=task_id,
-                        **_input)
+                    logits = self.model.predict_on_top(task_id, raw_logits)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
                     predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
                     seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
                     pred = [prediction[:max_seq_len] for max_seq_len,
-                            prediction in zip(seq_lengths, predicted_ids)]
+                                                         prediction in zip(seq_lengths, predicted_ids)]
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
-                if self.multilabel[task_id]:
-                    probs = torch.sigmoid(logits)
-                    if self.return_probas:
-                        pred = probs
-                    else:
-                        pred = [torch.where(k>0.5)[0].cpu().tolist() for k in probs]
                 else:
-                    if self.return_probas:
-                        pred = torch.softmax(logits, dim=-1)
+                    if self.multilabel[task_id]:
+                        probs = torch.sigmoid(logits)
+                        if self.return_probas:
+                            pred = probs
+                        else:
+                            pred = [torch.where(k > 0.5)[0].cpu().tolist() for k in probs]
                     else:
-                        pred = torch.argmax(logits, dim=1)
-                if not isinstance(pred, list):
-                    pred = pred.tolist()
+                        if self.return_probas:
+                            pred = torch.softmax(logits, dim=-1)
+                        else:
+                            pred = torch.argmax(logits, dim=1)
+                    if not isinstance(pred, list):
+                        pred = pred.tolist()
                 self.validation_predictions[task_id] = pred
         log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
@@ -463,14 +486,14 @@ class TorchMultiTaskBert(TorchModel):
         """
         log.debug(f'Training for {args}')
         error_msg = f'Len of arguments {len(args)} is WRONG. ' \
-            f'Correct is {2*self.n_tasks} as n_tasks is {self.n_tasks}'
-        assert len(args) == 2*self.n_tasks, error_msg
+                    f'Correct is {2 * self.n_tasks} as n_tasks is {self.n_tasks}'
+        assert len(args) == 2 * self.n_tasks, error_msg
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k]) > 0]
         assert len(
             ids_to_iterate) == 1, 'Samples from more than 1 task in train_on_batch'
         task_id = ids_to_iterate[0]
         _input, batch_size = self._make_input(task_features=args[task_id], task_id=task_id,
-                                              labels=args[task_id+self.n_tasks])
+                                              labels=args[task_id + self.n_tasks])
         assert _input != {}, 'Empty input!'
 
         if self.prev_id is None:
@@ -486,7 +509,6 @@ class TorchMultiTaskBert(TorchModel):
         loss = loss / self.gradient_accumulation_steps
         loss.backward()
 
-        
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
