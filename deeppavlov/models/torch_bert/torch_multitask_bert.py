@@ -437,7 +437,7 @@ class TorchMultiTaskBert(TorchModel):
                 last_hidden_state, cache_key = None, None
                 if self.cache_size > 0:
                     cache_key = (we_transform_input(self.task_names[task_id]),
-                                 str(args[task_id]['input_ids']))
+                                 hash(str(args[task_id]['input_ids'])))
                     if cache_key in self.cache:
                         last_hidden_state = self.cache[cache_key]
                         if not self.cuda_cache:
