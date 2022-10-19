@@ -16,7 +16,6 @@ class InputPreprocessor(Component):
     def __init__(self,
                  support_dataset_path: str,
                  format: str = "csv",
-                 class_sep: str = ",",
                  *args, **kwargs) -> None:
         file = Path(support_dataset_path)
         if file.exists():
@@ -34,22 +33,24 @@ class InputPreprocessor(Component):
             x = kwargs.get("x", "text")
             y = kwargs.get('y', 'labels')
             
-            multi_label = lambda labels: class_sep in str(labels)
-            self.support_dataset = [[row[x], str(row[y])] for _, row in df.iterrows() if not multi_label(row[y])]
+            self.support_dataset = [(row[x], str(row[y])) for _, row in df.iterrows()]
         else:
             log.warning("Cannot find {} file".format(support_dataset_path))
     
     def __call__(self,
                  input_texts : List[str]) -> List[List[str]]:
         # TODO: перепиши на numpy
-        hypotesis_batch = []
-        premise_batch = []
-        hypotesis_labels_batch = []
+        if self.support_dataset:
+            hypotesis_batch = []
+            premise_batch = []
+            hypotesis_labels_batch = []
 
-        for [premise, [hypotesis, hypotesis_labels]] in zip(input_texts * len(self.support_dataset),
-                                                            np.repeat(self.support_dataset, len(input_texts), axis=0)):
-            premise_batch.append(premise)
-            hypotesis_batch.append(hypotesis)
-            hypotesis_labels_batch.append(hypotesis_labels)
+            for [premise, [hypotesis, hypotesis_labels]] in zip(input_texts * len(self.support_dataset),
+                                                                np.repeat(self.support_dataset, len(input_texts), axis=0)):
+                premise_batch.append(premise)
+                hypotesis_batch.append(hypotesis)
+                hypotesis_labels_batch.append(hypotesis_labels)
 
-        return hypotesis_batch, premise_batch, hypotesis_labels_batch
+            return hypotesis_batch, premise_batch, hypotesis_labels_batch
+        else:
+            log.warning("Error while reading support dataset")

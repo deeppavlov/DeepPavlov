@@ -41,14 +41,14 @@ class FewShotIterator(DataLearningIterator):
                  shot: Optional[int] = None,
                  save_path: Optional[str] = None,
                  *args, **kwargs) -> None:
-        data = self._remove_multiclass_examples(data)
         self.shot = shot
         self.shuffle = shuffle
         self.random = Random(seed)
-        self.train = self.preprocess(self._get_shot_examples(data.get('train', [])), *args, **kwargs)
+
+        train_shot_examples = self._get_shot_examples(data.get('train', []))
+        self.train = self.preprocess(train_shot_examples, *args, **kwargs)
         self.valid = self.preprocess(data.get('valid', []), *args, **kwargs)
         self.test = self.preprocess(data.get('test', []), *args, **kwargs)
-        self.split(*args, **kwargs) # TODO: delete it
         self.data = {
             'train': self.train,
             'valid': self.valid,
@@ -56,53 +56,55 @@ class FewShotIterator(DataLearningIterator):
             'all': self.train + self.test + self.valid
         }
 
-        if save_path:
-            with open(save_path, "w") as file:
-                json.dump(self.data, file, indent=4)
+
+        if save_path is None:
+            return
+        
+        with open(save_path, "w") as file:
+            json_dict = {"columns": ["text","category"]}
+            json_dict["data"] = [[text, label] for text, label in train_shot_examples]
+            json.dump(json_dict, file, indent=4)
     
+    def _gather_info(self, data: List[Tuple[Any, Any]]):
+        unique_labels = list(set([label for text, label in data]))
+
+        label2examples = {}
+        for label in unique_labels:
+            label2examples[label] = []
+        for text, label in data:
+            label2examples[label].append(text)
+        
+        label2negative = {}
+        for i, label in enumerate(unique_labels):
+            label2negative[label] = unique_labels.copy()
+            del label2negative[label][i]
+        
+        return label2examples, label2negative
+
 
     @overrides
     def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
         if len(data) == 0:
             return data
 
-        unique_labels = list(set([label for text, label in data]))
-
-        labels_dict = {}
-        for label in unique_labels:
-            labels_dict[label] = []
-
-        for text, label in data:
-            labels_dict[label].append(text)
-        
-        negative_labels = {}
-        for i, label in enumerate(unique_labels):
-            negative_labels[label] = unique_labels.copy()
-            del negative_labels[label][i]
+        label2examples, label2negative = self._gather_info(data)
         
         nli_triplets = []
         # negative examples
         for text, label in data:
-            for negative_label in negative_labels[label]:
-                for negative_example in labels_dict[negative_label]:
+            for negative_label in label2negative[label]:
+                for negative_example in label2examples[negative_label]:
                     nli_triplets.append([[text, negative_example], 0])
+                    
         # positive examples
         for text, label in data:
-            for positive_example in labels_dict[label]:
-                nli_triplets.append([[text, positive_example], 1])
+            for positive_example in label2examples[label]:
+                if positive_example != text:
+                    nli_triplets.append([[text, positive_example], 1])
 
         if self.shuffle:
             self.random.shuffle(nli_triplets)
         return nli_triplets
-
-    def _remove_multiclass_examples(self, data: Dict[str, List[Tuple[Any, Any]]]):
-        new_data = {"train": [], "valid": [], "test": []}
-        for key in new_data.keys():
-            for text, labels_list in data[key]:
-                if len(labels_list) == 1:
-                    new_data[key].append((text, labels_list[0]))
-
-        return new_data
         
 
     def _get_shot_examples(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:

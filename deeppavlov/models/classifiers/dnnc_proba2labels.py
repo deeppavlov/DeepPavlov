@@ -79,15 +79,14 @@ class Proba2Labels(Component):
                 prediction = "oos" if max_probability < self.confidence_threshold else max_probability_label
             
             y_pred.append(prediction)
-        
-            # print(f"example = {example}")
-            # print(f"example_simmilarity_scores = {example_simmilarity_scores}")
-            # print(f"probability_by_label = {example_simmilarity_scores}")
-            # print(f"prediction = {prediction}")
-            # print(f"max(probability_by_label) = {max(probability_by_label)}")
-            # raise Exception
-
         return y_pred
         
 
-        
+@register('nli_proba2labels')
+class NLIProba2Labels(Component):
+    def __init__(self, **kwargs):
+        pass
+
+    def __call__(self, simmilarity_scores, *args, **kwargs):
+        # print("SCORES = ", simmilarity_scores)
+        return (np.array(simmilarity_scores) > 0.5).astype(int)

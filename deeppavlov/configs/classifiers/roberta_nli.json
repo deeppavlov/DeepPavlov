@@ -1,89 +1,115 @@
 {
-  "dataset_reader": {
-    "class_name": "basic_classification_reader",
-    "class_sep": ",",
-    "x": "text",
-    "y": "category",
-    "data_path": "/archive/savkin/parsed_datasets/clinc150/banking/dnnc",
-    "train": "train.csv",
-    "valid": "dev.csv",
-    "test": "test.csv"
-  },
-  "dataset_iterator": {
-    "class_name": "few_shot_iterator",
-    "seed": 42,
-    "shuffle": true,
-    "shot": 5,
-    "save_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json"
-  },
-  "chainer": {
-    "in": ["hypothesis", "premise"],
-    "in_y": ["y_true"],
-    "pipe": [
-      {
-        "class_name": "torch_transformers_preprocessor",
-        "in": ["hypothesis", "premise"],
-        "out": ["bert_features"],
-        "vocab_file": "{BASE_MODEL}",
-        "do_lower_case": false,
-        "max_seq_length": 128
-      },
-      {
-        "class_name": "torch_transformers_classifier",
-        "main": true,
-        "in": ["bert_features"],
-        "in_y": ["y_true"],
-        "out": ["simmilarity_scores"],
-        "n_classes": 2,
-        "return_probas": true,
-        "pretrained_bert": "{BASE_MODEL}",
-        "save_path": "{MODEL_PATH}/model",
-        "load_path": "{MODEL_PATH}/model",
-        "is_binary": "{BINARY_CLASSIFICATION}",
-        "optimizer": "AdamW",
-        "optimizer_parameters": {
-          "lr": 2e-05
+    "dataset_reader": {
+        "class_name": "basic_classification_reader",
+        "format": "json",
+        "orient": "split",
+        "x": "text",
+        "y": "category",
+        "data_path": "/archive/savkin/parsed_datasets/clinc150/all/dnnc",
+        "train": "train.json",
+        "valid": "dev.json",
+        "test": "test.json"
+    },
+    "dataset_iterator": {
+        "class_name": "few_shot_iterator",
+        "seed": 0,
+        "shuffle": true,
+        "shot": 10,
+        "save_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json"
+    },
+    "chainer": {
+        "in": [
+            "hypothesis",
+            "premise"
+        ],
+        "in_y": [
+            "y_true"
+        ],
+        "pipe": [
+            {
+                "class_name": "torch_transformers_preprocessor",
+                "in": [
+                    "hypothesis",
+                    "premise"
+                ],
+                "out": [
+                    "bert_features"
+                ],
+                "vocab_file": "{BASE_MODEL}",
+                "do_lower_case": false,
+                "max_seq_length": 128
+            },
+            {
+                "class_name": "torch_transformers_classifier",
+                "in": [
+                    "bert_features"
+                ],
+                "in_y": [
+                    "y_true"
+                ],
+                "out": [
+                    "simmilarity_scores"
+                ],
+                "n_classes": 2,
+                "return_probas": true,
+                "pretrained_bert": "{BASE_MODEL}",
+                "save_path": "{DNNC_PATH}/model",
+                "load_path": "{MODEL_PATH}/model",
+                "is_binary": "{BINARY_CLASSIFICATION}",
+                "optimizer": "AdamW",
+                "optimizer_parameters": {
+                    "lr": 2e-05
+                }
+            },
+            {
+                "class_name": "nli_proba2labels",
+                "in": [
+                    "simmilarity_scores"
+                ],
+                "out": [
+                    "y_pred"
+                ]
+            }
+        ],
+        "out": [
+            "y_pred"
+        ]
+    },
+    "train": {
+        "batch_size": 500,
+        "epochs": 7,
+        "log_every_n_epochs": 1,
+        "validate_first": false,
+        "validation_patience": -1,
+        "metrics": [
+            {
+                "name": "sklearn_balanced_accuracy",
+                "inputs": [
+                    "y_true",
+                    "y_pred"
+                ]
+            }
+        ],
+        "evaluation_targets": [
+            "valid"
+        ],
+        "class_name": "torch_trainer"
+    },
+    "metadata": {
+        "variables": {
+            "ROOT_PATH": "~/.deeppavlov",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "MODELS_PATH": "{ROOT_PATH}/models",
+            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli",
+            "DNNC_PATH": "{MODELS_PATH}/classification/dnnc",
+            "BASE_MODEL": "roberta-base",
+            "BINARY_CLASSIFICATION": true
         }
-      },
-      {
-        "class_name": "proba2labels",
-        "in": ["simmilarity_scores"],
-        "out": ["y_pred"],
-        "max_proba": true
-      }
-    ],
-    "out": ["y_pred"]
-  },
-  "train": {
-    "batch_size": 900,
-    "epochs": 7,
-    "log_every_n_epochs": 1,
-    "val_every_n_epochs": 1,
-    "validate_first": false,
-    "metrics": [
-      {
-        "name": "sklearn_accuracy",
-        "inputs": ["y_true", "y_pred"]
-      }
-    ],
-    "evaluation_targets": ["valid"],
-    "class_name": "torch_trainer"
-  },
-  "metadata": {
-    "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli",
-      "DNNC_PATH": "{MODELS_PATH}/classification/dnnc",
-      "BASE_MODEL": "roberta-base",
-      "BINARY_CLASSIFICATION": true
-    }
-  },
-  "download": [
-    {
-      "url": "http://files.deeppavlov.ai/classifiers/few_shot_infer.tar.gz",
-      "subdir": "{MODEL_PATH}"
-    }
-  ]
+    },
+    "download": [
+        {
+            "url": "http://files.deeppavlov.ai/classifiers/few_shot_infer.tar.gz",
+            "subdir": "{MODEL_PATH}"
+        }
+    ]
 }
