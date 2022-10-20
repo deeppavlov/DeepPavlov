@@ -1,0 +1,16 @@
+button.copybtn svg {
+    width: 1.3em;
+    height: 1.3em;
+    padding: 0.1em;
+}
+
+button.copybtn {
+    top: 0.2em;
+    width: 1.4em;
+    height: 1.4em;   
+}
+
+.rst-content .linenodiv pre, .rst-content div[class^=highlight] pre, .rst-content pre.literal-block {
+    font-size: 13px;
+    line-height: 1.4;
+}

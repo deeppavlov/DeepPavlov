@@ -6,7 +6,7 @@ Features
 Models
 ------
 
-NER model :doc:`[docs] </features/models/ner>`
+NER model :doc:`[docs] </features/models/NER>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Named Entity Recognition task in DeepPavlov is solved with BERT-based model.
@@ -31,8 +31,8 @@ BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Tran
 | ConLL-2003                                              |       | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`                            |    91.7     |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
 
-Classification model :doc:`[docs] </features/models/classifiers>`
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Classification model :doc:`[docs] </features/models/classification>`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Model for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
 BiLSTM with self-attention and other models are presented. The model also allows multilabel classification of texts.
@@ -172,7 +172,7 @@ Based on `Reading Wikipedia to Answer Open-Domain Questions <https://github.com/
 +---------------+-------------------------------------------------+-----------------+----------------------+-----------------+-----------+
 
 
-Question Answering model :doc:`[docs] </features/models/squad>`
+Question Answering model :doc:`[docs] </features/models/SQuAD>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Models in this section solve the task of looking for an answer on a
