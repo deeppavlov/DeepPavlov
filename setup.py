@@ -72,7 +72,8 @@ if __name__ == '__main__':
                 'sphinx_rtd_theme==0.5.2',
                 'nbsphinx==0.8.4',
                 'ipykernel==5.5.4',
-                'jinja2<=3.0.3'
+                'jinja2<=3.0.3',
+                'sphinx-copybutton==0.5.0'
             ],
             's3': [
                 'boto3'
