@@ -247,9 +247,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 +                  +                      +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
 |                  |                      |      | :config:`Conversational RuBERT <classifiers/rusentiment_convers_bert.json>`                     |             | 0.739        | 0.7724       |  1.5 Gb   |
 +------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
-| Topics           | `DeepPavlov Topics`_ | En   | :config:`Distil BERT base uncased <classifiers/topics_distilbert_base_uncased.json>`            | F1-weighted | 0.877/0.830  | 0.878/0.831  |  0.7 Gb   |
-+                  +                      +      +-------------------------------------------------------------------------------------------------+             +--------------+--------------+-----------+
-|                  |                      |      | :config:`Multilingual BERT uncased <classifiers/topics_bert_base_multilingual_uncased.json>`    | / F1-macro  | 0.874/0.826  | 0.876/0.829  |  1.1 Gb   |
+| Topics           | `DeepPavlov Topics`_ | En   | :config:`Distil BERT base uncased <classifiers/topics_distilbert_base_uncased.json>`            | F1-w / F1-m | 0.877/0.830  | 0.878/0.831  |  0.7 Gb   |
 +------------------+----------------------+------+-------------------------------------------------------------------------------------------------+-------------+--------------+--------------+-----------+
 
 .. _`DSTC 2`: http://camdial.org/~mh521/dstc/
@@ -261,7 +259,7 @@ corresponding to `very negative`, `negative`, `neutral`, `positive`, `very posit
 .. _`Yahoo-L31`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`Yahoo-L6`: https://webscope.sandbox.yahoo.com/catalog.php?datatype=l
 .. _`SST`: https://nlp.stanford.edu/sentiment/index.html
-.. _`DeepPavlov Topics`: A new dataset for topic classification from DeepPavlov in English, contains 33 classes. Paper will be available soon. Available for downloading http://files.deeppavlov.ai/datasets/dp_topics_downsampled_dataset_v0.tar.gz
+.. _`DeepPavlov Topics`: https://deeppavlov.ai/datasets/topics
 
 GLUE Benchmark
 --------------
