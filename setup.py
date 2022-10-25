@@ -73,7 +73,8 @@ if __name__ == '__main__':
                 'nbsphinx==0.8.4',
                 'ipykernel==5.5.4',
                 'jinja2<=3.0.3',
-                'sphinx-copybutton==0.5.0'
+                'sphinx-copybutton==0.5.0',
+                'pandoc==2.2'
             ],
             's3': [
                 'boto3'
