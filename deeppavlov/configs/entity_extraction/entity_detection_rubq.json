@@ -17,12 +17,34 @@
         "tags_file": "{NER_PATH}/tag.dict",
         "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
+        "ignored_tags": ["DATE", "CARDINAL", "ORDINAL", "QUANTITY", "PERCENT", "NORP"],
         "id": "edp"
       },
       {
+        "thres_proba": 0.05,
+        "o_tag": "O",
+        "tags_file": "{NER_PATH2}/tag.dict",
+        "return_entities_with_tags": true,
+        "class_name": "entity_detection_parser",
+        "id": "edp2"
+      },
+      {
         "class_name": "ner_chunk_model",
-        "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert_probas.json"},
+        "ner": {
+          "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_mult.json",
+          "overwrite": {
+            "chainer.pipe.2.use_crf": false,
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+          }
+        },
         "ner_parser": "#edp",
+        "ner2": {
+          "config_path": "{CONFIGS_PATH}/ner/entity_type_detection_rubq.json",
+          "overwrite": {
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+          }
+        },
+        "ner_parser2": "#edp2",
         "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       }
@@ -34,8 +56,9 @@
       "ROOT_PATH": "~/.deeppavlov",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
-      "NER_PATH": "{MODELS_PATH}/wiki_ner_rus_bert"
+      "TRANSFORMER": "bert-base-multilingual-cased",
+      "NER_PATH": "{MODELS_PATH}/ner_ontonotes_torch_bert_mult_crf",
+      "NER_PATH2": "{MODELS_PATH}/entity_type_detection_rubq"
     }
   }
 }
