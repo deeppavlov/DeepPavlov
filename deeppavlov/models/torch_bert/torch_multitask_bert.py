@@ -444,14 +444,20 @@ class TorchMultiTaskBert(TorchModel):
                             last_hidden_state = last_hidden_state.cuda()
                 if last_hidden_state is None:
                     with torch.no_grad():
-                        last_hidden_state = self.model.get_logits(task_id, **_input)
+                        if self.is_data_parallel:
+                            last_hidden_state = self.model.module.get_logits(task_id, **_input)
+                        else:
+                            last_hidden_state = self.model.get_logits(task_id, **_input)
                         if self.cache_size > 0:
                             if self.cuda_cache:
                                 self.cache[cache_key] = last_hidden_state
                             else:
                                 self.cache[cache_key] = last_hidden_state.cpu()
                 with torch.no_grad():
-                    logits = self.model.predict_on_top(task_id, last_hidden_state)
+                    if self.is_data_parallel:
+                        logits = self.model.module.predict_on_top(task_id, last_hidden_state)
+                    else:
+                        logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
