@@ -20,7 +20,7 @@ from collections import namedtuple
 
 from hdt import HDTDocument
 
-from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.common.file import load_pickle, read_json
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 
@@ -34,6 +34,7 @@ class WikiParser:
     def __init__(self, wiki_filename: str,
                  file_format: str = "hdt",
                  prefixes: Dict[str, Union[str, Dict[str, str]]] = None,
+                 used_rels_filename: str = None,
                  max_comb_num: int = 1e6,
                  lang: str = "@en", **kwargs) -> None:
         """
@@ -69,9 +70,14 @@ class WikiParser:
             self.parsed_document = {}
         else:
             raise ValueError("Unsupported file format")
+        self.used_rels = set()
+        if used_rels_filename:
+            self.used_rels = set(read_json(str(expand_path(used_rels_filename))))
+            self.used_rels = {rel.split("/")[-1] for rel in self.used_rels}
 
         self.max_comb_num = max_comb_num
         self.lang = lang
+        self.replace_tokens = [('"', ''), (self.lang, " "), ('$', ' '), ('  ', ' ')]
 
     def __call__(self, parser_info_list: List[str], queries_list: List[Any]) -> List[Any]:
         wiki_parser_output = self.execute_queries_list(parser_info_list, queries_list)
@@ -96,6 +102,13 @@ class WikiParser:
                 rels = []
                 try:
                     rels = self.find_rels(*query)
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(rels)
+            elif parser_info == "find_rels_2hop":
+                rels = []
+                try:
+                    rels = self.find_rels_2hop(*query)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
@@ -196,16 +209,16 @@ class WikiParser:
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
             """
                 n = 0, query = ["?ent", "http://www.wikidata.org/prop/direct/P17",
-                                                                            "http://www.wikidata.org/entity/Q159"]
+                                "http://www.wikidata.org/entity/Q159"]
                        unknown_elem_positions = ["?ent"]
                 n = 1, query = ["?ent", "http://www.wikidata.org/prop/direct/P31",
-                                                                        "http://www.wikidata.org/entity/Q23397"]
+                                "http://www.wikidata.org/entity/Q23397"]
                        unknown_elem_positions = [(0, "?ent")]
                 n = 2, query = ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]
                        unknown_elem_positions = [(0, "?ent"), (2, "?obj")]
             """
             if n == 0:
-                combs = self.search(query, unknown_elem_positions, rel_type)
+                combs, triplets = self.search(query, unknown_elem_positions, rel_type)
                 # combs = [{"?ent": "http://www.wikidata.org/entity/Q5513"}, ...]
             else:
                 if combs:
@@ -233,17 +246,18 @@ class WikiParser:
                             known_values = [comb[known_elem] for known_elem in known_elements]
                             for known_elem, known_value in zip(known_elements, known_values):
                                 filled_query = [elem.replace(known_elem, known_value) for elem in query]
-                                new_combs = self.search(filled_query, unknown_elem_positions, rel_type)
+                                new_combs, triplets = self.search(filled_query, unknown_elem_positions, rel_type)
                                 for new_comb in new_combs:
                                     extended_combs.append({**comb, **new_comb})
                     else:
-                        new_combs = self.search(query, unknown_elem_positions, rel_type)
+                        new_combs, triplets = self.search(query, unknown_elem_positions, rel_type)
                         for comb in combs:
                             for new_comb in new_combs:
                                 extended_combs.append({**comb, **new_comb})
                 combs = extended_combs
 
-        if combs:
+        is_boolean = self.define_is_boolean(query_seq)
+        if combs or is_boolean:
             if filter_info:
                 for filter_elem, filter_value in filter_info:
                     if filter_value == "qualifier":
@@ -263,7 +277,7 @@ class WikiParser:
                 combs = sorted(combs, key=lambda x: x[sort_elem], reverse=reverse)
                 combs = [combs[0]]
 
-            if what_return[-1].startswith("count"):
+            if what_return and what_return[-1].startswith("count"):
                 combs = [[combs[0][key] for key in what_return[:-1]] + [len(combs)]]
             else:
                 combs = [[elem[key] for key in what_return] for elem in combs]
@@ -277,8 +291,16 @@ class WikiParser:
                     combs = [[entity for entity in comb
                               if answer_types.intersection(self.find_types(entity))] for comb in combs]
                 combs = [comb for comb in combs if any([entity for entity in comb])]
+            if is_boolean:
+                combs = [["Yes" if len(triplets) > 0 else "No"]]
 
         return combs
+
+    def define_is_boolean(self, query_hdt_seq):
+        is_boolean = False
+        if len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]]):
+            is_boolean = True
+        return is_boolean
 
     def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
@@ -287,12 +309,17 @@ class WikiParser:
             combs = []
             triplets, cnt = self.document.search_triples(subj, rel, obj)
             if cnt < self.max_comb_num:
+                triplets = list(triplets)
                 if rel == self.prefixes["description"] or rel == self.prefixes["label"]:
                     triplets = [triplet for triplet in triplets if triplet[2].endswith(self.lang)]
                     combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
                 else:
-                    combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
-                             if triplet[1].startswith(self.prefixes["rels"][rel_type])]
+                    if isinstance(self.prefixes["rels"][rel_type], str):
+                        combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
+                                 if triplet[1].startswith(self.prefixes["rels"][rel_type])]
+                    else:
+                        combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
+                                 if any(triplet[1].startswith(tp) for tp in self.prefixes["rels"][rel_type])]
             else:
                 log.debug("max comb num exceede")
         else:
@@ -311,7 +338,7 @@ class WikiParser:
                     triplets = [triplet for triplet in triplets if triplet[1] == rel]
             combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets]
 
-        return combs
+        return combs, triplets
 
     def find_label(self, entity: str, question: str) -> str:
         entity = str(entity).replace('"', '')
@@ -327,11 +354,10 @@ class WikiParser:
                 #                                                    '"Lake Baikal"@en'], ...]
                 for label in labels:
                     if label[2].endswith(self.lang):
-                        found_label = label[2].strip(self.lang).replace('"', '').replace('$', ' ').replace('  ', ' ')
-                        return found_label
-                for label in labels:
-                    if label[2].endswith("@en"):
-                        found_label = label[2].strip("@en").replace('"', '').replace('$', ' ').replace('  ', ' ')
+                        found_label = label[2].strip(self.lang)
+                        for old_tok, new_tok in self.replace_tokens:
+                            found_label = found_label.replace(old_tok, new_tok)
+                        found_label = found_label.strip()
                         return found_label
 
             elif entity.endswith(self.lang):
@@ -349,7 +375,6 @@ class WikiParser:
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('$', '')
-
                 return entity
 
             elif entity.isdigit():
@@ -384,7 +409,7 @@ class WikiParser:
                 entity = year
             elif "в каком месяце" in question.lower():
                 entity = month
-            elif day != "00":
+            elif day not in {"00", "0"}:
                 date = datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%m-%d")
                 entity = date.strftime("%d %B %Y")
             else:
@@ -403,7 +428,7 @@ class WikiParser:
             aliases = [label[2].strip(self.lang).strip('"') for label in labels if label[2].endswith(self.lang)]
         return aliases
 
-    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type", save: bool = False) -> List[str]:
+    def find_rels(self, entity: str, direction: str, rel_type: str = "no_type") -> List[str]:
         rels = []
         if self.file_format == "hdt":
             if not rel_type:
@@ -413,14 +438,40 @@ class WikiParser:
             else:
                 query = ["", "", f"{self.prefixes['entity']}/{entity}"]
             triplets, c = self.document.search_triples(*query)
-
-            start_str = f"{self.prefixes['rels'][rel_type]}/P"
-            rels = {triplet[1] for triplet in triplets if triplet[1].startswith(start_str)}
+            triplets = list(triplets)
+            if isinstance(self.prefixes['rels'][rel_type], str):
+                start_str = f"{self.prefixes['rels'][rel_type]}/P"
+                rels = {triplet[1] for triplet in triplets if triplet[1].startswith(start_str)}
+            else:
+                rels = {triplet[1] for triplet in triplets
+                        if any([triplet[1].startswith(tp) for tp in self.prefixes['rels'][rel_type]])}
             rels = list(rels)
-        if self.file_format == "pickle":
-            triplets = self.document.get(entity, {}).get(direction, [])
-            triplets = self.uncompress(triplets)
-            rels = [triplet[0] for triplet in triplets if triplet[0].startswith("P")]
+            if self.used_rels:
+                rels = [rel for rel in rels if rel.split("/")[-1] in self.used_rels]
+        return rels
+
+    def find_rels_2hop(self, entity_ids, rels_1hop):
+        rels = []
+        for entity_id in entity_ids:
+            for rel_1hop in rels_1hop:
+                triplets, cnt = self.document.search_triples(f"{self.prefixes['entity']}/{entity_id}", rel_1hop, "")
+                triplets = [triplet for triplet in triplets if triplet[2].startswith(self.prefixes['entity'])]
+                objects_1hop = [triplet[2].split("/")[-1] for triplet in triplets]
+                triplets, cnt = self.document.search_triples("", rel_1hop, f"{self.prefixes['entity']}/{entity_id}")
+                triplets = [triplet for triplet in triplets if triplet[0].startswith(self.prefixes['entity'])]
+                objects_1hop += [triplet[0].split("/")[-1] for triplet in triplets]
+                for object_1hop in objects_1hop[:5]:
+                    tr_2hop, cnt = self.document.search_triples(f"{self.prefixes['entity']}/{object_1hop}", "", "")
+                    rels_2hop = [elem[1] for elem in tr_2hop if elem[1] != rel_1hop]
+                    if self.used_rels:
+                        rels_2hop = [elem for elem in rels_2hop if elem.split("/")[-1] in self.used_rels]
+                    rels += rels_2hop
+                    tr_2hop, cnt = self.document.search_triples("", "", f"{self.prefixes['entity']}/{object_1hop}")
+                    rels_2hop = [elem[1] for elem in tr_2hop if elem[1] != rel_1hop]
+                    if self.used_rels:
+                        rels_2hop = [elem for elem in rels_2hop if elem.split("/")[-1] in self.used_rels]
+                    rels += rels_2hop
+        rels = list(set(rels))
         return rels
 
     def find_object(self, entity: str, rel: str, direction: str) -> List[str]:

@@ -378,46 +378,91 @@ class RelRankingPreprocessor(Component):
         Args:
             questions_batch: list of texts,
             rels_batch: list of relations list
-
         Returns:
             batch of :class:`transformers.data.processors.utils.InputFeatures` with subtokens, subtoken ids, \
                 subtoken mask, segment mask, or tuple of batch of InputFeatures and Batch of subtokens
         """
-        lengths = []
+        lengths, proc_rels_batch = [], []
         for question, rels_list in zip(questions_batch, rels_batch):
             if isinstance(rels_list, list):
-                rels_str = self.add_special_tokens[2].join(rels_list)
+                rels_str = " ".join(rels_list)
             else:
                 rels_str = rels_list
-            text_input = f"{self.add_special_tokens[0]} {question} {self.add_special_tokens[1]} {rels_str}"
-            encoding = self.tokenizer.encode_plus(text=text_input,
+            encoding = self.tokenizer.encode_plus(text=question, text_pair=rels_str,
                                                   return_attention_mask=True, add_special_tokens=True,
                                                   truncation=True)
             lengths.append(len(encoding["input_ids"]))
+            proc_rels_batch.append(rels_str)
         max_len = max(lengths)
-        input_ids_batch = []
-        attention_mask_batch = []
-        token_type_ids_batch = []
-        for question, rels_list in zip(questions_batch, rels_batch):
-            if isinstance(rels_list, list):
-                rels_str = self.add_special_tokens[2].join(rels_list)
-            else:
-                rels_str = rels_list
-            text_input = f"{self.add_special_tokens[0]} {question} {self.add_special_tokens[1]} {rels_str}"
-            encoding = self.tokenizer.encode_plus(text=text_input,
-                                                  truncation = True, max_length=max_len,
-                                                  pad_to_max_length=True, return_attention_mask = True)
+        input_ids_batch, attention_mask_batch, token_type_ids_batch = [], [], []
+        for question, rels_list in zip(questions_batch, proc_rels_batch):
+            encoding = self.tokenizer.encode_plus(text=question, text_pair=rels_list,
+                                                  truncation=True, max_length=max_len,
+                                                  pad_to_max_length=True, return_attention_mask=True)
             input_ids_batch.append(encoding["input_ids"])
             attention_mask_batch.append(encoding["attention_mask"])
             if "token_type_ids" in encoding:
                 token_type_ids_batch.append(encoding["token_type_ids"])
             else:
                 token_type_ids_batch.append([0])
-            
         input_features = {"input_ids": torch.LongTensor(input_ids_batch),
                           "attention_mask": torch.LongTensor(attention_mask_batch),
                           "token_type_ids": torch.LongTensor(token_type_ids_batch)}
-            
+        return input_features
+
+
+@register('path_ranking_preprocessor')
+class PathRankingPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 add_special_tokens: List[str],
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 67,
+                 num_neg_samples: int = 499,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+        self.num_neg_samples = num_neg_samples
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.add_special_tokens = add_special_tokens
+        special_tokens_dict = {'additional_special_tokens': add_special_tokens}
+        self.tokenizer.add_special_tokens(special_tokens_dict)
+
+    def __call__(self, questions_batch: List[str], rels_batch: List[List[List[str]]]):
+        lengths, proc_rels_batch = [], []
+        for question, rels_list in zip(questions_batch, rels_batch):
+            proc_rels_list = []
+            for rels in rels_list:
+                rels_str = ""
+                if len(rels) == 1:
+                    rels_str = f"<one_rel> {rels[0]} </one_rel>"
+                elif len(rels) == 2:
+                    if rels[0] == rels[1]:
+                        rels_str = f"<double> {rels[0]} </double>"
+                    else:
+                        rels_str = f"<first_rel> {rels[0]} <mid> {rels[1]} </second_rel>"
+                encoding = self.tokenizer.encode_plus(text=question, text_pair=rels_str,
+                                                      return_attention_mask=True, add_special_tokens=True,
+                                                      truncation=True)
+                lengths.append(len(encoding["input_ids"]))
+                proc_rels_list.append(rels_str)
+            proc_rels_batch.append(proc_rels_list)
+
+        max_len = min(max(lengths), self.max_seq_length)
+        input_ids_batch, attention_mask_batch, token_type_ids_batch = [], [], []
+        for question, rels_list in zip(questions_batch, proc_rels_batch):
+            for rels_str in rels_list:
+                encoding = self.tokenizer.encode_plus(text=question, text_pair=rels_str,
+                                                      truncation=True, max_length=max_len, add_special_tokens=True,
+                                                      pad_to_max_length=True, return_attention_mask=True)
+                input_ids_batch.append(encoding["input_ids"])
+                attention_mask_batch.append(encoding["attention_mask"])
+                if "token_type_ids" in encoding:
+                    token_type_ids_batch.append(encoding["token_type_ids"])
+                else:
+                    token_type_ids_batch.append([0])
+        input_features = {"input_ids": torch.LongTensor(input_ids_batch),
+                          "attention_mask": torch.LongTensor(attention_mask_batch),
+                          "token_type_ids": torch.LongTensor(token_type_ids_batch)}
         return input_features
 
 

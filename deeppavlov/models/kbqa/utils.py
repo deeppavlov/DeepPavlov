@@ -77,22 +77,23 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     return ent_combs
 
 
-def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str]) -> List[str]:
+def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str],
+               map_query_str_to_kb) -> List[str]:
     ''' example of query: ["wd:E1", "p:R1", "?s"]
                    entity_comb: ["Q159"]
                    type_comb: []
                    rel_comb: ["P17"]
+        map_query_str_to_kb = [("P0", "http://wd"),
+                               ("P00", "http://wl"),
+                               ("wd:", "http://we/"),
+                               ("wdt:", "http://wpd/"),
+                               (" p:", " http://wp/"),
+                               ("ps:", "http://wps/"),
+                               ("pq:", "http://wpq/")]
     '''
     query = " ".join(query)
-    map_query_str_to_wikidata = [("P0", "http://wd"),
-                                 ("P00", "http://wl"),
-                                 ("wd:", "http://we/"),
-                                 ("wdt:", "http://wpd/"),
-                                 (" p:", " http://wp/"),
-                                 ("ps:", "http://wps/"),
-                                 ("pq:", "http://wpq/")]
 
-    for query_str, wikidata_str in map_query_str_to_wikidata:
+    for query_str, wikidata_str in map_query_str_to_kb:
         query = query.replace(query_str, wikidata_str)
     for n, entity in enumerate(entity_comb[:-1]):
         query = query.replace(f"e{n + 1}", entity)
@@ -104,3 +105,68 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
     query = query.replace("http://wpd/P00", "http://wl")
     query = query.split(' ')
     return query
+
+
+def preprocess_template_queries(template_queries):
+    for template_num in template_queries:
+        template = template_queries[template_num]
+        query = template["query_template"]
+        query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
+        query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
+        if not "rel_types" in template:
+            template["rel_types"] = ["direct" for _ in query_triplets]
+        rel_types = template["rel_types"]
+        rel_dirs, n_hops, entities, types, gr_ent, mod_ent, q_ent = [], [], set(), set(), set(), set(), set()
+
+        for triplet, rel_type in zip(query_triplets, rel_types):
+            if not triplet[1].startswith("wdt:P"):
+                if triplet[2].startswith("?"):
+                    rel_dirs.append("forw")
+                else:
+                    rel_dirs.append("backw")
+            for ind in [0, 2]:
+                if triplet[ind].startswith("wd:E"):
+                    entities.add(triplet[ind])
+                elif triplet[ind].startswith("wd:T"):
+                    types.add(triplet[ind])
+            if rel_type == "qualifier":
+                if triplet[2].startswith("wd:E"):
+                    q_ent.add(triplet[2])
+            else:
+                if triplet[0].startswith("wd:E"):
+                    gr_ent.add(triplet[0])
+                elif triplet[2].startswith("wd:E"):
+                    mod_ent.add(triplet[2])
+            if triplet[1].startswith("wdt:R") and triplet[0].startswith("?") and triplet[2].startswith("?"):
+                n_hops.append("2-hop")
+            else:
+                n_hops.append("1-hop")
+        syntax_structure = {"gr_ent": len(gr_ent), "types": len(types), "mod_ent": len(mod_ent),
+                            "q_ent": len(q_ent), "year_or_number": False, "count": False, "order": False}
+        if "filter" in query.lower():
+            syntax_structure["year_or_number"] = True
+        if "order" in query.lower():
+            syntax_structure["order"] = True
+        if "count" in query.lower():
+            syntax_structure["count"] = True
+        if not "query_sequence" in template:
+            template["query_sequence"] = list(range(1, len(query_triplets) + 1))
+        template["rel_dirs"] = rel_dirs
+        template["n_hops"] = n_hops
+        template["entities_and_types_num"] = [len(entities), len(types)]
+        if entities:
+            entities_str = '_'.join([str(num) for num in list(range(1, len(entities) + 1))])
+        else:
+            entities_str = "0"
+        if types:
+            types_str = '_'.join([str(num) for num in list(range(1, len(types) + 1))])
+        else:
+            types_str = "0"
+        template["entities_and_types_select"] = f"{entities_str} {types_str}"
+        template["syntax_structure"] = syntax_structure
+        if "return_if_found" not in template:
+            template["return_if_found"] = False
+        if "priority" not in template:
+            template["priority"] = 1
+        template_queries[template_num] = template
+    return template_queries

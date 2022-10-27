@@ -52,8 +52,10 @@ class NerChunker(Component):
         self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
         self.lowercase = lowercase
 
-    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]],
-                                                       List[List[List[Tuple[int, int]]]], List[List[List[str]]]]:
+    def __call__(self, docs_batch: List[str],
+                 template_type_batch: List[str] = None) -> Tuple[List[List[str]], List[List[int]],
+                                                                 List[List[List[Tuple[int, int]]]], List[
+                                                                     List[List[str]]]]:
         """
         This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
  
@@ -64,8 +66,12 @@ class NerChunker(Component):
             batch of lists of numbers of documents which correspond to chunks
         """
         text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list = [], [], [], []
+        template_type_batch_list = []
         text_batch, nums_batch, sentences_offsets_batch, sentences_batch = [], [], [], []
-        for n, doc in enumerate(docs_batch):
+        cur_template_type_batch = []
+        if template_type_batch is None:
+            template_type_batch = ["" for _ in docs_batch]
+        for n, (doc, template_type) in enumerate(zip(docs_batch, template_type_batch)):
             if self.lowercase:
                 doc = doc.lower()
             start = 0
@@ -98,6 +104,7 @@ class NerChunker(Component):
                             sentences_offsets_batch.append(sentences_offsets_list)
                             sentences_batch.append(sentences_list)
                             nums_batch.append(n)
+                            cur_template_type_batch.append(template_type)
 
                         if sentence_len < self.max_seq_len:
                             text = f"{sentence} "
@@ -129,6 +136,7 @@ class NerChunker(Component):
                                         sentences_offsets_batch.append(sentences_offsets_list)
                                         sentences_batch.append(sentences_list)
                                         nums_batch.append(n)
+                                        cur_template_type_batch.append(template_type)
 
                                     text = f"{chunk} "
                                     cur_len = chunk_len
@@ -142,11 +150,13 @@ class NerChunker(Component):
                 if text:
                     text_batch.append(text)
                     nums_batch.append(n)
+                    cur_template_type_batch.append(template_type)
                     sentences_offsets_batch.append(sentences_offsets_list)
                     sentences_batch.append(sentences_list)
             else:
                 text_batch.append("а")
                 nums_batch.append(n)
+                cur_template_type_batch.append(template_type)
                 sentences_offsets_batch.append([(0, len(doc))])
                 sentences_batch.append([doc])
 
@@ -154,11 +164,13 @@ class NerChunker(Component):
         for jj in range(num_batches):
             text_batch_list.append(text_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             nums_batch_list.append(nums_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
+            template_type_batch_list.append(cur_template_type_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             sentences_offsets_batch_list.append(
                 sentences_offsets_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             sentences_batch_list.append(sentences_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
 
-        return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list
+        return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list, \
+               template_type_batch_list
 
     def sanitize(self, text):
         text_len = len(text)
@@ -185,6 +197,8 @@ class NerChunkModel(Component):
 
     def __init__(self, ner: Chainer,
                  ner_parser: EntityDetectionParser,
+                 ner2: Chainer = None,
+                 ner_parser2: EntityDetectionParser = None,
                  **kwargs) -> None:
         """
         Args:
@@ -194,11 +208,14 @@ class NerChunkModel(Component):
         """
         self.ner = ner
         self.ner_parser = ner_parser
+        self.ner2 = ner2
+        self.ner_parser2 = ner_parser2
 
     def __call__(self, text_batch_list: List[List[str]],
                  nums_batch_list: List[List[int]],
                  sentences_offsets_batch_list: List[List[List[Tuple[int, int]]]],
-                 sentences_batch_list: List[List[List[str]]]
+                 sentences_batch_list: List[List[List[str]]],
+                 template_type_batch_list: List[List[str]]
                  ):
         """
         Args:
@@ -215,13 +232,20 @@ class NerChunkModel(Component):
         """
         entity_substr_batch_list, entity_offsets_batch_list, entity_positions_batch_list, tags_batch_list, \
         entity_probas_batch_list, text_len_batch_list, text_tokens_len_batch_list = [], [], [], [], [], [], []
-        for text_batch, sentences_offsets_batch, sentences_batch in \
-                zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
+        for text_batch, sentences_offsets_batch, sentences_batch, template_type_batch in \
+                zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list, template_type_batch_list):
             text_batch = [text.replace("\xad", " ") for text in text_batch]
 
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch, probas_batch = self.ner(text_batch)
             entity_substr_batch, entity_positions_batch, entity_probas_batch = \
-                self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch)
+                self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch, template_type_batch)
+            if self.ner2:
+                ner_tokens_batch2, ner_tokens_offsets_batch2, ner_probas_batch2, probas_batch2 = self.ner2(text_batch)
+                entity_substr_batch2, entity_positions_batch2, entity_probas_batch2 = \
+                    self.ner_parser2(ner_tokens_batch2, ner_probas_batch2, probas_batch2, template_type_batch)
+                entity_substr_batch, entity_positions_batch, entity_probas_batch = \
+                    self.merge_annotations(entity_substr_batch, entity_positions_batch, entity_probas_batch,
+                                           entity_substr_batch2, entity_positions_batch2, entity_probas_batch2)
 
             entity_pos_tags_probas_batch = [[(entity_substr.lower(), entity_substr_positions, tag, entity_proba)
                                              for tag, entity_substr_list in entity_substr_dict.items()
@@ -316,3 +340,55 @@ class NerChunkModel(Component):
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_entity_positions_batch, doc_tags_batch, \
                doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
+
+    def merge_annotations(self, entity_substr_batch, entity_pos_batch, entity_probas_batch,
+                          entity_substr_batch2, entity_pos_batch2, entity_probas_batch2):
+        for i in range(len(entity_substr_batch)):
+            for key2 in entity_substr_batch2[i]:
+                entity_substr_list2 = entity_substr_batch2[i][key2]
+                entity_pos_list2 = entity_pos_batch2[i][key2]
+                entity_probas_list2 = entity_probas_batch2[i][key2]
+                for entity_substr2, entity_pos2, entity_probas2 in \
+                        zip(entity_substr_list2, entity_pos_list2, entity_probas_list2):
+                    found = False
+                    for key in entity_substr_batch[i]:
+                        entity_pos_list = entity_pos_batch[i][key]
+                        for entity_pos in entity_pos_list:
+                            if entity_pos[0] <= entity_pos2[0] <= entity_pos[-1] \
+                                    or entity_pos[0] <= entity_pos2[-1] <= entity_pos[-1]:
+                                found = True
+                    if not found:
+                        if key2 not in entity_substr_batch[i]:
+                            entity_substr_batch[i][key2] = []
+                            entity_pos_batch[i][key2] = []
+                            entity_probas_batch[i][key2] = []
+                        entity_substr_batch[i][key2].append(entity_substr2)
+                        entity_pos_batch[i][key2].append(entity_pos2)
+                        entity_probas_batch[i][key2].append(entity_probas2)
+        for i in range(len(entity_substr_batch)):
+            for key2 in entity_substr_batch2[i]:
+                entity_substr_list2 = entity_substr_batch2[i][key2]
+                entity_pos_list2 = entity_pos_batch2[i][key2]
+                entity_probas_list2 = entity_probas_batch2[i][key2]
+                for entity_substr2, entity_pos2, entity_probas2 in \
+                        zip(entity_substr_list2, entity_pos_list2, entity_probas_list2):
+                    for key in entity_substr_batch[i]:
+                        entity_inds = []
+                        entity_substr_list = entity_substr_batch[i][key]
+                        entity_pos_list = entity_pos_batch[i][key]
+                        entity_probas_list = entity_probas_batch[i][key]
+                        for n, (entity_substr, entity_pos, entity_probas) in \
+                                enumerate(zip(entity_substr_list, entity_pos_list, entity_probas_list)):
+                            if (entity_pos[0] == entity_pos2[0] and entity_pos[-1] < entity_pos2[-1]) or \
+                                    (entity_pos[0] > entity_pos2[0] and entity_pos[-1] == entity_pos2[-1]):
+                                entity_inds.append(n)
+                        if len(entity_inds) > 1:
+                            entity_inds = sorted(entity_inds, reverse=True)
+                            for ind in entity_inds:
+                                del entity_substr_batch[i][key][ind]
+                                del entity_pos_batch[i][key][ind]
+                                del entity_probas_batch[i][key][ind]
+                            entity_substr_batch[i][key].append(entity_substr2)
+                            entity_pos_batch[i][key].append(entity_pos2)
+                            entity_probas_batch[i][key].append(entity_probas2)
+        return entity_substr_batch, entity_pos_batch, entity_probas_batch

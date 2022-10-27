@@ -17,13 +17,13 @@
         "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
         "out": ["entity_ids", "entity_conf", "entity_pages"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_rus",
-        "entities_database_filename": "el_rus.db",
+        "entities_database_filename": "el_db_rus.db",
         "entity_ranker": "#entity_descr_ranking",
         "rank_in_runtime": true,
-        "num_entities_for_bert_ranking": 20,
+        "num_entities_for_bert_ranking": 30,
         "use_gpu": false,
         "include_mention": false,
-        "num_entities_to_return": 3,
+        "num_entities_to_return": 7,
         "lemmatize": true,
         "use_descriptions": true,
         "use_connections": true,
@@ -38,7 +38,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1"

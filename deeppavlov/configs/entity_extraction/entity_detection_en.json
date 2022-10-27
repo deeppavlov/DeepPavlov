@@ -9,10 +9,10 @@
         "max_seq_len" : 300,
         "vocab_file": "{TRANSFORMER}",
         "in": ["x"],
-        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"]
       },
       {
-        "thres_proba": 0.05,
+        "thres_proba": 0.6,
         "o_tag": "O",
         "tags_file": "{NER_PATH}/tag.dict",
         "return_entities_with_tags": true,
@@ -28,7 +28,7 @@
           }
         },
         "ner_parser": "#edp",
-        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       }
     ],
@@ -36,7 +36,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "/archive/evseev/.deeppavlov",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "TRANSFORMER": "bert-base-cased",
