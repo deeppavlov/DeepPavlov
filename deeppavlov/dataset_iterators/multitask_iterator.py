@@ -66,7 +66,8 @@ class MultiTaskIterator:
             seed=42,
             features=None,
             one_element_tuples=True,
-            *args
+            *args,
+            **kwargs
     ):
         self.task_iterators = {}
         for task_name, task_iterator_params in tasks.items():
