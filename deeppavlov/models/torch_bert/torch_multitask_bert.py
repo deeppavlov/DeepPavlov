@@ -474,9 +474,10 @@ class TorchMultiTaskBert(TorchModel):
                             pred = probs
                         else:
                             numbers_of_sample, numbers_of_class = (probs > 0.5).nonzero(as_tuple=True)
-                            pred = [[] for _ in range(len(numbers_of_sample))]
+                            pred = [[] for _ in range(len(logits))]
                             for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
                                 pred[sample_num].append(class_num)
+                                assert class_num == int(class_num), breakpoint()
                     else:
                         if self.return_probas:
                             pred = torch.softmax(logits, dim=-1)
