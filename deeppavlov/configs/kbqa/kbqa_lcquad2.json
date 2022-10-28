@@ -37,7 +37,17 @@
         "overwrite": {
             "chainer.in": ["entity_substr", "entity_tags", "sentences"],
             "chainer.pipe.1.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng/el_eng_notypes"
+            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng/el_eng_notypes",
+            "metadata.download": [
+              {
+                "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_lcquad2.tar.gz",
+                "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
+              },
+              {
+                "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_ranker_eng.tar.gz",
+                "subdir": "{MODELS_PATH}/entity_linking_eng"
+              }
+            ]
         },
         "id": "entity_linker"
       },
@@ -77,7 +87,13 @@
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2",
+                     "metadata.download": [
+                       {
+                         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_lcquad2.tar.gz",
+                         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
+                       }
+                     ]
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -117,7 +133,13 @@
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2",
+                     "metadata.download": [
+                       {
+                         "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_bert_lcquad2.tar.gz",
+                         "subdir": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
+                       }
+                     ]
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -141,6 +163,10 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_full.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_lcquad2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"

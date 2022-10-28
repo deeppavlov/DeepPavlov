@@ -39,9 +39,18 @@
         },
         "ner_parser": "#edp",
         "ner2": {
-          "config_path": "{CONFIGS_PATH}/ner/entity_type_detection_rubq.json",
+          "config_path": "{CONFIGS_PATH}/ner/ner_rus_bert.json",
           "overwrite": {
-            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"]
+            "chainer.pipe.2.use_crf": false,
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"],
+            "metadata.variables.TRANSFORMER": "bert-base-multilingual-cased",
+            "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_type_detection_rubq",
+            "metadata.download": [
+              {
+                "url": "http://files.deeppavlov.ai/kbqa/models/entity_type_detection_rubq.tar.gz",
+                "subdir": "{MODELS_PATH}/entity_type_detection_rubq"
+              }
+            ]
           }
         },
         "ner_parser2": "#edp2",

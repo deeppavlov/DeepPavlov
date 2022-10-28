@@ -72,7 +72,17 @@
         "overwrite": {
             "chainer.in": ["entity_substr", "entity_tags", "sentences"],
             "chainer.pipe.1.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng/el_eng_dbpedia"
+            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng/el_eng_dbpedia",
+            "metadata.download": [
+              {
+                "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_dbpedia.tar.gz",
+                "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
+              },
+              {
+                "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_ranker_eng.tar.gz",
+                "subdir": "{MODELS_PATH}/entity_linking_eng"
+              }
+            ]
         },
         "id": "entity_linker"
       },
@@ -107,7 +117,13 @@
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad"
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad",
+                     "metadata.download": [
+                       {
+                         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_lcquad.tar.gz",
+                         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad"
+                       }
+                     ]
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -147,8 +163,14 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
-                     "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq"
+                     "metadata.variables.TRANSFORMER": "bert-base-cased",
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq",
+                     "metadata.download": [
+                       {
+                         "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_bert_lcquad_eq.tar.gz",
+                         "subdir": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq"
+                       }
+                     ]
                    }
         },
         "wiki_parser": "#wiki_p",
