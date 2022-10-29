@@ -79,8 +79,9 @@ class QueryGenerator(QueryGeneratorBase):
         template_answers_batch = []
         if answer_types_batch is None:
             answer_types_batch = [[] for _ in question_batch]
-        log.debug(f"kbqa inputs {question_batch} {question_san_batch} {template_type_batch} {entities_from_ner_batch} "
-                  f"{types_from_ner_batch} {entity_tags_batch} {answer_types_batch}")
+        log.debug(f"kbqa inputs {question_batch} {question_san_batch} template_type_batch: {template_type_batch} --- "
+                  f"entities_from_ner: {entities_from_ner_batch} --- types_from_ner: {types_from_ner_batch} --- "
+                  f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch {answer_types_batch}")
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner, entity_tags_list, \
             answer_types in zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
                                 types_from_ner_batch, entity_tags_batch, answer_types_batch):

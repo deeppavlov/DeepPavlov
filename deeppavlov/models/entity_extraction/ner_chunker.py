@@ -343,6 +343,7 @@ class NerChunkModel(Component):
 
     def merge_annotations(self, entity_substr_batch, entity_pos_batch, entity_probas_batch,
                           entity_substr_batch2, entity_pos_batch2, entity_probas_batch2):
+        log.debug(f"ner_chunker, entity_substr: {entity_substr_batch2} --- entity_pos: {entity_pos_batch2}")
         for i in range(len(entity_substr_batch)):
             for key2 in entity_substr_batch2[i]:
                 entity_substr_list2 = entity_substr_batch2[i][key2]
@@ -382,7 +383,7 @@ class NerChunkModel(Component):
                             if (entity_pos[0] == entity_pos2[0] and entity_pos[-1] < entity_pos2[-1]) or \
                                     (entity_pos[0] > entity_pos2[0] and entity_pos[-1] == entity_pos2[-1]):
                                 entity_inds.append(n)
-                        if len(entity_inds) > 1:
+                        if len(entity_inds) > 1 or (len(entity_inds) == 1 and key == "WORK_OF_ART"):
                             entity_inds = sorted(entity_inds, reverse=True)
                             for ind in entity_inds:
                                 del entity_substr_batch[i][key][ind]

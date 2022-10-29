@@ -26,6 +26,7 @@
         "tags_file": "{NER_PATH2}/tag.dict",
         "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
+        "ignored_tags": ["T"],
         "id": "edp2"
       },
       {
@@ -39,11 +40,10 @@
         },
         "ner_parser": "#edp",
         "ner2": {
-          "config_path": "{CONFIGS_PATH}/ner/ner_rus_bert.json",
+          "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_mult.json",
           "overwrite": {
             "chainer.pipe.2.use_crf": false,
             "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"],
-            "metadata.variables.TRANSFORMER": "bert-base-multilingual-cased",
             "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_type_detection_rubq",
             "metadata.download": [
               {

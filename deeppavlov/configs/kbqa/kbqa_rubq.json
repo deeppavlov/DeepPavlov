@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": ["x"],
-    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
@@ -50,7 +49,7 @@
         "adj_to_noun": "#adj2noun",
         "lang": "rus",
         "in": ["syntax_info", "entity_positions"],
-        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
+        "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_types_substr"]
       },
       {
         "class_name": "template_matcher",
@@ -62,12 +61,19 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json",
+                   "overwrite": {
+                     "chainer.out": ["y_pred_labels"],
+                     "metadata.variables.TRANSFORMER": "DeepPavlov/rubert-base-cased",
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_rus"
+                   }
+        },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "return_all_possible_answers": true,
         "return_answer_ids": false,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
+        "rank": false,
         "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
       },
       {
@@ -84,8 +90,10 @@
         "entities_to_leave": 9,
         "rels_to_leave": 10,
         "return_all_possible_answers": false,
+        "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
+                                [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
         "syntax_structure_known": true,
-        "in": ["x_punct", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
+        "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "f_tags", "answer_types"],
         "out": ["answers"]
       }
     ],

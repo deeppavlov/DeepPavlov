@@ -108,42 +108,42 @@ class RelRankerInfer(Component, Serializable):
         for question, candidate_answers, entities, template_answer, equal_flag in \
                 zip(questions_list, candidate_answers_list, entities_list, template_answers_list, equal_flag_list):
             answers_with_scores = []
-            if self.rank:
-                n_batches = len(candidate_answers) // self.batch_size + int(
-                    len(candidate_answers) % self.batch_size > 0)
-                for i in range(n_batches):
-                    questions_batch = []
-                    rels_batch = []
-                    rels_labels_batch = []
-                    cur_answers_batch = []
-                    entities_batch = []
-                    confidences_batch = []
-                    for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                        candidate_rels = []
-                        candidate_rels_str, candidate_answer = [], ""
-                        candidate_entities, candidate_confidence, candidate_rels_labels = [], [], []
-                        if candidate_ans_and_rels:
-                            candidate_rels = candidate_ans_and_rels["relations"]
-                            if self.delete_rel_prefix:
-                                candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                            candidate_answer = candidate_ans_and_rels["answers"]
-                            candidate_entities = candidate_ans_and_rels["entities"]
-                            candidate_confidence = candidate_ans_and_rels["candidate_output_conf"]
-                            candidate_rels_labels = [self.rel_q2name[candidate_rel].lower()
-                                                     for candidate_rel in candidate_rels
-                                                     if candidate_rel in self.rel_q2name]
-                        if candidate_rels_labels and ((len(candidate_rels_labels) == 2 and equal_flag
-                                and ((candidate_rels_labels[0] == candidate_rels_labels[1] and equal_flag == "equal") or
-                                     (candidate_rels_labels[0] != candidate_rels_labels[1]
-                                      and equal_flag == "not_equal")))
-                                or not equal_flag or len(candidate_rels_labels) == 1):
-                            questions_batch.append(question)
-                            rels_batch.append(candidate_rels)
-                            rels_labels_batch.append(candidate_rels_labels)
-                            cur_answers_batch.append(candidate_answer)
-                            entities_batch.append(candidate_entities)
-                            confidences_batch.append(candidate_confidence)
-                    if questions_batch:
+            n_batches = len(candidate_answers) // self.batch_size + int(
+                len(candidate_answers) % self.batch_size > 0)
+            for i in range(n_batches):
+                questions_batch = []
+                rels_batch = []
+                rels_labels_batch = []
+                cur_answers_batch = []
+                entities_batch = []
+                confidences_batch = []
+                for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
+                    candidate_rels = []
+                    candidate_rels_str, candidate_answer = [], ""
+                    candidate_entities, candidate_confidence, candidate_rels_labels = [], [], []
+                    if candidate_ans_and_rels:
+                        candidate_rels = candidate_ans_and_rels["relations"]
+                        if self.delete_rel_prefix:
+                            candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
+                        candidate_answer = candidate_ans_and_rels["answers"]
+                        candidate_entities = candidate_ans_and_rels["entities"]
+                        candidate_confidence = candidate_ans_and_rels["candidate_output_conf"]
+                        candidate_rels_labels = [self.rel_q2name[candidate_rel].lower()
+                                                 for candidate_rel in candidate_rels
+                                                 if candidate_rel in self.rel_q2name]
+                    if candidate_rels_labels and ((len(candidate_rels_labels) == 2 and equal_flag
+                            and ((candidate_rels_labels[0] == candidate_rels_labels[1] and equal_flag == "equal") or
+                                 (candidate_rels_labels[0] != candidate_rels_labels[1]
+                                  and equal_flag == "not_equal")))
+                            or not equal_flag or len(candidate_rels_labels) == 1):
+                        questions_batch.append(question)
+                        rels_batch.append(candidate_rels)
+                        rels_labels_batch.append(candidate_rels_labels)
+                        cur_answers_batch.append(candidate_answer)
+                        entities_batch.append(candidate_entities)
+                        confidences_batch.append(candidate_confidence)
+                if questions_batch:
+                    if self.rank:
                         if self.nll_ranking:
                             probas = self.ranker([questions_batch[0]], [rels_labels_batch])
                             probas = probas[0]
@@ -151,15 +151,15 @@ class RelRankerInfer(Component, Serializable):
                             what_to_rank_batch = [self.what_to_rank for _ in questions_batch]
                             probas = self.ranker(questions_batch, rels_labels_batch, what_to_rank_batch)
                             probas = [proba[0] for proba in probas]
-                        for j, (answer, entities, (rel_conf, entity_conf), rels_ids, rels_labels) in \
-                                enumerate(zip(cur_answers_batch, entities_batch, confidences_batch, rels_batch,
-                                              rels_labels_batch)):
-                            answers_with_scores.append(
-                                (answer, entities, rels_labels, rels_ids, probas[j], entity_conf))
+                    else:
+                        probas = [1.0 for _ in questions_batch]
+                    for j, (answer, entities, (rel_conf, entity_conf), rels_ids, rels_labels) in \
+                            enumerate(zip(cur_answers_batch, entities_batch, confidences_batch, rels_batch,
+                                          rels_labels_batch)):
+                        answers_with_scores.append(
+                            (answer, entities, rels_labels, rels_ids, probas[j], entity_conf))
 
-                answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-2], reverse=True)
-            else:
-                answers_with_scores = [(answer, rels, conf) for *rels, answer, conf in candidate_answers]
+            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-2], reverse=True)
 
             res_answers_list, res_answer_ids_list, res_confidences_list, res_entities_and_rels_list = [], [], [], []
             for answers_with_scores_elem in answers_with_scores:

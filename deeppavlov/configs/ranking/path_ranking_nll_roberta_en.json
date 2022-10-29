@@ -21,7 +21,7 @@
         "out": ["bert_features"]
       },
       {
-        "class_name": "path_nll_ranking",
+        "class_name": "torch_transformers_nll_ranker",
         "in": ["bert_features"],
         "in_y": ["y"],
         "out": ["model_output"],

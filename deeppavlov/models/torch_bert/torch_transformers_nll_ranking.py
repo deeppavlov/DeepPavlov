@@ -159,13 +159,14 @@ class NLLRanking(nn.Module):
             positive_idx: List[List[int]] = None
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
-        bs, seq_len = input_ids.size()
+        bs, samples_num, seq_len = input_ids.size()
+        input_ids = input_ids.reshape(bs, -1)
+        attention_mask = attention_mask.reshape(bs, -1)
+        token_type_ids = token_type_ids.reshape(bs, -1)
         encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
         cls_emb = encoder_output.last_hidden_state[:, :1, :].squeeze(1)
         scores = self.fc(cls_emb)
-        bs = bs // 100
-        scores = scores.reshape(bs, -1)
-        # scores = scores.reshape(1, bs)
+        scores = scores.reshape(bs, samples_num)
 
         scores = F.log_softmax(scores, dim=1)
         if positive_idx is not None:

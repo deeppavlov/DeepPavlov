@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": ["x"],
-    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
@@ -115,7 +114,6 @@
         "id": "rel_r_inf",
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_roberta_en.json",
                    "overwrite": {
-                     "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad",
                      "metadata.download": [
@@ -163,6 +161,7 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
+                     "chainer.out": ["y_pred_labels"],
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq",
                      "metadata.download": [

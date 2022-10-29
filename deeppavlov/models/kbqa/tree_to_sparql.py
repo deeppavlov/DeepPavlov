@@ -139,7 +139,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                 entity_old = sentence[start:end]
                 entity_new = entity_old.capitalize()
                 sentence = sentence.replace(entity_old, entity_new)
-            sentence = sentence.capitalize()
+            sentence = f"{sentence[0].upper()}{sentence[1:]}"
             sentences_tok.append(re.findall(self.re_tokenizer, sentence))
         markup = list(self.syntax.map(sentences_tok))
 
@@ -209,20 +209,17 @@ class TreeToSparql(Component):
     def __call__(self, syntax_tree_batch: List[str],
                  positions_batch: List[List[List[int]]]) -> Tuple[
         List[str], List[List[str]], List[List[str]], List[List[str]]]:
-        log.debug(f"positions of entity tokens {positions_batch}")
+        log.debug(f"positions of entity tokens: {positions_batch}")
         query_nums_batch = []
         entities_dict_batch = []
         types_dict_batch = []
         questions_batch = []
         count = False
         for syntax_tree, positions in zip(syntax_tree_batch, positions_batch):
-            log.debug(f"\n{syntax_tree}")
-            try:
-                tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
-                root = self.find_root(tree)
-                tree_desc = tree.descendants
-            except ValueError:
-                root = ""
+            log.debug(f"syntax tree: \n{syntax_tree}")
+            tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
+            root = self.find_root(tree)
+            tree_desc = tree.descendants
             unknown_node = ""
             if root:
                 log.debug(f"syntax tree info, root: {root.form}")

@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": ["x"],
-    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",

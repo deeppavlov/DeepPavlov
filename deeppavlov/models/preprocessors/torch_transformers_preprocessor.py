@@ -362,15 +362,11 @@ class RelRankingPreprocessor(Component):
 
     def __init__(self,
                  vocab_file: str,
-                 add_special_tokens: List[str],
                  do_lower_case: bool = True,
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
-        self.add_special_tokens = add_special_tokens
-        special_tokens_dict = {'additional_special_tokens': add_special_tokens}
-        self.tokenizer.add_special_tokens(special_tokens_dict)
 
     def __call__(self, questions_batch: List[List[str]], rels_batch: List[List[str]] = None) -> Dict[str, torch.tensor]:
         """Tokenize questions and relations
@@ -450,19 +446,22 @@ class PathRankingPreprocessor(Component):
         max_len = min(max(lengths), self.max_seq_length)
         input_ids_batch, attention_mask_batch, token_type_ids_batch = [], [], []
         for question, rels_list in zip(questions_batch, proc_rels_batch):
+            input_ids_list, attention_mask_list, token_type_ids_list = [], [], []
             for rels_str in rels_list:
                 encoding = self.tokenizer.encode_plus(text=question, text_pair=rels_str,
                                                       truncation=True, max_length=max_len, add_special_tokens=True,
                                                       pad_to_max_length=True, return_attention_mask=True)
-                input_ids_batch.append(encoding["input_ids"])
-                attention_mask_batch.append(encoding["attention_mask"])
+                input_ids_list.append(encoding["input_ids"])
+                attention_mask_list.append(encoding["attention_mask"])
                 if "token_type_ids" in encoding:
-                    token_type_ids_batch.append(encoding["token_type_ids"])
+                    token_type_ids_list.append(encoding["token_type_ids"])
                 else:
-                    token_type_ids_batch.append([0])
-        input_features = {"input_ids": torch.LongTensor(input_ids_batch),
-                          "attention_mask": torch.LongTensor(attention_mask_batch),
-                          "token_type_ids": torch.LongTensor(token_type_ids_batch)}
+                    token_type_ids_list.append([0])
+            input_ids_batch.append(input_ids_list)
+            attention_mask_batch.append(attention_mask_list)
+            token_type_ids_batch.append(token_type_ids_list)
+        input_features = {"input_ids": input_ids_batch, "attention_mask": attention_mask_batch,
+                          "token_type_ids": token_type_ids_batch}
         return input_features
 
 

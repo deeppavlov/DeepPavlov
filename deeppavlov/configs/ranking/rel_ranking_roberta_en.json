@@ -38,7 +38,7 @@
       {
         "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
-        "return_probas": "true",
+        "return_probas": true,
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
@@ -62,11 +62,11 @@
         "ref": "classes_vocab"
       }
     ],
-    "out": ["y_pred_probas"]
+    "out": ["y_pred_labels"]
   },
   "train": {
     "epochs": 3,
-    "batch_size": 50,
+    "batch_size": 30,
     "metrics": [
       "accuracy",
       "f1_macro"
@@ -88,7 +88,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rel_ranking_bert_eng_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_roberta_en.tar.gz",
         "subdir": "{MODEL_PATH}"
       },
       {

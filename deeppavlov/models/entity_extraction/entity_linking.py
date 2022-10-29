@@ -114,7 +114,7 @@ class EntityLinker(Component, Serializable):
             entity_offsets_batch: List[List[List[int]]] = None,
             sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
     ):
-        if sentences_offsets_batch is None and sentences_batch is not None:
+        if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None:
             sentences_offsets_batch = []
             for sentences_list in sentences_batch:
                 sentences_offsets_list = []
@@ -129,8 +129,9 @@ class EntityLinker(Component, Serializable):
             sentences_batch = [[] for _ in entity_substr_batch]
             sentences_offsets_batch = [[] for _ in entity_substr_batch]
 
-        log.debug(f"sentences_batch {sentences_batch}")
-        if entity_offsets_batch is None and sentences_batch is not None:
+        log.debug(f"entity_substr: {entity_substr_batch} --- sentences_batch: {sentences_batch} --- "
+                  f"entity_offsets: {entity_offsets_batch}")
+        if (not entity_offsets_batch or entity_offsets_batch[0] is None) and sentences_batch:
             entity_offsets_batch = []
             for entity_substr_list, sentences_list in zip(entity_substr_batch, sentences_batch):
                 text = " ".join(sentences_list).lower()
