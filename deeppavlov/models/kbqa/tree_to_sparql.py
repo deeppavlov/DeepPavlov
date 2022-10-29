@@ -153,10 +153,24 @@ class SlovnetSyntaxParser(Component, Serializable):
                 head_ids.append(elem.head_id)
                 rels.append(elem.rel)
             if "root" not in {rel.lower() for rel in rels}:
+                found_root = False
                 for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
                     if elem_id == head_id:
                         rels[n] = "root"
                         head_ids[n] = 0
+                        found_root = True
+                if not found_root:
+                    for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
+                        if rels[n] == "nsubj":
+                            rels[n] = "root"
+                            head_ids[n] = 0
+            root_n = -1
+            for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
+                if rels[n] == "root":
+                    root_n = n + 1
+                    break
+            if words[-1] == "?" and root_n > -1 and head_ids[-1] != root_n:
+                head_ids[-1] = root_n
             for elem_id, word, head_id, rel in zip(ids, words, head_ids, rels):
                 processed_markup.append(f"{elem_id}\t{word}\t_\t_\t_\t_\t{head_id}\t{rel}\t_\t_")
             processed_markup_batch.append("\n".join(processed_markup))
@@ -332,7 +346,6 @@ class TreeToSparql(Component):
                     for child in node.descendants:
                         if child.form.lower() in self.q_pronouns:
                             return child.parent, node
-
         if self.wh_leaf or self.one_chain:
             for node in root.children:
                 if node.deprel in ["nsubj", "obl", "obj", "nmod", "xcomp"] and node.form.lower() not in self.q_pronouns:
