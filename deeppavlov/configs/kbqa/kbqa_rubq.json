@@ -63,7 +63,7 @@
         "id": "rel_r_inf",
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json",
                    "overwrite": {
-                     "chainer.out": ["y_pred_labels"],
+                     "chainer.out": ["y_pred_probas"],
                      "metadata.variables.TRANSFORMER": "DeepPavlov/rubert-base-cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_rus"
                    }

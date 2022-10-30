@@ -110,8 +110,8 @@ class QueryGeneratorBase(Component, Serializable):
                 lines = fl2.readlines()
                 self.rank_list_1 = [line.split('\t')[0] for line in lines]
 
-        self.template_queries = read_json(str(expand_path(self.sparql_queries_filename)))
-        self.template_queries = preprocess_template_queries(self.template_queries)
+        template_queries = read_json(str(expand_path(self.sparql_queries_filename)))
+        self.template_queries = preprocess_template_queries(template_queries)
 
     def save(self) -> None:
         pass
@@ -200,7 +200,8 @@ class QueryGeneratorBase(Component, Serializable):
         candidate_outputs = []
         if isinstance(self.template_nums, str):
             self.template_nums = [self.template_nums]
-        log.debug(f"(find_candidate_answers)self.template_nums: {self.template_nums}")
+        template_log_list = [str([num, self.template_queries[num]["query_template"]]) for num in self.template_nums]
+        log.debug(f"(find_candidate_answers)self.template_nums: {' --- '.join(template_log_list)}")
         init_templates = []
         for template_num in self.template_nums:
             for num, template in self.template_queries.items():

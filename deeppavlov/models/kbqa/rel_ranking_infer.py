@@ -235,8 +235,7 @@ class RelRankerInfer(Component, Serializable):
                         rels_batch.append(candidate_rel)
                         rels_labels_batch.append(self.rel_q2name[candidate_rel])
                 if questions_batch:
-                    what_to_rank_batch = [self.what_to_rank for _ in questions_batch]
-                    probas = self.ranker(questions_batch, rels_labels_batch, what_to_rank_batch)
+                    probas = self.ranker(questions_batch, rels_labels_batch)
                     probas = [proba[1] for proba in probas]
                     for j, rel in enumerate(rels_batch):
                         rels_with_scores.append((rel, probas[j]))

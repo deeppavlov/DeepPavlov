@@ -31,6 +31,7 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.models.kbqa.utils import preprocess_template_queries
 
 log = getLogger(__name__)
 
@@ -216,7 +217,8 @@ class TreeToSparql(Component):
         else:
             raise ValueError(f"unsupported language {lang}")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
-        self.template_queries = read_json(self.sparql_queries_filename)
+        template_queries = read_json(self.sparql_queries_filename)
+        self.template_queries = preprocess_template_queries(template_queries)
         self.adj_to_noun = adj_to_noun
         self.morph = pymorphy2.MorphAnalyzer()
 
@@ -254,7 +256,8 @@ class TreeToSparql(Component):
                         modifiers_debug_list.append(modifier)
                     else:
                         modifiers_debug_list.append(modifier.form)
-                log.debug(f"modifiers: {' '.join(modifiers_debug_list)}")
+                log.debug(f"modifiers: {' '.join(modifiers_debug_list)} --- "
+                          f"clause modifiers: {[nd.form for nd in clause_modifiers]}")
                 if f"{tree_desc[0].form.lower()} {tree_desc[1].form.lower()}" in self.change_root_tokens:
                     new_root = root.children[0]
                 else:
@@ -473,7 +476,7 @@ class TreeToSparql(Component):
     def find_year_or_number(self, node: Node) -> bool:
         found = False
         for elem in node.descendants:
-            if elem.deprel == "nummod":
+            if elem.deprel == "nummod" or re.findall(r"[\d]{4}", elem.form):
                 return True
         return found
 
@@ -544,8 +547,8 @@ class TreeToSparql(Component):
             for i in range(len(root_desc[key])):
                 root_desc_deprels.append(key)
         root_desc_deprels = sorted(root_desc_deprels)
-        log.debug(f"build_query: root_desc.keys, {root_desc_deprels}, positions {positions}")
-        log.debug(f"temporal order {temporal_order}, ranking tokens {ranking_tokens}")
+        log.debug(f"build_query: root_desc.keys, {root_desc_deprels}, positions {positions}, wh_leaf {self.wh_leaf}, "
+                  f"one_chain {self.one_chain}, temporal order {temporal_order}, ranking tokens {ranking_tokens}")
         if root_desc_deprels in [["nsubj", "obl"],
                                  ["nsubj", "obj"],
                                  ["nsubj", "xcomp"],
