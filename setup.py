@@ -75,6 +75,8 @@ if __name__ == '__main__':
                 'jinja2<=3.0.3',
                 'sphinx-copybutton==0.5.0',
                 'pandoc==2.2'
+                'ipython_genutils==0.2.0',
+                'ipywidgets==8.0.2'
             ],
             's3': [
                 'boto3'

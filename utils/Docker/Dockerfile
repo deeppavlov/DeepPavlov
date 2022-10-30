@@ -31,6 +31,7 @@ RUN rm -f /etc/apt/sources.list.d/cuda*.list && \
         libxslt-dev \
         locales \
         make \
+        pandoc \
         tk-dev \
         wget \
         xz-utils \
