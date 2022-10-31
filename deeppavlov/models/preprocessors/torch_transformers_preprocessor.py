@@ -154,7 +154,7 @@ class TorchTransformersPreprocessor(Component):
         elif isinstance(texts_a, str):
             raise Exception(
                 f'Received string {texts_a} as an input! Check the iterator output')
-        elif texts_a == [] and texts_b == []:
+        elif texts_a == []:
             return {}
 
         texts_a = [k for k in texts_a if k is not None]  # handle dummy output
