@@ -39,6 +39,10 @@ def we_transform_input(name):
     return name in ['sequence_labeling', 'multiple_choice']
 
 
+def make_hash(cuda_tensor):
+    return hash(cuda_tensor.cpu().numpy().tostring())
+
+
 class BertForMultiTask(nn.Module):
     """
     BERT model for multiple choice,sequence labeling, ner, classification or regression
@@ -181,6 +185,8 @@ class TorchMultiTaskBert(TorchModel):
         freeze_embeddings(default: False): set true to freeze BERT embeddings
         dropout(default: None): dropout for the final model layer.
         If not set, defaults to the parameter hidden_dropout_prob of original model
+        cuda_cache_size(default:3): predicts cache size. Recommended if we need classify one samples for many tasks. 0 if we don't use cache
+        cuda_cache(default:True): if True, store cache on GPU
     """
 
     def __init__(
@@ -199,6 +205,7 @@ class TorchMultiTaskBert(TorchModel):
             return_probas: bool = False,
             freeze_embeddings: bool = False,
             dropout: Optional[float] = None,
+            cuda_cache_size: int = 3,
             *args,
             **kwargs,
     ) -> None:
@@ -234,6 +241,11 @@ class TorchMultiTaskBert(TorchModel):
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
+        self.cuda_cache_size = cuda_cache_size
+        if self.cuda_cache_size:
+            self.cuda_cache = FixSizeOrderedDict(max=self.cuda_cache_size)
+        else:
+            self.cuda_cache = None
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -427,11 +439,29 @@ class TorchMultiTaskBert(TorchModel):
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
+                last_hidden_state, cache_key = None, None
+                if self.cuda_cache:
+                    hashes_of_tensor_values = tuple([make_hash(args[task_id][name])
+                                               for name in ["input_ids", "attention_mask", "token_type_ids"]
+                                               if name in args[task_id]])
+                    cache_key = (we_transform_input(self.task_names[task_id]),
+                                 hashes_of_tensor_values)
+                    if cache_key in self.cuda_cache:
+                        last_hidden_state = self.cuda_cache[cache_key]
+                if last_hidden_state is None:
+                    with torch.no_grad():
+                        if self.is_data_parallel:
+                            last_hidden_state = self.model.module.get_logits(task_id, **_input)
+                        else:
+                            last_hidden_state = self.model.get_logits(task_id, **_input)
+                        if self.cache_size > 0 and cache_key is not None:
+                            self.cuda_cache[cache_key] = last_hidden_state
+
                 with torch.no_grad():
                     if self.is_data_parallel:
-                        logits = self.model.module.forward(task_id, **_input)
+                        logits = self.model.module.predict_on_top(task_id, last_hidden_state)
                     else:
-                        logits = self.model.forward(task_id, **_input)
+                        logits = self.model.predict_on_top(task_id, last_hidden_state)
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
@@ -448,9 +478,10 @@ class TorchMultiTaskBert(TorchModel):
                             pred = probs
                         else:
                             numbers_of_sample, numbers_of_class = (probs > 0.5).nonzero(as_tuple=True)
+                            numbers_of_sample, numbers_of_class = numbers_of_sample.detach().cpu().numpy(), numbers_of_class.detach().cpu().numpy()
                             pred = [[] for _ in range(len(logits))]
                             for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
-                                pred[sample_num].append(class_num.cpu())
+                                pred[sample_num].append(int(class_num))
                     else:
                         if self.return_probas:
                             pred = torch.softmax(logits, dim=-1)
