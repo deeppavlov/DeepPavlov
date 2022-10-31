@@ -454,7 +454,7 @@ class TorchMultiTaskBert(TorchModel):
                             last_hidden_state = self.model.module.get_logits(task_id, **_input)
                         else:
                             last_hidden_state = self.model.get_logits(task_id, **_input)
-                        if self.cache_size > 0 and cache_key is not None:
+                        if self.cuda_cache and cache_key is not None:
                             self.cuda_cache[cache_key] = last_hidden_state
 
                 with torch.no_grad():
