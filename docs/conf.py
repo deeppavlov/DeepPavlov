@@ -77,10 +77,7 @@ language = 'en'
 exclude_patterns = ['_build', 
                     'Thumbs.db', 
                     '.DS_Store', 
-                    '**.ipynb_checkpoints', 
-                    'features/models/classifiers.rst', 
-                    'features/models/ner.rst',
-                    'features/models/squad.rst'
+                    '**.ipynb_checkpoints'
 ]
 
 # The name of the Pygments (syntax highlighting) style to use.
@@ -111,13 +108,7 @@ html_logo = '_static/deeppavlov.png'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-html_css_files = ['my_blocks.css',
-                  'deeppavlov.css']
-
-#html_context = {
-#    'css_files': [       
-#    ]
-#}
+html_css_files = ['my_blocks.css', 'deeppavlov.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
