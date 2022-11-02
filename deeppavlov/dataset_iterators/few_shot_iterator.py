@@ -20,12 +20,9 @@ from logging import getLogger
 
 import numpy as np
 from overrides import overrides
-from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-
-import wandb
 
 log = getLogger(__name__)
 
@@ -92,13 +89,13 @@ class FewShotIterator(DataLearningIterator):
         
         nli_triplets = []
         # negative examples
-        for text, label in tqdm(data, desc='Negative examples generation'):
+        for text, label in data:
             for negative_label in label2negative[label]:
                 for negative_example in label2examples[negative_label]:
                     nli_triplets.append([[text, negative_example], 0])
                     
         # positive examples
-        for text, label in tqdm(data, desc='Positive examples generation'):
+        for text, label in data:
             for positive_example in label2examples[label]:
                 if positive_example != text:
                     nli_triplets.append([[text, positive_example], 1])
