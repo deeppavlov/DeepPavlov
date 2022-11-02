@@ -28,7 +28,7 @@ Welcome to DeepPavlov's documentation!
    
    
    Context Question Answering <features/models/SQuAD.ipynb>
-   Classification <features/models/classification.ipynb>
+   Classification <features/models/classifiers>
    Named Entity Recognition <features/models/NER.ipynb>
    Entity Extraction <features/models/entity_extraction>
    BERT-based models <features/models/bert>

@@ -31,7 +31,7 @@ BERT-based model is described in  `BERT: Pre-training of Deep Bidirectional Tran
 | ConLL-2003                                              |       | :config:`ner_conll2003_bert.json <ner/ner_conll2003_bert.json>`                            |    91.7     |
 +---------------------------------------------------------+-------+--------------------------------------------------------------------------------------------+-------------+
 
-Classification model :doc:`[docs] </features/models/classification>`
+Classification model :doc:`[docs] </features/models/classifiers>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Model for classification tasks (intents, sentiment, etc) on word-level. Shallow-and-wide CNN, Deep CNN, BiLSTM,
