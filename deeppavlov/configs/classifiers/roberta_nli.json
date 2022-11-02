@@ -40,6 +40,15 @@
                 "max_seq_length": 128
             },
             {
+                "class_name": "nli_label2ids",
+                "in": [
+                    "y_true"
+                ],
+                "out": [
+                    "y_true"
+                ]
+            },
+            {
                 "class_name": "torch_transformers_classifier",
                 "in": [
                     "bert_features"
@@ -63,6 +72,7 @@
             },
             {
                 "class_name": "nli_proba2labels",
+                "is_binary": "{BINARY_CLASSIFICATION}",
                 "in": [
                     "simmilarity_scores"
                 ],
@@ -79,11 +89,10 @@
         "batch_size": 500,
         "epochs": 7,
         "log_every_n_epochs": 1,
-        "validate_first": false,
         "validation_patience": -1,
         "metrics": [
             {
-                "name": "sklearn_balanced_accuracy",
+                "name": "sklearn_accuracy",
                 "inputs": [
                     "y_true",
                     "y_pred"
@@ -100,16 +109,10 @@
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli",
+            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_finetune",
             "DNNC_PATH": "{MODELS_PATH}/classification/dnnc",
             "BASE_MODEL": "roberta-base",
-            "BINARY_CLASSIFICATION": true
+            "BINARY_CLASSIFICATION": false
         }
-    },
-    "download": [
-        {
-            "url": "http://files.deeppavlov.ai/classifiers/few_shot_infer.tar.gz",
-            "subdir": "{MODEL_PATH}"
-        }
-    ]
+    }
 }

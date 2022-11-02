@@ -5,7 +5,8 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "/archive/savkin/parsed_datasets/clinc150/all&oos/dnnc",
+        "data_path": "/archive/savkin/parsed_datasets/clinc150/all_oos/dnnc",
+        "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
     },
@@ -72,6 +73,7 @@
             },
             {
                 "class_name": "dnnc_proba2labels",
+                "is_binary": "{BINARY_CLASSIFICATION}",
                 "in": [
                     "simmilarity_scores",
                     "x",
@@ -82,7 +84,7 @@
                     "y_pred"
                 ],
                 "multilabel": false,
-                "confidence_threshold": 0.2
+                "confidence_threshold": 0.0
             }
         ],
         "out": [
@@ -90,8 +92,16 @@
         ]
     },
     "train": {
-        "batch_size": 4,
+        "batch_size": 5,
         "metrics": [
+            {
+                "name": "sklearn_accuracy",
+                "inputs": [
+                    "y_true",
+                    "y_pred"
+                ],
+                "exclude_oos": true
+            },
             {
                 "name": "sklearn_balanced_accuracy",
                 "inputs": [
@@ -110,7 +120,7 @@
         ],
         "show_examples": false,
         "evaluation_targets": [
-            "valid"
+            "test"
         ],
         "class_name": "torch_trainer"
     },
@@ -121,14 +131,8 @@
             "MODELS_PATH": "{ROOT_PATH}/models",
             "MODEL_PATH": "{MODELS_PATH}/classification/dnnc",
             "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-            "BINARY_CLASSIFICATION": true,
+            "BINARY_CLASSIFICATION": false,
             "BASE_MODEL": "roberta-base"
         }
-    },
-    "download": [
-        {
-            "url": "http://files.deeppavlov.ai/v1/classifiers/few_shot_infer.tar.gz",
-            "subdir": "{MODEL_PATH}"
-        }
-    ]
+    }
 }

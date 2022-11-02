@@ -12,18 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from doctest import Example
 from logging import getLogger
 from typing import List, Union
 
 import numpy as np
-import torch
 
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
+
+def preprocess_scores(scores, is_binary, class_id: int = 1):
+    scores = np.array(scores)
+    return scores if is_binary else scores[:, class_id]
 
 @register('dnnc_proba2labels')
 class Proba2Labels(Component):
@@ -32,11 +33,14 @@ class Proba2Labels(Component):
                  confidence_threshold: float = 0.8,
                  pooling: str = 'mean',
                  multilabel: bool = False,
+                 is_binary: bool = False,
                  **kwargs) -> None:
 
         self.confidence_threshold = confidence_threshold
         self.pooling = pooling
         self.multilabel = multilabel
+        self.is_binary = is_binary
+
 
     def __call__(self,
                  simmilarity_scores: Union[np.ndarray, List[List[float]], List[List[int]]],
@@ -46,13 +50,13 @@ class Proba2Labels(Component):
                  *args,
                  **kwargs):
         y_pred = []
-        simmilarity_scores = np.array(simmilarity_scores)
+        simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
         x = np.array(x)
         x_populated = np.array(x_populated)
         y_support = np.array(y_support)
         unique_labels = np.unique(y_support)
 
-        for example in x:
+        for example in x: 
             example_mask = np.where(x_populated == example)
             example_simmilarity_scores = simmilarity_scores[example_mask]
             example_y_support = y_support[example_mask]
@@ -79,14 +83,33 @@ class Proba2Labels(Component):
                 prediction = "oos" if max_probability < self.confidence_threshold else max_probability_label
             
             y_pred.append(prediction)
+    
         return y_pred
         
 
 @register('nli_proba2labels')
 class NLIProba2Labels(Component):
+    def __init__(self,
+                 is_binary: bool = False,
+                 **kwargs):
+        self.is_binary = is_binary
+
+    def __call__(self,
+                 simmilarity_scores,
+                 *args, **kwargs):
+        simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
+        labels = (simmilarity_scores > 0.5).astype(int)
+        return labels
+
+
+@register('nli_label2ids')
+class NLIPLabel2Ids(Component):
     def __init__(self, **kwargs):
         pass
 
-    def __call__(self, simmilarity_scores, *args, **kwargs):
-        # print("SCORES = ", simmilarity_scores)
-        return (np.array(simmilarity_scores) > 0.5).astype(int)
+    def __call__(self,
+                 y_true,
+                 *args, **kwargs):
+
+        y_ids = np.array([int(label) for label in y_true])
+        return y_ids

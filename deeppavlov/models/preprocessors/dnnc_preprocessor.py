@@ -39,7 +39,6 @@ class InputPreprocessor(Component):
     
     def __call__(self,
                  input_texts : List[str]) -> List[List[str]]:
-        # TODO: перепиши на numpy
         if self.support_dataset:
             hypotesis_batch = []
             premise_batch = []

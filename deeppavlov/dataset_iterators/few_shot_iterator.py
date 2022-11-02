@@ -15,19 +15,17 @@
 
 import json
 from random import Random
-from typing import Dict, Any, List, Tuple, Generator, Optional
-from collections import defaultdict
+from typing import Dict, Any, List, Tuple, Optional
 from logging import getLogger
 
 import numpy as np
 from overrides import overrides
-from pyparsing import null_debug_action
+from tqdm import tqdm
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 import wandb
-
 
 log = getLogger(__name__)
 
@@ -39,16 +37,19 @@ class FewShotIterator(DataLearningIterator):
                  seed: int = None, 
                  shuffle: bool = True, 
                  shot: Optional[int] = None,
+                 shot_test: Optional[int] = None,
                  save_path: Optional[str] = None,
                  *args, **kwargs) -> None:
         self.shot = shot
+        self.shot_test = shot_test
         self.shuffle = shuffle
         self.random = Random(seed)
-
-        train_shot_examples = self._get_shot_examples(data.get('train', []))
+        train_shot_examples = self._get_shot_examples(data.get('train', []), self.shot)
+        valid_shot_examples = self._get_shot_examples(data.get('valid', []), self.shot_test)
+        test_shot_examples = self._get_shot_examples(data.get('test', []), self.shot_test)
         self.train = self.preprocess(train_shot_examples, *args, **kwargs)
-        self.valid = self.preprocess(data.get('valid', []), *args, **kwargs)
-        self.test = self.preprocess(data.get('test', []), *args, **kwargs)
+        self.valid = self.preprocess(valid_shot_examples, *args, **kwargs)
+        self.test = self.preprocess(test_shot_examples, *args, **kwargs)
         self.data = {
             'train': self.train,
             'valid': self.valid,
@@ -91,13 +92,13 @@ class FewShotIterator(DataLearningIterator):
         
         nli_triplets = []
         # negative examples
-        for text, label in data:
+        for text, label in tqdm(data, desc='Negative examples generation'):
             for negative_label in label2negative[label]:
                 for negative_example in label2examples[negative_label]:
                     nli_triplets.append([[text, negative_example], 0])
                     
         # positive examples
-        for text, label in data:
+        for text, label in tqdm(data, desc='Positive examples generation'):
             for positive_example in label2examples[label]:
                 if positive_example != text:
                     nli_triplets.append([[text, positive_example], 1])
@@ -107,8 +108,8 @@ class FewShotIterator(DataLearningIterator):
         return nli_triplets
         
 
-    def _get_shot_examples(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:
-        if self.shot is None:
+    def _get_shot_examples(self, data, shot):
+        if shot is None:
             return data
         
         # shuffle data to select shot-examples
@@ -120,11 +121,11 @@ class FewShotIterator(DataLearningIterator):
             data_dict[label] = []
 
         for text, label in data:
-            if len(data_dict[label]) < self.shot:
+            if len(data_dict[label]) < shot:
                 data_dict[label].append(text)
         
-        if max(len(x) for x in data_dict.values()) < self.shot:
-            log.warning(f"Some labels have less than \"shot\"={self.shot} examples")
+        if max(len(x) for x in data_dict.values()) < shot:
+            log.warning(f"Some labels have less than \"shot\"={shot} examples")
 
         new_data = []
         for label in data_dict.keys():

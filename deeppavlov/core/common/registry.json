@@ -34,6 +34,7 @@
   "ner_chunk_model": "deeppavlov.models.entity_extraction.ner_chunker:NerChunkModel",
   "ner_chunker": "deeppavlov.models.entity_extraction.ner_chunker:NerChunker",
   "ner_vocab": "deeppavlov.models.preprocessors.ner_preprocessor:NerVocab",
+  "nli_label2ids": "deeppavlov.models.classifiers.dnnc_proba2labels:NLIPLabel2Ids",
   "nli_proba2labels": "deeppavlov.models.classifiers.dnnc_proba2labels:NLIProba2Labels",
   "nltk_moses_tokenizer": "deeppavlov.models.tokenizers.nltk_moses_tokenizer:NLTKMosesTokenizer",
   "nltk_tokenizer": "deeppavlov.models.tokenizers.nltk_tokenizer:NLTKTokenizer",
