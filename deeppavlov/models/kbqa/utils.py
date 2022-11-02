@@ -19,6 +19,7 @@ from typing import List
 
 def extract_year(question_tokens: List[str], question: str) -> str:
     question_patterns = [r'.*\d{1,2}/\d{1,2}/(\d{4}).*', r'.*\d{1,2}-\d{1,2}-(\d{4}).*', r'.*(\d{4})-\d{1,2}-\d{1,2}.*']
+    from_to_patterns = [r"from ([\d]{3,4}) to [\d]{3,4}", r"с ([\d]{3,4}) по [\d]{3,4}"]
     token_patterns = [r'(\d{4})', r'^(\d{4})-.*', r'.*-(\d{4})$']
     year = ""
     for pattern in question_patterns:
@@ -27,6 +28,10 @@ def extract_year(question_tokens: List[str], question: str) -> str:
             year = fnd.group(1)
             break
     else:
+        for pattern in from_to_patterns:
+            fnd = re.findall(pattern, question)
+            if fnd:
+                return fnd[0]
         for token in question_tokens:
             for pattern in token_patterns:
                 fnd = re.search(pattern, token)
@@ -55,7 +60,6 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 def order_of_answers_sorting(question: str) -> str:
     question_lower = question.lower()
     max_words = ["maximum", "highest", "max ", "greatest", "most", "longest", "biggest", "deepest"]
-
     for word in max_words:
         if word in question_lower:
             return "desc"
@@ -129,7 +133,7 @@ def preprocess_template_queries(template_queries):
                     entities.add(triplet[ind])
                 elif triplet[ind].startswith("wd:T"):
                     types.add(triplet[ind])
-            if rel_type == "qualifier":
+            if rel_type in {"qualifier", "statement"}:
                 if triplet[2].startswith("wd:E"):
                     q_ent.add(triplet[2])
             else:

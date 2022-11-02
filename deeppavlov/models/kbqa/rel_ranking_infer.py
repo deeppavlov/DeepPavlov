@@ -162,8 +162,7 @@ class RelRankerInfer(Component, Serializable):
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-2], reverse=True)
 
             res_answers_list, res_answer_ids_list, res_confidences_list, res_entities_and_rels_list = [], [], [], []
-            for answers_with_scores_elem in answers_with_scores:
-                log.debug(f"answers: {answers_with_scores[0]}")
+            for n, answers_with_scores_elem in enumerate(answers_with_scores):
                 answer_ids, query_entities, _, query_rels, confidence, _ = answers_with_scores_elem
                 if self.return_all_possible_answers and isinstance(answer_ids, tuple):
                     answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
@@ -173,7 +172,8 @@ class RelRankerInfer(Component, Serializable):
                     answer_ids = str(answer_ids).split("/")[-1]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
-                log.debug(f"answer_labels {answer_labels}")
+                if n < 20:
+                    log.debug(f"answers: {answers_with_scores_elem} --- answer_labels {answer_labels}")
                 if self.return_all_possible_answers:
                     answer_labels = list(set(answer_labels))
                     answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]

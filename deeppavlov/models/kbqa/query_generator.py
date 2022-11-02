@@ -73,6 +73,7 @@ class QueryGenerator(QueryGeneratorBase):
                  entities_from_ner_batch: List[List[str]],
                  types_from_ner_batch: List[List[str]],
                  entity_tags_batch: List[List[str]],
+                 probas_batch: List[List[float]],
                  answer_types_batch: List[Set[str]] = None) -> List[str]:
 
         candidate_outputs_batch = []
@@ -83,13 +84,14 @@ class QueryGenerator(QueryGeneratorBase):
                   f"entities_from_ner: {entities_from_ner_batch} --- types_from_ner: {types_from_ner_batch} --- "
                   f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch {answer_types_batch}")
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner, entity_tags_list, \
-            answer_types in zip(question_batch, question_san_batch, template_type_batch, entities_from_ner_batch,
-                                types_from_ner_batch, entity_tags_batch, answer_types_batch):
+            probas, answer_types in zip(question_batch, question_san_batch, template_type_batch,
+                                        entities_from_ner_batch, types_from_ner_batch, entity_tags_batch, probas_batch,
+                                        answer_types_batch):
             if template_type == "-1":
                 template_type = "7"
             candidate_outputs, template_answer = \
                 self.find_candidate_answers(question, question_sanitized, template_type, entities_from_ner,
-                                            types_from_ner, entity_tags_list, answer_types)
+                                            types_from_ner, entity_tags_list, probas, answer_types)
             candidate_outputs_batch.append(candidate_outputs)
             template_answers_batch.append(template_answer)
 
@@ -180,10 +182,11 @@ class QueryGenerator(QueryGeneratorBase):
 
             entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
             log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
-            selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
-            if not type_ids:
-                type_ids = [[]]
-            selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
+            selected_entity_ids, selected_type_ids = [], []
+            if entity_ids:
+                selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
+            if type_ids:
+                selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
             entity_combs = make_combs(selected_entity_ids, permut=True)
             type_combs = make_combs(selected_type_ids, permut=False)
             log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
@@ -223,7 +226,7 @@ class QueryGenerator(QueryGeneratorBase):
                         entity = query_hdt_elem[2].split("/")[-1]
                     if not query_hdt_elem[1].startswith("?"):
                         rel = query_hdt_elem[1].split("/")[-1]
-                    if entity and rel and (entity, rel) not in entities_rel_conn:
+                    if entity and rel and rel not in {"P31", "P279"} and (entity, rel) not in entities_rel_conn:
                         entity_rel_valid = False
         return entity_rel_valid
 
@@ -235,12 +238,12 @@ class QueryGenerator(QueryGeneratorBase):
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> Union[
         List[Dict[str, Union[Union[Tuple[Any, ...], List[Any]], Any]]], List[Dict[str, Any]]]:
         parsed_queries_info = self.parse_queries_info(question, queries_info, entity_ids, type_ids, rels_from_template)
-
+        log.debug(f"query_parser, answer_types {answer_types}")
         queries_list, parser_info_list, confidences_list, entity_conf_list = [], [], [], []
         new_combs_list = []
         combs_num_list = [len(parsed_query_info["all_combs_list"]) for parsed_query_info in parsed_queries_info]
         if combs_num_list:
-            max_comb_nums = max(combs_num_list)
+            max_comb_nums = min(max(combs_num_list), self.max_comb_num)
         else:
             max_comb_nums = 0
         for comb_num in range(max_comb_nums):
@@ -266,6 +269,7 @@ class QueryGenerator(QueryGeneratorBase):
                     if comb_num == 0:
                         log.debug(
                             f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
+
                     entity_rel_valid = self.check_valid_query(entities_rel_conn, query_hdt_seq)
                     if entity_rel_valid:
                         new_combs_list.append(combs)
@@ -288,8 +292,7 @@ class QueryGenerator(QueryGeneratorBase):
                         queries_list.append((unk_rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
                         parser_info_list.append("query_execute")
-                    if comb_num == self.max_comb_num:
-                        break
+
         candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
         candidate_outputs = self.parse_candidate_outputs(candidate_outputs_list, new_combs_list, confidences_list,
                                                          entity_conf_list)

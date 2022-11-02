@@ -283,7 +283,7 @@ class WikiParser:
                 combs = [[elem[key] for key in what_return] for elem in combs]
 
             if answer_types:
-                if answer_types == ["date"]:
+                if list(answer_types) == ["date"]:
                     combs = [[entity for entity in comb
                               if re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for comb in combs]
                 else:

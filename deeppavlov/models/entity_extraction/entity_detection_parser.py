@@ -67,7 +67,7 @@ class EntityDetectionParser(Component):
 
     def __init__(self, o_tag: str, tags_file: str, entity_tags: List[str] = None, ignore_points: bool = False,
                  return_entities_with_tags: bool = False, thres_proba: float = 0.8,
-                 make_tags_from_probas: bool = False, lang: str = "@en", ignored_tags: List[str] = None, **kwargs):
+                 make_tags_from_probas: bool = False, lang: str = "en", ignored_tags: List[str] = None, **kwargs):
         """
         Args:
             o_tag: tag for tokens which are neither entities nor types
@@ -100,9 +100,9 @@ class EntityDetectionParser(Component):
                     self.tag_ind_dict[ind] = entity_tag
             self.tag_ind_dict[0] = self.o_tag
         self.make_tags_from_probas = make_tags_from_probas
-        if lang == "@en":
+        if lang == "en":
             self.stopwords = set(stopwords.words("english"))
-        elif lang == "@ru":
+        elif lang == "ru":
             self.stopwords = set(stopwords.words("russian"))
         if ignored_tags:
             self.ignored_tags = ignored_tags
@@ -207,7 +207,7 @@ class EntityDetectionParser(Component):
         return tags
 
     def add_entity(self, entity, c_tag):
-        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', ''), ('{', ''), ('}', ''),
+        replace_tokens = [(' - ', '-'), ("'s", ''), (' .', '.'), ('{', ''), ('}', ''),
                           ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
         if entity and (entity[-1] in punctuation or entity[-1] == "»"):
             entity = entity[:-1]
@@ -218,7 +218,7 @@ class EntityDetectionParser(Component):
         entity = ' '.join(entity)
         for old, new in replace_tokens:
             entity = entity.replace(old, new)
-        if entity:
+        if entity and entity.lower() not in self.stopwords:
             self.entities_dict[c_tag].append(entity)
             self.entities_positions_dict[c_tag].append(self.entity_positions_dict[c_tag])
             cur_probas = self.entity_probas_dict[c_tag]

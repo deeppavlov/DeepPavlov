@@ -18,6 +18,7 @@
         "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
         "ignored_tags": ["DATE", "CARDINAL", "ORDINAL", "QUANTITY", "PERCENT", "NORP"],
+        "lang": "ru",
         "id": "edp"
       },
       {
@@ -27,6 +28,7 @@
         "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
         "ignored_tags": ["T"],
+        "lang": "ru",
         "id": "edp2"
       },
       {

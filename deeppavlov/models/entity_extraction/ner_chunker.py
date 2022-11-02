@@ -343,7 +343,8 @@ class NerChunkModel(Component):
 
     def merge_annotations(self, entity_substr_batch, entity_pos_batch, entity_probas_batch,
                           entity_substr_batch2, entity_pos_batch2, entity_probas_batch2):
-        log.debug(f"ner_chunker, entity_substr: {entity_substr_batch2} --- entity_pos: {entity_pos_batch2}")
+        log.debug(f"ner_chunker, entity_substr: {entity_substr_batch2} --- entity_pos: {entity_pos_batch2} --- "
+                  f"entity_probas: {entity_probas_batch2}")
         for i in range(len(entity_substr_batch)):
             for key2 in entity_substr_batch2[i]:
                 entity_substr_list2 = entity_substr_batch2[i][key2]
