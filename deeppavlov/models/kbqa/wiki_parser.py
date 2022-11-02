@@ -248,12 +248,12 @@ class WikiParser:
                                 filled_query = [elem.replace(known_elem, known_value) for elem in query]
                                 new_combs, triplets = self.search(filled_query, unknown_elem_positions, rel_type)
                                 for new_comb in new_combs:
-                                    extended_combs.append({**comb, **new_comb})
+                                    extended_combs.append(self.merge_combs(comb, new_comb))
                     else:
                         new_combs, triplets = self.search(query, unknown_elem_positions, rel_type)
                         for comb in combs:
                             for new_comb in new_combs:
-                                extended_combs.append({**comb, **new_comb})
+                                extended_combs.append(self.merge_combs(comb, new_comb))
                 combs = extended_combs
 
         is_boolean = self.define_is_boolean(query_seq)
@@ -301,6 +301,16 @@ class WikiParser:
         if len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]]):
             is_boolean = True
         return is_boolean
+
+    def merge_combs(self, comb1, comb2):
+        new_comb = {}
+        for key in comb1:
+            if (key in comb2 and comb1[key] == comb2[key]) or key not in comb2:
+                new_comb[key] = comb1[key]
+        for key in comb2:
+            if (key in comb1 and comb2[key] == comb1[key]) or key not in comb1:
+                new_comb[key] = comb2[key]
+        return new_comb
 
     def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))

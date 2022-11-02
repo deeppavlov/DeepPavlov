@@ -121,11 +121,18 @@ class RuAdjToNoun:
 class SlovnetSyntaxParser(Component, Serializable):
     """Class for syntax parsing using Slovnet library"""
 
-    def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, **kwargs):
+    def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, lang: str = "ru", **kwargs):
         super().__init__(save_path=None, load_path=load_path)
         self.navec_filename = expand_path(navec_filename)
         self.syntax_parser_filename = expand_path(syntax_parser_filename)
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self.lang = f"@{lang}"
+        if self.lang == "@ru":
+            self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
+                               "где", "чем", "сколько"}
+        elif self.lang == "@en":
+            self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
+        self.morph = pymorphy2.MorphAnalyzer()
         self.load()
 
     def load(self) -> None:
@@ -137,7 +144,7 @@ class SlovnetSyntaxParser(Component, Serializable):
         pass
 
     def preprocess_sentences(self, sentences, entity_offsets_batch):
-        sentences_tokens_batch, names_dict_batch = [], []
+        sentences_tokens_batch, replace_dict_batch = [], []
         for sentence, entity_offsets in zip(sentences, entity_offsets_batch):
             for start, end in entity_offsets:
                 entity_old = sentence[start:end]
@@ -145,45 +152,59 @@ class SlovnetSyntaxParser(Component, Serializable):
                 sentence = sentence.replace(entity_old, entity_new)
             sentence = f"{sentence[0].upper()}{sentence[1:]}"
             names3 = re.findall(r"([\w]{1}\.)([ ]?)([\w]{1}\.)([ ])([\w]{3,})", sentence)
-            names_dict = {}
+            replace_dict = {}
             for name in names3:
                 names_str = "".join(name)
-                names_dict[name[-1]] = names_str
+                replace_dict[name[-1]] = names_str
                 sentence = sentence.replace(names_str, name[-1])
             names2 = re.findall(r"([\w]{1}\.)([ ])([\w]{3,})", sentence)
             for name in names2:
                 names_str = "".join(name)
-                names_dict[name[-1]] = names_str
+                replace_dict[name[-1]] = names_str
                 sentence = sentence.replace(names_str, name[-1])
+            works_of_art = re.findall(r'(["«])(.*?)(["»])', sentence)
+            for symb_start, work_of_art, symb_end in works_of_art:
+                work_of_art_tokens = re.findall(self.re_tokenizer, work_of_art)
+                if len(work_of_art_tokens) > 1:
+                    short_substr = ""
+                    for tok in work_of_art_tokens:
+                        if self.morph.parse(tok)[0].tag.POS == "NOUN":
+                            short_substr = tok
+                            break
+                    if short_substr:
+                        replace_dict[short_substr] = work_of_art
+                        sentence = sentence.replace(work_of_art, short_substr)
+            print("replace_dict", replace_dict)
             sentences_tokens_batch.append([tok.text for tok in tokenize(sentence)])
-            names_dict_batch.append(names_dict)
-        return sentences_tokens_batch, names_dict_batch
+            replace_dict_batch.append(replace_dict)
+        return sentences_tokens_batch, replace_dict_batch
 
-    def get_markup(self, proc_syntax_batch, names_dict_batch):
+    def get_markup(self, proc_syntax_batch, replace_dict_batch):
         markup_batch = []
-        for proc_syntax, names_dict in zip(proc_syntax_batch, names_dict_batch):
+        for proc_syntax, replace_dict in zip(proc_syntax_batch, replace_dict_batch):
             markup_list = []
             for elem in proc_syntax.tokens:
+                print("elem", elem)
                 markup_list.append({"id": elem.id, "text": elem.text, "head_id": int(elem.head_id), "rel": elem.rel})
-            for name in names_dict:
-                name_full = names_dict[name]
+            for substr in replace_dict:
+                substr_full = replace_dict[substr]
                 found_n = -1
                 for n, markup_elem in enumerate(markup_list):
-                    if markup_elem["text"] == name:
+                    if markup_elem["text"] == substr:
                         found_n = n
                 if found_n > -1:
                     before_markup_list = copy.deepcopy(markup_list[:found_n])
                     after_markup_list = copy.deepcopy(markup_list[found_n + 1:])
-                    name_tokens = re.findall(self.re_tokenizer, name_full)
+                    substr_tokens = re.findall(self.re_tokenizer, substr_full)
                     new_markup_list = []
-                    for j in range(len(name_tokens)):
-                        new_markup_elem = {"id": str(found_n + j + 1), "text": name_tokens[j]}
+                    for j in range(len(substr_tokens)):
+                        new_markup_elem = {"id": str(found_n + j + 1), "text": substr_tokens[j]}
                         if j == 0:
                             new_markup_elem["rel"] = markup_list[found_n]["rel"]
                             if markup_list[found_n]["head_id"] < found_n + 1:
                                 new_markup_elem["head_id"] = markup_list[found_n]["head_id"]
                             else:
-                                new_markup_elem["head_id"] = markup_list[found_n]["head_id"] + len(name_tokens) - 1
+                                new_markup_elem["head_id"] = markup_list[found_n]["head_id"] + len(substr_tokens) - 1
                         else:
                             new_markup_elem["rel"] = "flat:name"
                             new_markup_elem["head_id"] = found_n + 1
@@ -191,11 +212,11 @@ class SlovnetSyntaxParser(Component, Serializable):
 
                     for j in range(len(before_markup_list)):
                         if before_markup_list[j]["head_id"] > found_n + 1:
-                            before_markup_list[j]["head_id"] = before_markup_list[j]["head_id"] + len(name_tokens) - 1
+                            before_markup_list[j]["head_id"] = before_markup_list[j]["head_id"] + len(substr_tokens) - 1
                     for j in range(len(after_markup_list)):
-                        after_markup_list[j]["id"] = str(int(after_markup_list[j]["id"]) + len(name_tokens) - 1)
+                        after_markup_list[j]["id"] = str(int(after_markup_list[j]["id"]) + len(substr_tokens) - 1)
                         if after_markup_list[j]["head_id"] > found_n + 1:
-                            after_markup_list[j]["head_id"] = after_markup_list[j]["head_id"] + len(name_tokens) - 1
+                            after_markup_list[j]["head_id"] = after_markup_list[j]["head_id"] + len(substr_tokens) - 1
 
                     markup_list = before_markup_list + new_markup_list + after_markup_list
             for j in range(len(markup_list)):
@@ -209,6 +230,26 @@ class SlovnetSyntaxParser(Component, Serializable):
                 if i < j and head_ids[j] == str(i + 1) and head_ids[i] == str(j + 1):
                     return i + 1, j + 1
         return -1, -1
+
+    def correct_markup(self, ids, words, head_ids, rels, root_n):
+        if len(words) > 3:
+            pos = [self.morph.parse(words[i])[0].tag.POS for i in range(3)]
+            if words[0].lower() in self.q_pronouns and rels[:3] == ["root", "amod", "nsubj"] \
+                    and pos[1:3] == ["ADJF", "NOUN"]:
+                rels[0] = "nsubj"
+                rels[2] = "root"
+                head_ids[2] = 0
+                head_ids[0] = 3
+                root_n = 3
+            elif words[0].lower() == "кто" and rels[:3] == ["root", "acl:relcl", "obj"] \
+                    and pos[1:3] == ["VERB", "NOUN"]:
+                rels[0] = "nsubj"
+                rels[1] = "root"
+                head_ids[0] = 2
+                head_ids[1] = 0
+                head_ids[2] = 2
+                root_n = 2
+        return head_ids, rels, root_n
 
     def process_markup(self, markup_batch):
         processed_markup_batch = []
@@ -228,8 +269,14 @@ class SlovnetSyntaxParser(Component, Serializable):
                         head_ids[n] = 0
                         found_root = True
                 if not found_root:
-                    for n, (elem_id, head_id) in enumerate(zip(ids, head_ids)):
+                    for n in range(len(ids)):
                         if rels[n] == "nsubj":
+                            rels[n] = "root"
+                            head_ids[n] = 0
+                            found_root = True
+                if not found_root:
+                    for n in range(len(ids)):
+                        if self.morph.parse(words[n])[0].tag.POS == "VERB":
                             rels[n] = "root"
                             head_ids[n] = 0
             root_n = -1
@@ -237,6 +284,8 @@ class SlovnetSyntaxParser(Component, Serializable):
                 if rels[n] == "root":
                     root_n = n + 1
                     break
+
+            head_ids, rels, root_n = self.correct_markup(ids, words, head_ids, rels, root_n)
             if words[-1] == "?" and root_n > -1 and head_ids[-1] != root_n:
                 head_ids[-1] = root_n
             cycle_num = -1
@@ -261,9 +310,9 @@ class SlovnetSyntaxParser(Component, Serializable):
         return processed_markup_batch
 
     def __call__(self, sentences, entity_offsets_batch):
-        sentences_tokens_batch, names_dict_batch = self.preprocess_sentences(sentences, entity_offsets_batch)
+        sentences_tokens_batch, substr_dict_batch = self.preprocess_sentences(sentences, entity_offsets_batch)
         proc_syntax_batch = list(self.syntax.map(sentences_tokens_batch))
-        markup_batch = self.get_markup(proc_syntax_batch, names_dict_batch)
+        markup_batch = self.get_markup(proc_syntax_batch, substr_dict_batch)
         processed_markup_batch = self.process_markup(markup_batch)
         return processed_markup_batch
 
