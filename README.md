@@ -26,9 +26,9 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/ner.html) | [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/NER.html) | [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |
 
-[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/squad.html) | [Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
+[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/SQuAD.html) | [Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
 
 [Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
 
