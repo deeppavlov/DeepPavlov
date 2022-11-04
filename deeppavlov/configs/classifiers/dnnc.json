@@ -5,7 +5,7 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "/archive/savkin/parsed_datasets/clinc150/all_oos/dnnc",
+        "data_path": "/archive/savkin/parsed_datasets/clinc150/banking_oos/dnnc",
         "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
@@ -76,7 +76,6 @@
                 "is_binary": "{BINARY_CLASSIFICATION}",
                 "in": [
                     "simmilarity_scores",
-                    "x",
                     "x_populated",
                     "y_support"
                 ],

@@ -46,14 +46,6 @@ def balanced_accuracy(y_true, y_pred, exclude_oos: bool = False) -> float:
 
     return balanced_accuracy_score(y_true, y_pred)
 
-@register_metric('joint_accuracy_in_recall_oos')
-def joint_accuracy_in_recall_oos(y_true, y_pred) -> float:
-    return accuracy(y_true, y_pred, exclude_oos=True) + oos_scores(y_true, y_pred)["recall"]
-
-@register_metric('sklearn_precision_recall_fscore_support')
-def recision_recall_fscore(*args, **kwargs):
-    return precision_recall_fscore_support(*args, **kwargs)
-
 
 @register_metric('oos_scores')
 def oos_scores(y_true, y_pred):
@@ -61,8 +53,3 @@ def oos_scores(y_true, y_pred):
     y_pred_binary = (np.array(y_pred) == "oos")
     scores = precision_recall_fscore_support(y_true_binary, y_pred_binary, average='binary')
     return dict(zip(["precision", "recall", "fbeta_score"], scores[:3]))
-
-    
-@register_metric('sklearn_classification_report')
-def report(*args, **kwargs):
-    return classification_report(output_dict=True, *args, **kwargs)

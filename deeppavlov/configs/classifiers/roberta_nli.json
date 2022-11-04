@@ -5,7 +5,7 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "/archive/savkin/parsed_datasets/clinc150/all/dnnc",
+        "data_path": "/archive/savkin/parsed_datasets/clinc150/banking/dnnc",
         "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
@@ -45,7 +45,7 @@
                     "y_true"
                 ],
                 "out": [
-                    "y_true"
+                    "y_ids"
                 ]
             },
             {
@@ -54,7 +54,7 @@
                     "bert_features"
                 ],
                 "in_y": [
-                    "y_true"
+                    "y_ids"
                 ],
                 "out": [
                     "simmilarity_scores"
@@ -86,9 +86,10 @@
         ]
     },
     "train": {
-        "batch_size": 500,
+        "batch_size": 400,
         "epochs": 7,
         "log_every_n_epochs": 1,
+        "val_every_n_epochs": 1,
         "validation_patience": -1,
         "metrics": [
             {
@@ -100,7 +101,7 @@
             }
         ],
         "evaluation_targets": [
-            "valid"
+            "train"
         ],
         "class_name": "torch_trainer"
     },
@@ -109,7 +110,7 @@
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_finetune",
+            "MODEL_PATH": "{MODELS_PATH}/classification/empty",
             "DNNC_PATH": "{MODELS_PATH}/classification/dnnc",
             "BASE_MODEL": "roberta-base",
             "BINARY_CLASSIFICATION": false

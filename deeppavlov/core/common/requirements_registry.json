@@ -63,6 +63,19 @@
   "russian_words_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
+  "sklearn_accuracy": [
+    "{DEEPPAVLOV_PATH}/requirements/sklearn.txt"
+  ],
+  "sklearn_balanced_accuracy": [
+    "{DEEPPAVLOV_PATH}/requirements/sklearn.txt"
+  ],
+  "oos_scores": [
+    "{DEEPPAVLOV_PATH}/requirements/sklearn.txt"
+  ],
+  "sklearn_precision_recall_fscore_support": [
+    "{DEEPPAVLOV_PATH}/requirements/sklearn.txt"
+  ],
+  
   "slovnet_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/slovnet.txt"
   ],

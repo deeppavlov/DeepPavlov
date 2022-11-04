@@ -24,6 +24,9 @@ from overrides import overrides
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
+ENTAILMENT = 'entailment'
+NON_ENTAILMENT = 'non_entailment'
+
 log = getLogger(__name__)
 
 @register('few_shot_iterator')
@@ -92,13 +95,13 @@ class FewShotIterator(DataLearningIterator):
         for text, label in data:
             for negative_label in label2negative[label]:
                 for negative_example in label2examples[negative_label]:
-                    nli_triplets.append([[text, negative_example], 0])
+                    nli_triplets.append([[text, negative_example], NON_ENTAILMENT])
                     
         # positive examples
         for text, label in data:
             for positive_example in label2examples[label]:
                 if positive_example != text:
-                    nli_triplets.append([[text, positive_example], 1])
+                    nli_triplets.append([[text, positive_example], ENTAILMENT])
 
         if self.shuffle:
             self.random.shuffle(nli_triplets)

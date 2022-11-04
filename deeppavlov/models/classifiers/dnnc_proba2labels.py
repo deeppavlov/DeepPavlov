@@ -20,6 +20,9 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
+ENTAILMENT = 'entailment'
+NON_ENTAILMENT = 'non_entailment'
+
 log = getLogger(__name__)
 
 def preprocess_scores(scores, is_binary, class_id: int = 1):
@@ -44,19 +47,20 @@ class Proba2Labels(Component):
 
     def __call__(self,
                  simmilarity_scores: Union[np.ndarray, List[List[float]], List[List[int]]],
-                 x: List[str],
                  x_populated: List[str],
                  y_support: List[str],
                  *args,
                  **kwargs):
         y_pred = []
+
         simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
-        x = np.array(x)
         x_populated = np.array(x_populated)
         y_support = np.array(y_support)
+
+        unique_texts = np.unique(x_populated)
         unique_labels = np.unique(y_support)
 
-        for example in x: 
+        for example in unique_texts: 
             example_mask = np.where(x_populated == example)
             example_simmilarity_scores = simmilarity_scores[example_mask]
             example_y_support = y_support[example_mask]
@@ -98,7 +102,9 @@ class NLIProba2Labels(Component):
                  simmilarity_scores,
                  *args, **kwargs):
         simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
-        labels = (simmilarity_scores > 0.5).astype(int)
+
+        labels = np.array([NON_ENTAILMENT] * len(simmilarity_scores), dtype="object")
+        labels[simmilarity_scores > 0.5] = ENTAILMENT
         return labels
 
 
@@ -111,5 +117,9 @@ class NLIPLabel2Ids(Component):
                  y_true,
                  *args, **kwargs):
 
-        y_ids = np.array([int(label) for label in y_true])
+        label2id = {
+            NON_ENTAILMENT: 0,
+            ENTAILMENT: 1
+        }
+        y_ids = np.array([label2id[label] for label in y_true])
         return y_ids

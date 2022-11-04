@@ -39,6 +39,9 @@ class InputPreprocessor(Component):
     
     def __call__(self,
                  input_texts : List[str]) -> List[List[str]]:
+        '''
+            Generates all possible ordread pairs from 'input_texts' and 'self.support_dataset'
+        '''
         if self.support_dataset:
             hypotesis_batch = []
             premise_batch = []
@@ -52,4 +55,4 @@ class InputPreprocessor(Component):
 
             return hypotesis_batch, premise_batch, hypotesis_labels_batch
         else:
-            log.warning("Error while reading support dataset")
+            log.warning("Error: no support dataset")
