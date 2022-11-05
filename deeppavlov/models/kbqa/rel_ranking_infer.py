@@ -148,10 +148,11 @@ class RelRankerInfer(Component, Serializable):
                 answer_ids = answers_with_scores[0][0]
                 if self.return_all_possible_answers and isinstance(answer_ids, tuple):
                     answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
-                    answer_ids = [answer_id.split("/")[-1] for answer_id in answer_ids]
+                    answer_ids = list(map(lambda x: x.split("/")[-1] if str(x).startswith("http") else x, answer_ids))
                 else:
                     answer_ids_input = [(answer_ids, question)]
-                    answer_ids = answer_ids.split("/")[-1]
+                    if str(answer_ids).startswith("http:"):
+                        answer_ids = answer_ids.split("/")[-1]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 log.debug(f"answer_labels {answer_labels}")
