@@ -18,6 +18,7 @@ import time
 from itertools import islice
 from logging import getLogger
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
+
 from tqdm import tqdm
 
 from deeppavlov.core.commands.infer import build_model
