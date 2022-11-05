@@ -82,7 +82,7 @@ are used as model argument names instead of the list from model config's
 Socket client example (Python)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Socket client for :doc:`SQuAD </features/models/squad>` model with a batch of
+Socket client for :doc:`SQuAD </features/models/SQuAD>` model with a batch of
 two elements:
 
 .. code-block:: python

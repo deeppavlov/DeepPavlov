@@ -81,7 +81,7 @@ Training
 
 **ODQA ranker** and **ODQA reader** should be trained separately.
 Read about training the **ranker** :ref:`here <ranker_training>`.
-Read about training the **reader** in our separate :ref:`reader tutorial <reader_training>`.
+Read about training the **reader** in our separate [reader tutorial]<SQuAD.ipynb#4.-Train-the-model-on-your-data>.
 
 Interacting
 -----------
@@ -107,7 +107,7 @@ Configuration
 .. _odqa_configuration:
 
 The **ODQA** configs suit only model inferring purposes. For training purposes use
-the :ref:`ranker configs <ranker_training>` and the :ref:`reader configs <reader_training>`
+the :ref:`ranker configs <ranker_training>` and the [reader tutorial]<SQuAD.ipynb#4.-Train-the-model-on-your-data>
 accordingly.
 
 There are several ODQA configs available:
