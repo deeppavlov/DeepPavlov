@@ -530,6 +530,7 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        pytest.skip(f"Disabled")
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
