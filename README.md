@@ -1,4 +1,4 @@
-[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/deepmipt/DeepPavlov/blob/master/LICENSE)
+[![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![Python 3.6, 3.7, 3.8, 3.9](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
@@ -15,10 +15,10 @@ DeepPavlov is designed for
 * Documentation [*docs.deeppavlov.ai*](http://docs.deeppavlov.ai/)
     * Model List [*docs:features/*](http://docs.deeppavlov.ai/en/master/features/overview.html)
     * Contribution Guide [*docs:contribution_guide/*](http://docs.deeppavlov.ai/en/master/devguides/contribution_guide.html)
-* Issues [*github/issues/*](https://github.com/deepmipt/DeepPavlov/issues)
+* Issues [*github/issues/*](https://github.com/deeppavlov/DeepPavlov/issues)
 * Forum [*forum.deeppavlov.ai*](https://forum.deeppavlov.ai/)
 * Blogs [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
-* Tutorials [*examples/*](https://github.com/deepmipt/DeepPavlov/tree/master/examples) and [extended colab tutorials](https://github.com/deepmipt/dp_tutorials)
+* Tutorials [*examples/*](examples) and [extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
@@ -194,7 +194,3 @@ model = evaluate_model(<config_path>, download=True)
 DeepPavlov is Apache 2.0 - licensed.
 
 ##
-
-<p align="center">
-<img src="docs/_static/ipavlov_footer.png" width="50%" height="50%"/>
-</p>

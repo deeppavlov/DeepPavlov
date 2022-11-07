@@ -206,8 +206,8 @@ autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nlt
                         'udapi', 'whapi']
 
 extlinks = {
-    'config': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),
-    'dp_file': (f'https://github.com/deepmipt/DeepPavlov/blob/{release}/%s', None)
+    'config': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),
+    'dp_file': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/%s', None)
 }
 
 # -- Options for intersphinx extension ---------------------------------------
