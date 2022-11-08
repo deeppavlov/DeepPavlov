@@ -18,6 +18,7 @@ from pathlib import Path
 from collections import defaultdict
 
 import pandas as pd
+from tqdm import tqdm
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -59,6 +60,12 @@ class BasicClassificationDatasetReader(DatasetReader):
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
         """
+        def row_list_process(row, y):
+            if pd.isna(row[y]):
+                return []
+            else:
+                return [label_type(label) for label in str(row[y]).split(class_sep)]
+
         data_types = ["train", "valid", "test"]
 
         train_file = kwargs.get('train', 'train.csv')
@@ -90,6 +97,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                 if format == 'csv':
                     keys = ('sep', 'header', 'names')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
+                    print(file)
                     df = pd.read_csv(file, **options)
                 elif format == 'json':
                     keys = ('orient', 'lines')
@@ -100,8 +108,8 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-                row_list_process = lambda row, y: [label_type(label) for label in str(row[y]).split(class_sep)]
-                for _, row in df.iterrows():
+
+                for _, row in tqdm(df.iterrows()):
                     try:
                         if isinstance(x, list):
                             x_text = [row[x_] for x_ in x]
@@ -114,6 +122,7 @@ class BasicClassificationDatasetReader(DatasetReader):
                         data[data_type].append((x_text, y_label))
                     except Exception as e:
                         print(f'Error processing {row}: {e}')
+                        breakpoint()
                         raise e
             else:
                 log.warning("Cannot find {} file".format(file))
