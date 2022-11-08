@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": ["x"],
-    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
@@ -46,7 +45,9 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_en.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_roberta_en.json",
+                   "overwrite": {"chainer.out": ["y_pred_probas"]}
+        },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "return_all_possible_answers": true,
@@ -69,6 +70,19 @@
         "entities_to_leave": 5,
         "rels_to_leave": 10,
         "in": ["x_punct", "x_punct", "template_type", "f_entity_substr", "f_tags", "answer_types"],
+        "out": ["cand_answers", "template_answers"]
+      },
+      {
+        "class_name": "rel_ranking_infer",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json"},
+        "wiki_parser": "#wiki_p",
+        "batch_size": 32,
+        "return_all_possible_answers": true,
+        "return_answer_ids": true,
+        "rank_answers": true,
+        "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
+        "rel_q2name_filename": "wiki_dict_properties_eng.pickle",
+        "in": ["x_punct", "cand_answers", "entity_substr", "template_answers"],
         "out": ["answers"]
       }
     ],

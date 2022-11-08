@@ -28,7 +28,7 @@ class AnswerTypesExtractor:
     """Class which defines answer types for the question"""
 
     def __init__(self, lang: str, types_filename: str, types_sets_filename: str,
-                 num_types_to_return: int = 15, **kwargs):
+                 num_types_to_return: int = 15, use_type_substr: bool = False, **kwargs):
         """
 
         Args:
@@ -43,6 +43,7 @@ class AnswerTypesExtractor:
         self.types_filename = str(expand_path(types_filename))
         self.types_sets_filename = str(expand_path(types_sets_filename))
         self.num_types_to_return = num_types_to_return
+        self.use_type_substr = use_type_substr
         self.morph = pymorphy2.MorphAnalyzer()
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
@@ -85,43 +86,44 @@ class AnswerTypesExtractor:
                             break
                         elif token.head.text == type_noun and token.dep_ == "prep":
                             if len(list(token.children)) == 1 \
-                                    and not any([[tok.text for tok in token.children][0] in entity_substr.lower()
+                                    and not any([list(token.children)[0] in entity_substr.lower()
                                                  for entity_substr in entity_substr_list]):
-                                types_substr += [token.text, [tok.text for tok in token.children][0]]
+                                types_substr += [token.text, list(token.children)[0]]
                 elif any([word in question for word in self.pronouns]):
                     for token in doc:
                         if token.dep_ == "nsubj" and not any([token.text in entity_substr.lower()
                                                               for entity_substr in entity_substr_list]):
                             types_substr.append(token.text)
-
                 types_substr = [(token, token_pos_dict[token]) for token in types_substr]
                 types_substr = sorted(types_substr, key=lambda x: x[1])
                 types_substr = " ".join([elem[0] for elem in types_substr])
                 types_substr_batch.append(types_substr)
-        for types_substr in types_substr_batch:
-            types_substr_tokens = types_substr.split()
-            types_substr_tokens = [tok for tok in types_substr_tokens if tok not in self.stopwords]
-            if self.lang == "@ru":
-                types_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in types_substr_tokens]
-            types_substr_tokens = set(types_substr_tokens)
-            types_scores = []
-            for entity in self.types_dict:
-                labels, cnt = self.types_dict[entity]
-                cur_cnts = []
-                for label in labels:
-                    label_tokens = label.lower().split()
-                    if len(types_substr_tokens) == 1 and len(label_tokens) == 2 and \
-                            list(types_substr_tokens)[0] == label_tokens[0]:
-                        cur_cnts.append(0.3)
-                    else:
-                        inters = types_substr_tokens.intersection(set(label_tokens))
-                        cur_cnts.append(len(inters) / max(len(types_substr_tokens), len(label_tokens)))
+        if self.use_type_substr:
+            for types_substr in types_substr_batch:
+                types_substr_tokens = types_substr.split()
+                types_substr_tokens = [tok for tok in types_substr_tokens if tok not in self.stopwords]
+                if self.lang == "@ru":
+                    types_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in types_substr_tokens]
+                types_substr_tokens = set(types_substr_tokens)
+                types_scores = []
+                for entity in self.types_dict:
+                    labels, cnt = self.types_dict[entity]
+                    cur_cnts = []
+                    for label in labels:
+                        label_tokens = label.lower().split()
+                        if len(types_substr_tokens) == 1 and len(label_tokens) == 2 and \
+                                list(types_substr_tokens)[0] == label_tokens[0]:
+                            cur_cnts.append(0.3)
+                        else:
+                            inters = types_substr_tokens.intersection(set(label_tokens))
+                            cur_cnts.append(len(inters) / max(len(types_substr_tokens), len(label_tokens)))
 
-                types_scores.append([entity, max(cur_cnts), cnt])
-            types_scores = sorted(types_scores, key=lambda x: (x[1], x[2]), reverse=True)
-            cur_types = [elem[0] for elem in types_scores if elem[1] > 0][:self.num_types_to_return]
-            types_sets_batch.append(cur_types)
-
+                    types_scores.append([entity, max(cur_cnts), cnt])
+                types_scores = sorted(types_scores, key=lambda x: (x[1], x[2]), reverse=True)
+                cur_types = [elem[0] for elem in types_scores if elem[1] > 0][:self.num_types_to_return]
+                types_sets_batch.append(cur_types)
+        else:
+            types_sets_batch = [set() for _ in questions_batch]
         for n, (question, types_sets) in enumerate(zip(questions_batch, types_sets_batch)):
             question = question.lower()
             if not types_sets:
@@ -130,11 +132,15 @@ class AnswerTypesExtractor:
                         types_sets_batch[n] = self.types_sets["PER"]
                     elif question.startswith("где"):
                         types_sets_batch[n] = self.types_sets["LOC"]
+                    elif any([question.startswith(elem) for elem in ["когда", "в каком году", "в каком месяце"]]):
+                        types_sets_batch[n] = {"date"}
                 elif self.lang == "@en":
                     if question.startswith("who"):
                         types_sets_batch[n] = self.types_sets["PER"]
                     elif question.startswith("where"):
                         types_sets_batch[n] = self.types_sets["LOC"]
+                    elif any([question.startswith(elem) for elem in ["when", "what year", "what month"]]):
+                        types_sets_batch[n] = {"date"}
 
         new_entity_substr_batch, new_entity_offsets_batch, new_tags_batch = [], [], []
         for question, entity_substr_list, tags_list in zip(questions_batch, entity_substr_batch, tags_batch):

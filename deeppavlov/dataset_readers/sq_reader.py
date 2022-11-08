@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import pickle
 
 from deeppavlov.core.common.registry import register
@@ -23,7 +24,11 @@ class OntonotesReader(DatasetReader):
     """Class to read training datasets in OntoNotes format"""
 
     def read(self, data_path: str):
-        with open(data_path, 'rb') as f:
-            dataset = pickle.load(f)
+        if str(data_path).endswith(".pickle"):
+            with open(data_path, 'rb') as f:
+                dataset = pickle.load(f)
+        elif str(data_path).endswith(".json"):
+            with open(data_path, 'r') as f:
+                dataset = json.load(f)
 
         return dataset

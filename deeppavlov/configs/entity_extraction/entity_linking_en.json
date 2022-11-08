@@ -1,6 +1,6 @@
 {
   "chainer": {
-    "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
+    "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
     "pipe": [
       {
         "class_name": "torch_transformers_entity_ranker_infer",
@@ -14,8 +14,8 @@
       },
       {
         "class_name": "entity_linker",
-        "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
-        "out": ["entity_ids", "entity_conf", "entity_pages"],
+        "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
+        "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_eng",
         "entities_database_filename": "el_eng.db",
         "entity_ranker": "#entity_descr_ranking",
@@ -34,7 +34,7 @@
         "lang": "ru"
       }
     ],
-    "out": ["entity_ids", "entity_conf", "entity_pages"]
+    "out": ["entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]
   },
   "metadata": {
     "variables": {
