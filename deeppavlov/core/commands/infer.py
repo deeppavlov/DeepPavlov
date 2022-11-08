@@ -29,13 +29,9 @@ log = getLogger(__name__)
 
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
-                load_trained: bool = False, download: bool = False,
-                serialized: Optional[bytes] = None) -> Chainer:
+                load_trained: bool = False, download: bool = False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     config = parse_config(config)
-
-    if serialized:
-        serialized: list = pickle.loads(serialized)
 
     if download:
         deep_download(config)
@@ -54,12 +50,7 @@ def build_model(config: Union[str, Path, dict], mode: str = 'infer',
                 log.warning('No "save_path" parameter for the {} component, so "load_path" will not be renewed'
                             .format(component_config.get('class_name', component_config.get('ref', 'UNKNOWN'))))
 
-        if serialized and 'in' in component_config:
-            component_serialized = serialized.pop(0)
-        else:
-            component_serialized = None
-
-        component = from_params(component_config, mode=mode, serialized=component_serialized)
+        component = from_params(component_config, mode=mode)
 
         if 'id' in component_config:
             model._components_dict[component_config['id']] = component

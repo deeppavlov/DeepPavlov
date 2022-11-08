@@ -25,6 +25,7 @@ from deeppavlov.models.tokenizers.utils import detokenize, ngramize
 logger = getLogger(__name__)
 
 
+# TODO: make proper handling through spacy.cli.download in the stage of python -m deeppavlov download
 def _try_load_spacy_model(model_name: str, disable: Iterable[str] = ()):
     disable = set(disable)
     try:

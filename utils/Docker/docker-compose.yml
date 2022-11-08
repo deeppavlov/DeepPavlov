@@ -1,0 +1,54 @@
+version: '3.7'
+services:
+  py36:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.6.15
+        - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
+  py37:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.7.11
+        - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
+  py38:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.8.12
+        - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
+  py39:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.9.10
+        - BASE_IMAGE=nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True

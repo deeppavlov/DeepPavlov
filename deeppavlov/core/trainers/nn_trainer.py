@@ -20,13 +20,17 @@ from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Iterable
 
+from tqdm import tqdm
+
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log_events import get_tb_writer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics, NumpyArrayEncoder
 
 log = getLogger(__name__)
+report_log = getLogger('train_report')
 
 
 @register('nn_trainer')
@@ -105,8 +109,7 @@ class NNTrainer(FitTrainer):
                  log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1,
                  **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
-                         show_examples=show_examples, tensorboard_log_dir=tensorboard_log_dir,
-                         max_test_batches=max_test_batches, **kwargs)
+                         show_examples=show_examples, max_test_batches=max_test_batches, **kwargs)
         if train_metrics is None:
             self.train_metrics = self.metrics
         else:
@@ -145,10 +148,7 @@ class NNTrainer(FitTrainer):
         self.last_result = {}
         self.losses = []
         self.start_time: Optional[float] = None
-
-        if self.tensorboard_log_dir is not None:
-            self.tb_train_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'train_log'))
-            self.tb_valid_writer = self._tf.summary.FileWriter(str(self.tensorboard_log_dir / 'valid_log'))
+        self.tb_writer = get_tb_writer(tensorboard_log_dir)
 
     def save(self) -> None:
         if self._loaded:
@@ -174,14 +174,13 @@ class NNTrainer(FitTrainer):
 
         metrics = list(report['metrics'].items())
 
-        if tensorboard_tag is not None and self.tensorboard_log_dir is not None:
-            summary = self._tf.Summary()
-            for name, score in metrics:
-                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
+        if tensorboard_tag is not None and self.tb_writer is not None:
             if tensorboard_index is None:
                 tensorboard_index = self.train_batches_seen
-            self.tb_valid_writer.add_summary(summary, tensorboard_index)
-            self.tb_valid_writer.flush()
+            for name, score in metrics:
+                self.tb_writer.write_valid(tag=f'{tensorboard_tag}/{name}', scalar_value=score,
+                                           global_step=tensorboard_index)
+            self.tb_writer.flush()
 
         m_name, score = metrics[0]
 
@@ -217,7 +216,7 @@ class NNTrainer(FitTrainer):
 
         self._send_event(event_name='after_validation', data=report)
         report = {'valid': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        report_log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
         self.validation_number += 1
 
     def _log(self, iterator: DataLearningIterator,
@@ -246,18 +245,16 @@ class NNTrainer(FitTrainer):
             self.losses.clear()
             metrics.append(('loss', report['loss']))
 
-        if metrics and self.tensorboard_log_dir is not None:
-            summary = self._tf.Summary()
-
+        if metrics and self.tb_writer is not None:
             for name, score in metrics:
-                summary.value.add(tag=f'{tensorboard_tag}/{name}', simple_value=score)
-            self.tb_train_writer.add_summary(summary, tensorboard_index)
-            self.tb_train_writer.flush()
+                self.tb_writer.write_train(tag=f'{tensorboard_tag}/{name}', scalar_value=score,
+                                           global_step=tensorboard_index)
+            self.tb_writer.flush()
 
         self._send_event(event_name='after_train_log', data=report)
 
         report = {'train': report}
-        print(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
+        report_log.info(json.dumps(report, ensure_ascii=False, cls=NumpyArrayEncoder))
 
     def _send_event(self, event_name: str, data: Optional[dict] = None) -> None:
         report = {
@@ -279,7 +276,7 @@ class NNTrainer(FitTrainer):
         while True:
             impatient = False
             self._send_event(event_name='before_train')
-            for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
+            for x, y_true in tqdm(iterator.gen_batches(self.batch_size, data_type='train')):
                 self.last_result = self._chainer.train_on_batch(x, y_true)
                 if self.last_result is None:
                     self.last_result = {}

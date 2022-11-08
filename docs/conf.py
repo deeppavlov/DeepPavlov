@@ -48,6 +48,8 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.extlinks',
     'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx_copybutton'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -67,12 +69,16 @@ master_doc = 'index'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = 'en'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path .
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', '**.ipynb_checkpoints']
+exclude_patterns = ['_build', 
+                    'Thumbs.db', 
+                    '.DS_Store', 
+                    '**.ipynb_checkpoints'
+]
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -102,14 +108,7 @@ html_logo = '_static/deeppavlov.png'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-
-html_context = {
-    'css_files': [
-        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
-        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
-        '_static/deeppavlov.css'
-    ]
-}
+html_css_files = ['my_blocks.css', 'deeppavlov.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -120,6 +119,18 @@ html_context = {
 # 'searchbox.html']``.
 #
 # html_sidebars = {}
+
+nbsphinx_prolog = """
+.. raw:: html
+
+    <style>
+    .nbinput .prompt,
+    .nboutput .prompt {
+        display: none;
+    }
+    </style>
+"""
+nbsphinx_execute = 'never'
 
 
 # -- Options for HTMLHelp output ---------------------------------------------
@@ -190,13 +201,13 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['bert_dp', 'bs4', 'faiss', 'fastText', 'fasttext', 'gensim', 'hdt', 'kenlm', 'librosa',
-                        'lxml', 'nemo', 'nemo_asr', 'nemo_tts', 'nltk', 'opt_einsum', 'rapidfuzz', 'rasa',
-                        'russian_tagsets', 'sacremoses', 'sortedcontainers', 'spacy', 'tensorflow', 'tensorflow_hub',
-                        'torch', 'transformers', 'udapi', 'ufal_udpipe', 'whapi', 'xeger']
+autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz',
+                        'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf', 'transformers',
+                        'udapi', 'whapi']
 
 extlinks = {
-    'config': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None)
+    'config': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),
+    'dp_file': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/%s', None)
 }
 
 # -- Options for intersphinx extension ---------------------------------------

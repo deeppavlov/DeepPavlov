@@ -21,8 +21,8 @@
     ],
     "pipe": [
       {
-        "class_name": "bert_preprocessor",
-        "vocab_file": "{MODEL_PATH}/vocab.txt",
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
         "do_lower_case": false,
         "max_seq_length": 64,
         "in": [
@@ -51,15 +51,14 @@
         "single_vector": true
       },
       {
-        "class_name": "bert_classifier",
+        "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "one_hot_labels": true,
-        "bert_config_file": "{MODEL_PATH}/bert_config.json",
+        "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "keep_prob": 0.5,
-        "learning_rate": 1e-05,
+        "optimizer_parameters": {"lr": 1e-05},
         "learning_rate_drop_patience": 5,
         "learning_rate_drop_div": 2.0,
         "in": [
@@ -111,15 +110,15 @@
       "valid",
       "test"
     ],
-    "class_name": "nn_trainer",
-    "tensorboard_log_dir": "{MODEL_PATH}/"
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_sst_bert_v2"
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_sst_bert_torch",
+      "TRANSFORMER": "DeepPavlov/bert-base-cased-conversational"
     },
     "download": [
       {
@@ -127,8 +126,8 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/classifiers/sentiment_sst_bert_v2.tar.gz",
-        "subdir": "{MODELS_PATH}/classifiers"
+        "url": "http://files.deeppavlov.ai/v1/classifiers/sentiment_sst_bert/sentiment_sst_bert_torch.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }

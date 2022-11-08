@@ -299,16 +299,3 @@ class Chainer(Component):
         if hasattr(self, 'pipe'):
             self.pipe.clear()
         super().destroy()
-
-    def serialize(self) -> bytes:
-        data = []
-        for in_params, out_params, component in self.train_pipe:
-            serialized = component.serialize() if isinstance(component, Component) else None
-            data.append(serialized)
-        return pickle.dumps(data, protocol=4)
-
-    def deserialize(self, data: bytes) -> None:
-        data = pickle.loads(data)
-        for (in_params, out_params, component), component_data in zip(self.train_pipe, data):
-            if isinstance(component, Component):
-                component.deserialize(component_data)

@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import re
-import json
-import math
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
@@ -22,14 +20,12 @@ from typing import List, Tuple, Optional, Dict
 import numpy as np
 import torch
 from overrides import overrides
-from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoTokenizer
+from transformers import AutoModelForQuestionAnswering, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
-from deeppavlov import build_model
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.estimator import Component
 from deeppavlov.core.models.torch_model import TorchModel
 
 logger = getLogger(__name__)
@@ -65,6 +61,7 @@ class TorchTransformersSquad(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        batch_size: batch size for inference of squad model
     """
 
     def __init__(self,
@@ -79,6 +76,7 @@ class TorchTransformersSquad(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
+                 batch_size: int = 10,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -93,6 +91,7 @@ class TorchTransformersSquad(TorchModel):
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.batch_size = batch_size
 
         super().__init__(optimizer=optimizer,
                          optimizer_parameters=optimizer_parameters,
@@ -102,7 +101,8 @@ class TorchTransformersSquad(TorchModel):
                          min_learning_rate=min_learning_rate,
                          **kwargs)
 
-    def train_on_batch(self, features: List[InputFeatures], y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
+    def train_on_batch(self, features: List[List[InputFeatures]],
+                       y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
         """Train model on given batch.
         This method calls train_op using features and labels from y_st and y_end
 
@@ -115,10 +115,9 @@ class TorchTransformersSquad(TorchModel):
             dict with loss and learning_rate values
 
         """
-
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
-        input_type_ids = [f.token_type_ids for f in features]
+        input_ids = [f[0].input_ids for f in features]
+        input_masks = [f[0].attention_mask for f in features]
+        input_type_ids = [f[0].token_type_ids for f in features]
 
         b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
         b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
@@ -128,7 +127,7 @@ class TorchTransformersSquad(TorchModel):
         y_end = [x[0] for x in y_end]
         b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
         b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
-        
+
         input_ = {
             'input_ids': b_input_ids,
             'attention_mask': b_input_masks,
@@ -163,79 +162,107 @@ class TorchTransformersSquad(TorchModel):
             accepted_keys = self.model.forward.__code__.co_varnames
         return accepted_keys
 
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
-    def __call__(self, features: List[InputFeatures]) -> Tuple[List[int], List[int], List[float], List[float]]:
+    def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
+            List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
         """get predictions using features as input
 
         Args:
-            features: batch of InputFeatures instances
+            features_batch: batch of InputFeatures instances
 
         Returns:
-            predictions: start, end positions, start, end logits positions
+            start_pred_batch: answer start positions
+            end_pred_batch: answer end positions
+            logits_batch: answer logits
+            scores_batch: answer confidences
+            ind_batch: indices of paragraph pieces where the answer was found
 
         """
-        input_ids = [f.input_ids for f in features]
-        input_masks = [f.attention_mask for f in features]
-        input_type_ids = [f.token_type_ids for f in features]
+        predictions = {}
+        # TODO: refactor batchification
+        indices, input_ids, input_masks, input_type_ids = [], [], [], []
+        for n, features_list in enumerate(features_batch):
+            for f in features_list:
+                input_ids.append(f.input_ids)
+                input_masks.append(f.attention_mask)
+                input_type_ids.append(f.token_type_ids)
+                indices.append(n)
 
-        b_input_ids = torch.cat(input_ids, dim=0).to(self.device)
-        b_input_masks = torch.cat(input_masks, dim=0).to(self.device)
-        b_input_type_ids = torch.cat(input_type_ids, dim=0).to(self.device)
-        
-        input_ = {
-            'input_ids': b_input_ids,
-            'attention_mask': b_input_masks,
-            'token_type_ids': b_input_type_ids,
-            'return_dict': True
-        }
+        num_batches = len(indices) // self.batch_size + int(len(indices) % self.batch_size > 0)
+        for i in range(num_batches):
+            b_input_ids = torch.cat(input_ids[i * self.batch_size:(i + 1) * self.batch_size], dim=0).to(self.device)
+            b_input_masks = torch.cat(input_masks[i * self.batch_size:(i + 1) * self.batch_size], dim=0).to(self.device)
+            b_input_type_ids = torch.cat(input_type_ids[i * self.batch_size:(i + 1) * self.batch_size],
+                                         dim=0).to(self.device)
+            input_ = {
+                'input_ids': b_input_ids,
+                'attention_mask': b_input_masks,
+                'token_type_ids': b_input_type_ids,
+                'return_dict': True
+            }
 
-        with torch.no_grad():
-            input_ = {arg_name: arg_value for arg_name, arg_value in input_.items() if arg_name in self.accepted_keys}
-            # Forward pass, calculate logit predictions
-            outputs = self.model(**input_)
+            with torch.no_grad():
+                input_ = {arg_name: arg_value for arg_name, arg_value in input_.items()
+                          if arg_name in self.accepted_keys}
+                # Forward pass, calculate logit predictions
+                outputs = self.model(**input_)
 
-            logits_st = outputs.start_logits
-            logits_end = outputs.end_logits
+                logits_st = outputs.start_logits
+                logits_end = outputs.end_logits
 
-            bs = b_input_ids.size()[0]
-            seq_len = b_input_ids.size()[-1]
-            mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
-                              torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
-            logit_mask = b_input_type_ids + mask
-            logits_st = softmax_mask(logits_st, logit_mask)
-            logits_end = softmax_mask(logits_end, logit_mask)
+                bs = b_input_ids.size()[0]
+                seq_len = b_input_ids.size()[-1]
+                mask = torch.cat([torch.ones(bs, 1, dtype=torch.int32),
+                                  torch.zeros(bs, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
+                logit_mask = b_input_type_ids + mask
+                logits_st = softmax_mask(logits_st, logit_mask)
+                logits_end = softmax_mask(logits_end, logit_mask)
 
-            start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
-            end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
-            scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+                start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
+                end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
+                scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
 
-            outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
-                                 end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
-            outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
-                logits_end.size()[0], 1, logits_end.size()[1]))
+                outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
+                                     end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
+                outer_logits = torch.exp(logits_st.view(*logits_st.size(), 1) + logits_end.view(
+                    logits_end.size()[0], 1, logits_end.size()[1]))
 
-            context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
+                context_max_len = torch.max(torch.sum(b_input_type_ids, dim=1)).to(torch.int64)
 
-            max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
+                max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
 
-            outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
-            outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
-                outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
+                outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
+                outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
+                    outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
 
-            start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
-            end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
-            logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
+                start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
+                end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
+                logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
 
-        # Move logits and labels to CPU and to numpy arrays
-        start_pred = start_pred.detach().cpu().numpy()
-        end_pred = end_pred.detach().cpu().numpy()
-        logits = logits.detach().cpu().numpy().tolist()
-        scores = scores.detach().cpu().numpy().tolist()
+            # Move logits and labels to CPU and to numpy arrays
+            start_pred = start_pred.detach().cpu().numpy()
+            end_pred = end_pred.detach().cpu().numpy()
+            logits = logits.detach().cpu().numpy().tolist()
+            scores = scores.detach().cpu().numpy().tolist()
 
-        return start_pred, end_pred, logits, scores
+            for j, (start_pred_elem, end_pred_elem, logits_elem, scores_elem) in \
+                    enumerate(zip(start_pred, end_pred, logits, scores)):
+                ind = indices[i * self.batch_size + j]
+                if ind in predictions:
+                    predictions[ind] += [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
+                else:
+                    predictions[ind] = [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
+
+        start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch = [], [], [], [], []
+        for ind in sorted(predictions.keys()):
+            prediction = predictions[ind]
+            max_ind = np.argmax([pred[2] for pred in prediction])
+            start_pred_batch.append(prediction[max_ind][0])
+            end_pred_batch.append(prediction[max_ind][1])
+            logits_batch.append(prediction[max_ind][2])
+            scores_batch.append(prediction[max_ind][3])
+            ind_batch.append(max_ind)
+
+        return start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch
 
     @overrides
     def load(self, fname=None):
@@ -270,144 +297,4 @@ class TorchTransformersSquad(TorchModel):
         if self.lr_scheduler_name is not None:
             self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
                 self.optimizer, **self.lr_scheduler_parameters)
-
-        if self.load_path:
-            logger.info(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                logger.info(f"Load path {weights_path} exists.")
-                logger.info(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                logger.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                model_state = checkpoint["model_state_dict"]
-                optimizer_state = checkpoint["optimizer_state_dict"]
-
-                # load a multi-gpu model on a single device
-                if not self.is_data_parallel and "module." in list(model_state.keys())[0]:
-                    tmp_model_state = {}
-                    for key, value in model_state.items():
-                        tmp_model_state[re.sub("module.", "", key)] = value
-                    model_state = tmp_model_state
-
-                strict_load_flag = bool([key for key in checkpoint["model_state_dict"].keys()
-                                         if key.endswith("embeddings.position_ids")])
-                self.model.load_state_dict(model_state, strict=strict_load_flag)
-                self.optimizer.load_state_dict(optimizer_state)
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                logger.info(f"Init from scratch. Load path {weights_path} does not exist.")
-
-
-@register('torch_transformers_squad_infer')
-class TorchTransformersSquadInfer(Component):
-    """This model wraps BertSQuADModel to make predictions on longer than 512 tokens sequences.
-
-    It splits context on chunks with `max_seq_length - 3 - len(question)` length, preserving sentences boundaries.
-
-    It reassembles batches with chunks instead of full contexts to optimize performance, e.g.,:
-        batch_size = 5
-        number_of_contexts == 2
-        number of first context chunks == 8
-        number of second context chunks == 2
-
-        we will create two batches with 5 chunks
-
-    For each context the best answer is selected via logits or scores from BertSQuADModel.
-
-
-    Args:
-        squad_model_config: path to DeepPavlov BertSQuADModel config file
-        vocab_file: path to Bert vocab file
-        do_lower_case: set True if lowercasing is needed
-        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
-        batch_size: size of batch to use during inference
-        lang: either `en` or `ru`, it is used to select sentence tokenizer
-
-    """
-
-    def __init__(self, squad_model_config: str,
-                 vocab_file: str,
-                 do_lower_case: bool,
-                 max_seq_length: int = 512,
-                 batch_size: int = 10,
-                 lang: str = 'en', **kwargs) -> None:
-        config = json.load(open(squad_model_config))
-        config['chainer']['pipe'][0]['max_seq_length'] = max_seq_length
-        self.model = build_model(config)
-        self.max_seq_length = max_seq_length
-
-        if Path(vocab_file).is_file():
-            vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
-        else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
-
-        self.batch_size = batch_size
-
-        if lang == 'en':
-            from nltk import sent_tokenize
-            self.sent_tokenizer = sent_tokenize
-        elif lang == 'ru':
-            from ru_sent_tokenize import ru_sent_tokenize
-            self.sent_tokenizer = ru_sent_tokenize
-        else:
-            raise RuntimeError('en and ru languages are supported only')
-
-    def __call__(self, contexts: List[str], questions: List[str], **kwargs) -> Tuple[List[str], List[int], List[float]]:
-        """get predictions for given contexts and questions
-
-        Args:
-            contexts: batch of contexts
-            questions: batch of questions
-
-        Returns:
-            predictions: answer, answer start position, logits or scores
-
-        """
-        batch_indices = []
-        contexts_to_predict = []
-        questions_to_predict = []
-        predictions = {}
-        for i, (context, question) in enumerate(zip(contexts, questions)):
-            context_subtokens = self.tokenizer.tokenize(context)
-            question_subtokens = self.tokenizer.tokenize(question)
-            max_chunk_len = self.max_seq_length - len(question_subtokens) - 3
-            if 0 < max_chunk_len < len(context_subtokens):
-                number_of_chunks = math.ceil(len(context_subtokens) / max_chunk_len)
-                sentences = self.sent_tokenizer(context)
-                for chunk in np.array_split(sentences, number_of_chunks):
-                    contexts_to_predict += [' '.join(chunk)]
-                    questions_to_predict += [question]
-                    batch_indices += [i]
-            else:
-                contexts_to_predict += [context]
-                questions_to_predict += [question]
-                batch_indices += [i]
-
-        for j in range(0, len(contexts_to_predict), self.batch_size):
-            c_batch = contexts_to_predict[j: j + self.batch_size]
-            q_batch = questions_to_predict[j: j + self.batch_size]
-            ind_batch = batch_indices[j: j + self.batch_size]
-            a_batch, a_st_batch, logits_batch = self.model(c_batch, q_batch)
-            for a, a_st, logits, ind in zip(a_batch, a_st_batch, logits_batch, ind_batch):
-                if ind in predictions:
-                    predictions[ind] += [(a, a_st, logits)]
-                else:
-                    predictions[ind] = [(a, a_st, logits)]
-
-        answers, answer_starts, logits = [], [], []
-        for ind in sorted(predictions.keys()):
-            prediction = predictions[ind]
-            best_answer_ind = np.argmax([p[2] for p in prediction])
-            answers += [prediction[best_answer_ind][0]]
-            answer_starts += [prediction[best_answer_ind][1]]
-            logits += [prediction[best_answer_ind][2]]
-
-        return answers, answer_starts, logits
+        super().load()

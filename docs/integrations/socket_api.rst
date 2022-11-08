@@ -42,8 +42,8 @@ to the model by ``server_utils`` label in ``metadata`` section of the model
 config. Value of ``server_utils`` label from model config should match with
 properties key from ``model_defaults`` section of ``server_config.json``.
 
-For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2.json``
-with value *GoalOrientedBot* will initiate the search of *GoalOrientedBot* tag
+For example, adding ``metadata/server_utils`` key to ``kbqa/kbqa_cq.json``
+with value *KBQA* will initiate the search of *KBQA* tag
 at ``model_defaults`` section of ``server_config.json``. Therefore, if this
 section is present, all parameters with non empty (i.e. not ``""``,
 not ``[]`` etc.) values stored by this tag will overwrite the parameter values
@@ -82,7 +82,7 @@ are used as model argument names instead of the list from model config's
 Socket client example (Python)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Socket client for :doc:`SQuAD </features/models/squad>` model with a batch of
+Socket client for :doc:`SQuAD </features/models/SQuAD>` model with a batch of
 two elements:
 
 .. code-block:: python

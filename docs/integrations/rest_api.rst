@@ -24,6 +24,13 @@ The command will print the used host and port. Default web service properties
 (host, port, POST request arguments) can be modified via changing
 ``deeppavlov/utils/settings/server_config.json`` file.
 
+.. warning::
+
+    Starting from the 1.0.0rc2 model response format in riseapi mode matches :class:`~deeppavlov.core.common.chainer.Chainer`
+    response format. To start model with the old format, give the ``COMPATIBILITY_MODE`` environment variable any
+    non-empty value (e.g. ``COMPATIBILITY_MODE=true python -m deeppavlov riseapi ...``).
+    ``COMPATIBILITY_MODE`` will be removed in DeepPavlov 1.2.0.
+
 API routes
 ----------
 
@@ -40,8 +47,8 @@ server will send a response ``["Test passed"]`` if it is working. Requests to
 
 /api
 """"
-To get model argument names send GET request to ``<host>:<port>/api``. Server
-will return list with argument names.
+To get model argument and response names send GET request to ``<host>:<port>/api``. Server
+will return dict with model input and output names.
 
 .. _rest_api_docs:
 
@@ -72,8 +79,8 @@ to the model by ``server_utils`` label in ``metadata`` section of the model
 config. Value of ``server_utils`` label from model config should match with
 properties key from ``model_defaults`` section of ``server_config.json``.
 
-For example, adding ``metadata/server_utils`` key to ``go_bot/gobot_dstc2.json``
-with value *GoalOrientedBot* will initiate the search of *GoalOrientedBot* tag
+For example, adding ``metadata/server_utils`` key to ``kbqa/kbqa_cq.json``
+with value *KBQA* will initiate the search of *KBQA* tag
 at ``model_defaults`` section of ``server_config.json``. Therefore, if this
 section is present, all parameters with non empty (i.e. not ``""``,
 not ``[]`` etc.) values stored by this tag will overwrite the parameter values

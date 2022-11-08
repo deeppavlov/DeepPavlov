@@ -19,7 +19,6 @@ from typing import List, Iterable
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 
 
 @register_metric('accuracy')
@@ -155,23 +154,6 @@ def per_item_dialog_accuracy(y_true, y_predicted: List[List[str]]):
     examples_len = len(y_true)
     correct = sum([y1.strip().lower() == y2.strip().lower() for y1, y2 in zip(y_true, y_predicted)])
     return correct / examples_len if examples_len else 0
-
-
-@register_metric("per_item_action_accuracy")
-def per_item_action_accuracy(dialogs_true, dialog_jsons_predicted: List[List[JSONNLGResponse]]):
-    # todo metric classes???
-    # todo oop instead of serialization/deserialization
-    utterances_actions_true = [utterance['act']
-                               for dialog in dialogs_true
-                               for utterance in dialog]
-
-    utterances_actions_predicted: Iterable[JSONNLGResponse] = itertools.chain(*dialog_jsons_predicted)
-    examples_len = len(utterances_actions_true)
-    correct = sum([y1.strip().lower() == '+'.join(y2.actions_tuple).lower()
-                   for y1, y2 in zip(utterances_actions_true, utterances_actions_predicted)])  # todo ugly
-    return correct / examples_len if examples_len else 0
-
-# endregion go-bot metrics
 
 
 @register_metric('acc')

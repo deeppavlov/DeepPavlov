@@ -194,7 +194,11 @@ def round_f1(y_true, y_predicted):
     try:
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
-        predictions = y_predicted
+        if set(y_true) | set(y_predicted) in ({"True"}, {"False"}, {"False", "True"}):
+            y_true = [y == "True" for y in y_true]
+            predictions = [y == "True" for y in y_predicted]
+        else:
+            raise RuntimeError(f"Unexpectible type for {y_true} and {predictions}")
 
     return f1_score(y_true, predictions)
 

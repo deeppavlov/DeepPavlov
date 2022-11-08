@@ -13,51 +13,55 @@
     "in_y": ["ans_raw", "ans_raw_start"],
     "pipe": [
       {
-        "class_name": "bert_preprocessor",
-        "vocab_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/vocab.txt",
-        "do_lower_case": false,
+        "class_name": "torch_squad_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{LOWERCASE}",
         "max_seq_length": 384,
         "in": ["question_raw", "context_raw"],
-        "out": ["bert_features"]
+        "out": ["bert_features", "subtokens", "split_context"]
       },
       {
         "class_name": "squad_bert_mapping",
-        "do_lower_case": false,
-        "in": ["context_raw", "bert_features"],
+        "do_lower_case": "{LOWERCASE}",
+        "in": ["split_context", "bert_features", "subtokens"],
         "out": ["subtok2chars", "char2subtoks"]
       },
       {
         "class_name": "squad_bert_ans_preprocessor",
-        "do_lower_case": false,
-        "in": ["ans_raw", "ans_raw_start","char2subtoks"],
+        "do_lower_case": "{LOWERCASE}",
+        "in": ["ans_raw", "ans_raw_start", "char2subtoks"],
         "out": ["ans", "ans_start", "ans_end"]
       },
       {
-        "class_name": "squad_bert_model",
-        "bert_config_file": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_config.json",
-        "pretrained_bert": "{DOWNLOADS_PATH}/bert_models/cased_L-12_H-768_A-12/bert_model.ckpt",
-        "save_path": "{MODELS_PATH}/squad_bert/model",
-        "load_path": "{MODELS_PATH}/squad_bert/model",
-        "keep_prob": 0.5,
-        "learning_rate": 2e-05,
+        "class_name": "torch_transformers_squad",
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05,
+          "weight_decay": 0.01,
+          "betas": [0.9, 0.999],
+          "eps": 1e-06
+        },
         "learning_rate_drop_patience": 2,
         "learning_rate_drop_div": 2.0,
+        "batch_size": 10,
         "in": ["bert_features"],
         "in_y": ["ans_start", "ans_end"],
-        "out": ["ans_start_predicted", "ans_end_predicted", "logits"]
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits", "scores", "inds"]
       },
       {
         "class_name": "squad_bert_ans_postprocessor",
-        "in": ["ans_start_predicted", "ans_end_predicted", "context_raw", "bert_features", "subtok2chars"],
+        "in": ["ans_start_predicted", "ans_end_predicted", "split_context", "subtok2chars", "subtokens", "inds"],
         "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
       }
     ],
-    "out": ["ans_predicted", "ans_start_predicted", "logits"]
+    "out": ["ans_predicted", "ans_start_predicted", "scores"]
   },
   "train": {
     "show_examples": false,
-    "test_best": false,
-    "validate_best": true,
+    "evaluation_targets": ["valid"],
     "log_every_n_batches": 250,
     "val_every_n_batches": 500,
     "batch_size": 10,
@@ -82,24 +86,22 @@
         "inputs": ["ans", "ans_predicted"]
       }
     ],
-    "tensorboard_log_dir": "{MODELS_PATH}/squad_bert/logs"
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
+      "LOWERCASE": false,
+      "TRANSFORMER": "bert-base-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/cased/{TRANSFORMER}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/bert/cased_L-12_H-768_A-12.zip",
-        "subdir": "{DOWNLOADS_PATH}/bert_models"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/squad_bert.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/v1/squad/squad_torch_bert_cased.tar.gz",
+        "subdir": "{MODEL_PATH}"
       }
-      ]
+    ]
   }
 }
-

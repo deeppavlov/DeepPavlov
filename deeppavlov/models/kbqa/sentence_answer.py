@@ -12,13 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import importlib
 import re
 from logging import getLogger
 
+import pkg_resources
 import spacy
 
 log = getLogger(__name__)
 
+# en_core_web_sm is installed and used by test_inferring_pretrained_model in the same interpreter session during tests.
+# Spacy checks en_core_web_sm package presence with pkg_resources, but pkg_resources is initialized with interpreter,
+# sot it doesn't see en_core_web_sm installed after interpreter initialization, so we use importlib.reload below.
+
+if 'en-core-web-sm' not in pkg_resources.working_set.by_key.keys():
+    importlib.reload(pkg_resources)
+
+# TODO: move nlp to sentence_answer, sentence_answer to rel_ranking_infer and revise en_core_web_sm requirement,
+# TODO: make proper downloading with spacy.cli.download
 nlp = spacy.load('en_core_web_sm')
 
 pronouns = ["who", "what", "when", "where", "how"]

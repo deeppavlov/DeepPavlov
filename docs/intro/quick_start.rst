@@ -2,7 +2,7 @@ QuickStart
 ------------
 
 First, follow instructions on :doc:`Installation page </intro/installation>`
-to install ``deeppavlov`` package for Python 3.6/3.7.
+to install ``deeppavlov`` package for Python 3.6/3.7/3.8/3.9.
 
 DeepPavlov contains a bunch of great pre-trained NLP models. Each model is
 determined by its config file. List of models is available on
@@ -27,8 +27,8 @@ Before making choice of an interface, install model's package requirements
         python -m deeppavlov install <config_path>
 
     * where ``<config_path>`` is path to the chosen model's config file (e.g.
-      ``deeppavlov/configs/ner/slotfill_dstc2.json``) or just name without
-      `.json` extension (e.g. ``slotfill_dstc2``)
+      ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``) or just name without
+      `.json` extension (e.g. ``insults_kaggle_bert``)
 
 
 Command line interface (CLI)
@@ -71,10 +71,6 @@ There are even more actions you can perform with configs:
           </integrations/rest_api>`),
         * ``risesocket`` to run a socket API server (see :doc:`docs
           </integrations/socket_api>`),
-        * ``telegram`` to run as a Telegram bot (see :doc:`docs
-          </integrations/telegram>`),
-        * ``msbot`` to run a Miscrosoft Bot Framework server (see
-          :doc:`docs </integrations/ms_bot>`),
         * ``predict`` to get prediction for samples from `stdin` or from
           `<file_path>` if ``-f <file_path>`` is specified.
     * ``<config_path>`` specifies path (or name) of model's config file
@@ -111,7 +107,7 @@ You can train it in the same simple way:
         model = train_model(<config_path>, download=True)
 
     * ``download=True`` downloads pretrained model, therefore the pretrained
-      model will be, first, loaded and then train (optional).
+      model will be, first, loaded and then trained (optional).
 
     Dataset will be downloaded regardless of whether there was ``-d`` flag or
     not.
@@ -128,26 +124,23 @@ You can also calculate metrics on the dataset specified in your config file:
 
         model = evaluate_model(<config_path>, download=True)
 
-There are also available integrations with various messengers, see
-:doc:`Telegram Bot doc page </integrations/telegram>` and others in the
-Integrations section for more info.
-
 
 Using GPU
 ~~~~~~~~~
 
-To run or train **TensorFlow**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 10.0
-installed on your host machine and TensorFlow with GPU support (``tensorflow-gpu``)
-installed in your python environment. Current supported TensorFlow version is 1.15.5. Run
+To run or train **PyTorch**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__
+installed on your host machine, and install model's package requirements. CUDA version should be compatible with
+DeepPavlov :dp_file:`required PyTorch version <deeppavlov/requirements/pytorch.txt>`.
+
+.. warning::
+    If you use latest NVIDIA architecture, PyTorch installed from PyPI using DeepPavlov could not support your device
+    CUDA capability. You will receive incompatible device warning after model initialization. You can install compatible
+    package from `download.pytorch.org <https://download.pytorch.org/whl/torch_stable.html>`_. For example:
 
     .. code:: bash
 
-        pip install tensorflow-gpu==1.15.5
+        pip3 install torch==1.8.0+cu111 -f https://download.pytorch.org/whl/torch_stable.html
 
-before installing model's package requirements to install supported ``tensorflow-gpu`` version.
-
-To run or train **PyTorch**-based DeepPavlov models on GPU you should also have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__ 9.0 or 10.0
-installed on your host machine, and install model's package requirements.
 If you want to run the code on GPU, just make the device visible for the script.
 If you want to use a particular device, you may set it in command line:
 
@@ -207,15 +200,13 @@ a paragraph of text), where the answer to the question is a segment of the conte
 .. table::
     :widths: auto
 
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Multi    | :config:`squad_bert_multilingual_freezed_emb <squad/squad_bert_multilingual_freezed_emb.json>` | https://demo.deeppavlov.ai/#/mu/textqa    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | En       | :config:`squad_bert_infer <squad/squad_bert_infer.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Ru       | :config:`squad_ru_bert_infer <squad/squad_ru_bert_infer.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
+    | Language | DeepPavlov config                                                                  | Demo                                      |
+    +==========+====================================================================================+===========================================+
+    | En       | :config:`squad_bert <squad/squad_bert.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
+    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
+    | Ru       | :config:`squad_ru_bert <squad/squad_ru_bert.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
+    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
 
 
 Name Entity Recognition
@@ -252,22 +243,7 @@ related to.
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
-    | En       | :config:`insults_kaggle_conv_bert <classifiers/insults_kaggle_conv_bert.json>`                 | https://demo.deeppavlov.ai/#/en/insult    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-
-
-Sentiment Analysis
-==================
-
-Classify text according to a prevailing emotion (positive, negative, etc.) in it.
-
-.. table::
-    :widths: auto
-
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Ru       | :config:`rusentiment_elmo_twitter_cnn <classifiers/rusentiment_elmo_twitter_cnn.json>`         | https://demo.deeppavlov.ai/#/ru/sentiment |
+    | En       | :config:`insults_kaggle_bert <classifiers/insults_kaggle_bert.json>`                           | https://demo.deeppavlov.ai/#/en/insult    |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
 
 
@@ -282,7 +258,5 @@ Detect if two given texts have the same meaning.
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Language | DeepPavlov config                                                                              | Demo                                      |
     +==========+================================================================================================+===========================================+
-    | En       | :config:`paraphraser_bert <classifiers/paraphraser_bert.json>`                                 | None                                      |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
     | Ru       | :config:`paraphraser_rubert <classifiers/paraphraser_rubert.json>`                             | None                                      |
     +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+

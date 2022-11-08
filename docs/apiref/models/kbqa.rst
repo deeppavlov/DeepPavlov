@@ -3,22 +3,17 @@ deeppavlov.models.kbqa
 
 .. automodule:: deeppavlov.models.kbqa
 
+.. autoclass:: deeppavlov.models.kbqa.type_define.AnswerTypesExtractor
+
+    .. automethod:: __init__
+    .. automethod:: __call__
+
 .. autoclass:: deeppavlov.models.kbqa.query_generator.QueryGenerator
 
     .. automethod:: __init__
     .. automethod:: __call__
 
 .. autoclass:: deeppavlov.models.kbqa.query_generator_base.QueryGeneratorBase
-
-    .. automethod:: __init__
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.kbqa.query_generator_online.QueryGeneratorOnline
-
-    .. automethod:: __init__
-    .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.kbqa.rel_ranking_bert_infer.RelRankerBertInfer
 
     .. automethod:: __init__
     .. automethod:: __call__
@@ -47,7 +42,3 @@ deeppavlov.models.kbqa
 
     .. automethod:: __init__
     .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.kbqa.wiki_parser_online.WikiParserOnline
-
-    .. automethod:: __init__
