@@ -61,7 +61,9 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json",
+                   "overwrite": {"chainer.out": ["y_pred_probas"]}
+        },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "return_all_possible_answers": true,

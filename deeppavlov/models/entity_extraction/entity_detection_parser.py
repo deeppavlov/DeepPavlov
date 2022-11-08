@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 from collections import defaultdict
 from string import punctuation
 from typing import List, Tuple, Union, Dict
@@ -25,9 +26,24 @@ from deeppavlov.core.models.component import Component
 
 
 @register('question_sign_checker')
-def question_sign_checker(questions: List[str]) -> List[str]:
-    """Adds question sign if it is absent or replaces dots in the end with question sign."""
-    return [question if question.endswith('?') else f'{question.rstrip(".")}?' for question in questions]
+class QuestionSignChecker:
+    def __init__(self, delete_brackets: bool = False, **kwargs):
+        self.delete_brackets = delete_brackets
+        self.replace_tokens = [(" '", ' "'), ("' ", '" '), (" ?", "?"), ("  ", " ")]
+        
+    def __call__(self, questions: List[str]) -> List[str]:
+        """Adds question sign if it is absent or replaces dots in the end with question sign."""
+        questions_clean = []
+        for question in questions:
+            question = question if question.endswith('?') else f'{question.rstrip(".")}?'
+            if self.delete_brackets:
+                brackets_text = re.findall(r"(\(.*?\))", question)
+                for elem in brackets_text:
+                    question = question.replace(elem, " ")
+            for old_tok, new_tok in self.replace_tokens:
+                question = question.replace(old_tok, new_tok)
+            questions_clean.append(question)
+        return questions_clean
 
 
 @register('entity_type_split')
@@ -131,7 +147,8 @@ class EntityDetectionParser(Component):
                 tags, _ = self.tags_from_probas(tokens, probas)
             tags = self.correct_quotes(tokens, tags, probas)
             if template_type:
-                tags = self.correct_tags(tags, probas, template_type)
+                tags = self.correct_template_tags(tags, probas, template_type)
+            tags = self.correct_tags(tokens, tags)
             entities, positions, entities_probas = self.entities_from_tags(tokens, tags, probas)
             entities_batch.append(entities)
             positions_batch.append(positions)
@@ -160,7 +177,27 @@ class EntityDetectionParser(Component):
 
         return tags, tag_probas
 
-    def correct_tags(self, tags, probas, template_type):
+    def correct_tags(self, tokens, tags):
+        for i in range(len(tags) - 2):
+            if len(tags[i]) > 1 and tags[i].startswith("B-"):
+                tag = tags[i].split("-")[1]
+                if tags[i + 2] == f"I-{tag}" and tags[i + 1] != f"I-{tag}":
+                    tags[i + 1] = f"I-{tag}"
+            if tokens[i + 1] in '«' and tags[i] != "O":
+                tags[i] = "O"
+                tags[i + 1] = "O"
+            if len(tags[i]) > 1 and tags[i].split("-")[1] == "EVENT":
+                found_n = -1
+                for j in range(i + 1, i + 3):
+                    if re.findall(r"[\d]{3,4}", tokens[j]):
+                        found_n = j
+                        break
+                if found_n > 0:
+                    for j in range(i + 1, found_n + 1):
+                        tags[j] = "I-EVENT"
+        return tags
+
+    def correct_template_tags(self, tags, probas, template_type):
         if template_type in {"simple", "2_hop"}:
             for i in range(len(tags) - 1):
                 if tags[i] in {"B-E", "I-E"} and tags[i + 1] == "B-E":

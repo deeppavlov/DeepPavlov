@@ -104,7 +104,8 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
         query = query.replace(f"t{n + 1}", entity_type)
     for n, (rel, score) in enumerate(rel_comb[:-1]):
-        query = query.replace(f"r{n + 1}", rel)
+        if not rel.startswith("?"):
+            query = query.replace(f"r{n + 1}", rel)
     query = query.replace("http://wpd/P0", "http://wd")
     query = query.replace("http://wpd/P00", "http://wl")
     query = query.split(' ')

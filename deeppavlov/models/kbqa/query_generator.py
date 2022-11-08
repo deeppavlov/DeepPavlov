@@ -41,6 +41,7 @@ class QueryGenerator(QueryGeneratorBase):
     def __init__(self, wiki_parser: WikiParser,
                  rel_ranker: RelRankerInfer,
                  entities_to_leave: int = 5,
+                 types_to_leave: int = 2,
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
                  return_all_possible_answers: bool = False, *args, **kwargs) -> None:
@@ -58,6 +59,7 @@ class QueryGenerator(QueryGeneratorBase):
         self.wiki_parser = wiki_parser
         self.rel_ranker = rel_ranker
         self.entities_to_leave = entities_to_leave
+        self.types_to_leave = types_to_leave
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
         self.return_all_possible_answers = return_all_possible_answers
@@ -82,7 +84,8 @@ class QueryGenerator(QueryGeneratorBase):
             answer_types_batch = [[] for _ in question_batch]
         log.debug(f"kbqa inputs {question_batch} {question_san_batch} template_type_batch: {template_type_batch} --- "
                   f"entities_from_ner: {entities_from_ner_batch} --- types_from_ner: {types_from_ner_batch} --- "
-                  f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch {answer_types_batch}")
+                  f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch: "
+                  f"{[list(elem)[:3] for elem in answer_types_batch]}")
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner, entity_tags_list, \
             probas, answer_types in zip(question_batch, question_san_batch, template_type_batch,
                                         entities_from_ner_batch, types_from_ner_batch, entity_tags_batch, probas_batch,
@@ -108,6 +111,7 @@ class QueryGenerator(QueryGeneratorBase):
     def parse_queries_info(self, question, queries_info, entity_ids, type_ids, rels_from_template):
         parsed_queries_info = []
         question_tokens = nltk.word_tokenize(question)
+        rels_scores_dict = {}
         for query_info in queries_info:
             parsed_query_info = {}
             query = query_info["query_template"].lower()
@@ -130,23 +134,25 @@ class QueryGenerator(QueryGeneratorBase):
             for rel_type, query_triplet in zip(rel_types, query_triplets):
                 if query_triplet[1].startswith("?") and rel_type == "qualifier":
                     property_types[query_triplet[1]] = rel_type
-            query_sequence_dict = {num: triplet for num, triplet in zip(query_seq_num, query_triplets)}
+            query_sequence_dict = {num + 1: triplet for num, triplet in enumerate(query_triplets)}
             query_sequence = []
-            for i in range(1, max(query_seq_num) + 1):
+            for i in query_seq_num:
                 query_sequence.append(query_sequence_dict[i])
             triplet_info_list = [("forw" if triplet[2].startswith('?') else "backw", search_source, rel_type, n_hop)
                                  for search_source, triplet, rel_type, n_hop in \
-                                 zip(rels_for_search, query_triplets, rel_types, n_hops)
+                                 zip(rels_for_search, query_sequence, rel_types, n_hops)
                                  if search_source != "do_not_rank"]
-            log.debug(f"(query_parser)rel_directions: {triplet_info_list}")
+            log.debug(f"(query_parser)query_sequence_dict: {query_sequence_dict} --- rel_directions: "
+                      f"{triplet_info_list} --- query_sequence: {query_sequence}")
             entity_ids = [entity[:self.entities_to_leave] for entity in entity_ids]
             rels, entities_rel_conn = [], set()
             if rels_from_template is not None:
                 rels = [[(rel, 1.0) for rel in rel_list] for rel_list in rels_from_template]
             elif not rels:
                 for triplet_info in triplet_info_list:
-                    ex_rels, entity_rel_conn = self.find_top_rels(question, entity_ids, triplet_info)
+                    ex_rels, cur_rels_scores_dict, entity_rel_conn = self.find_top_rels(question, entity_ids, triplet_info)
                     rels.append(ex_rels)
+                    rels_scores_dict = {**rels_scores_dict, **cur_rels_scores_dict}
                     entities_rel_conn = entities_rel_conn.union(entity_rel_conn)
             log.debug(f"(query_parser)rels: {rels}")
             rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
@@ -183,10 +189,18 @@ class QueryGenerator(QueryGeneratorBase):
             entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
             log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
             selected_entity_ids, selected_type_ids = [], []
-            if entity_ids:
+            if len(entity_ids) > 1 and len(entity_positions) == 1:
+                selected_entity_ids = []
+                for j in range(max([len(elem) for elem in entity_ids])):
+                    for elem in entity_ids:
+                        if j < len(elem):
+                            selected_entity_ids.append(elem[j])
+                selected_entity_ids = [selected_entity_ids]
+            else:
                 selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
             if type_ids:
-                selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
+                selected_type_ids = [type_ids[int(pos) - 1][:self.types_to_leave]
+                                     for pos in type_positions if int(pos) > 0]
             entity_combs = make_combs(selected_entity_ids, permut=True)
             type_combs = make_combs(selected_type_ids, permut=False)
             log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"
@@ -212,7 +226,7 @@ class QueryGenerator(QueryGeneratorBase):
             parsed_query_info["rel_combs"] = rel_combs
             parsed_query_info["all_combs_list"] = all_combs_list
             parsed_queries_info.append(parsed_query_info)
-        return parsed_queries_info
+        return parsed_queries_info, rels_scores_dict
 
     def check_valid_query(self, entities_rel_conn, query_hdt_seq):
         entity_rel_valid = True
@@ -237,9 +251,9 @@ class QueryGenerator(QueryGeneratorBase):
                      answer_types: Set[str],
                      rels_from_template: Optional[List[Tuple[str]]] = None) -> Union[
         List[Dict[str, Union[Union[Tuple[Any, ...], List[Any]], Any]]], List[Dict[str, Any]]]:
-        parsed_queries_info = self.parse_queries_info(question, queries_info, entity_ids, type_ids, rels_from_template)
-        log.debug(f"query_parser, answer_types {answer_types}")
-        queries_list, parser_info_list, confidences_list, entity_conf_list = [], [], [], []
+        parsed_queries_info, rels_scores_dict = self.parse_queries_info(question, queries_info, entity_ids, type_ids,
+                                                                        rels_from_template)
+        queries_list, parser_info_list, entity_conf_list = [], [], []
         new_combs_list = []
         combs_num_list = [len(parsed_query_info["all_combs_list"]) for parsed_query_info in parsed_queries_info]
         if combs_num_list:
@@ -259,7 +273,6 @@ class QueryGenerator(QueryGeneratorBase):
                     return_if_found = parsed_query_info["return_if_found"]
                     entities_rel_conn = parsed_query_info["entities_rel_conn"]
                     combs = parsed_query_info["all_combs_list"][comb_num]
-                    confidence = np.prod([score for rel, score in combs[2][:-1]])
                     if combs[0][-1] == 0:
                         entity_conf_list.append(1.0)
                     else:
@@ -273,8 +286,7 @@ class QueryGenerator(QueryGeneratorBase):
                     entity_rel_valid = self.check_valid_query(entities_rel_conn, query_hdt_seq)
                     if entity_rel_valid:
                         new_combs_list.append(combs)
-                        confidences_list.append(confidence)
-                        queries_list.append((rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info,
+                        queries_list.append((answer_ent, rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
                         parser_info_list.append("query_execute")
                     if comb_num < 3 and unk_rels:
@@ -282,58 +294,53 @@ class QueryGenerator(QueryGeneratorBase):
                         unk_rels_from_query = copy.deepcopy(rels_from_query)
                         for unk_rel, rel_var in zip(unk_rels, ["?p", "?p2"]):
                             unk_query_sequence[int(unk_rel) - 1][1] = rel_var
+                            combs[-1][int(unk_rel) - 1] = (rel_var, 1.0)
                             if rel_var not in rels_from_query:
                                 unk_rels_from_query.append(rel_var)
                         query_hdt_seq = [
                             fill_query(query_hdt_elem, combs[0], combs[1], combs[2], self.map_query_str_to_kb)
                             for query_hdt_elem in unk_query_sequence]
                         new_combs_list.append(combs)
-                        confidences_list.append(confidence)
-                        queries_list.append((unk_rels_from_query + answer_ent, query_hdt_seq, filter_info, order_info,
+                        queries_list.append((answer_ent, unk_rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
                         parser_info_list.append("query_execute")
 
-        candidate_outputs_list = self.wiki_parser(parser_info_list, queries_list)
-        candidate_outputs = self.parse_candidate_outputs(candidate_outputs_list, new_combs_list, confidences_list,
-                                                         entity_conf_list)
-        return candidate_outputs
+        outputs_list = self.wiki_parser(parser_info_list, queries_list)
+        outputs = self.parse_outputs(outputs_list, new_combs_list, entity_conf_list, rels_scores_dict)
+        return outputs
 
-    def parse_candidate_outputs(self, candidate_outputs_list, new_combs_list, confidences_list, entity_conf_list):
-        candidate_outputs = []
-        if isinstance(candidate_outputs_list, list) and candidate_outputs_list:
-            outputs_len = len(candidate_outputs_list)
-            new_combs_list = new_combs_list[:outputs_len]
-            confidences_list = confidences_list[:outputs_len]
+    def parse_outputs(self, outputs_list, combs_list, entity_conf_list, rels_scores_dict):
+        outputs = []
+        if isinstance(outputs_list, list) and outputs_list:
+            outputs_len = len(outputs_list)
+            combs_list = combs_list[:outputs_len]
             entity_conf_list = entity_conf_list[:outputs_len]
-            for combs, confidence, entity_conf, candidate_output in \
-                    zip(new_combs_list, confidences_list, entity_conf_list, candidate_outputs_list):
-                for output in candidate_output:
-                    if len(output) == 2:
-                        output[0] = output[0].split("/")[-1]
-                    candidate_outputs.append([combs[0], combs[1]] + [rel for rel, score in combs[2][:-1]] +
-                                             output + [(confidence, entity_conf)])
-            if self.return_all_possible_answers:
-                candidate_outputs_dict = defaultdict(list)
-                for candidate_output in candidate_outputs:
-                    key = (tuple(candidate_output[0]), tuple(candidate_output[1]), tuple(candidate_output[2:-2]))
-                    if key not in candidate_outputs_dict or candidate_output[-2:] not in candidate_outputs_dict[key]:
-                        candidate_outputs_dict[key].append(candidate_output[-2:])
-                candidate_outputs = []
-                for (candidate_entity_comb, candidate_type_comb, candidate_rel_comb), candidate_output \
-                        in candidate_outputs_dict.items():
-                    cand_output_conf = [elem[1] for elem in candidate_output]
-                    cand_output_conf = sorted(cand_output_conf, key=lambda x: x[0] * x[1], reverse=True)
-                    candidate_outputs.append({"entities": candidate_entity_comb,
-                                              "types": candidate_type_comb,
-                                              "relations": list(candidate_rel_comb),
-                                              "answers": tuple([ans for ans, conf in candidate_output]),
-                                              "candidate_output_conf": cand_output_conf[0]
-                                              })
-            else:
-                candidate_outputs = [{"entities": f_entities,
-                                      "types": f_types,
-                                      "relations": f_relations,
-                                      "answers": f_answers,
-                                      "candidate_output_conf": f_conf
-                                      } for f_entities, f_types, *f_relations, f_answers, f_conf in candidate_outputs]
-        return candidate_outputs
+            for combs, entity_conf, (answers_list, found_rels_list) in zip(combs_list, entity_conf_list, outputs_list):
+                for answers, found_rels in zip(answers_list, found_rels_list):
+                    found_rels = [found_rel.split("/")[-1] for found_rel in found_rels]
+                    new_combs = copy.deepcopy(combs)
+                    for j, rel_var in enumerate(["?p", "?p2"]):
+                        if isinstance(new_combs[2][j], tuple) and new_combs[2][j][0] == rel_var:
+                            if found_rels:
+                                new_combs[2][j] = (found_rels[j], rels_scores_dict.get(found_rels[j], 1.0))
+                            else:
+                                new_combs[2][j] = (new_combs[2][j][0], 0.0)
+                    confidence = np.prod([score for rel, score in new_combs[2][:-1]])
+                    if answers:
+                        outputs.append([new_combs[0], new_combs[1]] + [rel for rel, score in new_combs[2][:-1]] +
+                                        answers + [(confidence, entity_conf)])
+            outputs_dict = defaultdict(list)
+            types_dict = defaultdict(list)
+            for output in outputs:
+                key = (tuple(output[0]), tuple(output[2:-2]))
+                if key not in outputs_dict or output[-2:] not in outputs_dict[key]:
+                    outputs_dict[key].append(output[-2:])
+                    types_dict[key].append(tuple(output[1]))
+            outputs = []
+            for (entity_comb, rel_comb), output in outputs_dict.items():
+                type_comb = types_dict[(entity_comb, rel_comb)]
+                output_conf = [elem[1] for elem in output]
+                output_conf = sorted(output_conf, key=lambda x: x[0] * x[1], reverse=True)
+                outputs.append({"entities": entity_comb, "types": type_comb, "relations": list(rel_comb),
+                                "answers": tuple([ans for ans, conf in output]), "output_conf": output_conf[0]})
+        return outputs

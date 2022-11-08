@@ -143,7 +143,7 @@ class QueryGeneratorBase(Component, Serializable):
         log.debug(
             f"question: {question} entities_from_template {entities_from_template} template_type {self.template_nums} "
             f"types from template {types_from_template} rels_from_template {rels_from_template} entities_from_ner "
-            f"{entities_from_ner} types_from_ner {types_from_ner} answer_types {answer_types}")
+            f"{entities_from_ner} types_from_ner {types_from_ner} answer_types {list(answer_types)[:3]}")
 
         if entities_from_template or types_from_template:
             if rels_from_template[0][0] == "PHOW":
@@ -153,11 +153,9 @@ class QueryGeneratorBase(Component, Serializable):
                 entity_ids = self.get_entity_ids(entities_from_template, entity_tags, probas, question)
                 type_ids = self.get_entity_ids(types_from_template, ["t" for _ in types_from_template],
                                                [1.0 for _ in types_from_template], question)
-                log.debug(f"entities_from_template {entities_from_template}")
-                log.debug(f"entity_types {entity_types}")
-                log.debug(f"types_from_template {types_from_template}")
-                log.debug(f"rels_from_template {rels_from_template}")
-                log.debug(f"entity_ids {entity_ids}")
+                log.debug(f"entities_from_template: {entities_from_template} --- entity_types: {entity_types} --- "
+                          f"types_from_template: {types_from_template} --- rels_from_template: {rels_from_template} "
+                          f"--- answer_types: {template_answer_types} --- entity_ids: {entity_ids}")
                 candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids,
                     template_answer_types, rels_from_template, rel_dirs_from_template)
 
@@ -200,7 +198,6 @@ class QueryGeneratorBase(Component, Serializable):
                                rels_from_template: Optional[List[Tuple[str]]] = None,
                                rel_dirs_from_template: Optional[List[str]] = None) -> Tuple[Union[None, List[Any]],
                                                                                             List[Any]]:
-        log.debug(f"query_parser, answer_types {answer_types}")
         candidate_outputs = []
         if isinstance(self.template_nums, str):
             self.template_nums = [self.template_nums]
@@ -242,7 +239,7 @@ class QueryGeneratorBase(Component, Serializable):
 
             if not candidate_outputs:
                 alt_template_nums = templates[0].get("alternative_templates", [])
-                log.info(f"Using alternative templates {alt_template_nums}")
+                log.debug(f"Using alternative templates {alt_template_nums}")
                 alt_templates = [self.template_queries[num] for num in alt_template_nums]
                 candidate_outputs = self.query_parser(question, alt_templates, entity_ids, type_ids, answer_types,
                                                       rels_from_template)
@@ -294,8 +291,9 @@ class QueryGeneratorBase(Component, Serializable):
                 ex_rels_2hop = [rel.split('/')[-1] for rel in ex_rels_2hop]
             rels_12hop = list(set(rels_1hop + ex_rels_2hop))
             rels_with_scores = self.rel_ranker.rank_rels(question, rels_12hop)
+        rels_scores_dict = {rel: score for rel, score in rels_with_scores}
 
-        return rels_with_scores[:self.rels_to_leave], entity_rel_conn
+        return rels_with_scores[:self.rels_to_leave], rels_scores_dict, entity_rel_conn
 
     def find_answer_wikihow(self, howto_sentence: str) -> str:
         tags = []

@@ -37,17 +37,15 @@ class RelRankerInfer(Component, Serializable):
                  ranker: Chainer = None,
                  wiki_parser: Optional[WikiParser] = None,
                  batch_size: int = 32,
-                 rels_to_leave: int = 40,
                  softmax: bool = False,
-                 return_all_possible_answers: bool = False,
                  return_answer_ids: bool = False,
                  use_api_requester: bool = False,
                  return_sentence_answer: bool = False,
                  rank: bool = True,
-                 what_to_rank: str = "r",
                  delete_rel_prefix: bool = True,
                  return_entities_and_rels: bool = False,
                  nll_ranking: bool = False,
+                 top_possible_answers: int = -1,
                  top_n: int = 1,
                  return_confidences: bool = False, **kwargs):
         """
@@ -58,9 +56,7 @@ class RelRankerInfer(Component, Serializable):
             ranker: component deeppavlov.models.ranking.rel_ranker
             wiki_parser: component deeppavlov.models.wiki_parser
             batch_size: infering batch size
-            rels_to_leave: how many relations to leave after relation ranking
             softmax: whether to process relation scores with softmax function
-            return_all_possible_answers: whether to return all found answers
             return_answer_ids: whether to return answer ids from Wikidata
             use_api_requester: whether wiki parser will be used as external api
             return_sentence_answer: whether to return answer as a sentence
@@ -73,17 +69,15 @@ class RelRankerInfer(Component, Serializable):
         self.ranker = ranker
         self.wiki_parser = wiki_parser
         self.batch_size = batch_size
-        self.rels_to_leave = rels_to_leave
         self.softmax = softmax
-        self.return_all_possible_answers = return_all_possible_answers
         self.return_answer_ids = return_answer_ids
         self.use_api_requester = use_api_requester
         self.return_sentence_answer = return_sentence_answer
         self.rank = rank
-        self.what_to_rank = what_to_rank
         self.delete_rel_prefix = delete_rel_prefix
         self.return_entities_and_rels = return_entities_and_rels
         self.nll_ranking = nll_ranking
+        self.top_possible_answers = top_possible_answers
         self.top_n = top_n
         self.return_confidences = return_confidences
         self.load()
@@ -98,50 +92,39 @@ class RelRankerInfer(Component, Serializable):
         pass
 
     def __call__(self, questions_list: List[str],
-                 candidate_answers_list: List[List[Tuple[str]]],
+                 answers_list: List[List[Tuple[str]]],
                  entities_list: List[List[str]],
                  template_answers_list: List[str],
                  equal_flag_list: List[str] = None) -> List[str]:
         answers_batch, confidences_batch, answer_ids_batch, entities_and_rels_batch = [], [], [], []
         if equal_flag_list is None:
             equal_flag_list = ["" for _ in questions_list]
-        for question, candidate_answers, entities, template_answer, equal_flag in \
-                zip(questions_list, candidate_answers_list, entities_list, template_answers_list, equal_flag_list):
+        for question, answers, entities, template_answer, equal_flag in \
+                zip(questions_list, answers_list, entities_list, template_answers_list, equal_flag_list):
             answers_with_scores = []
-            n_batches = len(candidate_answers) // self.batch_size + int(
-                len(candidate_answers) % self.batch_size > 0)
+            n_batches = len(answers) // self.batch_size + int(len(answers) % self.batch_size > 0)
             for i in range(n_batches):
-                questions_batch = []
-                rels_batch = []
-                rels_labels_batch = []
-                cur_answers_batch = []
-                entities_batch = []
-                confidences_batch = []
-                for candidate_ans_and_rels in candidate_answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                    candidate_rels = []
-                    candidate_rels_str, candidate_answer = [], ""
-                    candidate_entities, candidate_confidence, candidate_rels_labels = [], [], []
-                    if candidate_ans_and_rels:
-                        candidate_rels = candidate_ans_and_rels["relations"]
+                questions_batch, rels_batch, rels_labels_batch, cur_answers_batch = [], [], [], []
+                entities_batch, confidences_batch = [], []
+                for ans_and_rels in answers[i * self.batch_size: (i + 1) * self.batch_size]:
+                    rels, rels_str, answer, entities, confidence, rels_labels = [], [], "", [], [], []
+                    if ans_and_rels:
+                        rels = ans_and_rels["relations"]
                         if self.delete_rel_prefix:
-                            candidate_rels = [candidate_rel.split('/')[-1] for candidate_rel in candidate_rels]
-                        candidate_answer = candidate_ans_and_rels["answers"]
-                        candidate_entities = candidate_ans_and_rels["entities"]
-                        candidate_confidence = candidate_ans_and_rels["candidate_output_conf"]
-                        candidate_rels_labels = [self.rel_q2name[candidate_rel].lower()
-                                                 for candidate_rel in candidate_rels
-                                                 if candidate_rel in self.rel_q2name]
-                    if candidate_rels_labels and ((len(candidate_rels_labels) == 2 and equal_flag
-                            and ((candidate_rels_labels[0] == candidate_rels_labels[1] and equal_flag == "equal") or
-                                 (candidate_rels_labels[0] != candidate_rels_labels[1]
-                                  and equal_flag == "not_equal")))
-                            or not equal_flag or len(candidate_rels_labels) == 1):
+                            rels = [rel.split('/')[-1] for rel in rels]
+                        answer = ans_and_rels["answers"]
+                        entities = ans_and_rels["entities"]
+                        confidence = ans_and_rels["output_conf"]
+                        rels_labels = [self.rel_q2name[rel][0].lower() for rel in rels if rel in self.rel_q2name]
+                    if rels_labels and ((len(rels_labels) == 2 and equal_flag and ((rels_labels[0] == rels_labels[1] \
+                            and equal_flag == "equal") or (rels_labels[0] != rels_labels[1] \
+                            and equal_flag == "not_equal"))) or not equal_flag or len(rels_labels) == 1):
                         questions_batch.append(question)
-                        rels_batch.append(candidate_rels)
-                        rels_labels_batch.append(candidate_rels_labels)
-                        cur_answers_batch.append(candidate_answer)
-                        entities_batch.append(candidate_entities)
-                        confidences_batch.append(candidate_confidence)
+                        rels_batch.append(rels)
+                        rels_labels_batch.append(rels_labels)
+                        cur_answers_batch.append(answer)
+                        entities_batch.append(entities)
+                        confidences_batch.append(confidence)
                 if questions_batch:
                     if self.rank:
                         if self.nll_ranking:
@@ -152,7 +135,7 @@ class RelRankerInfer(Component, Serializable):
                             probas = self.ranker(questions_batch, rels_labels_batch, what_to_rank_batch)
                             probas = [proba[0] for proba in probas]
                     else:
-                        probas = [1.0 for _ in questions_batch]
+                        probas = [rel_conf for rel_conf, entity_conf in confidences_batch]
                     for j, (answer, entities, (rel_conf, entity_conf), rels_ids, rels_labels) in \
                             enumerate(zip(cur_answers_batch, entities_batch, confidences_batch, rels_batch,
                                           rels_labels_batch)):
@@ -163,27 +146,28 @@ class RelRankerInfer(Component, Serializable):
 
             res_answers_list, res_answer_ids_list, res_confidences_list, res_entities_and_rels_list = [], [], [], []
             for n, answers_with_scores_elem in enumerate(answers_with_scores):
-                answer_ids, query_entities, _, query_rels, confidence, _ = answers_with_scores_elem
-                if self.return_all_possible_answers and isinstance(answer_ids, tuple):
-                    answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
-                    answer_ids = [str(answer_id).split("/")[-1] for answer_id in answer_ids]
-                else:
-                    answer_ids_input = [(answer_ids, question)]
-                    answer_ids = str(answer_ids).split("/")[-1]
+                init_answer_ids, query_entities, _, query_rels, confidence, _ = answers_with_scores_elem
+                answer_ids = []
+                for answer_id in init_answer_ids:
+                    if answer_id not in answer_ids:
+                        answer_ids.append(answer_id)
+
+                if self.top_possible_answers > 0:
+                    answer_ids = answer_ids[:self.top_possible_answers]
+                answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
+                answer_ids = [str(answer_id).split("/")[-1] for answer_id in answer_ids]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 if n < 20:
                     log.debug(f"answers: {answers_with_scores_elem} --- answer_labels {answer_labels}")
-                if self.return_all_possible_answers:
-                    answer_labels = list(set(answer_labels))
-                    answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]
-                    answer_labels = [str(label) for label in answer_labels]
-                    if len(answer_labels) > 2:
-                        answer = f"{', '.join(answer_labels[:-1])} and {answer_labels[-1]}"
-                    else:
-                        answer = ', '.join(answer_labels)
+                answer_labels = list(set(answer_labels))
+                answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]
+                answer_labels = [str(label) for label in answer_labels]
+                if len(answer_labels) > 2:
+                    answer = f"{', '.join(answer_labels[:-1])} and {answer_labels[-1]}"
                 else:
-                    answer = answer_labels[0]
+                    answer = ', '.join(answer_labels)
+
                 if self.return_sentence_answer:
                     try:
                         answer = sentence_answer(question, answer, entities, template_answer)
@@ -224,26 +208,35 @@ class RelRankerInfer(Component, Serializable):
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
         if question is not None:
-            n_batches = len(candidate_rels) // self.batch_size + int(len(candidate_rels) % self.batch_size > 0)
-            for i in range(n_batches):
-                questions_batch = []
-                rels_labels_batch = []
-                rels_batch = []
-                for candidate_rel in candidate_rels[i * self.batch_size: (i + 1) * self.batch_size]:
-                    if candidate_rel in self.rel_q2name:
-                        questions_batch.append(question)
-                        rels_batch.append(candidate_rel)
-                        rels_labels_batch.append(self.rel_q2name[candidate_rel])
-                if questions_batch:
-                    probas = self.ranker(questions_batch, rels_labels_batch)
+            questions, rels_labels, rels = [], [], []
+            for candidate_rel in candidate_rels:
+                if candidate_rel in self.rel_q2name:
+                    cur_rels_labels = self.rel_q2name[candidate_rel]
+                    if isinstance(cur_rels_labels, str):
+                        cur_rels_labels = [cur_rels_labels]
+                    for cur_rel in cur_rels_labels:
+                        questions.append(question)
+                        rels.append(candidate_rel)
+                        rels_labels.append(cur_rel)
+            if questions:
+                n_batches = len(rels) // self.batch_size + int(len(rels) % self.batch_size > 0)
+                for i in range(n_batches):
+                    probas = self.ranker(questions[i*self.batch_size:(i+1)*self.batch_size],
+                                         rels_labels[i*self.batch_size:(i+1)*self.batch_size])
                     probas = [proba[1] for proba in probas]
-                    for j, rel in enumerate(rels_batch):
+                    for j, rel in enumerate(rels[i*self.batch_size:(i+1)*self.batch_size]):
                         rels_with_scores.append((rel, probas[j]))
             if self.softmax:
                 scores = [score for rel, score in rels_with_scores]
                 softmax_scores = softmax(scores)
                 rels_with_scores = [(rel, softmax_score) for (rel, score), softmax_score in
                                     zip(rels_with_scores, softmax_scores)]
+            rels_with_scores_dict = {}
+            for rel, score in rels_with_scores:
+                if rel not in rels_with_scores_dict:
+                    rels_with_scores_dict[rel] = []
+                rels_with_scores_dict[rel].append(score)
+            rels_with_scores = [(rel, max(scores)) for rel, scores in rels_with_scores_dict.items()]
             rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
 
-        return rels_with_scores[:self.rels_to_leave]
+        return rels_with_scores

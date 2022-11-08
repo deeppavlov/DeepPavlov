@@ -341,56 +341,55 @@ class NerChunkModel(Component):
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_entity_positions_batch, doc_tags_batch, \
                doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
 
-    def merge_annotations(self, entity_substr_batch, entity_pos_batch, entity_probas_batch,
-                          entity_substr_batch2, entity_pos_batch2, entity_probas_batch2):
-        log.debug(f"ner_chunker, entity_substr: {entity_substr_batch2} --- entity_pos: {entity_pos_batch2} --- "
-                  f"entity_probas: {entity_probas_batch2}")
-        for i in range(len(entity_substr_batch)):
-            for key2 in entity_substr_batch2[i]:
-                entity_substr_list2 = entity_substr_batch2[i][key2]
-                entity_pos_list2 = entity_pos_batch2[i][key2]
-                entity_probas_list2 = entity_probas_batch2[i][key2]
-                for entity_substr2, entity_pos2, entity_probas2 in \
-                        zip(entity_substr_list2, entity_pos_list2, entity_probas_list2):
+    def merge_annotations(self, substr_batch, pos_batch, probas_batch, substr_batch2, pos_batch2, probas_batch2):
+        log.debug(f"ner_chunker, substr2: {substr_batch2} --- pos2: {pos_batch2} --- probas2: {probas_batch2} --- "
+                  f"substr: {substr_batch} --- pos: {pos_batch} --- probas: {probas_batch}")
+        for i in range(len(substr_batch)):
+            for key2 in substr_batch2[i]:
+                substr_list2 = substr_batch2[i][key2]
+                pos_list2 = pos_batch2[i][key2]
+                probas_list2 = probas_batch2[i][key2]
+                for substr2, pos2, probas2 in zip(substr_list2, pos_list2, probas_list2):
                     found = False
-                    for key in entity_substr_batch[i]:
-                        entity_pos_list = entity_pos_batch[i][key]
-                        for entity_pos in entity_pos_list:
-                            if entity_pos[0] <= entity_pos2[0] <= entity_pos[-1] \
-                                    or entity_pos[0] <= entity_pos2[-1] <= entity_pos[-1]:
+                    for key in substr_batch[i]:
+                        pos_list = pos_batch[i][key]
+                        for pos in pos_list:
+                            if pos[0] <= pos2[0] <= pos[-1] or pos[0] <= pos2[-1] <= pos[-1]:
                                 found = True
                     if not found:
-                        if key2 not in entity_substr_batch[i]:
-                            entity_substr_batch[i][key2] = []
-                            entity_pos_batch[i][key2] = []
-                            entity_probas_batch[i][key2] = []
-                        entity_substr_batch[i][key2].append(entity_substr2)
-                        entity_pos_batch[i][key2].append(entity_pos2)
-                        entity_probas_batch[i][key2].append(entity_probas2)
-        for i in range(len(entity_substr_batch)):
-            for key2 in entity_substr_batch2[i]:
-                entity_substr_list2 = entity_substr_batch2[i][key2]
-                entity_pos_list2 = entity_pos_batch2[i][key2]
-                entity_probas_list2 = entity_probas_batch2[i][key2]
-                for entity_substr2, entity_pos2, entity_probas2 in \
-                        zip(entity_substr_list2, entity_pos_list2, entity_probas_list2):
-                    for key in entity_substr_batch[i]:
-                        entity_inds = []
-                        entity_substr_list = entity_substr_batch[i][key]
-                        entity_pos_list = entity_pos_batch[i][key]
-                        entity_probas_list = entity_probas_batch[i][key]
-                        for n, (entity_substr, entity_pos, entity_probas) in \
-                                enumerate(zip(entity_substr_list, entity_pos_list, entity_probas_list)):
-                            if (entity_pos[0] == entity_pos2[0] and entity_pos[-1] < entity_pos2[-1]) or \
-                                    (entity_pos[0] > entity_pos2[0] and entity_pos[-1] == entity_pos2[-1]):
-                                entity_inds.append(n)
-                        if len(entity_inds) > 1 or (len(entity_inds) == 1 and key == "WORK_OF_ART"):
-                            entity_inds = sorted(entity_inds, reverse=True)
-                            for ind in entity_inds:
-                                del entity_substr_batch[i][key][ind]
-                                del entity_pos_batch[i][key][ind]
-                                del entity_probas_batch[i][key][ind]
-                            entity_substr_batch[i][key].append(entity_substr2)
-                            entity_pos_batch[i][key].append(entity_pos2)
-                            entity_probas_batch[i][key].append(entity_probas2)
-        return entity_substr_batch, entity_pos_batch, entity_probas_batch
+                        if key2 not in substr_batch[i]:
+                            substr_batch[i][key2] = []
+                            pos_batch[i][key2] = []
+                            probas_batch[i][key2] = []
+                        substr_batch[i][key2].append(substr2)
+                        pos_batch[i][key2].append(pos2)
+                        probas_batch[i][key2].append(probas2)
+        for i in range(len(substr_batch)):
+            for key2 in substr_batch2[i]:
+                substr_list2 = substr_batch2[i][key2]
+                pos_list2 = pos_batch2[i][key2]
+                probas_list2 = probas_batch2[i][key2]
+                for substr2, pos2, probas2 in zip(substr_list2, pos_list2, probas_list2):
+                    for key in substr_batch[i]:
+                        inds = []
+                        substr_list = substr_batch[i][key]
+                        pos_list = pos_batch[i][key]
+                        probas_list = probas_batch[i][key]
+                        for n, (substr, pos, probas) in enumerate(zip(substr_list, pos_list, probas_list)):
+                            if (pos[0] == pos2[0] and pos[-1] < pos2[-1]) or (pos[0] > pos2[0] and pos[-1] == pos2[-1]):
+                                inds.append(n)
+                            elif key == "EVENT" and ((pos[0] >= pos2[0] and pos[-1] <= pos2[-1]) \
+                                     or (len(substr.split()) == 1 and pos2[0] <= pos[0])):
+                                inds.append(n)
+                        
+                        if (len(inds) > 1 or (len(inds) == 1 and key in {"WORK_OF_ART", "EVENT"})) \
+                                and not (key == "PERSON" and " и " in substr2):
+                            inds = sorted(inds, reverse=True)
+                            for ind in inds:
+                                del substr_batch[i][key][ind]
+                                del pos_batch[i][key][ind]
+                                del probas_batch[i][key][ind]
+                            substr_batch[i][key].append(substr2)
+                            pos_batch[i][key].append(pos2)
+                            probas_batch[i][key].append(probas2)
+        return substr_batch, pos_batch, probas_batch

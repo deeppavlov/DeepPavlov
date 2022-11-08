@@ -132,14 +132,14 @@ class AnswerTypesExtractor:
                         types_sets_batch[n] = self.types_sets["PER"]
                     elif question.startswith("где"):
                         types_sets_batch[n] = self.types_sets["LOC"]
-                    elif question.startswith("когда") or question.startswith("в каком году"):
+                    elif any([question.startswith(elem) for elem in ["когда", "в каком году", "в каком месяце"]]):
                         types_sets_batch[n] = {"date"}
                 elif self.lang == "@en":
                     if question.startswith("who"):
                         types_sets_batch[n] = self.types_sets["PER"]
                     elif question.startswith("where"):
                         types_sets_batch[n] = self.types_sets["LOC"]
-                    elif question.startswith("when") or question.startswith("what year"):
+                    elif any([question.startswith(elem) for elem in ["when", "what year", "what month"]]):
                         types_sets_batch[n] = {"date"}
 
         new_entity_substr_batch, new_entity_offsets_batch, new_tags_batch = [], [], []
