@@ -448,7 +448,7 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 last_hidden_state, cache_key = None, None
-                if self.cache:
+                if self.cuda_cache:
                     hashes_of_tensor_values = tuple([make_hash(args[task_id][name])
                                                for name in ["input_ids", "attention_mask", "token_type_ids"]
                                                if name in args[task_id]])
