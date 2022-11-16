@@ -17,8 +17,6 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_labels_to_subtoken_labels
-from deeppavlov.models.torch_bert.pal_modeling import BertModel as PalBertModel
-from deeppavlov.models.torch_bert.pal_modeling import plain_config, distil_config
 
 log = getLogger(__name__)
 
@@ -62,6 +60,8 @@ class BertForMultiTask(nn.Module):
 
         super(BertForMultiTask, self).__init__()
         if 'palbert' in backbone_model:
+            from deeppavlov.models.torch_bert.pal_modeling import BertModel as PalBertModel
+            from deeppavlov.models.torch_bert.pal_modeling import plain_config, distil_config
             if backbone_model == 'palbert_base_uncased':
                 self.bert = PalBertModel(plain_config)
             if backbone_model == 'palbert_distil_base_uncased':
