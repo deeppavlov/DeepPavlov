@@ -17,7 +17,8 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_labels_to_subtoken_labels
-from pal_modeling import BertModel, plain_config, distil_config as PalBertModel, plain_config, distil_config
+from deeppavlov.models.torch_bert.pal_modeling import BertModel as PalBertModel
+from deeppavlov.models.torch_bert.pal_modeling import plain_config, distil_config
 
 log = getLogger(__name__)
 
