@@ -129,7 +129,6 @@ class MultiTaskIterator:
                         del self.data['train'][task][i]
                         log.info(
                             f'NAN for mode {mode} task {task} element {i} CLEARED')
-                        breakpoint()
                     elif isinstance(x, tuple) and len(x) == 1 and one_element_tuples:
                         # x is a tuple consisting of 1 element. return it as string
                         self.data[mode][task][i] = (x[0], y)

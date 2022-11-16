@@ -17,6 +17,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_labels_to_subtoken_labels
+from pal_modeling import BertModel, plain_config, distil_config as PalBertModel, plain_config, distil_config
 
 log = getLogger(__name__)
 
@@ -59,10 +60,16 @@ class BertForMultiTask(nn.Module):
                  max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
-        config = AutoConfig.from_pretrained(
+        if 'palbert' in backbone_model:
+            if backbone_model == 'palbert_base_uncased':
+                self.bert = PalBertModel(plain_config)
+            if backbone_model == 'palbert_distil_base_uncased':
+                self.bert = PalBertModel(distil_config)
+        else:
+            config = AutoConfig.from_pretrained(
             backbone_model, output_hidden_states=True, output_attentions=True)
-        self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
-                                              config=config)
+            self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
+                                                  config=config)
         self.classes = tasks_num_classes  # classes for every task
         self.multilabel = multilabel
         if dropout is not None:
@@ -440,7 +447,7 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 last_hidden_state, cache_key = None, None
-                if self.cuda_cache:
+                if self.cache:
                     hashes_of_tensor_values = tuple([make_hash(args[task_id][name])
                                                for name in ["input_ids", "attention_mask", "token_type_ids"]
                                                if name in args[task_id]])

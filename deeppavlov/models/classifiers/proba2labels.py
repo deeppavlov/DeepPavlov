@@ -1,3 +1,4 @@
+
 # Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +31,10 @@ class Proba2Labels(Component):
     Class implements probability to labels processing using the following ways: \
      choosing one or top_n indices with maximal probability or choosing any number of indices \
       which probabilities to belong with are higher than given confident threshold
-
     Args:
         max_proba: whether to choose label with maximal probability
         confidence_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
-
     Attributes:
         max_proba: whether to choose label with maximal probability
         confidence_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
@@ -60,10 +59,8 @@ class Proba2Labels(Component):
                  **kwargs):
         """
         Process probabilities to labels
-
         Args:
             Every argument is a list of vectors with probability distribution
-
         Returns:
             list of labels (only label classification) or list of lists of labels (multi-label classification),
             or list of the following lists (in multitask setting) for every argument

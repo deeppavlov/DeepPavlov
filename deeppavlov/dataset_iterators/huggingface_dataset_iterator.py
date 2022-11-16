@@ -43,7 +43,13 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
         """
 
         dataset = []
-        for example in data:
+        for i in range(len(data)):  # for example in data
+            try:
+                example = data[i]
+            except Exception as e:
+                print(i)
+                print(features)
+                breakpoint()
             if isinstance(features, str):
                 feat = example[features]
             elif isinstance(features, list):
