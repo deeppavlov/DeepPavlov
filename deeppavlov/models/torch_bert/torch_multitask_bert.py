@@ -485,7 +485,7 @@ class TorchMultiTaskBert(TorchModel):
                             pred = probs
                         else:
                             numbers_of_sample, numbers_of_class = (probs > 0.5).nonzero(as_tuple=True)
-                            numbers_of_sample, numbers_of_class = numbers_of_sample.detach().cpu().numpy(), numbers_of_class.detach().cpu().numpy()
+                            numbers_of_sample, numbers_of_class = numbers_of_sample.cpu().numpy(), numbers_of_class.cpu().numpy()
                             pred = [[] for _ in range(len(logits))]
                             for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
                                 pred[sample_num].append(int(class_num))
@@ -494,8 +494,7 @@ class TorchMultiTaskBert(TorchModel):
                             pred = torch.softmax(logits, dim=-1)
                         else:
                             pred = torch.argmax(logits, dim=1)
-                    if not isinstance(pred, list):
-                        pred = pred.tolist()
+                        pred = pred.cpu().numpy()
                 self.validation_predictions[task_id] = pred
         log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
