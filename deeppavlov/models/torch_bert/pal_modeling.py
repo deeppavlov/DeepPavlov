@@ -285,8 +285,8 @@ class BertConfig(object):
 
 simple_params = {
   "hidden_size_aug": 204,
-  "mult": true,
-  "pals": true,
+  "mult": True,
+  "pals": True,
   "attention_probs_dropout_prob": 0.1,
   "hidden_act": "gelu",
   "hidden_dropout_prob": 0.1,
@@ -304,8 +304,8 @@ plain_config = BertConfig(*simple_params)
 
 distil_params = {
   "hidden_size_aug": 204,
-  "mult": true,
-  "pals": true,
+  "mult": True,
+  "pals": True,
   "attention_probs_dropout_prob": 0.1,
   "hidden_act": "gelu",
   "hidden_dropout_prob": 0.1,
