@@ -270,7 +270,7 @@ class TorchTransformersSquad(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-            logger.info(f"From pretrained {self.pretrained_bert}.")
+            logger.debug(f"From pretrained {self.pretrained_bert}.")
             config = AutoConfig.from_pretrained(self.pretrained_bert,
                                                 output_attentions=False,
                                                 output_hidden_states=False)

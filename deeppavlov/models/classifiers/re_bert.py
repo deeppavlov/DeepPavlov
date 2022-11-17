@@ -156,7 +156,7 @@ class BertWithAdaThresholdLocContextPooling(nn.Module):
 
     def load(self) -> None:
         if self.pretrained_bert:
-            log.info(f"From pretrained {self.pretrained_bert}.")
+            log.debug(f"From pretrained {self.pretrained_bert}.")
             self.config = AutoConfig.from_pretrained(
                 self.pretrained_bert, num_labels=self.n_classes, output_attentions=True, output_hidden_states=True
             )

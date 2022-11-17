@@ -117,7 +117,7 @@ class NerVocab(Estimator):
         return padded_sents
 
     def load(self, *args, **kwargs):
-        log.info("[loading vocabulary from {}]".format(self.load_path))
+        log.debug("[loading vocabulary from {}]".format(self.load_path))
         if self.load_path is not None:
             self.load_from_file(self.load_path)
 

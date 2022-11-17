@@ -63,7 +63,7 @@ class FitTrainer:
                  max_test_batches: int = -1,
                  **kwargs) -> None:
         if kwargs:
-            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
+            log.warning(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
         self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
