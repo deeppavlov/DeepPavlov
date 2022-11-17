@@ -18,7 +18,7 @@ DeepPavlov is designed for
 * Issues [*github/issues/*](https://github.com/deeppavlov/DeepPavlov/issues)
 * Forum [*forum.deeppavlov.ai*](https://forum.deeppavlov.ai/)
 * Blogs [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
-* Tutorials [*examples/*](examples) and [extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)
+* [Extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
