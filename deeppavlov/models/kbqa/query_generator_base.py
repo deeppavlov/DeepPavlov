@@ -123,6 +123,7 @@ class QueryGeneratorBase(Component, Serializable):
                                types_from_ner: List[str],
                                entity_tags: List[str],
                                probas: List[float],
+                               entities_to_link: List[int],
                                answer_types: Set[str]) -> Tuple[Union[Union[List[List[Union[str, float]]],
                                                                             List[Any]], Any],
                                                                 Union[str, Any], Union[List[Any], Any]]:
@@ -150,7 +151,8 @@ class QueryGeneratorBase(Component, Serializable):
                 how_to_content = self.find_answer_wikihow(entities_from_template[0])
                 candidate_outputs = [["PHOW", how_to_content, 1.0]]
             else:
-                entity_ids = self.get_entity_ids(entities_from_template, entity_tags, probas, question)
+                entity_ids = self.get_entity_ids(entities_from_template, entity_tags, probas, question,
+                                                 entities_to_link)
                 type_ids = self.get_entity_ids(types_from_template, ["t" for _ in types_from_template],
                                                [1.0 for _ in types_from_template], question)
                 log.debug(f"entities_from_template: {entities_from_template} --- entity_types: {entity_types} --- "
@@ -159,7 +161,6 @@ class QueryGeneratorBase(Component, Serializable):
                 candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids,
                                                                 template_answer_types, rels_from_template,
                                                                 rel_dirs_from_template)
-
         if not candidate_outputs and (entities_from_ner or types_from_ner):
             log.debug(f"(__call__)entities_from_ner: {entities_from_ner}")
             entity_ids = self.get_entity_ids(entities_from_ner, entity_tags, probas, question)
@@ -173,11 +174,12 @@ class QueryGeneratorBase(Component, Serializable):
             candidate_outputs = self.sparql_template_parser(question_sanitized, entity_ids, type_ids, answer_types)
         return candidate_outputs, template_answer
 
-    def get_entity_ids(self, entities: List[str], tags: List[str], probas: List[float], question: str) -> List[
-        List[str]]:
+    def get_entity_ids(self, entities: List[str], tags: List[str], probas: List[float], question: str,
+                             entities_to_link: List[str] = None) -> List[List[str]]:
         entity_ids, el_output = [], []
         try:
-            el_output = self.entity_linker([entities], [tags], [probas], [[question]], [None], [None])
+            el_output = self.entity_linker([entities], [tags], [probas], [[question]], [None], [None],
+                                           [entities_to_link])
         except json.decoder.JSONDecodeError:
             log.info("not received output from entity linking")
         if el_output:
@@ -283,6 +285,8 @@ class QueryGeneratorBase(Component, Serializable):
             ex_rels = self.rank_list_0
         elif source in {"rank_list_2", "rel_list_2"}:
             ex_rels = self.rank_list_1
+
+        ex_rels = [rel for rel in ex_rels if not rel.endswith("P31")]
         rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         if n_hop == "2-hop" and rels_with_scores and entity_ids and entity_ids[0]:
             rels_1hop = [rel for rel, score in rels_with_scores]

@@ -14,6 +14,7 @@
 
 
 import itertools
+import re
 from typing import List, Iterable
 
 import numpy as np
@@ -45,6 +46,26 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
     correct = sum(equalities)
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('kbqa_accuracy')
+def kbqa_accuracy(pred_answer_labels_batch, pred_answer_ids_batch, pred_query_batch,
+                  gold_answer_labels_batch, gold_answer_ids_batch, gold_query_batch) -> float:
+    num_samples = len(pred_answer_ids_batch)
+    correct = 0
+    for pred_answer_label, pred_answer_ids, pred_query, gold_answer_labels, gold_answer_ids, gold_query in \
+            zip(pred_answer_labels_batch, pred_answer_ids_batch, pred_query_batch,
+                gold_answer_labels_batch, gold_answer_ids_batch, gold_query_batch):
+        found_date = False
+        if pred_answer_ids and gold_answer_ids and re.findall(r"[\d]{3,4}", pred_answer_ids[0]) and \
+                re.findall(r"[\d]{3,4}", pred_answer_ids[0]) == re.findall(r"[\d]{3,4}", gold_answer_ids[0]):
+            found_date = True
+        found_label = False
+        if len(gold_answer_labels) == 1 and len(pred_answer_label) > 1 and pred_answer_label == gold_answer_labels[0]:
+            found_label = True
+        if set(pred_answer_ids) == set(gold_answer_ids) or pred_query == gold_query or found_date or found_label:
+            correct += 1
+    return correct / num_samples if num_samples else 0
 
 
 @register_metric('multitask_accuracy')
@@ -175,13 +196,3 @@ def round_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0
-
-
-@register_metric('kbqa_accuracy')
-def kbqa_accuracy(y_true, y_predicted):
-    total_correct = 0
-    for answer_true, answer_predicted in zip(y_true, y_predicted):
-        if answer_predicted in answer_true:
-            total_correct += 1
-
-    return total_correct / len(y_true) if len(y_true) else 0

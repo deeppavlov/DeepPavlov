@@ -86,7 +86,7 @@ class WikiParser:
     def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any]):
         wiki_parser_output = []
         query_answer_types = []
-        for parser_info, query in zip(parser_info_list, queries_list):
+        for n, (parser_info, query) in enumerate(zip(parser_info_list, queries_list)):
             if parser_info == "query_execute":
                 answers, found_rels = [], []
                 try:
@@ -291,7 +291,9 @@ class WikiParser:
                         elif fnd_num or value_str.isdigit():
                             rel_comb[sort_elem] = float(value_str)
                         new_rel_combs.append(rel_comb)
-                    new_rel_combs = sorted(new_rel_combs, key=lambda x: x[sort_elem], reverse=reverse)
+                    new_rel_combs = [(elem, n) for n, elem in enumerate(new_rel_combs)]
+                    new_rel_combs = sorted(new_rel_combs, key=lambda x: (x[0][sort_elem], x[1]), reverse=reverse)
+                    new_rel_combs = [elem[0] for elem in new_rel_combs]
                     new_rel_combs_list.append(new_rel_combs)
                 combs = [new_rel_combs[0] for new_rel_combs in new_rel_combs_list]
 
@@ -304,6 +306,9 @@ class WikiParser:
                 if list(answer_types) == ["date"]:
                     answers = [[entity for entity in answer
                                 if re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for answer in answers]
+                elif list(answer_types) == ["not_date"]:
+                    answers = [[entity for entity in answer
+                                if not re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", entity)] for answer in answers]
                 else:
                     answer_types = set(answer_types)
                     answers = [[entity for entity in answer

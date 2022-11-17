@@ -9,7 +9,7 @@ import numpy as np
 from torch import Tensor
 
 from deeppavlov.core.commands.utils import expand_path
-from transformers import AutoConfig, BertModel, BertTokenizer
+from transformers import AutoConfig, AutoModel, AutoTokenizer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
@@ -146,9 +146,9 @@ class NLLRanking(nn.Module):
 
         if Path(bert_tokenizer_config_file).is_file():
             vocab_file = str(expand_path(bert_tokenizer_config_file))
-            tokenizer = BertTokenizer(vocab_file=vocab_file)
+            tokenizer = AutoTokenizer(vocab_file=vocab_file)
         else:
-            tokenizer = BertTokenizer.from_pretrained(pretrained_bert)
+            tokenizer = AutoTokenizer.from_pretrained(pretrained_bert)
         self.encoder.resize_token_embeddings(len(tokenizer) + 7)
 
     def forward(
@@ -160,16 +160,20 @@ class NLLRanking(nn.Module):
     ) -> Union[Tuple[Any, Tensor], Tuple[Tensor]]:
 
         bs, samples_num, seq_len = input_ids.size()
-        input_ids = input_ids.reshape(bs, -1)
-        attention_mask = attention_mask.reshape(bs, -1)
-        token_type_ids = token_type_ids.reshape(bs, -1)
-        encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        input_ids = input_ids.reshape(bs * samples_num, -1)
+        attention_mask = attention_mask.reshape(bs * samples_num, -1)
+        token_type_ids = token_type_ids.reshape(bs * samples_num, -1)
+        if hasattr(self.config, "type_vocab_size"):
+            encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask,
+                                          token_type_ids=token_type_ids)
+        else:
+            encoder_output = self.encoder(input_ids=input_ids, attention_mask=attention_mask)
         cls_emb = encoder_output.last_hidden_state[:, :1, :].squeeze(1)
         scores = self.fc(cls_emb)
         scores = scores.reshape(bs, samples_num)
 
-        scores = F.log_softmax(scores, dim=1)
         if positive_idx is not None:
+            scores = F.log_softmax(scores, dim=1)
             positive_idx = []
             for i in range(bs):
                 positive_idx.append(0)
@@ -179,18 +183,17 @@ class NLLRanking(nn.Module):
             return scores
 
     def load(self) -> None:
-        self.pretrained_bert = str(expand_path(self.pretrained_bert))
         if self.pretrained_bert:
             log.info(f"From pretrained {self.pretrained_bert}.")
             self.config = AutoConfig.from_pretrained(
                 self.pretrained_bert, output_hidden_states=True
             )
-            self.encoder = BertModel.from_pretrained(self.pretrained_bert, config=self.config)
+            self.encoder = AutoModel.from_pretrained(self.pretrained_bert, config=self.config)
             self.fc = nn.Linear(self.config.hidden_size, 1)
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-            self.encoder = BertModel.from_config(config=self.bert_config)
+            self.encoder = AutoModel.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 

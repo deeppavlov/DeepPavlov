@@ -30,7 +30,14 @@
         "use_descriptions": true,
         "use_connections": true,
         "use_tags": true,
-        "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "kb_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "prefixes": {"entity": ["http://we"],
+                     "rels": {"direct": "http://wpd",
+                              "no_type": "http://wp",
+                              "statement": "http://wps",
+                              "qualifier": "http://wpq"
+                              }
+                     },
         "full_paragraph": true,
         "return_confidences": true,
         "lang": "ru"
@@ -43,7 +50,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1"
+      "TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational_v1"
     },
     "download": [
       {

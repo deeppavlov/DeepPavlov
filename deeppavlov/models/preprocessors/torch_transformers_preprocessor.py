@@ -411,7 +411,7 @@ class RelRankingPreprocessor(Component):
 class PathRankingPreprocessor(Component):
     def __init__(self,
                  vocab_file: str,
-                 add_special_tokens: List[str],
+                 add_special_tokens: List[str] = None,
                  do_lower_case: bool = True,
                  max_seq_length: int = 67,
                  num_neg_samples: int = 499,
@@ -420,17 +420,23 @@ class PathRankingPreprocessor(Component):
         self.num_neg_samples = num_neg_samples
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.add_special_tokens = add_special_tokens
-        special_tokens_dict = {'additional_special_tokens': add_special_tokens}
-        self.tokenizer.add_special_tokens(special_tokens_dict)
+        if self.add_special_tokens:
+            special_tokens_dict = {'additional_special_tokens': add_special_tokens}
+            self.tokenizer.add_special_tokens(special_tokens_dict)
 
     def __call__(self, questions_batch: List[str], rels_batch: List[List[List[str]]]):
         lengths, proc_rels_batch = [], []
         for question, rels_list in zip(questions_batch, rels_batch):
             proc_rels_list = []
             for rels in rels_list:
+                if isinstance(rels, str):
+                    rels = [rels]
                 rels_str = ""
                 if len(rels) == 1:
-                    rels_str = f"<one_rel> {rels[0]} </one_rel>"
+                    if self.add_special_tokens:
+                        rels_str = f"<one_rel> {rels[0]} </one_rel>"
+                    else:
+                        rels_str = rels[0]
                 elif len(rels) == 2:
                     if rels[0] == rels[1]:
                         rels_str = f"<double> {rels[0]} </double>"

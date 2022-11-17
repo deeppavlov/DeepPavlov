@@ -15,7 +15,7 @@
 import copy
 import itertools
 import re
-from collections import defaultdict, namedtuple
+from collections import defaultdict
 from logging import getLogger
 from typing import Tuple, List, Optional, Union, Dict, Any, Set
 
@@ -25,8 +25,8 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.utils import \
-    extract_year, extract_number, order_of_answers_sorting, make_combs, fill_query
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, order_of_answers_sorting, make_combs, \
+    fill_query, find_query_features, make_sparql_query, merge_sparql_query
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
 log = getLogger(__name__)
@@ -44,6 +44,7 @@ class QueryGenerator(QueryGeneratorBase):
                  types_to_leave: int = 2,
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
+                 gold_query_info: Dict[str, str] = None,
                  return_all_possible_answers: bool = False, *args, **kwargs) -> None:
         """
 
@@ -62,9 +63,9 @@ class QueryGenerator(QueryGeneratorBase):
         self.types_to_leave = types_to_leave
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
+        self.gold_query_info = gold_query_info
         self.return_all_possible_answers = return_all_possible_answers
-        self.replace_tokens = [("wdt:p31", "wdt:P31"), ("pq:p580", "pq:P580"),
-                               ("pq:p582", "pq:P582"), ("pq:p585", "pq:P585"), ("pq:p1545", "pq:P1545")]
+        self.replace_tokens = [("wdt:p", "wdt:P"), ("pq:p", "pq:P")]
         super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
                          entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
                          *args, **kwargs)
@@ -76,10 +77,10 @@ class QueryGenerator(QueryGeneratorBase):
                  types_from_ner_batch: List[List[str]],
                  entity_tags_batch: List[List[str]],
                  probas_batch: List[List[float]],
-                 answer_types_batch: List[Set[str]] = None) -> List[str]:
+                 answer_types_batch: List[Set[str]],
+                 entities_to_link_batch: List[List[int]] = None) -> List[str]:
 
-        candidate_outputs_batch = []
-        template_answers_batch = []
+        candidate_outputs_batch, template_answers_batch = [], []
         if answer_types_batch is None:
             answer_types_batch = [[] for _ in question_batch]
         log.debug(f"kbqa inputs {question_batch} {question_san_batch} template_type_batch: {template_type_batch} --- "
@@ -87,14 +88,15 @@ class QueryGenerator(QueryGeneratorBase):
                   f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch: "
                   f"{[list(elem)[:3] for elem in answer_types_batch]}")
         for question, question_sanitized, template_type, entities_from_ner, types_from_ner, entity_tags_list, \
-            probas, answer_types in zip(question_batch, question_san_batch, template_type_batch,
-                                        entities_from_ner_batch, types_from_ner_batch, entity_tags_batch, probas_batch,
-                                        answer_types_batch):
+            probas, entities_to_link, answer_types in zip(question_batch, question_san_batch, template_type_batch,
+                                                          entities_from_ner_batch, types_from_ner_batch,
+                                                          entity_tags_batch, probas_batch, entities_to_link_batch,
+                                                          answer_types_batch):
             if template_type == "-1":
                 template_type = "7"
             candidate_outputs, template_answer = \
                 self.find_candidate_answers(question, question_sanitized, template_type, entities_from_ner,
-                                            types_from_ner, entity_tags_list, probas, answer_types)
+                                            types_from_ner, entity_tags_list, probas, entities_to_link, answer_types)
             candidate_outputs_batch.append(candidate_outputs)
             template_answers_batch.append(template_answer)
 
@@ -129,12 +131,12 @@ class QueryGenerator(QueryGeneratorBase):
                       f"n_hops {n_hops}, {query_seq_num}, {return_if_found}")
             query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
             log.debug(f"(query_parser)query_triplets: {query_triplets}")
-            query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
+            query_triplets_split = [triplet.split(' ')[:3] for triplet in query_triplets]
             property_types = {}
-            for rel_type, query_triplet in zip(rel_types, query_triplets):
+            for rel_type, query_triplet in zip(rel_types, query_triplets_split):
                 if query_triplet[1].startswith("?") and rel_type == "qualifier":
                     property_types[query_triplet[1]] = rel_type
-            query_sequence_dict = {num + 1: triplet for num, triplet in enumerate(query_triplets)}
+            query_sequence_dict = {num + 1: triplet for num, triplet in enumerate(query_triplets_split)}
             query_sequence = []
             for i in query_seq_num:
                 query_sequence.append(query_sequence_dict[i])
@@ -156,22 +158,11 @@ class QueryGenerator(QueryGeneratorBase):
                     rels_scores_dict = {**rels_scores_dict, **cur_rels_scores_dict}
                     entities_rel_conn = entities_rel_conn.union(entity_rel_conn)
             log.debug(f"(query_parser)rels: {rels}")
-            rels_from_query = [triplet[1] for triplet in query_triplets if triplet[1].startswith('?')]
-            qualifier_rels = [triplet[1] for triplet in query_triplets if triplet[1].startswith("pq:P")]
-            answer_ent = re.findall(r"select [\(]?([\S]+) ", query)
-            order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
-            order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
-            if order_variable:
-                if qualifier_rels and len(qualifier_rels[0][4:]) > 1:
-                    answers_sorting_order = order_variable[0][0]
-                else:
-                    answers_sorting_order = order_of_answers_sorting(question)
-                order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
-            else:
-                order_info = order_info_nt(None, None)
-            log.debug(f"question, order_info: {question}, {order_info}")
-            filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
-            log.debug(f"(query_parser)filter_from_query: {filter_from_query}")
+            rels_from_query = [triplet[1] for triplet in query_triplets_split if triplet[1].startswith('?')]
+            qualifier_rels = [triplet[1] for triplet in query_triplets_split if triplet[1].startswith("pq:P")]
+            
+            answer_ent, order_info, filter_from_query = find_query_features(query, qualifier_rels, question)
+            log.debug(f"(query_parser) filter_from_query: {filter_from_query} --- order_info: {order_info}")
 
             year = extract_year(question_tokens, question)
             number = extract_number(question_tokens, question)
@@ -197,7 +188,7 @@ class QueryGenerator(QueryGeneratorBase):
                         if j < len(elem):
                             selected_entity_ids.append(elem[j])
                 selected_entity_ids = [selected_entity_ids]
-            else:
+            elif entity_ids:
                 selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
             if type_ids:
                 selected_type_ids = [type_ids[int(pos) - 1][:self.types_to_leave]
@@ -210,6 +201,7 @@ class QueryGenerator(QueryGeneratorBase):
             all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
             all_combs_list = sorted(all_combs_list, key=lambda x: (sum([elem[-1] for elem in x]), x[0][-1]))
 
+            parsed_query_info["query_triplets"] = query_triplets
             parsed_query_info["query_sequence"] = query_sequence
             parsed_query_info["rels_from_query"] = rels_from_query
             parsed_query_info["answer_ent"] = answer_ent
@@ -255,7 +247,7 @@ class QueryGenerator(QueryGeneratorBase):
         parsed_queries_info, rels_scores_dict = self.parse_queries_info(question, queries_info, entity_ids, type_ids,
                                                                         rels_from_template)
         queries_list, parser_info_list, entity_conf_list = [], [], []
-        new_combs_list = []
+        new_combs_list, query_info_list = [], []
         combs_num_list = [len(parsed_query_info["all_combs_list"]) for parsed_query_info in parsed_queries_info]
         if combs_num_list:
             max_comb_nums = min(max(combs_num_list), self.max_comb_num)
@@ -264,6 +256,7 @@ class QueryGenerator(QueryGeneratorBase):
         for comb_num in range(max_comb_nums):
             for parsed_query_info in parsed_queries_info:
                 if comb_num < len(parsed_query_info["all_combs_list"]):
+                    query_triplets = parsed_query_info["query_triplets"]
                     query_sequence = parsed_query_info["query_sequence"]
                     rels_from_query = parsed_query_info["rels_from_query"]
                     answer_ent = parsed_query_info["answer_ent"]
@@ -278,7 +271,8 @@ class QueryGenerator(QueryGeneratorBase):
                         entity_conf_list.append(1.0)
                     else:
                         entity_conf_list.append(0.9)
-                    query_hdt_seq = [fill_query(query_hdt_elem, combs[0], combs[1], combs[2], self.map_query_str_to_kb)
+                    query_hdt_seq = [fill_query(query_hdt_elem, combs[0], combs[1], combs[2],
+                                                self.map_query_str_to_kb)
                                      for query_hdt_elem in query_sequence]
                     if comb_num == 0:
                         log.debug(
@@ -289,6 +283,7 @@ class QueryGenerator(QueryGeneratorBase):
                         new_combs_list.append(combs)
                         queries_list.append((answer_ent, rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
+                        query_info_list.append((query_triplets, answer_ent, filter_info, order_info))
                         parser_info_list.append("query_execute")
                     if comb_num < 3 and unk_rels:
                         unk_query_sequence = copy.deepcopy(query_sequence)
@@ -304,44 +299,75 @@ class QueryGenerator(QueryGeneratorBase):
                         new_combs_list.append(combs)
                         queries_list.append((answer_ent, unk_rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
+                        query_info_list.append((query_triplets, answer_ent, filter_info, order_info))
                         parser_info_list.append("query_execute")
 
         outputs_list = self.wiki_parser(parser_info_list, queries_list)
-        outputs = self.parse_outputs(outputs_list, new_combs_list, entity_conf_list, rels_scores_dict)
+        outputs = self.parse_outputs(outputs_list, new_combs_list, query_info_list, entity_conf_list, rels_scores_dict)
         return outputs
 
-    def parse_outputs(self, outputs_list, combs_list, entity_conf_list, rels_scores_dict):
+    def parse_outputs(self, outputs_list, combs_list, query_info_list, entity_conf_list, rels_scores_dict):
         outputs = []
         if isinstance(outputs_list, list) and outputs_list:
             outputs_len = len(outputs_list)
             combs_list = combs_list[:outputs_len]
             entity_conf_list = entity_conf_list[:outputs_len]
-            for combs, entity_conf, (answers_list, found_rels_list) in zip(combs_list, entity_conf_list, outputs_list):
+            for combs, query_info, entity_conf, (answers_list, found_rels_list) in \
+                    zip(combs_list, query_info_list, entity_conf_list, outputs_list):
                 for answers, found_rels in zip(answers_list, found_rels_list):
                     found_rels = [found_rel.split("/")[-1] for found_rel in found_rels]
-                    new_combs = copy.deepcopy(combs)
+                    new_combs = list(copy.deepcopy(combs))
+                    found_unk_rel = False
                     for j, rel_var in enumerate(["?p", "?p2"]):
                         if isinstance(new_combs[2][j], tuple) and new_combs[2][j][0] == rel_var:
                             if found_rels:
                                 new_combs[2][j] = (found_rels[j], rels_scores_dict.get(found_rels[j], 1.0))
                             else:
                                 new_combs[2][j] = (new_combs[2][j][0], 0.0)
+                            found_unk_rel = True
+                    if found_rels and not found_unk_rel:
+                        new_combs[2] = new_combs[2][:-1] + [(found_rels[0], 1.0), new_combs[2][-1]]
                     confidence = np.prod([score for rel, score in new_combs[2][:-1]])
                     if answers:
                         outputs.append([new_combs[0], new_combs[1]] + [rel for rel, score in new_combs[2][:-1]] +
-                                       answers + [(confidence, entity_conf)])
+                                       answers + [(confidence, entity_conf), query_info, new_combs[2]])
             outputs_dict = defaultdict(list)
             types_dict = defaultdict(list)
             for output in outputs:
-                key = (tuple(output[0]), tuple(output[2:-2]))
-                if key not in outputs_dict or output[-2:] not in outputs_dict[key]:
-                    outputs_dict[key].append(output[-2:])
+                key = (tuple(output[0]), tuple(output[2:-4]))
+                if key not in outputs_dict or output[-4:] not in outputs_dict[key]:
+                    outputs_dict[key].append(output[-4:])
                     types_dict[key].append(tuple(output[1]))
             outputs = []
             for (entity_comb, rel_comb), output in outputs_dict.items():
                 type_comb = types_dict[(entity_comb, rel_comb)]
                 output_conf = [elem[1] for elem in output]
                 output_conf = sorted(output_conf, key=lambda x: x[0] * x[1], reverse=True)
+                queries = [elem[2] for elem in output]
+                rel_combs = [elem[3] for elem in output]
+                sparql_query = make_sparql_query(queries[0], entity_comb, rel_combs[0], type_comb[0],
+                                                 self.gold_query_info)
                 outputs.append({"entities": entity_comb, "types": type_comb, "relations": list(rel_comb),
-                                "answers": tuple([ans for ans, conf in output]), "output_conf": output_conf[0]})
+                                "answers": tuple([ans for ans, *_ in output]), "output_conf": output_conf[0],
+                                "sparql_query": sparql_query})
         return outputs
+
+
+@register('query_formatter')
+class QueryFormatter:
+    def __init__(self, query_info: Dict[str, str], **kwargs):
+        self.query_info = query_info
+
+    def __call__(self, queries_batch):
+        parsed_queries_batch = []
+        for query in queries_batch:
+            query_split = re.findall("{[ ]?(.*?)[ ]?}", query)
+            query_triplets = []
+            if query_split:
+                query_triplets = query_split[0].split('. ')
+            query_triplets = [triplet.strip() for triplet in query_triplets]
+            answer_ent, order_info, filter_from_query = find_query_features(query, order_from_query=True)
+            query_info = (query_triplets, answer_ent, filter_from_query, order_info)
+            query = merge_sparql_query(query_info, self.query_info)
+            parsed_queries_batch.append(query)
+        return parsed_queries_batch

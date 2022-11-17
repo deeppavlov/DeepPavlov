@@ -12,9 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import namedtuple
 import re
 import itertools
 from typing import List
+
+
+def find_query_features(query, qualifier_rels=None, question=None, order_from_query=None):
+    query = query.lower()
+    answer_ent = re.findall(r"select [\(]?([\S]+) ", query)
+    order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
+    order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
+    if order_variable:
+        if (qualifier_rels and len(qualifier_rels[0][4:]) > 1) or order_from_query:
+            answers_sorting_order = order_variable[0][0]
+        else:
+            answers_sorting_order = order_of_answers_sorting(question)
+        order_info = order_info_nt(order_variable[0][1], answers_sorting_order)
+    else:
+        order_info = order_info_nt(None, None)
+    filter_from_query = re.findall("contains\((\?\w), (.+?)\)", query)
+    return answer_ent, order_info, filter_from_query
 
 
 def extract_year(question_tokens: List[str], question: str) -> str:
@@ -59,11 +77,11 @@ def extract_number(question_tokens: List[str], question: str) -> str:
 
 def order_of_answers_sorting(question: str) -> str:
     question_lower = question.lower()
-    max_words = ["maximum", "highest", "max ", "greatest", "most", "longest", "biggest", "deepest"]
+    max_words = ["maximum", "highest", "max ", "greatest", "most", "longest", "biggest", "deepest", "завершил",
+                 "закончил", "завершает"]
     for word in max_words:
         if word in question_lower:
             return "desc"
-
     return "asc"
 
 
@@ -79,6 +97,38 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     entity_ids = sorted(entity_ids_permut, key=lambda x: sum([elem[1] for elem in x]))
     ent_combs = [[elem[0] for elem in comb] + [sum([elem[1] for elem in comb])] for comb in entity_ids]
     return ent_combs
+
+
+def fill_slots(query, entity_comb, type_comb, rel_comb):
+    for n, entity in enumerate(entity_comb[:-1]):
+        query = query.replace(f"e{n + 1}", entity)
+    for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
+        query = query.replace(f"t{n + 1}", entity_type)
+    for n, (rel, score) in enumerate(rel_comb[:-1]):
+        if not rel.startswith("?"):
+            query = query.replace(f"r{n + 1}", rel)
+    return query
+
+
+def correct_variables(query_triplets, answer_ent, query_info):
+    for i in range(len(query_triplets)):
+        for ent_var in answer_ent:
+            if answer_ent[0].lower().startswith("count"):
+                query_triplets[i] = query_triplets[i].replace(ent_var, query_info["mid_var"])
+            else:
+                query_triplets[i] = query_triplets[i].replace(ent_var, query_info["unk_var"])
+    return query_triplets
+
+
+def query_from_triplets(query_triplets, answer_ent, query_info):
+    filled_query = " . ".join(query_triplets)
+    if answer_ent and answer_ent[0].lower().startswith("count"):
+        filled_query = f"SELECT (COUNT({query_info['mid_var']}) as {query_info['unk_var']}) " + \
+                       f"WHERE {{ {filled_query}. }}"
+    else:
+        filled_query = f"SELECT {query_info['unk_var']} WHERE {{ {filled_query}. }}"
+    filled_query = filled_query.replace(" ..", ".")
+    return filled_query
 
 
 def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str],
@@ -99,16 +149,24 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
 
     for query_str, wikidata_str in map_query_str_to_kb:
         query = query.replace(query_str, wikidata_str)
-    for n, entity in enumerate(entity_comb[:-1]):
-        query = query.replace(f"e{n + 1}", entity)
-    for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
-        query = query.replace(f"t{n + 1}", entity_type)
-    for n, (rel, score) in enumerate(rel_comb[:-1]):
-        if not rel.startswith("?"):
-            query = query.replace(f"r{n + 1}", rel)
+    query = fill_slots(query, entity_comb, type_comb, rel_comb)
     query = query.replace("http://wpd/P0", "http://wd")
     query = query.replace("http://wpd/P00", "http://wl")
     query = query.split(' ')
+    return query
+
+
+def make_sparql_query(query_info, entities, rels, types, query_info_dict):
+    query_triplets, answer_ent, filter_info, order_info = query_info
+    query_triplets = [fill_slots(elem, entities, types, rels) for elem in query_triplets]
+    query_triplets = correct_variables(query_triplets, answer_ent, query_info_dict)
+    filled_query = query_from_triplets(query_triplets, answer_ent, query_info_dict)
+    return filled_query
+
+
+def merge_sparql_query(query_info, query_info_dict):
+    query_triplets, answer_ent, filter_info, order_info = query_info
+    query = query_from_triplets(query_triplets, answer_ent, query_info_dict)
     return query
 
 

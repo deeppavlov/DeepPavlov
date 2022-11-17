@@ -43,12 +43,14 @@ class WordSearcher:
         ngrams_list = []
         for i in range(len(query) - 1):
             ngram = query[i : i + 2].lower()
-            ngram_id = self.bigrams_dict[ngram]
-            ngrams_list.append(ngram_id)
+            if ngram in self.bigrams_dict:
+                ngram_id = self.bigrams_dict[ngram]
+                ngrams_list.append(ngram_id)
         for i in range(len(query) - 2):
             ngram = query[i : i + 3].lower()
-            ngram_id = self.trigrams_dict[ngram]
-            ngrams_list.append(ngram_id)
+            if ngram in self.trigrams_dict:
+                ngram_id = self.trigrams_dict[ngram]
+                ngrams_list.append(ngram_id)
         ngrams_with_cnts = Counter(ngrams_list).most_common()
         ngram_ids = [elem[0] for elem in ngrams_with_cnts]
         ngram_cnts = [1 for _ in ngrams_with_cnts]

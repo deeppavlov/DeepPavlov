@@ -1,12 +1,28 @@
 {
+  "dataset_reader": {
+    "class_name": "rubq_reader",
+    "version": "2.0",
+    "question_types": ["qualifier-constraint"],
+    "data_path": "{DOWNLOADS_PATH}/rubq/rubq2.0.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
   "chainer": {
     "in": ["x"],
+    "in_y": ["gold_answer_ids", "gold_answer_labels", "gold_query"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
         "delete_brackets": true,
         "in": ["x"],
         "out": ["x_punct"]
+      },
+      {
+        "class_name": "query_formatter",
+        "query_info": {"unk_var": "?answer", "mid_var": "?ent"},
+        "in": ["gold_query"],
+        "out": ["f_gold_query"]
       },
       {
         "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_rubq.json",
@@ -23,13 +39,15 @@
       },
       {
         "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_ru.json",
-        "overwrite": {"chainer.pipe.1.num_entities_to_return": "max"},
+        "overwrite": {"chainer.pipe.1.num_entities_to_return": "max",
+                      "chainer.pipe.1.use_connections": "true"},
         "id": "entity_linker"
       },
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
         "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_full.hdt",
+        "max_comb_num": 40000,
         "lang": "@ru"
       },
       {
@@ -37,6 +55,7 @@
         "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
         "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
         "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
+        "tree_patterns_filename": "{DOWNLOADS_PATH}/wikidata_rus/tree_patterns.json",
         "id": "slovnet_parser"
       },
       {
@@ -46,12 +65,12 @@
       },
       {
         "class_name": "tree_to_sparql",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "adj_to_noun": "#adj2noun",
         "syntax_parser": "#slovnet_parser",
         "lang": "ru",
         "in": ["x_punct", "entity_substr", "tags", "entity_offsets", "entity_positions", "probas"],
-        "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "s_types_substr"]
+        "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "entities_to_link", "s_types_substr"]
       },
       {
         "class_name": "template_matcher",
@@ -63,18 +82,28 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json",
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_nll_bert_ru.json",
                    "overwrite": {
-                     "chainer.out": ["y_pred_probas"],
+                     "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "DeepPavlov/rubert-base-cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_rus"
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru",
+                     "metadata.download": [
+                       {
+                         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_bert_ru.tar.gz",
+                         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
+                       }
+                     ]
                    }
         },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
+        "nll_rel_ranking": true,
+        "return_confidences": false,
         "return_answer_ids": true,
+        "return_queries": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rank": false,
+        "type_rels": ["P31", "P279"],
         "rel_q2name_filename": "wiki_dict_properties_full_rus.pickle"
       },
       {
@@ -93,12 +122,24 @@
         "max_comb_num": 1000,
         "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
                                 [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
+        "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "syntax_structure_known": true,
-        "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "s_tags", "s_probas", "answer_types"],
-        "out": ["answers"]
+        "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "s_tags", "s_probas", "answer_types", "entities_to_link"],
+        "out": ["answers", "answer_ids", "query"]
       }
     ],
-    "out": ["answers"]
+    "out": ["answers", "answer_ids", "query"]
+  },
+  "train": {
+    "evaluation_targets": ["test"],
+    "batch_size": 1,
+    "metrics": [
+      {
+        "name": "kbqa_accuracy",
+        "inputs": ["answers", "answer_ids", "query", "gold_answer_labels", "gold_answer_ids", "f_gold_query"]
+      }
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
@@ -108,6 +149,10 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/datasets/rubq2.0.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rubq"
+      },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"

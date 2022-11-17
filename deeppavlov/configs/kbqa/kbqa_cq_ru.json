@@ -28,6 +28,7 @@
         "class_name": "wiki_parser",
         "id": "wiki_p",
         "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "max_comb_num": 40000,
         "lang": "@ru"
       },
       {
@@ -35,8 +36,8 @@
         "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
         "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
         "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
-        "in": ["x_punct", "entity_offsets"],
-        "out": ["syntax_info"]
+        "tree_patterns_filename": "{DOWNLOADS_PATH}/wikidata_rus/tree_patterns.json",
+        "id": "slovnet_parser"
       },
       {
         "class_name": "ru_adj_to_noun",
@@ -45,11 +46,12 @@
       },
       {
         "class_name": "tree_to_sparql",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "adj_to_noun": "#adj2noun",
-        "lang": "rus",
-        "in": ["syntax_info", "entity_positions"],
-        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
+        "syntax_parser": "#slovnet_parser",
+        "lang": "ru",
+        "in": ["x_punct", "entity_substr", "tags", "entity_offsets", "entity_positions", "probas"],
+        "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "entities_to_link", "s_types_substr"]
       },
       {
         "class_name": "template_matcher",
@@ -61,15 +63,19 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json",
-                   "overwrite": {"chainer.out": ["y_pred_probas"]}
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_nll_bert_ru.json",
+                   "overwrite": {"chainer.pipe.1.return_probas": true}
         },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
-        "return_all_possible_answers": true,
-        "return_answer_ids": false,
+        "nll_rel_ranking": true,
+        "return_confidences": false,
+        "return_answer_ids": true,
+        "return_queries": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
+        "rank": false,
+        "type_rels": ["P31", "P279"],
+        "rel_q2name_filename": "wiki_dict_properties_full_rus.pickle"
       },
       {
         "class_name": "query_generator",
@@ -81,13 +87,16 @@
         "load_path": "{DOWNLOADS_PATH}/wikidata",
         "rank_rels_filename_1": "rels_0.txt",
         "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "entities_to_leave": 9,
         "rels_to_leave": 10,
-        "return_all_possible_answers": false,
+        "max_comb_num": 1000,
+        "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
+                                [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
+        "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "syntax_structure_known": true,
-        "in": ["x_punct", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
-        "out": ["answers"]
+        "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "s_tags", "s_probas", "answer_types", "entities_to_link"],
+        "out": ["answers", "answer_ids", "query"]
       }
     ],
     "out": ["answers"]

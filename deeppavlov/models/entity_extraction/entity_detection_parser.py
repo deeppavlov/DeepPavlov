@@ -195,6 +195,12 @@ class EntityDetectionParser(Component):
                 if found_n > 0:
                     for j in range(i + 1, found_n + 1):
                         tags[j] = "I-EVENT"
+            if i < len(tokens) - 3 and len(tokens[i]) == 1 and tokens[i + 1] == "." and len(tokens[i + 2]) == 1 \
+                    and tokens[i + 3] == "." and tags[i + 2].startswith("B-"):
+                tag = tags[i + 2].split("-")[1]
+                tags[i] = f"B-{tag}"
+                tags[i + 1] = f"I-{tag}"
+                tags[i + 2] = f"I-{tag}"
         return tags
 
     def correct_template_tags(self, tags, probas, template_type):

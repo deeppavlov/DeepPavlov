@@ -134,6 +134,9 @@ class AnswerTypesExtractor:
                         types_sets_batch[n] = self.types_sets["LOC"]
                     elif any([question.startswith(elem) for elem in ["когда", "в каком году", "в каком месяце"]]):
                         types_sets_batch[n] = {"date"}
+                    elif any([question.startswith(elem) for elem in ["кем ", "как"]]) \
+                            or question.split()[1].startswith("как"):
+                        types_sets_batch[n] = {"not_date"}
                 elif self.lang == "@en":
                     if question.startswith("who"):
                         types_sets_batch[n] = self.types_sets["PER"]
