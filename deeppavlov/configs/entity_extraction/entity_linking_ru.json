@@ -1,6 +1,6 @@
 {
   "chainer": {
-    "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
+    "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
     "pipe": [
       {
         "class_name": "torch_transformers_entity_ranker_infer",
@@ -14,38 +14,47 @@
       },
       {
         "class_name": "entity_linker",
-        "in": ["entity_substr", "tags", "sentences", "entity_offsets", "sentences_offsets"],
-        "out": ["entity_ids", "entity_conf", "entity_pages"],
+        "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
+        "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_rus",
-        "entities_database_filename": "el_rus.db",
+        "entities_database_filename": "el_db_rus.db",
+        "words_dict_filename": "{DOWNLOADS_PATH}/entity_linking_rus/words_dict.pickle",
+        "ngrams_matrix_filename": "{DOWNLOADS_PATH}/entity_linking_rus/ngrams_matrix.npz",
         "entity_ranker": "#entity_descr_ranking",
         "rank_in_runtime": true,
-        "num_entities_for_bert_ranking": 20,
+        "num_entities_for_bert_ranking": 30,
         "use_gpu": false,
         "include_mention": false,
-        "num_entities_to_return": 3,
+        "num_entities_to_return": 7,
         "lemmatize": true,
         "use_descriptions": true,
         "use_connections": true,
         "use_tags": true,
-        "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "kb_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "prefixes": {"entity": ["http://we"],
+                     "rels": {"direct": "http://wpd",
+                              "no_type": "http://wp",
+                              "statement": "http://wps",
+                              "qualifier": "http://wpq"
+                              }
+                     },
         "full_paragraph": true,
         "return_confidences": true,
         "lang": "ru"
       }
     ],
-    "out": ["entity_ids", "entity_conf", "entity_pages"]
+    "out": ["entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1"
+      "TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational_v1"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_db_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_files_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/entity_linking_rus"
       },
       {
