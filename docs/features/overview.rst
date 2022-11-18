@@ -206,17 +206,14 @@ In the case when answer is not necessary present in given context we have :confi
 model. This model outputs empty string in case if there is no answer in context.
 
 
-Frequently Asked Questions (FAQ) model :doc:`[docs] </features/skills/faq>`
+Frequently Asked Questions (FAQ) model :doc:`[docs] </features/models/faq>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Set of pipelines for FAQ task: classifying incoming question into set of known questions and return prepared answer.
 You can build different pipelines based on: tf-idf, weighted fasttext, cosine similarity, logistic regression.
 
 
-Skills
-------
-
-ODQA :doc:`[docs] </features/skills/odqa>`
+ODQA :doc:`[docs] </features/models/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer

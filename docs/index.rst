@@ -39,15 +39,8 @@ Welcome to DeepPavlov's documentation!
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Skills
-   
-   Open-Domain Question Answering <features/skills/odqa>
-   Frequently Asked Questions Answering <features/skills/faq>
+   Open-Domain Question Answering <features/models/odqa>
+   Frequently Asked Questions Answering <features/models/faq>
 
 
 .. toctree::
