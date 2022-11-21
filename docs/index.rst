@@ -39,6 +39,7 @@ Welcome to DeepPavlov's documentation!
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
+   Generative Question Answering <features/models/generative_qa>
 
 
 .. toctree::

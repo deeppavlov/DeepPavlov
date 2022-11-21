@@ -421,6 +421,69 @@ class RelRankingPreprocessor(Component):
         return input_features
 
 
+@register('fid_input_preprocessor')
+class FiDInputPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 max_seq_length: int = 512,
+                 **kwargs) -> None:
+        self.max_seq_length = max_seq_length
+
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+    
+    def __call__(self, questions_batch: List[str], contexts_batch: List[List[str]]):
+        prepare_data = lambda q, c,: f"question: {q} context: {c}"
+        passages_batch = [[prepare_data(question, context) for context in contexts] 
+                            for (question, contexts) in zip(questions_batch, contexts_batch)]
+
+        passage_ids, passage_masks = [], []
+        for text_passages in passages_batch:
+            passages_encoding = self.tokenizer(
+                text_passages,
+                max_length=self.max_seq_length if self.max_seq_length > 0 else None,
+                pad_to_max_length=True,
+                return_tensors='pt',
+                truncation=True if self.max_seq_length > 0 else False,
+            )
+            passage_ids.append(passages_encoding['input_ids'][None])
+            passage_masks.append(passages_encoding['attention_mask'][None])
+
+        passage_ids = torch.cat(passage_ids, dim=0)
+        passage_masks = torch.cat(passage_masks, dim=0)
+
+        return passage_ids, passage_masks
+
+@register('fid_target_preprocessor')
+class FiDTargetPreprocessor(Component):
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = True,
+                 answer_maxlength: int = 50,
+                 **kwargs) -> None:
+        self.answer_maxlength = answer_maxlength
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        
+
+    def __call__(self, targets_batch: List[str]):
+        target_encoding = self.tokenizer(
+            targets_batch,
+            max_length=self.answer_maxlength if self.answer_maxlength > 0 else None,
+            pad_to_max_length=True,
+            return_tensors='pt',
+            truncation=True if self.answer_maxlength > 0 else False,
+        )
+        target_ids = target_encoding["input_ids"]
+        return target_ids
+
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):
     """

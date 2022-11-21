@@ -1,0 +1,97 @@
+{
+  "dataset_reader": {
+    "class_name": "json_reader",
+    "data_path": "{DATASET_PATH}/natural_questions_dataset.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator",
+    "seed": 42,
+    "shuffle": true
+  },
+  "chainer": {
+    "in": ["question", "contexts", "titles"],
+    "in_y": ["target", "gold_answers"],
+    "pipe": [
+      {
+        "class_name": "fid_input_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "max_seq_length": 200,
+        "in": ["question", "contexts"],
+        "out": ["input_ids", "attention_mask"]
+      },
+      {
+        "class_name": "fid_target_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "answer_maxlength" : 50,
+        "in": ["target"],
+        "out": ["target_ids"]
+      },
+      {
+        "class_name": "torch_generative_qa_fid",
+        "pretrained_transformer": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}",
+        "load_path": "{MODEL_PATH}",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 3e-04,
+          "weight_decay": 0.01,
+          "betas": [0.9, 0.999],
+          "eps": 1e-08
+        },
+        "learning_rate_drop_patience": 24,
+        "learning_rate_drop_div": 2,
+        "min_learning_rate": 1e-5,
+        "generate_max_length" : 50,
+        "in": ["input_ids", "attention_mask"],
+        "in_y": ["target_ids"],
+        "out": ["model_answer"]
+      }
+    ],
+    "out": ["model_answer"]
+  },
+  "train": {
+    "show_examples": false,
+    "evaluation_targets": [
+      "valid"
+    ],
+    "log_every_n_batches": 100,
+    "val_every_n_batches": 600,
+    "batch_size": 1,
+    "validation_patience": 100,
+    "metrics": [
+      {
+        "name": "squad_v2_em",
+        "inputs": ["gold_answers", "model_answer"]
+      },
+      {
+        "name": "squad_v2_f1",
+        "inputs": ["gold_answers", "model_answer"]
+      }
+    ],
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "TRANSFORMER": "t5-base",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/generative_qa/fusion_in_decoder/natural_questions",
+      "DATASET_PATH": "{DOWNLOADS_PATH}/natural_questions"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/generative_qa/datasets/natural_questions/natural_questions_dataset.json",
+        "subdir": "{DATASET_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/generative_qa/models/fusion_in_decoder/natural_questions/config.json",
+        "subdir": "{MODEL_PATH}"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/generative_qa/models/fusion_in_decoder/natural_questions/pytorch_model.bin",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

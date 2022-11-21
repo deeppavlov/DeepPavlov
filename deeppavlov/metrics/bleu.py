@@ -20,6 +20,8 @@ from nltk.translate.bleu_score import corpus_bleu, sentence_bleu, SmoothingFunct
 from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.metrics.google_bleu import compute_bleu
 
+import numpy as np
+
 SMOOTH = SmoothingFunction()
 
 
