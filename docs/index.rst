@@ -9,7 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
-   Models/Skills overview <features/overview>
+   Models overview <features/overview>
 
 
 .. toctree::

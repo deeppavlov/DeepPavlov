@@ -145,7 +145,7 @@ def download_resource(url: str, dest_paths: Iterable[Union[Path, str]], headers:
 
 def download_resources(args: Namespace) -> None:
     if not args.all and not args.config:
-        log.error('You should provide either skill config path or -all flag')
+        log.error('You should provide either model config path or -all flag')
         sys.exit(1)
     elif args.all:
         downloads = get_configs_downloads()

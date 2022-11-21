@@ -163,7 +163,7 @@ with model parameters `"device": "cpu"`.
 Pretrained models
 ~~~~~~~~~~~~~~~~~
 
-DeepPavlov provides a wide range of pretrained models and skills.
+DeepPavlov provides a wide range of pretrained models.
 See :doc:`features overview </features/overview>` for more info. Please
 note that most of our models are trained on specific datasets for
 specific tasks and may require further training on your data.

@@ -216,7 +216,7 @@ You can build different pipelines based on: tf-idf, weighted fasttext, cosine si
 ODQA :doc:`[docs] </features/models/odqa>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-An open domain question answering skill. The skill accepts free-form questions about the world and outputs an answer
+An open domain question answering model. The model accepts free-form questions about the world and outputs an answer
 based on its Wikipedia knowledge.
 
 
