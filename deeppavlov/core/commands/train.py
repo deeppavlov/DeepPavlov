@@ -24,6 +24,7 @@ from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
 
@@ -70,12 +71,15 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
                                      iterator: Union[DataLearningIterator, DataFittingIterator] = None, *,
                                      to_train: bool = True,
                                      evaluation_targets: Optional[Iterable[str]] = None,
+                                     install: bool = False,
                                      download: bool = False,
                                      start_epoch_num: Optional[int] = None,
                                      recursive: bool = False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
+    if install:
+        install_from_config(config)
     if download:
         deep_download(config)
 
