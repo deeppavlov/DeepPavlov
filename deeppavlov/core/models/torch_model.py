@@ -99,7 +99,7 @@ class TorchModel(NNModel):
         # we need to switch to eval mode here because by default it's in `train` mode.
         # But in case of `interact/build_model` usage, we need to have model in eval mode.
         self.model.eval()
-        log.info(f"Model was successfully initialized! Model summary:\n {self.model}")
+        log.debug(f"Model was successfully initialized! Model summary:\n {self.model}")
 
     def init_from_opt(self, model_func: str) -> None:
         """Initialize from scratch `self.model` with the architecture built in  `model_func` method of this class
@@ -150,22 +150,22 @@ class TorchModel(NNModel):
         model_func = getattr(self, self.opt.get("model_name", ""), None)
 
         if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
+            log.debug(f"Load path {self.load_path} is given.")
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
                 raise ConfigError("Provided load path is incorrect!")
 
             weights_path = Path(self.load_path.resolve())
             weights_path = weights_path.with_suffix(f".pth.tar")
             if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
+                log.debug(f"Load path {weights_path} exists.")
+                log.debug(f"Initializing `{self.__class__.__name__}` from saved.")
 
                 # firstly, initialize with random weights and previously saved parameters
                 if model_func:
                     self.init_from_opt(model_func)
 
                 # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
+                log.debug(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
                 model_state = checkpoint["model_state_dict"]
                 optimizer_state = checkpoint["optimizer_state_dict"]
@@ -181,10 +181,10 @@ class TorchModel(NNModel):
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             elif model_func:
-                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+                log.debug(f"Init from scratch. Load path {weights_path} does not exist.")
                 self.init_from_opt(model_func)
         elif model_func:
-            log.info(f"Init from scratch. Load path {self.load_path} is not provided.")
+            log.debug(f"Init from scratch. Load path {self.load_path} is not provided.")
             self.init_from_opt(model_func)
 
     @overrides

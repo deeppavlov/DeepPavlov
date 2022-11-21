@@ -170,7 +170,7 @@ class RelRankerInfer(Component, Serializable):
                     try:
                         answer = sentence_answer(question, answer, entities, template_answer)
                     except:
-                        log.info("Error in sentence answer")
+                        log.warning("Error in sentence answer")
                 confidence = answers_with_scores[0][2]
             if self.return_confidences:
                 answers.append((answer, confidence))
