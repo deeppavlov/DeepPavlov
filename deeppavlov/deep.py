@@ -41,6 +41,7 @@ parser.add_argument("--recursive", action="store_true", help="Train nested confi
 parser.add_argument("-b", "--batch-size", dest="batch_size", default=None, help="inference batch size", type=int)
 parser.add_argument("-f", "--input-file", dest="file_path", default=None, help="Path to the input file", type=str)
 parser.add_argument("-d", "--download", action="store_true", help="download model components")
+parser.add_argument("-i", "--install", action="store_true", help="install model requirements")
 
 parser.add_argument("--folds", help="number of folds", type=int, default=5)
 
@@ -67,6 +68,8 @@ def main():
     args = parser.parse_args()
     pipeline_config_path = find_config(args.config_path)
 
+    if args.install or args.mode == 'install':
+        install_from_config(pipeline_config_path)
     if args.download or args.mode == 'download':
         deep_download(pipeline_config_path)
 
@@ -95,8 +98,6 @@ def main():
                              rabbit_virtualhost=args.rabbit_virtualhost)
     elif args.mode == 'predict':
         predict_on_stream(pipeline_config_path, args.batch_size, args.file_path)
-    elif args.mode == 'install':
-        install_from_config(pipeline_config_path)
     elif args.mode == 'crossval':
         if args.folds < 2:
             log.error('Minimum number of Folds is 2')
