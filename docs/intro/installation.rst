@@ -2,15 +2,11 @@ Installation
 ============
 
 
-We support ``Linux`` and ``Windows`` platforms, ``Python 3.6`` and ``Python 3.7``.
+We support ``Linux`` platform, ``Python 3.6``, ``3.7``, ``3.8`` and ``3.9``.
 
 .. note::
 
     * ``Python 3.5`` is not supported!
-
-    * installation for ``Windows`` requires ``Git`` for Windows (for example,
-      `git <https://git-scm.com/download/win>`_ ), ``Visual Studio 2015/2017``
-      with ``C++`` build tools installed!
 
 
 #. Create a virtual environment:
@@ -26,12 +22,6 @@ We support ``Linux`` and ``Windows`` platforms, ``Python 3.6`` and ``Python 3.7`
         .. code:: bash
 
             source ./env/bin/activate
-
-    * Windows
-
-        .. code:: bash
-
-            .\env\Scripts\activate.bat
 
 #. Install the package inside this virtual environment:
 
