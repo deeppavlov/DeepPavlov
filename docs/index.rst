@@ -9,7 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
-   Models/Skills overview <features/overview>
+   Models overview <features/overview>
 
 
 .. toctree::
@@ -28,7 +28,7 @@ Welcome to DeepPavlov's documentation!
    
    
    Context Question Answering <features/models/SQuAD.ipynb>
-   Classification <features/models/classifiers>
+   Classification <features/models/classification.ipynb>
    Named Entity Recognition <features/models/NER.ipynb>
    Entity Extraction <features/models/entity_extraction>
    BERT-based models <features/models/bert>
@@ -39,15 +39,8 @@ Welcome to DeepPavlov's documentation!
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Skills
-   
-   Open-Domain Question Answering <features/skills/odqa>
-   Frequently Asked Questions Answering <features/skills/faq>
+   Open-Domain Question Answering <features/models/odqa>
+   Frequently Asked Questions Answering <features/models/faq>
 
 
 .. toctree::

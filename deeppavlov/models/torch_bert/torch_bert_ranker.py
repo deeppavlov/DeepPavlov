@@ -161,7 +161,7 @@ class TorchBertRankerModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-            log.info(f"From pretrained {self.pretrained_bert}.")
+            log.debug(f"From pretrained {self.pretrained_bert}.")
             if Path(expand_path(self.pretrained_bert)).exists():
                 self.pretrained_bert = str(expand_path(self.pretrained_bert))
             config = AutoConfig.from_pretrained(self.pretrained_bert,

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import json
-import pickle
 import sys
 from itertools import islice
 from logging import getLogger
@@ -24,15 +23,18 @@ from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.data.utils import jsonify_data
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
 
 
 def build_model(config: Union[str, Path, dict], mode: str = 'infer',
-                load_trained: bool = False, download: bool = False) -> Chainer:
+                load_trained: bool = False, install: bool = False, download: bool = False) -> Chainer:
     """Build and return the model described in corresponding configuration file."""
     config = parse_config(config)
 
+    if install:
+        install_from_config(config)
     if download:
         deep_download(config)
 

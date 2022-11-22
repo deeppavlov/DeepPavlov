@@ -109,7 +109,7 @@ class SimpleVocabulary(Estimator):
         self.reset()
         if self.load_path:
             if self.load_path.is_file():
-                log.info("[loading vocabulary from {}]".format(self.load_path))
+                log.debug("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r', encoding='utf8'):
                     token, cnt = self.load_line(ln)

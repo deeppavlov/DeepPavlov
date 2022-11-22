@@ -18,7 +18,7 @@ DeepPavlov is designed for
 * Issues [*github/issues/*](https://github.com/deeppavlov/DeepPavlov/issues)
 * Forum [*forum.deeppavlov.ai*](https://forum.deeppavlov.ai/)
 * Blogs [*medium.com/deeppavlov*](https://medium.com/deeppavlov)
-* Tutorials [*examples/*](examples) and [extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)
+* [Extended colab tutorials](https://github.com/deeppavlov/dp_tutorials)
 * Docker Hub [*hub.docker.com/u/deeppavlov/*](https://hub.docker.com/u/deeppavlov/) 
     * Docker Images Documentation [*docs:docker-images/*](http://docs.deeppavlov.ai/en/master/intro/installation.html#docker-images)
 
@@ -34,13 +34,9 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)
 
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/odqa.html) | [Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/faq.html)
+
 [Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
-
-**Skills**
-
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/odqa.html)
-
-[Frequently Asked Questions Answering](http://docs.deeppavlov.ai/en/master/features/skills/faq.html)
 
 **Embeddings**
 
@@ -97,24 +93,26 @@ evaluate and infer it:
 
 #### GPU requirements
 
-To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit) compatible
-with used GPU and [library PyTorch version](deeppavlov/requirements/pytorch.txt).
+By default, DeepPavlov installs models requirements from PyPI. PyTorch from PyPI could not support your device CUDA
+capability. To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit)
+compatible with used GPU and [PyTorch version](deeppavlov/requirements/pytorch.txt) required by DeepPavlov models.
+See [docs](https://docs.deeppavlov.ai/en/master/intro/quick_start.html#using-gpu) for details.
 
 ### Command line interface (CLI)
 
 To get predictions from a model interactively through CLI, run
 
 ```bash
-python -m deeppavlov interact <config_path> [-d]
+python -m deeppavlov interact <config_path> [-d] [-i]
 ```
 
-* `-d` downloads required data -- pretrained model files and embeddings
-  (optional).
+* `-d` downloads required data - pretrained model files and embeddings (optional).
+* `-i` installs model requirements (optional).
 
 You can train it in the same simple way:
 
 ```bash
-python -m deeppavlov train <config_path> [-d]
+python -m deeppavlov train <config_path> [-d] [-i]
 ```
 
 Dataset will be downloaded regardless of whether there was `-d` flag or not.
@@ -126,10 +124,11 @@ The data format is specified in the corresponding model doc page.
 There are even more actions you can perform with configs:
 
 ```bash
-python -m deeppavlov <action> <config_path> [-d]
+python -m deeppavlov <action> <config_path> [-d] [-i]
 ```
 
 * `<action>` can be
+    * `install` to install model requirements (same as `-i`),
     * `download` to download model's data (same as `-d`),
     * `train` to train the model on the data specified in the config file,
     * `evaluate` to calculate metrics on the same dataset,
@@ -140,6 +139,7 @@ python -m deeppavlov <action> <config_path> [-d]
       *<file_path>* if `-f <file_path>` is specified.
 * `<config_path>` specifies path (or name) of model's config file
 * `-d` downloads required data
+* `-i` installs model requirements
 
 
 ### Python
@@ -149,17 +149,16 @@ To get predictions from a model interactively through Python, run
 ```python
 from deeppavlov import build_model
 
-model = build_model(<config_path>, download=True)
+model = build_model(<config_path>, install=True, download=True)
 
 # get predictions for 'input_text1', 'input_text2'
 model(['input_text1', 'input_text2'])
 ```
-
-* where `download=True` downloads required data from web -- pretrained model
-  files and embeddings (optional),
-* `<config_path>` is path to the chosen model's config file (e.g.
-  `"deeppavlov/configs/ner/ner_ontonotes_bert_mult.json"`) or
-  `deeppavlov.configs` attribute (e.g.
+where
+* `install=True` installs model requirements (optional),
+* `download=True` downloads required data from web - pretrained model files and embeddings (optional),
+* `<config_path>` is model name (e.g. `'ner_ontonotes_bert_mult'`), path to the chosen model's config file (e.g.
+  `"deeppavlov/configs/ner/ner_ontonotes_bert_mult.json"`),  or `deeppavlov.configs` attribute (e.g.
   `deeppavlov.configs.ner.ner_ontonotes_bert_mult` without quotation marks).
 
 You can train it in the same simple way:
@@ -167,14 +166,8 @@ You can train it in the same simple way:
 ```python
 from deeppavlov import train_model 
 
-model = train_model(<config_path>, download=True)
+model = train_model(<config_path>, install=True, download=True)
 ```
-
-* `download=True` downloads pretrained model, therefore the pretrained
-model will be, first, loaded and then train (optional).
-
-Dataset will be downloaded regardless of whether there was ``-d`` flag or
-not.
 
 To train on your own data you need to modify dataset reader path in the
 [train config doc](http://docs.deeppavlov.ai/en/master/intro/config_description.html#train-config).
@@ -185,12 +178,9 @@ You can also calculate metrics on the dataset specified in your config file:
 ```python
 from deeppavlov import evaluate_model 
 
-model = evaluate_model(<config_path>, download=True)
+model = evaluate_model(<config_path>, install=True, download=True)
 ```
-
 
 ## License
 
 DeepPavlov is Apache 2.0 - licensed.
-
-##

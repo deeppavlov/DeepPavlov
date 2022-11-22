@@ -135,10 +135,10 @@ class SklearnComponent(Estimator):
             predictions = self.infer_method(x_features)
         except TypeError or ValueError:
             if issparse(x_features):
-                log.info("Converting input for model {} to dense array".format(self.model_class))
+                log.debug("Converting input for model {} to dense array".format(self.model_class))
                 predictions = self.infer_method(x_features.todense())
             else:
-                log.info("Converting input for model {} to sparse array".format(self.model_class))
+                log.debug("Converting input for model {} to sparse array".format(self.model_class))
                 predictions = self.infer_method(csr_matrix(x_features))
 
         if isinstance(predictions, list):
@@ -163,7 +163,7 @@ class SklearnComponent(Estimator):
         Returns:
             None
         """
-        log.info("Initializing model {} from scratch".format(self.model_class))
+        log.debug("Initializing model {} from scratch".format(self.model_class))
         model_function = cls_from_str(self.model_class)
 
         if model_function is None:
@@ -200,18 +200,18 @@ class SklearnComponent(Estimator):
         fname = Path(fname).with_suffix('.pkl')
 
         if fname.exists():
-            log.info("Loading model {} from {}".format(self.model_class, str(fname)))
+            log.debug("Loading model {} from {}".format(self.model_class, str(fname)))
             with open(fname, "rb") as f:
                 self.model = pickle.load(f)
 
             warm_start = self.model_params.get("warm_start", None)
             self.model_params = {param: getattr(self.model, param) for param in self.get_class_attributes(self.model)}
             self.model_class = self.model.__module__ + self.model.__class__.__name__
-            log.info("Model {} loaded  with parameters".format(self.model_class))
+            log.debug("Model {} loaded  with parameters".format(self.model_class))
 
             if warm_start and "warm_start" in self.model_params.keys():
                 self.model_params["warm_start"] = True
-                log.info("Fitting of loaded model can be continued because `warm_start` is set to True")
+                log.debug("Fitting of loaded model can be continued because `warm_start` is set to True")
             else:
                 log.warning("Fitting of loaded model can not be continued. Model can be fitted from scratch."
                             "If one needs to continue fitting, please, look at `warm_start` parameter")
