@@ -31,7 +31,7 @@
         "use_tags": true,
         "full_paragraph": true,
         "return_confidences": true,
-        "lang": "ru"
+        "lang": "en"
       }
     ],
     "out": ["entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]

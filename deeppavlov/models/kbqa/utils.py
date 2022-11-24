@@ -88,6 +88,9 @@ def order_of_answers_sorting(question: str) -> str:
 def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
     entity_ids = list(itertools.product(*entity_ids))
+    entity_ids = [comb for comb in entity_ids if not
+                  (all([comb[i][0][0].split("/")[-1] == comb[0][0][0].split("/")[-1] for i in range(len(comb))])
+                   and not all([comb[i][0][0] == comb[0][0][0] for i in range(len(comb))]))]
     entity_ids_permut = []
     if permut:
         for comb in entity_ids:
@@ -99,13 +102,15 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     return ent_combs
 
 
-def fill_slots(query, entity_comb, type_comb, rel_comb):
+def fill_slots(query, entity_comb, type_comb, rel_comb, delete_rel_prefix = False):
     for n, entity in enumerate(entity_comb[:-1]):
         query = query.replace(f"e{n + 1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
         query = query.replace(f"t{n + 1}", entity_type)
     for n, (rel, score) in enumerate(rel_comb[:-1]):
         if not rel.startswith("?"):
+            if delete_rel_prefix:
+                rel = rel.split("/")[-1]
             query = query.replace(f"r{n + 1}", rel)
     return query
 
@@ -158,7 +163,7 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
 
 def make_sparql_query(query_info, entities, rels, types, query_info_dict):
     query_triplets, answer_ent, filter_info, order_info = query_info
-    query_triplets = [fill_slots(elem, entities, types, rels) for elem in query_triplets]
+    query_triplets = [fill_slots(elem, entities, types, rels, delete_rel_prefix=True) for elem in query_triplets]
     query_triplets = correct_variables(query_triplets, answer_ent, query_info_dict)
     filled_query = query_from_triplets(query_triplets, answer_ent, query_info_dict)
     return filled_query
@@ -170,38 +175,41 @@ def merge_sparql_query(query_info, query_info_dict):
     return query
 
 
-def preprocess_template_queries(template_queries):
+def preprocess_template_queries(template_queries, kb_prefixes):
     for template_num in template_queries:
         template = template_queries[template_num]
         query = template["query_template"]
-        query_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
-        query_triplets = [triplet.split(' ')[:3] for triplet in query_triplets]
+        q_triplets = re.findall("{[ ]?(.*?)[ ]?}", query)[0].split(' . ')
+        q_triplets = [triplet.split(' ')[:3] for triplet in q_triplets]
         if not "rel_types" in template:
-            template["rel_types"] = ["direct" for _ in query_triplets]
+            template["rel_types"] = ["direct" for _ in q_triplets]
         rel_types = template["rel_types"]
         rel_dirs, n_hops, entities, types, gr_ent, mod_ent, q_ent = [], [], set(), set(), set(), set(), set()
 
-        for triplet, rel_type in zip(query_triplets, rel_types):
-            if not triplet[1].startswith("wdt:P"):
+        for n, (triplet, rel_type) in enumerate(zip(q_triplets, rel_types)):
+            if not triplet[1].startswith(kb_prefixes["type_rel"]):
                 if triplet[2].startswith("?"):
                     rel_dirs.append("forw")
                 else:
                     rel_dirs.append("backw")
             for ind in [0, 2]:
-                if triplet[ind].startswith("wd:E"):
+                if triplet[ind].startswith(kb_prefixes["entity"]):
                     entities.add(triplet[ind])
-                elif triplet[ind].startswith("wd:T"):
+                elif triplet[ind].startswith(kb_prefixes["type"]):
                     types.add(triplet[ind])
             if rel_type in {"qualifier", "statement"}:
-                if triplet[2].startswith("wd:E"):
+                if triplet[2].startswith(kb_prefixes["entity"]):
                     q_ent.add(triplet[2])
             else:
-                if triplet[0].startswith("wd:E"):
+                if triplet[0].startswith(kb_prefixes["entity"]):
                     gr_ent.add(triplet[0])
-                elif triplet[2].startswith("wd:E"):
+                elif triplet[2].startswith(kb_prefixes["entity"]):
                     mod_ent.add(triplet[2])
-            if triplet[1].startswith("wdt:R") and triplet[0].startswith("?") and triplet[2].startswith("?"):
+            if triplet[1].startswith(kb_prefixes["rel"]) and triplet[0].startswith("?") and triplet[2].startswith("?"):
                 n_hops.append("2-hop")
+            elif n == 0 and len(q_triplets) == 2 and q_triplets[1][1].startswith(kb_prefixes["rel"]) \
+                    and q_triplets[1][0].startswith("?") and q_triplets[1][2].startswith("?"):
+                n_hops.append("1-of-2-hop")
             else:
                 n_hops.append("1-hop")
         syntax_structure = {"gr_ent": len(gr_ent), "types": len(types), "mod_ent": len(mod_ent),
@@ -213,7 +221,7 @@ def preprocess_template_queries(template_queries):
         if "count" in query.lower():
             syntax_structure["count"] = True
         if not "query_sequence" in template:
-            template["query_sequence"] = list(range(1, len(query_triplets) + 1))
+            template["query_sequence"] = list(range(1, len(q_triplets) + 1))
         template["rel_dirs"] = rel_dirs
         template["n_hops"] = n_hops
         template["entities_and_types_num"] = [len(entities), len(types)]

@@ -14,6 +14,7 @@
 
 import re
 from collections import defaultdict
+from logging import getLogger
 from string import punctuation
 from typing import List, Tuple, Union, Dict
 
@@ -23,6 +24,9 @@ from nltk.corpus import stopwords
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
+
+log = getLogger(__name__)
+punctuation = punctuation.replace('+', '')
 
 
 @register('question_sign_checker')
@@ -82,8 +86,8 @@ class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
 
     def __init__(self, o_tag: str, tags_file: str, entity_tags: List[str] = None, ignore_points: bool = False,
-                 return_entities_with_tags: bool = False, thres_proba: float = 0.8,
-                 make_tags_from_probas: bool = False, lang: str = "en", ignored_tags: List[str] = None, **kwargs):
+                 thres_proba: float = 0.8, make_tags_from_probas: bool = False, lang: str = "en",
+                 ignored_tags: List[str] = None, **kwargs):
         """
         Args:
             o_tag: tag for tokens which are neither entities nor types
@@ -97,7 +101,6 @@ class EntityDetectionParser(Component):
         self.entity_tags = entity_tags
         self.o_tag = o_tag
         self.ignore_points = ignore_points
-        self.return_entities_with_tags = return_entities_with_tags
         self.thres_proba = thres_proba
         self.tag_ind_dict = {}
         with open(str(expand_path(tags_file))) as fl:
@@ -149,7 +152,7 @@ class EntityDetectionParser(Component):
             if template_type:
                 tags = self.correct_template_tags(tags, probas, template_type)
             tags = self.correct_tags(tokens, tags)
-            entities, positions, entities_probas = self.entities_from_tags(tokens, tags, probas)
+            entities, positions, entities_probas = self.entities_from_tags(tokens, tags, probas, template_type)
             entities_batch.append(entities)
             positions_batch.append(positions)
             probas_batch.append(entities_probas)
@@ -204,9 +207,14 @@ class EntityDetectionParser(Component):
         return tags
 
     def correct_template_tags(self, tags, probas, template_type):
-        if template_type in {"simple", "2_hop"}:
+        if any([template_type.startswith(pattern) for pattern in {"simple", "2_hop"}]):
             for i in range(len(tags) - 1):
                 if tags[i] in {"B-E", "I-E"} and tags[i + 1] == "B-E":
+                    tags[i + 1] = "I-E"
+        elif template_type == "simple_boolean":
+            for i in range(len(tags) - 2):
+                if tags[i] in {"B-E", "I-E"} and tags[i + 1] == "B-E" \
+                        and any([tags[j] == "B-E" for j in range(i + 2, len(tags))]):
                     tags[i + 1] = "I-E"
         elif template_type == "double":
             for i in range(len(tags)):
@@ -251,26 +259,25 @@ class EntityDetectionParser(Component):
 
     def add_entity(self, entity, c_tag):
         replace_tokens = [(' - ', '-'), ("'s", ''), (' .', '.'), ('{', ''), ('}', ''),
-                          ('  ', ' '), ('"', "'"), ('(', ''), (')', '')]
+                          ('  ', ' '), ('"', "'"), ('(', ''), (')', ''), (' +', '+')]
         if entity and (entity[-1] in punctuation or entity[-1] == "»"):
             entity = entity[:-1]
-            self.entity_positions_dict[c_tag] = self.entity_positions_dict[c_tag][:-1]
+            self.ent_pos_dict[c_tag] = self.ent_pos_dict[c_tag][:-1]
         if entity and (entity[0] in punctuation or entity[0] == "«"):
             entity = entity[1:]
-            self.entity_positions_dict[c_tag] = self.entity_positions_dict[c_tag][1:]
+            self.ent_pos_dict[c_tag] = self.ent_pos_dict[c_tag][1:]
         entity = ' '.join(entity)
         for old, new in replace_tokens:
             entity = entity.replace(old, new)
         if entity and entity.lower() not in self.stopwords:
-            self.entities_dict[c_tag].append(entity)
-            self.entities_positions_dict[c_tag].append(self.entity_positions_dict[c_tag])
-            cur_probas = self.entity_probas_dict[c_tag]
-            self.entities_probas_dict[c_tag].append(round(sum(cur_probas) / len(cur_probas), 4))
-        self.entity_dict[c_tag] = []
-        self.entity_positions_dict[c_tag] = []
-        self.entity_probas_dict[c_tag] = []
+            cur_probas = self.ent_probas_dict[c_tag]
+            self.ents_pos_probas_dict[c_tag].append((entity, self.ent_pos_dict[c_tag],
+                                                     round(sum(cur_probas) / len(cur_probas), 4)))
+        self.ent_dict[c_tag] = []
+        self.ent_pos_dict[c_tag] = []
+        self.ent_probas_dict[c_tag] = []
 
-    def entities_from_tags(self, tokens, tags, tag_probas):
+    def entities_from_tags(self, tokens, tags, tag_probas, template_type):
         """
         This method makes lists of substrings corresponding to entities and entity types
         and a list of indices of tokens which correspond to entities
@@ -284,45 +291,43 @@ class EntityDetectionParser(Component):
             list of indices of tokens which correspond to entities (or a dict of tags (keys)
                 and list of indices of entity tokens)
         """
-        self.entities_dict = defaultdict(list)
-        self.entity_dict = defaultdict(list)
-        self.entity_positions_dict = defaultdict(list)
-        self.entities_positions_dict = defaultdict(list)
-        self.entities_probas_dict = defaultdict(list)
-        self.entity_probas_dict = defaultdict(list)
+        self.ent_dict = defaultdict(list)
+        self.ent_pos_dict = defaultdict(list)
+        self.ent_probas_dict = defaultdict(list)
+        self.ents_pos_probas_dict = defaultdict(list)
         cnt = 0
         for n, (tok, tag, probas) in enumerate(zip(tokens, tags, tag_probas)):
             if tag.split('-')[-1] in self.entity_tags:
                 f_tag = tag.split("-")[-1]
-                if tag.startswith("B-") and any(self.entity_dict.values()):
-                    for c_tag, entity in self.entity_dict.items():
+                if tag.startswith("B-") and any(self.ent_dict.values()):
+                    for c_tag, entity in self.ent_dict.items():
                         self.add_entity(entity, c_tag)
-                self.entity_dict[f_tag].append(tok)
-                self.entity_positions_dict[f_tag].append(cnt)
-                self.entity_probas_dict[f_tag].append(probas[self.tags_ind[tag]])
+                self.ent_dict[f_tag].append(tok)
+                self.ent_pos_dict[f_tag].append(cnt)
+                self.ent_probas_dict[f_tag].append(probas[self.tags_ind[tag]])
 
-            elif any(self.entity_dict.values()):
-                for tag, entity in self.entity_dict.items():
+            elif any(self.ent_dict.values()):
+                for tag, entity in self.ent_dict.items():
                     c_tag = tag.split("-")[-1]
                     self.add_entity(entity, c_tag)
             cnt += 1
-        if any(self.entity_dict.values()):
-            for tag, entity in self.entity_dict.items():
+        if any(self.ent_dict.values()):
+            for tag, entity in self.ent_dict.items():
                 c_tag = tag.split("-")[-1]
                 self.add_entity(entity, c_tag)
 
-        entities_list = [entity for tag, entities in self.entities_dict.items() for entity in entities]
-        entities_positions_list = [position for tag, positions in self.entities_positions_dict.items()
-                                   for position in positions]
-        entities_probas_list = [proba for tag, probas in self.entities_probas_dict.items() for proba in probas]
+        self.ents_pos_probas_dict = {tag: elements for tag, elements in self.ents_pos_probas_dict.items()
+                                     if tag not in self.ignored_tags}
 
-        entities_dict = {tag: entities for tag, entities in self.entities_dict.items() if tag not in self.ignored_tags}
-        entities_positions_dict = {tag: pos for tag, pos in self.entities_positions_dict.items() if
-                                   tag not in self.ignored_tags}
-        entities_probas_dict = {tag: probas for tag, probas in self.entities_probas_dict.items() if
-                                tag not in self.ignored_tags}
+        for tag in self.ents_pos_probas_dict:
+            ents_pos_proba = self.ents_pos_probas_dict[tag]
+            if template_type == "2_hop" and len(ents_pos_proba) > 1:
+                ents_pos_proba = sorted(ents_pos_proba, key=lambda x: len(x[0]), reverse=True)
+                self.ents_pos_probas_dict[tag] = [ents_pos_proba[0]]
 
-        if self.return_entities_with_tags:
-            return entities_dict, entities_positions_dict, entities_probas_dict
-        else:
-            return entities_list, entities_positions_list, entities_probas_list
+        entities_dict = {tag: [ent[0] for ent in ents] for tag, ents in self.ents_pos_probas_dict.items()}
+        entities_positions_dict = {tag: [ent[1] for ent in ents] for tag, ents in self.ents_pos_probas_dict.items()}
+        entities_probas_dict = {tag: [ent[2] for ent in ents] for tag, ents in self.ents_pos_probas_dict.items()}
+        log.debug(f"entities_dict {entities_dict}")
+
+        return entities_dict, entities_positions_dict, entities_probas_dict

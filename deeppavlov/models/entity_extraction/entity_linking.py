@@ -15,14 +15,17 @@
 import re
 import sqlite3
 from logging import getLogger
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Any
 from collections import defaultdict
 
 import nltk
 import pymorphy2
+from hdt import HDTDocument
 from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 from rapidfuzz import fuzz
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
@@ -46,6 +49,7 @@ class EntityLinker(Component, Serializable):
             words_dict_filename: str = None,
             ngrams_matrix_filename: str = None,
             num_entities_for_bert_ranking: int = 50,
+            num_entities_for_conn_ranking: int = 5,
             num_entities_to_return: int = 10,
             max_text_len: int = 300,
             max_paragraph_len: int = 150,
@@ -53,8 +57,12 @@ class EntityLinker(Component, Serializable):
             use_descriptions: bool = True,
             use_tags: bool = False,
             lemmatize: bool = False,
+            fuzzy_match: bool = False,
             full_paragraph: bool = False,
             use_connections: bool = False,
+            sort_low_conf: bool = False,
+            kb_filename: str = None,
+            prefixes: Dict[str, Any] = None,
             **kwargs,
     ) -> None:
         """
@@ -71,9 +79,10 @@ class EntityLinker(Component, Serializable):
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
-        self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
+        self.fuzzy_match = fuzzy_match
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
+        self.num_entities_for_conn_ranking = num_entities_for_conn_ranking
         self.entity_ranker = entity_ranker
         self.entities_database_filename = entities_database_filename
         self.words_dict_filename = words_dict_filename
@@ -84,10 +93,14 @@ class EntityLinker(Component, Serializable):
         self.lang = f"@{lang}"
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
+            nltk.download('wordnet')
+            self.morph = WordNetLemmatizer()
         elif self.lang == "@ru":
             self.stopwords = set(stopwords.words("russian"))
+            self.morph = pymorphy2.MorphAnalyzer()
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
+        self.sort_low_conf = sort_low_conf
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
@@ -104,11 +117,16 @@ class EntityLinker(Component, Serializable):
         self.word_searcher = None
         if self.words_dict_filename:
             self.word_searcher = WordSearcher(self.words_dict_filename, self.ngrams_matrix_filename, self.lang)
+        self.kb_filename = kb_filename
+        self.prefixes = prefixes
         self.load()
 
     def load(self) -> None:
         self.conn = sqlite3.connect(str(self.load_path / self.entities_database_filename))
         self.cur = self.conn.cursor()
+        self.kb = None
+        if self.kb_filename:
+            self.kb = HDTDocument(str(expand_path(self.kb_filename)))
 
     def save(self) -> None:
         pass
@@ -121,6 +139,7 @@ class EntityLinker(Component, Serializable):
             sentences_batch: List[List[str]] = None,
             offsets_batch: List[List[List[int]]] = None,
             sentences_offsets_batch: List[List[Tuple[int, int]]] = None,
+            entities_to_link_batch: List[List[int]] = None
     ):
         if (not sentences_offsets_batch or sentences_offsets_batch[0] is None) and sentences_batch is not None:
             sentences_offsets_batch = []
@@ -137,6 +156,9 @@ class EntityLinker(Component, Serializable):
             sentences_batch = [[] for _ in substr_batch]
             sentences_offsets_batch = [[] for _ in substr_batch]
 
+        if not entities_to_link_batch or entities_to_link_batch[0] is None:
+            entities_to_link_batch = [[1 for _ in substr_list] for substr_list in substr_batch]
+
         log.debug(f"substr: {substr_batch} --- sentences_batch: {sentences_batch} --- offsets: {offsets_batch}")
         if (not offsets_batch or offsets_batch[0] is None) and sentences_batch:
             offsets_batch = []
@@ -150,12 +172,12 @@ class EntityLinker(Component, Serializable):
                     offsets_list.append([st_offset, end_offset])
                 offsets_batch.append(offsets_list)
         ids_batch, conf_batch, pages_batch, labels_batch = [], [], [], []
-        for substr_list, offsets_list, tags_list, probas_list, sentences_list, sentences_offsets_list in zip(
-                substr_batch, offsets_batch, tags_batch, probas_batch, sentences_batch, sentences_offsets_batch
-        ):
-            ids_list, conf_list, pages_list, labels_list = self.link_entities(substr_list, offsets_list, tags_list,
-                                                                              probas_list, sentences_list,
-                                                                              sentences_offsets_list)
+        for substr_list, offsets_list, tags_list, probas_list, sentences_list, sentences_offsets_list, \
+                entities_to_link in zip(substr_batch, offsets_batch, tags_batch, probas_batch, sentences_batch,
+                                        sentences_offsets_batch, entities_to_link_batch):
+            ids_list, conf_list, pages_list, labels_list = \
+                self.link_entities(substr_list, offsets_list, tags_list, probas_list, sentences_list,
+                                   sentences_offsets_list, entities_to_link)
             log.debug(f"ids_list {ids_list} conf_list {conf_list}")
             if self.num_entities_to_return == 1:
                 pages_list = [pages[0] for pages in pages_list]
@@ -175,6 +197,7 @@ class EntityLinker(Component, Serializable):
             probas_list: List[float],
             sentences_list: List[str],
             sentences_offsets_list: List[List[int]],
+            entities_to_link: List[int]
     ) -> List[List[str]]:
         log.debug(f"substr_list {substr_list} tags_list {tags_list} probas {probas_list} offsets_list {offsets_list}")
         ids_list, conf_list, pages_list, label_list, descr_list = [], [], [], [], []
@@ -183,8 +206,10 @@ class EntityLinker(Component, Serializable):
             cand_ent_scores_list = []
             for substr, tags, proba in zip(substr_list, tags_list, probas_list):
                 for old_symb, new_symb in [("'s", ""), ("@", ""), ("  ", " "), (".", ""), (",", ""), ("-", " "),
-                                           ("'", " "), ("!", ""), (":", ""), ("&", ""), ("/", " "), ("  ", " ")]:
+                                           ("'", " "), ("!", ""), (":", ""), ("&", ""), ("/", " "), ('"', ""),
+                                           ("  ", " ")]:
                     substr = substr.replace(old_symb, new_symb)
+                substr = substr.strip()
                 cand_ent_init = defaultdict(set)
                 if len(substr) > 1:
                     if isinstance(tags, str):
@@ -210,25 +235,24 @@ class EntityLinker(Component, Serializable):
                                         if word not in self.stopwords and len(word) > 0]
                     substr_lemm1 = ""
                     substr_split_lemm1 = []
-                    if self.lang == "@ru":
-                        substr_split_lemm1, substr_split_lemm2 = self.morph_parse(substr_split)
-                        substr_lemm1 = " ".join(substr_split_lemm1)
-                        substr_lemm2 = " ".join(substr_split_lemm2)
-                        if substr_split != substr_split_lemm1 \
-                                or (tags[0][0] == "work_of_art"
-                                    and len(substr_split) != len(init_substr_split)):
-                            new_cand_ent_init = self.find_fuzzy_match(substr_split, tags, use_tags=use_tags_flag)
-                            cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        if substr_split != substr_split_lemm1:
-                            new_cand_ent_init = self.find_exact_match(substr_lemm1, tags, use_tags=use_tags_flag)
-                            cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, tags, use_tags=use_tags_flag)
-                            cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        if substr_split != substr_split_lemm2 and substr_split_lemm1 != substr_split_lemm2:
-                            new_cand_ent_init = self.find_exact_match(substr_lemm2, tags, use_tags=use_tags_flag)
-                            cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm2, tags, use_tags=use_tags_flag)
-                            cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
+                    substr_split_lemm1, substr_split_lemm2 = self.morph_parse(substr_split)
+                    substr_lemm1 = " ".join(substr_split_lemm1)
+                    substr_lemm2 = " ".join(substr_split_lemm2)
+                    if substr_split != substr_split_lemm1 \
+                            or (tags[0][0] == "work_of_art"
+                                and len(substr_split) != len(init_substr_split)):
+                        new_cand_ent_init = self.find_fuzzy_match(substr_split, tags, use_tags=use_tags_flag)
+                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
+                    if substr_split != substr_split_lemm1:
+                        new_cand_ent_init = self.find_exact_match(substr_lemm1, tags, use_tags=use_tags_flag)
+                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
+                        new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, tags, use_tags=use_tags_flag)
+                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
+                    if substr_split != substr_split_lemm2 and substr_split_lemm1 != substr_split_lemm2:
+                        new_cand_ent_init = self.find_exact_match(substr_lemm2, tags, use_tags=use_tags_flag)
+                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
+                        new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm2, tags, use_tags=use_tags_flag)
+                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
 
                     all_low_conf = self.define_all_low_conf(cand_ent_init, 1.0)
                     clean_tags, corr_tags, corr_clean_tags = self.correct_tags(tags)
@@ -238,7 +262,7 @@ class EntityLinker(Component, Serializable):
                     if (not cand_ent_init or all_low_conf) and corr_tags:
                         corr_cand_ent_init = self.find_exact_match(substr, corr_tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, corr_cand_ent_init)
-                        if self.lang == "@ru" and substr_split != substr_split_lemm1:
+                        if substr_split != substr_split_lemm1:
                             new_cand_ent_init = self.find_exact_match(substr_lemm1, corr_tags, use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
                             new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, corr_tags,
@@ -251,16 +275,15 @@ class EntityLinker(Component, Serializable):
                             cand_ent_init = self.find_exact_match(corr_words[0], tags + corr_tags,
                                                                   use_tags=use_tags_flag)
 
-                    if not cand_ent_init and len(substr_split) > 1:
+                    if (not cand_ent_init or self.fuzzy_match) and len(substr_split) > 1:
                         cand_ent_init = self.find_fuzzy_match(substr_split, tags)
 
                     all_low_conf = self.define_all_low_conf(cand_ent_init, 0.85)
-                    if not cand_ent_init or all_low_conf:
+                    if (not cand_ent_init or all_low_conf) and tags[0][0] != "t":
                         use_tags_flag = False
                         new_cand_ent_init = self.find_exact_match(substr, tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        if self.lang == "@ru" and substr_split != substr_split_lemm1 \
-                                and (tags[0][0] == "e" or not cand_ent_init):
+                        if substr_split != substr_split_lemm1 and (tags[0][0] == "e" or not cand_ent_init):
                             new_cand_ent_init = self.find_fuzzy_match(substr_split, tags, use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
                             new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, tags, use_tags=use_tags_flag)
@@ -288,17 +311,29 @@ class EntityLinker(Component, Serializable):
                     {entity_id: entity_label for entity_id, entity_label in zip(entity_ids, entity_labels)})
                 descr_list.append([elem[6] for elem in cand_ent_scores])
 
+            scores_dict = {}
+            if self.use_connections and self.kb:
+                scores_dict = self.rank_by_connections(ids_list)
+
             if self.use_descriptions:
                 substr_lens = [len(entity_substr.split()) for entity_substr in substr_list]
                 ids_list, conf_list = self.rank_by_description(substr_list, tags_list, offsets_list, ids_list,
                                                                descr_list, entities_scores_list, sentences_list,
-                                                               sentences_offsets_list, substr_lens)
+                                                               sentences_offsets_list, substr_lens, scores_dict)
         label_list = [[label_dict.get(entity_id, "") for entity_id in entity_ids]
                       for entity_ids, label_dict in zip(ids_list, label_list)]
         pages_list = [[pages_dict.get(entity_id, "") for entity_id in entity_ids]
                       for entity_ids, pages_dict in zip(ids_list, pages_list)]
 
-        return ids_list, conf_list, pages_list, label_list
+        f_ids_list, f_conf_list, f_pages_list, f_label_list = [], [], [], []
+        for ids, confs, pages, labels, add_flag in \
+                zip(ids_list, conf_list, pages_list, label_list, entities_to_link):
+            if add_flag:
+                f_ids_list.append(ids)
+                f_conf_list.append(confs)
+                f_pages_list.append(pages)
+                f_label_list.append(labels)
+        return f_ids_list, f_conf_list, f_pages_list, f_label_list
 
     def define_all_low_conf(self, cand_ent_init, thres):
         all_low_conf = True
@@ -350,14 +385,18 @@ class EntityLinker(Component, Serializable):
         return normal_form
 
     def morph_parse(self, words):
-        words = [self.nomn_case(word) for word in words]
-        if len(words) > 1 and self.morph.parse(words[-1])[0].tag.POS == "NOUN":
-            gender = self.morph.parse(words[-1])[0].tag.gender
-            if gender:
-                for i in range(len(words) - 1):
-                    if self.morph.parse(words[i])[0].tag.POS == "ADJF":
-                        words[i] = self.morph.parse(words[i])[0].inflect({gender}).word
-        words_n = [self.normal_form(word) for word in words]
+        if self.lang == "@ru":
+            words = [self.nomn_case(word) for word in words]
+            if len(words) > 1 and self.morph.parse(words[-1])[0].tag.POS == "NOUN":
+                gender = self.morph.parse(words[-1])[0].tag.gender
+                if gender:
+                    for i in range(len(words) - 1):
+                        if self.morph.parse(words[i])[0].tag.POS == "ADJF":
+                            words[i] = self.morph.parse(words[i])[0].inflect({gender}).word
+            words_n = [self.normal_form(word) for word in words]
+        elif self.lang == "@en":
+            words = [self.morph.lemmatize(word) for word in words]
+            words_n = words
         return words, words_n
 
     def process_cand_ent(self, cand_ent_init, entities_and_ids, substr_split, tag, tag_conf, use_tags):
@@ -396,7 +435,7 @@ class EntityLinker(Component, Serializable):
         cand_ent_init = defaultdict(set)
         for tag, tag_conf in tags:
             for word in entity_substr_split:
-                if len(word) > 1:
+                if len(word) > 1 and word not in self.stopwords:
                     query = "SELECT * FROM inverted_index WHERE title MATCH '{}';".format(word)
                     part_entities_and_ids = []
                     try:
@@ -409,34 +448,68 @@ class EntityLinker(Component, Serializable):
                             cand_ent_init, part_entities_and_ids, entity_substr_split, tag, tag_conf, use_tags)
         return cand_ent_init
 
-    def calc_substr_score(self, entity_title, entity_substr_split, entity_id, tag, ent_tag, entity_label):
-        if self.lang == "@ru":
-            entity_title = entity_title.replace("ё", "е")
-        label_tokens = entity_title.split()
+    def match_tokens(self, entity_substr_split, label_tokens):
         cnt = 0.0
-        for ent_tok in entity_substr_split:
-            found = False
-            for label_tok in label_tokens:
-                if label_tok == ent_tok:
-                    found = True
-                    break
-            if found:
-                cnt += 1.0
-            else:
+        if not (len(entity_substr_split) > 1 and len(label_tokens) > 1 \
+                and set(entity_substr_split) != set(label_tokens) and label_tokens[0] != label_tokens[-1] \
+                and ((entity_substr_split[0] == label_tokens[-1]) or (entity_substr_split[-1] == label_tokens[0]))):
+            for ent_tok in entity_substr_split:
+                found = False
                 for label_tok in label_tokens:
-                    if label_tok[:2] == ent_tok[:2]:
-                        fuzz_score = fuzz.ratio(label_tok, ent_tok)
-                        if (fuzz_score >= 75.0 or (len(label_tok) >= 8 and label_tok[:6] == ent_tok[:6]
-                                                   and fuzz_score > 70.0)) and not found:
-                            cnt += fuzz_score * 0.01
-                            break
+                    if label_tok == ent_tok:
+                        found = True
+                        break
+                if found:
+                    cnt += 1.0
+                else:
+                    for label_tok in label_tokens:
+                        if label_tok[:2] == ent_tok[:2]:
+                            fuzz_score = fuzz.ratio(label_tok, ent_tok)
+                            if (fuzz_score >= 75.0 \
+                                    or (len(label_tok) >= 8 and label_tok[:6] == ent_tok[:6] and fuzz_score > 70.0) \
+                                    or (len(label_tokens) > 2 and len(label_tok) > 3 and label_tok[:4] == ent_tok[:4])) \
+                                    and not found:
+                                cnt += fuzz_score * 0.01
+                                break
         substr_score = round(cnt / max(len(label_tokens), len(entity_substr_split)), 3)
         if len(label_tokens) == 2 and len(entity_substr_split) == 1:
             if entity_substr_split[0] == label_tokens[1]:
                 substr_score = 0.5
             elif entity_substr_split[0] == label_tokens[0]:
                 substr_score = 0.3
+        return substr_score
 
+    def correct_substr_score(self, entity_substr_split, label_tokens, substr_score):
+        if sum([len(tok) == 1 for tok in entity_substr_split]) == 2 and len(label_tokens) >= 2 \
+                and any([(len(tok) == 2 and re.findall(r"[a-z]{2}", tok)) for tok in label_tokens]):
+            new_label_tokens = []
+            for tok in label_tokens:
+                if len(tok) == 2 and re.findall(r"[a-z]{2}", tok):
+                    new_label_tokens.append(tok[0])
+                    new_label_tokens.append(tok[1])
+                else:
+                    new_label_tokens.append(tok)
+            label_tokens = new_label_tokens
+        if any([re.findall(r"[\d]{4}", tok) for tok in entity_substr_split]) \
+                and any([re.findall(r"[\d]{4}–[\d]{2}", tok) for tok in label_tokens]):
+            new_label_tokens = []
+            for tok in label_tokens:
+                if re.findall(r"[\d]{4}–[\d]{2}", tok):
+                    new_label_tokens.append(tok[:4])
+                    new_label_tokens.append(tok[5:])
+                else:
+                    new_label_tokens.append(tok)
+            label_tokens = new_label_tokens
+        new_substr_score = self.match_tokens(entity_substr_split, label_tokens)
+        substr_score = max(substr_score, new_substr_score)
+        return substr_score
+
+    def calc_substr_score(self, entity_title, entity_substr_split, entity_id, tag, ent_tag, entity_label):
+        if self.lang == "@ru":
+            entity_title = entity_title.replace("ё", "е")
+        label_tokens = entity_title.split()
+        substr_score = self.match_tokens(entity_substr_split, label_tokens)
+        substr_score = self.correct_substr_score(entity_substr_split, label_tokens, substr_score)
         if tag == ent_tag and tag.lower() == "person" and len(entity_substr_split) > 1 \
                 and len(entity_substr_split[-1]) > 1 and len(entity_substr_split[-2]) == 1 \
                 and len(label_tokens) == len(entity_substr_split):
@@ -464,6 +537,7 @@ class EntityLinker(Component, Serializable):
             sentences_list: List[str],
             sentences_offsets_list: List[Tuple[int, int]],
             substr_lens: List[int],
+            scores_dict: Dict[str, int] = None
     ) -> List[List[str]]:
         entity_ids_list = []
         conf_list = []
@@ -526,26 +600,20 @@ class EntityLinker(Component, Serializable):
         for entity_substr, tag, context, candidate_entities, substr_len, entities_scores, scores in zip(
                 entity_substr_list, tags_list, contexts, cand_ent_list, substr_lens, entities_scores_list, scores_list
         ):
-            if len(context.split()) < 4:
-                entities_with_scores = [
-                    (
-                        entity,
-                        round(entities_scores.get(entity, (0.0, 0))[0], 2),
-                        entities_scores.get(entity, (0.0, 0))[1],
-                        0.95,
-                    )
-                    for entity, score in scores
-                ]
-            else:
-                entities_with_scores = [
-                    (
-                        entity,
-                        round(entities_scores.get(entity, (0.0, 0))[0], 2),
-                        entities_scores.get(entity, (0.0, 0))[1],
-                        round(score, 2),
-                    )
-                    for entity, score in scores
-                ]
+            entities_with_scores = []
+            max_conn_score = 0
+            if scores_dict and scores:
+                max_conn_score = max([scores_dict.get(entity, 0) for entity, _ in scores])
+            for entity, score in scores:
+                substr_score = round(entities_scores.get(entity, (0.0, 0))[0], 2)
+                num_rels = entities_scores.get(entity, (0.0, 0))[1]
+                if len(context.split()) < 4:
+                    score = 0.95
+                elif scores_dict and max_conn_score > 0 and scores_dict.get(entity, 0) == max_conn_score:
+                    score = 1.0
+                    num_rels = 200
+                entities_with_scores.append((entity, substr_score, num_rels, score))
+
             if tag == "t":
                 entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)
             else:
@@ -590,6 +658,9 @@ class EntityLinker(Component, Serializable):
 
             top_entities = [elem[0] for elem in high_conf_entities] + top_entities
             top_conf = [elem[1:] for elem in high_conf_entities] + top_conf
+            
+            if self.sort_low_conf:
+                top_entities, top_conf = self.sort_out_low_conf(entity_substr, top_entities, top_conf)
 
             if not top_entities:
                 entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)
@@ -602,9 +673,11 @@ class EntityLinker(Component, Serializable):
             elif self.num_entities_to_return == "max":
                 if top_conf:
                     max_conf = top_conf[0][0]
+                    max_rank_conf = top_conf[0][2]
                     entity_ids, confs = [], []
                     for entity_id, conf in zip(top_entities, top_conf):
-                        if conf[0] >= max_conf * 0.9:
+                        if (conf[0] >= max_conf * 0.9 and max_rank_conf <= 1.0) \
+                                or (max_rank_conf == 1.0 and conf[2] == 1.0):
                             entity_ids.append(entity_id)
                             confs.append(conf)
                     entity_ids_list.append(entity_ids)
@@ -617,3 +690,55 @@ class EntityLinker(Component, Serializable):
                 conf_list.append(top_conf[: self.num_entities_to_return])
             log.debug(f"{entity_substr} --- top entities {entity_ids_list[-1]} --- top_conf {conf_list[-1]}")
         return entity_ids_list, conf_list
+
+    def sort_out_low_conf(self, entity_substr, top_entities, top_conf):
+        if len(entity_substr.split()) > 1 and top_conf:
+            f_top_entities, f_top_conf = [], []
+            for top_conf_thres, conf_thres in [(1.0, 0.9), (0.9, 0.8)]:
+                if top_conf[0][0] >= top_conf_thres:
+                    for ent, conf in zip(top_entities, top_conf):
+                        if conf[0] > conf_thres:
+                            f_top_entities.append(ent)
+                            f_top_conf.append(conf)
+            return f_top_entities, f_top_conf
+        return top_entities, top_conf
+
+    def rank_by_connections(self, ids_list):
+        objects_sets_dict, scores_dict, conn_dict = {}, {}, {}
+        for ids in ids_list:
+            for entity_id in ids:
+                scores_dict[entity_id] = 0
+                conn_dict[entity_id] = set()
+        for ids in ids_list:
+            for entity_id in ids[:self.num_entities_for_conn_ranking]:
+                objects = set()
+                for prefix in self.prefixes["entity"]:
+                    tr, _ = self.kb.search_triples(f"{prefix}/{entity_id}", "", "")
+                    for subj, rel, obj in tr:
+                        if rel.split("/")[-1] not in {"P31", "P279"}:
+                            if any([obj.startswith(pr) for pr in self.prefixes["entity"]]):
+                                objects.add(obj.split("/")[-1])
+                            if rel.startswith(self.prefixes["rels"]["no_type"]):
+                                tr2, _ = self.kb.search_triples(obj, "", "")
+                                for _, rel2, obj2 in tr2:
+                                    if rel2.startswith(self.prefixes["rels"]["statement"]) \
+                                            or rel2.startswith(self.prefixes["rels"]["qualifier"]):
+                                        if any([obj2.startswith(pr) for pr in self.prefixes["entity"]]):
+                                            objects.add(obj2.split("/")[-1])
+                objects_sets_dict[entity_id] = objects
+                for obj in objects:
+                    if obj not in objects_sets_dict:
+                        objects_sets_dict[obj] = set()
+                    objects_sets_dict[obj].add(entity_id)
+
+        for i in range(len(ids_list)):
+            for j in range(len(ids_list)):
+                if i != j:
+                    for entity_id1 in ids_list[i][:self.num_entities_for_conn_ranking]:
+                        for entity_id2 in ids_list[j][:self.num_entities_for_conn_ranking]:
+                            if entity_id1 in objects_sets_dict[entity_id2]:
+                                conn_dict[entity_id1].add(entity_id2)
+                                conn_dict[entity_id2].add(entity_id1)
+        for entity_id in conn_dict:
+            scores_dict[entity_id] = len(conn_dict[entity_id])
+        return scores_dict

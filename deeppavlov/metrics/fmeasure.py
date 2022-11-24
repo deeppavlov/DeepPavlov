@@ -417,3 +417,28 @@ def roc_auc__roc_auc__ner_f1(true_onehot1, pred_probas1, true_onehot2, pred_prob
     roc_auc2 = roc_auc_score(true_onehot2, pred_probas2)
     ner_f1_3 = ner_f1(ner_true3, ner_pred3) / 100
     return (roc_auc1 + roc_auc2 + ner_f1_3) / 3
+
+
+@register_metric('kbqa_f1')
+def kbqa_f1(question_batch, pred_answer_ids_batch, pred_query_batch, gold_answer_ids_batch, gold_query_batch) -> float:
+    precision, recall, f1 = 0, 0, 0
+    for question, pred_answer_ids, pred_query, gold_answer_ids, gold_query in \
+            zip(question_batch, pred_answer_ids_batch, pred_query_batch, gold_answer_ids_batch, gold_query_batch):
+        gold_answer_ids = [gold_ans_id.split("/")[-1].replace("@en", "").strip('"') for gold_ans_id in gold_answer_ids]
+        inters = set(pred_answer_ids).intersection(set(gold_answer_ids))
+        num_pred = len(set(pred_answer_ids))
+        num_gold = len(set(gold_answer_ids))
+        if pred_query == gold_query or set(pred_answer_ids) == set(gold_answer_ids):
+            precision += 1.0
+            recall += 1.0
+        else:
+            if num_pred > 0:
+                precision += 1.0 * len(inters) / num_pred
+            if num_gold > 0:
+                recall += 1.0 * len(inters) / num_gold
+    precision /= len(question_batch)
+    recall /= len(question_batch)
+    if precision + recall > 0:
+        f1 = 2 * precision * recall / (precision + recall)
+    log.debug(f"precision: {precision}, recall: {recall}")
+    return f1

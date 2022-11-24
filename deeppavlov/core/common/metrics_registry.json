@@ -11,6 +11,7 @@
   "f1_weighted": "deeppavlov.metrics.fmeasure:round_f1_weighted",
   "google_bleu": "deeppavlov.metrics.bleu:google_bleu",
   "kbqa_accuracy": "deeppavlov.metrics.accuracy:kbqa_accuracy",
+  "kbqa_f1": "deeppavlov.metrics.fmeasure:kbqa_f1",
   "log_loss": "deeppavlov.metrics.log_loss:sk_log_loss",
   "matthews_correlation": "deeppavlov.metrics.correlation:matthews_correlation",
   "mean_squared_error": "deeppavlov.metrics.mse:mse",

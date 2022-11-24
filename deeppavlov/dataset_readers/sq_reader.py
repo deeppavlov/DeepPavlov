@@ -66,3 +66,30 @@ class RuBQReader(SQReader):
         else:
             query = query.replace("\n", " ").replace("  ", " ")
         return [question, [answer_ids, answer_labels, query]]
+
+
+@register('lcquad_reader')
+class LCQuADReader(SQReader):
+    """Class to read LCQuAD dataset"""
+
+    def read(self, data_path: str, question_type: List[str] = "all",
+                   not_include_question_types: List[str] = None, num_samples: int = -1):
+        dataset = super().read(data_path)
+        for data_type in ["valid", "test"]:
+            samples = dataset[data_type]
+            samples = [sample for sample in samples if (question_type == sample["query_type"]
+                                                        or question_type == "all")]
+            if not_include_question_types:
+                samples = [sample for sample in samples
+                           if sample["query_type"] not in not_include_question_types]
+            samples = [self.preprocess(sample) for sample in samples]
+            if num_samples > 0:
+                samples = samples[:num_samples]
+            dataset[data_type] = samples
+        return dataset
+
+    def preprocess(self, sample):
+        question = sample.get("corrected_question", "")
+        answers = sample.get("answer", [])
+        query = sample.get("sparql_query", "")
+        return [question, [answers, query]]

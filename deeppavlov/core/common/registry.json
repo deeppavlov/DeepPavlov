@@ -23,6 +23,7 @@
   "huggingface_dataset_reader": "deeppavlov.dataset_readers.huggingface_dataset_reader:HuggingFaceDatasetReader",
   "imdb_reader": "deeppavlov.dataset_readers.imdb_reader:ImdbReader",
   "kenlm_elector": "deeppavlov.models.spelling_correction.electors.kenlm_elector:KenlmElector",
+  "lcquad_reader": "deeppavlov.dataset_readers.sq_reader:LCQuADReader",
   "line_reader": "deeppavlov.dataset_readers.line_reader:LineReader",
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",

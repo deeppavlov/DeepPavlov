@@ -394,8 +394,8 @@ class TreeToSparql(Component):
         Class for building of sparql query template using syntax parser
     """
 
-    def __init__(self, sparql_queries_filename: str, syntax_parser: Component, lang: str = "ru",
-                 adj_to_noun: RuAdjToNoun = None, **kwargs):
+    def __init__(self, sparql_queries_filename: str, syntax_parser: Component, kb_prefixes: Dict[str, str],
+                 lang: str = "ru", adj_to_noun: RuAdjToNoun = None, **kwargs):
         """
 
         Args:
@@ -431,7 +431,7 @@ class TreeToSparql(Component):
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
         template_queries = read_json(self.sparql_queries_filename)
-        self.template_queries = preprocess_template_queries(template_queries)
+        self.template_queries = preprocess_template_queries(template_queries, kb_prefixes)
         self.syntax_parser = syntax_parser
         self.adj_to_noun = adj_to_noun
         self.morph = pymorphy2.MorphAnalyzer()

@@ -56,7 +56,8 @@ class WikiParser:
                     "direct": "http://wpd",
                     "no_type": "http://wp",
                     "statement": "http://wps",
-                    "qualifier": "http://wpq"
+                    "qualifier": "http://wpq",
+                    "type": "http://wpd/P31"
                 },
                 "statement": "http://ws"
             }
@@ -353,10 +354,12 @@ class WikiParser:
                 else:
                     if isinstance(self.prefixes["rels"][rel_type], str):
                         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
-                                 if triplet[1].startswith(self.prefixes["rels"][rel_type])]
+                                 if (triplet[1].startswith(self.prefixes["rels"][rel_type])
+                                     or triplet[1].startswith(self.prefixes["rels"]["type"]))]
                     else:
                         combs = [{elem: triplet[pos] for pos, elem in unknown_elem_positions} for triplet in triplets
-                                 if any(triplet[1].startswith(tp) for tp in self.prefixes["rels"][rel_type])]
+                                 if (any(triplet[1].startswith(tp) for tp in self.prefixes["rels"][rel_type])
+                                     or triplet[1].startswith(self.prefixes["rels"]["type"]))]
             else:
                 log.debug("max comb num exceede")
         else:
@@ -412,6 +415,9 @@ class WikiParser:
                 for token in ["T00:00:00Z", "+"]:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('$', '')
+                return entity
+            
+            elif entity in ["Yes", "No"]:
                 return entity
 
             elif entity.isdigit():

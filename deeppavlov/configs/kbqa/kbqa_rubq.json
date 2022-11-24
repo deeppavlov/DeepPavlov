@@ -69,6 +69,7 @@
         "adj_to_noun": "#adj2noun",
         "syntax_parser": "#slovnet_parser",
         "lang": "ru",
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
         "in": ["x_punct", "entity_substr", "tags", "entity_offsets", "entity_positions", "probas"],
         "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "entities_to_link", "s_types_substr"]
       },
@@ -122,6 +123,7 @@
         "max_comb_num": 1000,
         "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
                                 [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
         "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "syntax_structure_known": true,
         "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "s_tags", "s_probas", "answer_types", "entities_to_link"],

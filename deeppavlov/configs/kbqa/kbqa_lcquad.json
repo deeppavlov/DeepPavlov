@@ -1,11 +1,27 @@
 {
+  "dataset_reader": {
+    "class_name": "lcquad_reader",
+    "question_type": "simple",
+    "num_samples": 10,
+    "data_path": "{DOWNLOADS_PATH}/lcquad/lcquad.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
   "chainer": {
     "in": ["x"],
+    "in_y": ["gold_answer_ids", "gold_query"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
         "in": ["x"],
         "out": ["x_punct"]
+      },
+      {
+        "class_name": "query_formatter",
+        "query_info": {"unk_var": "?uri", "mid_var": "?x"},
+        "in": ["gold_query"],
+        "out": ["f_gold_query"]
       },
       {
         "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
@@ -52,10 +68,10 @@
               "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
               "overwrite": {
                 "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"],
-                "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_detection_lcquad"
+                "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_type_detection_lcquad"
               }
             },
-            "metadata.variables.NER_PATH": "{MODELS_PATH}/entity_detection_lcquad",
+            "metadata.variables.NER_PATH": "{MODELS_PATH}/entity_type_detection_lcquad",
             "metadata.download": [
               {
                 "url": "http://files.deeppavlov.ai/kbqa/models/entity_detection_lcquad.tar.gz",
@@ -71,7 +87,11 @@
         "overwrite": {
             "chainer.in": ["entity_substr", "entity_tags", "sentences"],
             "chainer.pipe.1.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng/el_eng_dbpedia",
+            "chainer.pipe.1.fuzzy_match": true,
+            "chainer.pipe.1.num_entities_to_return": 7,
+            "chainer.pipe.1.sort_low_conf": true,
+            "chainer.pipe.1.load_path": "{DOWNLOADS_PATH}/entity_linking_eng",
+            "chainer.pipe.1.entities_database_filename": "{DOWNLOADS_PATH}/entity_linking_eng/el_db_dbpedia.db",
             "metadata.download": [
               {
                 "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_dbpedia.tar.gz",
@@ -96,9 +116,11 @@
           "alias": "",
           "description": "",
           "rels": {
-            "direct": ["http://d_p", "http://d_o"]
+            "direct": ["http://d_p", "http://d_o"],
+            "type": "http://d_t"
           }
         },
+        "max_comb_num": 40000,
         "used_rels_filename": "{DOWNLOADS_PATH}/dbpedia/used_lcquad1_rels_lite.json",
         "lang": "@en"
       },
@@ -130,7 +152,6 @@
         "return_all_possible_answers": true,
         "return_answer_ids": false,
         "rank_answers": true,
-        "what_to_rank": "r",
         "load_path": "{DOWNLOADS_PATH}/dbpedia",
         "rel_q2name_filename": "rels_dict_lite.json"
       },
@@ -148,13 +169,16 @@
         "wiki_parser": "#wiki_p",
         "load_path": "{DOWNLOADS_PATH}/dbpedia",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/dbpedia/sparql_queries.json",
-        "entities_to_leave": 5,
+        "entities_to_leave": 7,
         "rels_to_leave": 10,
         "return_answers": false,
-        "map_query_str_to_kb": [["wd:", "http://d_r/"], ["wdt:", ""]],
+        "map_query_str_to_kb": [["dbr:", "http://d_r/"], ["dbp:type", "http://d_t"], ["dbp:", ""],
+                                ["dbo:", "http://d_o/"]],
+        "kb_prefixes": {"entity": "dbr:", "rel": "dbp:", "type": "dbo:", "type_rel": "dbp:type", "type_rels": ["d_t"]},
+        "gold_query_info": {"unk_var": "?uri", "mid_var": "?x"},
         "return_all_possible_answers": true,
         "delete_rel_prefix": false,
-        "in": ["x_punct", "x_punct", "template_type", "entity_substr", "type_substr", "entity_tags"],
+        "in": ["x_punct", "x_punct", "template_type", "entity_substr", "type_substr", "entity_tags", "probas"],
         "out": ["cand_answers", "template_answers"]
       },
       {
@@ -162,7 +186,6 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
-                     "chainer.out": ["y_pred_labels"],
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq",
                      "metadata.download": [
@@ -174,7 +197,7 @@
                    }
         },
         "wiki_parser": "#wiki_p",
-        "batch_size": 32,
+        "bs": 32,
         "return_all_possible_answers": true,
         "return_answer_ids": true,
         "rank_answers": true,
@@ -183,13 +206,30 @@
         "return_entities_and_rels": true,
         "load_path": "{DOWNLOADS_PATH}/dbpedia",
         "rel_q2name_filename": "rels_dict_lite.json",
-        "nll_ranking": true,
-        "top_n": 10,
-        "in": ["x_punct", "cand_answers", "entity_substr", "template_answers", "equal_flag"],
-        "out": ["answers", "answer_ids", "entities_and_rels"]
+        "nll_path_ranking": true,
+        "top_n": 1,
+        "rel_thres": -10,
+        "filter_high_rel_conf_flag": true,
+        "return_confidences": true, 
+        "return_several_confidences": true,
+        "return_queries": true,
+        "max_comb_num": 1000,
+        "in": ["x_punct", "template_type", "cand_answers", "entity_substr", "template_answers", "equal_flag"],
+        "out": ["answers", "confs", "answer_ids", "ent_rels", "query"]
       }
     ],
-    "out": ["answers", "answer_ids", "entities_and_rels", "equal_flag"]
+    "out": ["answers", "confs", "answer_ids", "ent_rels", "query"]
+  },
+  "train": {
+    "evaluation_targets": ["test"],
+    "batch_size": 1,
+    "metrics": [
+      {
+        "name": "kbqa_f1",
+        "inputs": ["x_punct", "answer_ids", "query", "gold_answer_ids", "f_gold_query"]
+      }
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {

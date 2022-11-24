@@ -77,12 +77,14 @@ class QueryGenerator(QueryGeneratorBase):
                  types_from_ner_batch: List[List[str]],
                  entity_tags_batch: List[List[str]],
                  probas_batch: List[List[float]],
-                 answer_types_batch: List[Set[str]],
+                 answer_types_batch: List[Set[str]] = None,
                  entities_to_link_batch: List[List[int]] = None) -> List[str]:
 
         candidate_outputs_batch, template_answers_batch = [], []
-        if answer_types_batch is None:
+        if not answer_types_batch or answer_types_batch[0] is None :
             answer_types_batch = [[] for _ in question_batch]
+        if not entities_to_link_batch or entities_to_link_batch[0] is None:
+            entities_to_link_batch = [[1 for _ in substr_list] for substr_list in entities_from_ner_batch]
         log.debug(f"kbqa inputs {question_batch} {question_san_batch} template_type_batch: {template_type_batch} --- "
                   f"entities_from_ner: {entities_from_ner_batch} --- types_from_ner: {types_from_ner_batch} --- "
                   f"entity_tags_batch: {entity_tags_batch} --- answer_types_batch: "
@@ -101,8 +103,8 @@ class QueryGenerator(QueryGeneratorBase):
             template_answers_batch.append(template_answer)
 
         if self.return_answers:
-            answers = self.rel_ranker(question_batch, candidate_outputs_batch, entities_from_ner_batch,
-                                      template_answers_batch)
+            answers = self.rel_ranker(question_batch, template_type_batch, candidate_outputs_batch,
+                                      entities_from_ner_batch, template_answers_batch)
             log.debug(f"(__call__)answers: {answers}")
             if not answers:
                 answers = ["Not Found" for _ in question_batch]
@@ -233,7 +235,8 @@ class QueryGenerator(QueryGeneratorBase):
                         entity = query_hdt_elem[2].split("/")[-1]
                     if not query_hdt_elem[1].startswith("?"):
                         rel = query_hdt_elem[1].split("/")[-1]
-                    if entity and rel and rel not in {"P31", "P279"} and (entity, rel) not in entities_rel_conn:
+                    if entity and rel and rel not in self.kb_prefixes["type_rels"] \
+                            and (entity, rel) not in entities_rel_conn:
                         entity_rel_valid = False
         return entity_rel_valid
 
@@ -334,7 +337,7 @@ class QueryGenerator(QueryGeneratorBase):
             outputs_dict = defaultdict(list)
             types_dict = defaultdict(list)
             for output in outputs:
-                key = (tuple(output[0]), tuple(output[2:-4]))
+                key = (tuple(output[0]), tuple([rel.split("/")[-1] for rel in output[2:-4]]))
                 if key not in outputs_dict or output[-4:] not in outputs_dict[key]:
                     outputs_dict[key].append(output[-4:])
                     types_dict[key].append(tuple(output[1]))
@@ -345,9 +348,11 @@ class QueryGenerator(QueryGeneratorBase):
                 output_conf = sorted(output_conf, key=lambda x: x[0] * x[1], reverse=True)
                 queries = [elem[2] for elem in output]
                 rel_combs = [elem[3] for elem in output]
+                cur_rel_comb = rel_combs[0]
+                cur_rel_comb = [rel for rel, score in cur_rel_comb[:-1]]
                 sparql_query = make_sparql_query(queries[0], entity_comb, rel_combs[0], type_comb[0],
                                                  self.gold_query_info)
-                outputs.append({"entities": entity_comb, "types": type_comb, "relations": list(rel_comb),
+                outputs.append({"entities": entity_comb, "types": type_comb, "relations": list(cur_rel_comb),
                                 "answers": tuple([ans for ans, *_ in output]), "output_conf": output_conf[0],
                                 "sparql_query": sparql_query})
         return outputs

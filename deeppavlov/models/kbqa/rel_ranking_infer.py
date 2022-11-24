@@ -36,7 +36,7 @@ class RelRankerInfer(Component, Serializable):
                  rel_q2name_filename: str,
                  ranker: Chainer = None,
                  wiki_parser: Optional[WikiParser] = None,
-                 batch_size: int = 32,
+                 bs: int = 32,
                  softmax: bool = False,
                  return_answer_ids: bool = False,
                  use_api_requester: bool = False,
@@ -51,8 +51,10 @@ class RelRankerInfer(Component, Serializable):
                  top_n: int = 1,
                  pos_class_num: int = 1,
                  rel_thres: float = 0.0,
+                 filter_high_rel_conf_flag: bool = False,
                  type_rels: List[str] = None,
-                 return_confidences: bool = False, **kwargs):
+                 return_confidences: bool = False,
+                 return_several_confidences: bool = False, **kwargs):
         """
 
         Args:
@@ -73,7 +75,7 @@ class RelRankerInfer(Component, Serializable):
         self.rel_q2name_filename = rel_q2name_filename
         self.ranker = ranker
         self.wiki_parser = wiki_parser
-        self.batch_size = batch_size
+        self.bs = bs
         self.softmax = softmax
         self.return_answer_ids = return_answer_ids
         self.use_api_requester = use_api_requester
@@ -88,11 +90,14 @@ class RelRankerInfer(Component, Serializable):
         self.top_n = top_n
         self.pos_class_num = pos_class_num
         self.rel_thres = rel_thres
+        self.filter_high_rel_conf_flag = filter_high_rel_conf_flag
         if type_rels is None:
             self.type_rels = set()
         else:
             self.type_rels = type_rels
         self.return_confidences = return_confidences
+        self.return_several_confidences = return_several_confidences
+        self.equal_flag_oppos = {"equal": "not_equal", "not_equal": "equal"}
         self.load()
 
     def load(self) -> None:
@@ -104,73 +109,55 @@ class RelRankerInfer(Component, Serializable):
     def save(self) -> None:
         pass
 
-    def __call__(self, questions_list: List[str],
-                 answers_list: List[List[Tuple[str]]],
-                 entities_list: List[List[str]],
-                 template_answers_list: List[str],
-                 equal_flag_list: List[str] = None) -> List[str]:
+    def __call__(self, questions_batch: List[str],
+                 template_type_batch: List[str],
+                 raw_answers_batch: List[List[Tuple[str]]],
+                 entity_substr_batch: List[List[str]],
+                 template_answers_batch: List[str],
+                 equal_flag_batch: List[str] = None) -> List[str]:
         answers_batch, outp_confidences_batch, answer_ids_batch = [], [], []
         entities_and_rels_batch, queries_batch = [], []
-        if equal_flag_list is None:
-            equal_flag_list = ["" for _ in questions_list]
-        for question, answers, entities, template_answer, equal_flag in \
-                zip(questions_list, answers_list, entities_list, template_answers_list, equal_flag_list):
+        if equal_flag_batch is None:
+            equal_flag_batch = ["" for _ in questions_batch]
+        log.debug(f"equal_flag_batch {equal_flag_batch}")
+        for question, template_type, raw_answers, entities, template_answer, equal_flag in \
+                zip(questions_batch, template_type_batch, raw_answers_batch, entity_substr_batch,
+                    template_answers_batch, equal_flag_batch):
             answers_with_scores = []
-            n_batches = len(answers) // self.batch_size + int(len(answers) % self.batch_size > 0)
-            for i in range(n_batches):
-                questions_batch, rels_batch, rels_labels_batch, cur_answers_batch = [], [], [], []
-                entities_batch, types_batch, sparql_query_batch, confidences_batch = [], [], [], []
-                for ans_and_rels in answers[i * self.batch_size: (i + 1) * self.batch_size]:
-                    answer, sparql_query, confidence = "", "", []
-                    entities, types, rels, rels_labels = [], [], [], []
-                    if ans_and_rels:
-                        rels = ans_and_rels["relations"]
-                        if self.delete_rel_prefix:
-                            rels = [rel.split('/')[-1] for rel in rels]
-                        answer = ans_and_rels["answers"]
-                        entities = ans_and_rels["entities"]
-                        types = ans_and_rels["types"]
-                        sparql_query = ans_and_rels["sparql_query"]
-                        confidence = ans_and_rels["output_conf"]
-                        rels_labels = [self.rel_q2name[rel][0].lower() for rel in rels if rel in self.rel_q2name]
-                    check_equal = False
-                    if len(rels_labels) == 2 and ((rels_labels[0] == rels_labels[1] and equal_flag == "equal") or \
-                            (rels_labels[0] != rels_labels[1] and equal_flag == "not_equal")):
-                        check_equal = True
-                    if rels_labels and ((len(rels_labels) == 2 and equal_flag and check_equal)
-                                        or not equal_flag or len(rels_labels) == 1):
-                        questions_batch.append(question)
-                        rels_batch.append(rels)
-                        rels_labels_batch.append(rels_labels)
-                        cur_answers_batch.append(answer)
-                        entities_batch.append(entities)
-                        types_batch.append(types)
-                        sparql_query_batch.append(sparql_query)
-                        confidences_batch.append(confidence)
-                if questions_batch:
-                    if self.rank:
-                        if self.nll_path_ranking:
-                            probas = self.ranker([questions_batch[0]], [rels_labels_batch])
-                            probas = probas[0]
-                        else:
-                            what_to_rank_batch = [self.what_to_rank for _ in questions_batch]
-                            probas = self.ranker(questions_batch, rels_labels_batch, what_to_rank_batch)
-                            probas = [proba[0] for proba in probas]
-                    else:
-                        probas = [rel_conf for rel_conf, entity_conf in confidences_batch]
-                    for j, (answer, entities, types, (rel_conf, entity_conf), rels_ids, rels_labels, sparql_query) in \
-                            enumerate(zip(cur_answers_batch, entities_batch, types_batch, confidences_batch,
-                                          rels_batch, rels_labels_batch, sparql_query_batch)):
-                        if probas[j] > self.rel_thres or \
-                                (len(rels_ids) > 1 and not set(rels_ids).intersection(self.type_rels)):
-                            answers_with_scores.append(
-                                (answer, sparql_query, entities, types, rels_labels, rels_ids, probas[j], entity_conf))
+            l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_confs = \
+                self.preprocess_ranking_input(question, raw_answers, equal_flag)
+            if not l_cur_answers and equal_flag:
+                oppos_equal_flag = self.equal_flag_oppos[equal_flag]
+                l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_confs = \
+                    self.preprocess_ranking_input(question, raw_answers, oppos_equal_flag)
 
-            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-2], reverse=True)
+            n_batches = len(l_questions) // self.bs + int(len(l_questions) % self.bs > 0)
+            for i in range(n_batches):
+                if self.rank:
+                    if self.nll_path_ranking:
+                        probas = self.ranker([l_questions[0]], [l_rels_labels[self.bs*i:self.bs*(i+1)]])
+                        probas = probas[0]
+                    else:
+                        probas = self.ranker(l_questions[self.bs*i:self.bs*(i+1)],
+                                             l_rels_labels[self.bs*i:self.bs*(i+1)])
+                        probas = [proba[0] for proba in probas]
+                else:
+                    probas = [rel_conf for rel_conf, entity_conf in l_confs[self.bs*i:self.bs*(i+1)]]
+                for j in range(self.bs*i, self.bs*(i+1)):
+                    if j < len(l_cur_answers) and (probas[j - self.bs*i] > self.rel_thres or \
+                            (len(l_rels[j]) > 1 and not set(l_rels[j]).intersection(self.type_rels))):
+                        answers_with_scores.append((l_cur_answers[j], l_sparql_queries[j], l_entities[j], l_types[j],
+                                                    l_rels_labels[j], l_rels[j], round(probas[j - self.bs*i], 3),
+                                                    round(l_confs[j][0], 3), l_confs[j][1]))
+            answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-3], reverse=True)
+            if template_type == "simple_boolean" and not answers_with_scores:
+                answers_with_scores = [(["No"], "", [], [], [], [], 1.0, 1.0)]
             res_answers_list, res_answer_ids_list, res_confidences_list, res_entities_and_rels_list = [], [], [], []
             res_queries_list = []
-            for n, answers_with_scores_elem in enumerate(answers_with_scores):
-                init_answer_ids, sparql_query, q_entities, q_types, _, q_rels, confidence, _ = answers_with_scores_elem
+            if self.filter_high_rel_conf_flag:
+                answers_with_scores = self.filter_high_rel_conf(template_type, answers_with_scores)
+            for n, ans_sc_elem in enumerate(answers_with_scores):
+                init_answer_ids, query, q_entities, q_types, _, q_rels, p_conf, r_conf, e_conf = ans_sc_elem
                 answer_ids = []
                 for answer_id in init_answer_ids:
                     if answer_id not in answer_ids:
@@ -182,8 +169,9 @@ class RelRankerInfer(Component, Serializable):
                 answer_ids = [str(answer_id).split("/")[-1] for answer_id in answer_ids]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
                 answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
-                if n < 20:
-                    log.debug(f"answers: {answers_with_scores_elem} --- answer_labels {answer_labels}")
+                if n < 7:
+                    log.debug(f"answers: {init_answer_ids[:3]} --- query {query} --- entities {q_entities} --- "
+                              f"types {q_types[:3]} {ans_sc_elem[5:]} answer_labels {answer_labels[:3]}")
                 answer_labels = list(set(answer_labels))
                 answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]
                 answer_labels = [str(label) for label in answer_labels]
@@ -200,9 +188,12 @@ class RelRankerInfer(Component, Serializable):
                 
                 res_answers_list.append(answer)
                 res_answer_ids_list.append(answer_ids)
-                res_confidences_list.append(confidence)
+                if self.return_several_confidences:
+                    res_confidences_list.append((p_conf, r_conf, e_conf))
+                else:
+                    res_confidences_list.append(p_conf)
                 res_entities_and_rels_list.append([q_entities[:-1], q_rels])
-                res_queries_list.append(sparql_query)
+                res_queries_list.append(query)
 
             if self.top_n == 1:
                 if answers_with_scores:
@@ -222,7 +213,7 @@ class RelRankerInfer(Component, Serializable):
                 outp_confidences_batch.append(res_confidences_list[:self.top_n])
                 answer_ids_batch.append(res_answer_ids_list[:self.top_n])
                 entities_and_rels_batch.append(res_entities_and_rels_list[:self.top_n])
-                queries_batch.append(queries_list[:self.top_n])
+                queries_batch.append(res_queries_list[:self.top_n])
 
         answer_tuple = (answers_batch,)
         if self.return_confidences:
@@ -235,6 +226,55 @@ class RelRankerInfer(Component, Serializable):
             answer_tuple += (queries_batch,)
 
         return answer_tuple
+
+    def preprocess_ranking_input(self, question, answers, equal_flag):
+        l_questions, l_rels, l_rels_labels, l_cur_answers = [], [], [], []
+        l_entities, l_types, l_sparql_queries, l_confs = [], [], [], []    
+        for ans_and_rels in answers:
+            answer, sparql_query, confidence = "", "", []
+            entities, types, rels, rels_labels = [], [], [], []
+            if ans_and_rels:
+                rels = ans_and_rels["relations"]
+                if self.delete_rel_prefix:
+                    rels = [rel.split('/')[-1] for rel in rels]
+                answer = ans_and_rels["answers"]
+                entities = ans_and_rels["entities"]
+                types = ans_and_rels["types"]
+                sparql_query = ans_and_rels["sparql_query"]
+                confidence = ans_and_rels["output_conf"]
+                rels_labels = []
+                for rel in rels:
+                    if rel in self.rel_q2name:
+                        label = self.rel_q2name[rel]
+                        if isinstance(label, list):
+                            label = label[0]
+                        rels_labels.append(label.lower())
+            check_equal = False
+            if len(rels_labels) == 2 and ((rels_labels[0] == rels_labels[1] and equal_flag == "equal") or \
+                    (rels_labels[0] != rels_labels[1] and equal_flag == "not_equal")):
+                check_equal = True
+            if rels_labels and ((len(rels_labels) == 2 and equal_flag and check_equal)
+                                or not equal_flag or len(rels_labels) == 1):
+                l_questions.append(question)
+                l_rels.append(rels)
+                l_rels_labels.append(rels_labels)
+                l_cur_answers.append(answer)
+                l_entities.append(entities)
+                l_types.append(types)
+                l_sparql_queries.append(sparql_query)
+                l_confs.append(confidence)
+        return l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_confs
+
+    def filter_high_rel_conf(self, template_type, answers_with_scores):
+        for tp, thres in [("2_hop", 0.98), ("simple", 0.99)]:
+            if template_type.startswith(tp):
+                f_answers_with_scores = []
+                for ans_sc in answers_with_scores:
+                    if ans_sc[-2] > thres:
+                        f_answers_with_scores.append(ans_sc)
+                if f_answers_with_scores:
+                    return f_answers_with_scores
+        return answers_with_scores
 
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
@@ -250,17 +290,17 @@ class RelRankerInfer(Component, Serializable):
                         rels.append(candidate_rel)
                         rels_labels.append(cur_rel)
             if questions:
-                n_batches = len(rels) // self.batch_size + int(len(rels) % self.batch_size > 0)
+                n_batches = len(rels) // self.bs + int(len(rels) % self.bs > 0)
                 for i in range(n_batches):
                     if self.nll_rel_ranking:
                         probas = self.ranker([questions[0]],
-                                             [rels_labels[i * self.batch_size:(i + 1) * self.batch_size]])
+                                             [rels_labels[i * self.bs:(i + 1) * self.bs]])
                         probas = probas[0]
                     else:
-                        probas = self.ranker(questions[i * self.batch_size:(i + 1) * self.batch_size],
-                                             rels_labels[i * self.batch_size:(i + 1) * self.batch_size])
+                        probas = self.ranker(questions[i * self.bs:(i + 1) * self.bs],
+                                             rels_labels[i * self.bs:(i + 1) * self.bs])
                         probas = [proba[self.pos_class_num] for proba in probas]
-                    for j, rel in enumerate(rels[i * self.batch_size:(i + 1) * self.batch_size]):
+                    for j, rel in enumerate(rels[i * self.bs:(i + 1) * self.bs]):
                         rels_with_scores.append((rel, probas[j]))
             if self.softmax:
                 scores = [score for rel, score in rels_with_scores]

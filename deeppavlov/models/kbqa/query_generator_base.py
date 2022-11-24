@@ -15,7 +15,7 @@
 import itertools
 import json
 from logging import getLogger
-from typing import Tuple, List, Optional, Union, Any, Set
+from typing import Tuple, List, Dict, Optional, Union, Any, Set
 
 from bs4 import BeautifulSoup
 from whapi import search, get_html
@@ -55,7 +55,8 @@ class QueryGeneratorBase(Component, Serializable):
                  use_add_templates: bool = False,
                  return_answers: bool = True,
                  delete_rel_prefix: bool = True,
-                 map_query_str_to_kb: List[Tuple[str, str]] = None, *args, **kwargs) -> None:
+                 map_query_str_to_kb: List[Tuple[str, str]] = None,
+                 kb_prefixes: Dict[str, str] = None, *args, **kwargs) -> None:
         """
 
         Args:
@@ -96,6 +97,7 @@ class QueryGeneratorBase(Component, Serializable):
         self.return_answers = return_answers
         self.delete_rel_prefix = delete_rel_prefix
         self.map_query_str_to_kb = map_query_str_to_kb
+        self.kb_prefixes = kb_prefixes
 
         self.load()
 
@@ -111,7 +113,7 @@ class QueryGeneratorBase(Component, Serializable):
                 self.rank_list_1 = [line.split('\t')[0] for line in lines]
 
         template_queries = read_json(str(expand_path(self.sparql_queries_filename)))
-        self.template_queries = preprocess_template_queries(template_queries)
+        self.template_queries = preprocess_template_queries(template_queries, self.kb_prefixes)
 
     def save(self) -> None:
         pass
@@ -205,7 +207,8 @@ class QueryGeneratorBase(Component, Serializable):
         candidate_outputs = []
         if isinstance(self.template_nums, str):
             self.template_nums = [self.template_nums]
-        template_log_list = [str([num, self.template_queries[num]["query_template"]]) for num in self.template_nums]
+        template_log_list = [str([elem["query_template"], elem["template_num"]])
+                             for elem in self.template_queries.values() if elem["template_num"] in self.template_nums]
         log.debug(f"(find_candidate_answers)self.template_nums: {' --- '.join(template_log_list)}")
         init_templates = []
         for template_num in self.template_nums:
@@ -268,7 +271,7 @@ class QueryGeneratorBase(Component, Serializable):
             if self.use_wp_api_requester and ex_rels:
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(itertools.chain.from_iterable(ex_rels)))
-            if n_hop == "2-hop":
+            if n_hop in {"1-of-2-hop", "2-hop"}:
                 queries_list = list({(entity, "backw", rel_type) for entity_id in entity_ids
                                      for entity in entity_id[:self.entities_to_leave]})
                 entity_ids_list = [elem[0] for elem in queries_list]
@@ -286,7 +289,7 @@ class QueryGeneratorBase(Component, Serializable):
         elif source in {"rank_list_2", "rel_list_2"}:
             ex_rels = self.rank_list_1
 
-        ex_rels = [rel for rel in ex_rels if not rel.endswith("P31")]
+        ex_rels = [rel for rel in ex_rels if not any([rel.endswith(t_rel) for t_rel in self.kb_prefixes["type_rels"]])]
         rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)
         if n_hop == "2-hop" and rels_with_scores and entity_ids and entity_ids[0]:
             rels_1hop = [rel for rel, score in rels_with_scores]
@@ -295,8 +298,10 @@ class QueryGeneratorBase(Component, Serializable):
             ex_rels_2hop = self.wiki_parser(parser_info_list, queries_list)
             if self.delete_rel_prefix:
                 ex_rels_2hop = [rel.split('/')[-1] for rel in ex_rels_2hop]
-            rels_12hop = list(set(rels_1hop + ex_rels_2hop))
-            rels_with_scores = self.rel_ranker.rank_rels(question, rels_12hop)
+            rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels_2hop)
+
+        rels_with_scores = list(set(rels_with_scores))
+        rels_with_scores = sorted(rels_with_scores, key=lambda x: x[1], reverse=True)
         rels_scores_dict = {rel: score for rel, score in rels_with_scores}
 
         return rels_with_scores[:self.rels_to_leave], rels_scores_dict, entity_rel_conn
