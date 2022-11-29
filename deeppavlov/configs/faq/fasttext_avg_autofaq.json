@@ -1,26 +1,32 @@
 {
   "dataset_reader": {
-    "class_name": "faq_reader",
-    "x_col_name": "Question",
-    "y_col_name": "Answer",
-    "data_url": "http://files.deeppavlov.ai/faq/school/faq_school.csv"
+    "class_name": "basic_classification_reader",
+    "format": "json",
+    "orient": "split",
+    "x": "text",
+    "y": "category",
+    "data_path": "/home/nchizhikova/clinc150/all_5shot",
+    "train": "train.json",
+    "valid": "dev.json",
+    "test": "test.json"
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": "question",
+    "in": "q",
     "pipe": [
       {
-        "class_name": "ru_tokenizer",
-        "in": "question",
+        "class_name": "stream_spacy_tokenizer",
+        "in": "q",
+        "id": "my_tokenizer",
         "lemmas": true,
         "out": "q_token_lemmas"
       },
       {
         "class_name": "fasttext",
         "in": "q_token_lemmas",
-        "load_path": "{DOWNLOADS_PATH}/embeddings/lenta_lower_100.bin",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin",
         "mean": true,
         "out": "question_vector"
       },
@@ -32,8 +38,8 @@
           "y"
         ],
         "top_n": 1,
-        "save_path": "{MODELS_PATH}/faq/fasttext_cos_classifier.pkl",
-        "load_path": "{MODELS_PATH}/faq/fasttext_cos_classifier.pkl",
+        "save_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
+        "load_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
         "out": [
           "answer",
           "score"
@@ -41,27 +47,35 @@
       }
     ],
     "out": [
-      "answer",
-      "score"
+      "answer"
     ]
   },
   "train": {
-    "evaluation_targets": [],
-    "class_name": "fit_trainer"
+    "evaluation_targets": [
+      "train",
+      "valid",
+      "test"
+    ],
+    "class_name": "fit_trainer",
+    "metrics": [
+      {
+        "name": "accuracy",
+        "inputs": [
+          "y",
+          "answer"
+        ]
+      }
+    ]
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models"
+      "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/fasttext_avg_autofaq"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/faq/school/fasttext_cos_classifier.pkl",
-        "subdir": "{MODELS_PATH}/faq"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/lenta_lower_100.bin",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
       }
     ]
