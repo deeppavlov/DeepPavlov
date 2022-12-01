@@ -55,7 +55,7 @@
         "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
         "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
         "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
-        "tree_patterns_filename": "{DOWNLOADS_PATH}/wikidata_rus/tree_patterns.json",
+        "tree_patterns_filename": "{MODELS_PATH}/slovnet_syntax_parser/tree_patterns.json",
         "id": "slovnet_parser"
       },
       {
@@ -99,9 +99,7 @@
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "nll_rel_ranking": true,
-        "return_confidences": false,
-        "return_answer_ids": true,
-        "return_queries": true,
+        "return_elements": ["answer_ids", "queries"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
         "rank": false,
         "type_rels": ["P31", "P279"],

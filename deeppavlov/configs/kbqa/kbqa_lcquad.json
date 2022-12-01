@@ -26,7 +26,7 @@
       {
         "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
         "overwrite": {
-            "metadata.variables.TRANSFORMER": "roberta-base",
+            "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/roberta_base",
             "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction_dbpedia_eng4",
             "metadata.download": [
               {
@@ -41,7 +41,7 @@
       {
         "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
         "overwrite": {
-            "metadata.variables.TRANSFORMER": "roberta-base",
+            "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/roberta_base",
             "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/equal_rels_lcquad",
             "metadata.download": [
               {
@@ -74,8 +74,8 @@
             "metadata.variables.NER_PATH": "{MODELS_PATH}/entity_type_detection_lcquad",
             "metadata.download": [
               {
-                "url": "http://files.deeppavlov.ai/kbqa/models/entity_detection_lcquad.tar.gz",
-                "subdir": "{MODELS_PATH}/entity_detection_lcquad"
+                "url": "http://files.deeppavlov.ai/kbqa/models/entity_type_detection_lcquad.tar.gz",
+                "subdir": "{MODELS_PATH}/entity_type_detection_lcquad"
               }
             ]
         },
@@ -122,6 +122,7 @@
         },
         "max_comb_num": 40000,
         "used_rels_filename": "{DOWNLOADS_PATH}/dbpedia/used_lcquad1_rels_lite.json",
+        "rel_q2name_filename": "{DOWNLOADS_PATH}/dbpedia/rels_dict_lite.json",
         "lang": "@en"
       },
       {
@@ -137,7 +138,7 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_roberta_en.json",
                    "overwrite": {
                      "chainer.out": ["y_pred_probas"],
-                     "metadata.variables.TRANSFORMER": "bert-base-cased",
+                     "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad",
                      "metadata.download": [
                        {
@@ -149,8 +150,6 @@
         },
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
-        "return_all_possible_answers": true,
-        "return_answer_ids": false,
         "rank_answers": true,
         "load_path": "{DOWNLOADS_PATH}/dbpedia",
         "rel_q2name_filename": "rels_dict_lite.json"
@@ -186,7 +185,7 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
-                     "metadata.variables.TRANSFORMER": "bert-base-cased",
+                     "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad_eq",
                      "metadata.download": [
                        {
@@ -198,27 +197,22 @@
         },
         "wiki_parser": "#wiki_p",
         "bs": 32,
-        "return_all_possible_answers": true,
-        "return_answer_ids": true,
+        "return_elements": ["answer_ids", "queries"],
         "rank_answers": true,
         "what_to_rank": "p",
         "delete_rel_prefix": false,
-        "return_entities_and_rels": true,
         "load_path": "{DOWNLOADS_PATH}/dbpedia",
         "rel_q2name_filename": "rels_dict_lite.json",
         "nll_path_ranking": true,
         "top_n": 1,
         "rel_thres": -10,
         "filter_high_rel_conf_flag": true,
-        "return_confidences": true, 
-        "return_several_confidences": true,
-        "return_queries": true,
         "max_comb_num": 1000,
         "in": ["x_punct", "template_type", "cand_answers", "entity_substr", "template_answers", "equal_flag"],
-        "out": ["answers", "confs", "answer_ids", "ent_rels", "query"]
+        "out": ["answers", "answer_ids", "query"]
       }
     ],
-    "out": ["answers", "confs", "answer_ids", "ent_rels", "query"]
+    "out": ["answers", "answer_ids", "query"]
   },
   "train": {
     "evaluation_targets": ["test"],
@@ -240,16 +234,16 @@
     },
     "download": [
       {
+        "url": "http://files.deeppavlov.ai/datasets/lcquad.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/lcquad"
+      },
+      {
         "url": "http://files.deeppavlov.ai/kbqa/dbpedia/dbpedia_lite.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/dbpedia"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_lcquad.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/dbpedia"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_en.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata_eng"
       }
     ]
   }
