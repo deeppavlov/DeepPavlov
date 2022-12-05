@@ -37,7 +37,7 @@
                 "y": "category",
                 "format": "json",
                 "orient": "split",
-                "support_dataset_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json"
+                "support_dataset_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json",
             },
             {
                 "class_name": "torch_transformers_preprocessor",
@@ -76,6 +76,7 @@
                 "is_binary": "{BINARY_CLASSIFICATION}",
                 "in": [
                     "simmilarity_scores",
+                    "x",
                     "x_populated",
                     "y_support"
                 ],
@@ -83,7 +84,7 @@
                     "y_pred"
                 ],
                 "multilabel": false,
-                "confidence_threshold": 0.0
+                "confidence_threshold": 0.5
             }
         ],
         "out": [
@@ -91,7 +92,7 @@
         ]
     },
     "train": {
-        "batch_size": 5,
+        "batch_size": 1,
         "metrics": [
             {
                 "name": "sklearn_accuracy",
@@ -130,7 +131,7 @@
             "MODELS_PATH": "{ROOT_PATH}/models",
             "MODEL_PATH": "{MODELS_PATH}/classification/dnnc",
             "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
-            "BINARY_CLASSIFICATION": false,
+            "BINARY_CLASSIFICATION": true,
             "BASE_MODEL": "roberta-base"
         }
     }
