@@ -67,13 +67,17 @@ class Proba2Labels(Component):
         """
         answer = []
         for data in args:
-
+            #if data[0] is None:
+            #    answer.append([])
             if self.confidence_threshold:
                 if self.is_binary:
                     answer.append([int(el > self.confidence_threshold) for el in data])
                 else:
-                    answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0])
+                    try:
+                        answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0])
                                    for d in data])
+                    except Exception as e:
+                        breakpoint()
             elif self.max_proba:
                 answer.append([np.argmax(d) for d in data])
             elif self.top_n:

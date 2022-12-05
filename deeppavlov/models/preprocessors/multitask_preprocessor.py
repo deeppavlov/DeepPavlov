@@ -53,6 +53,7 @@ class MultiTaskInputJoiner:
 
     def __init__(self, **kwargs):
         pass
+
     def __call__(self, *args):
         """
         Returns list of joined values
@@ -63,7 +64,6 @@ class MultiTaskInputJoiner:
             A list of these values
         """
         return [k for k in args]
-        
 
 
 @register('multitask_pipeline_preprocessor')
@@ -91,20 +91,30 @@ class MultiTaskPipelinePreprocessor(Component):
                  preprocessors: List[str] = None,
                  max_seq_length: int = 512,
                  strict=False,
+                 new_model=False,
                  *args, **kwargs):
         self.strict = strict
+        self.new = new_model
+        self.printed = False
+        self.prefix = ''
         if preprocessors is None:
             log.info(
                 f'Assuming the same preprocessor name for all : {preprocessor}')
             self.preprocessor = eval(preprocessor)(vocab_file, do_lower_case,
-                                                     max_seq_length, *args, **kwargs)
+                                                   max_seq_length, *args, **kwargs)
             self.preprocessors = None
         else:
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
-            self.preprocessors = [preprocessors[i](vocab_file, do_lower_case, max_seq_length, *args, **kwargs)
-                                  for i in range(len(preprocessors))]
             self.n_task = len(preprocessors)
+            additional_special_tokens = []
+            if self.new:
+                additional_special_tokens = [f"[unused{i}]" for i in range(1, self.n_task+1)]
+                self.prefix = ' '.join(additional_special_tokens)
+            self.preprocessors = [
+                preprocessors[i](vocab_file=vocab_file, do_lower_case=do_lower_case, max_seq_length=max_seq_length,
+                                 additional_special_tokens=additional_special_tokens, *args, **kwargs)
+                for i in range(len(preprocessors))]
 
     def split(self, features):
         if all([isinstance(k, str) for k in features]) or all([k is None for k in features]):
@@ -143,9 +153,9 @@ class MultiTaskPipelinePreprocessor(Component):
         """
         self.n_task = len(args)
         if self.preprocessors is None:
-             # Defining preprocessor list while we call the function, as only he
-             self.preprocessors = [self.preprocessor
-                                   for _ in range(self.n_task)]
+            # Defining preprocessor list while we call the function, as only he
+            self.preprocessors = [self.preprocessor
+                                  for _ in range(self.n_task)]
         answer = []
         for i in range(len(args)):
             if all([j is None for j in args[i]]):
@@ -159,9 +169,25 @@ class MultiTaskPipelinePreprocessor(Component):
                     answer.append([])
                 else:
                     if 'choice' in str(self.preprocessors[i]):
-                        if isinstance(texts_a[0], str) and isinstance(texts_b[0], list):
-                            # transform multiple choice to format suitable for preprocessor
-                            texts_a = [[text for _ in range(len(texts_b[0]))] for text in texts_a]
-                    answer.append(self.preprocessors[i](texts_a, texts_b))
+                        if isinstance(texts_a[0], str) and isinstance(texts_b[0],list):
+                            for j in range(len(texts_b)):
+                                texts_a[j] = [texts_a[j] for _ in range(len(texts_b[j]))]
+                        if self.prefix:
+                            for j in range(len(texts_a)):
+                                 texts_a[j] = [' '.join([self.prefix, text]) for text in texts_a[j]]
+                        #print((texts_a,texts_b))
+                             
+                    else:
+                        if self.prefix:
+                            texts_a = [' '.join([self.prefix, text]) for text in texts_a]
+                    try:
+                        answer.append(self.preprocessors[i](texts_a, texts_b))
+                        #if not self.printed:
+                            #print((texts_a, texts_b))
+                            #print(answer[-1])
+                    except Exception as e:
+                        breakpoint()
+        self.printed = True             
         assert answer != [[]], 'Empty answer'
         return answer
+

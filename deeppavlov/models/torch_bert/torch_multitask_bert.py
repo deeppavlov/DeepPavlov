@@ -56,6 +56,7 @@ class BertForMultiTask(nn.Module):
 
     def __init__(self, tasks_num_classes, multilabel, task_types,
                  backbone_model='bert_base_uncased', dropout=None,
+                 new_model=False,binary_singlelabel_loss=False,
                  max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
@@ -73,6 +74,8 @@ class BertForMultiTask(nn.Module):
                                                   config=config)
         self.classes = tasks_num_classes  # classes for every task
         self.multilabel = multilabel
+        self.new_model = new_model
+        self.binary_singlelabel_loss = binary_singlelabel_loss
         if dropout is not None:
             self.dropout = nn.Dropout(dropout)
         elif hasattr(config, 'hidden_dropout_prob'):
@@ -83,13 +86,18 @@ class BertForMultiTask(nn.Module):
         self.activation = nn.Tanh()
         self.task_types = task_types
         OUT_DIM = config.hidden_size
+        if self.new_model and self.new_model!=2:
+            OUT_DIM = OUT_DIM * 2
         self.bert.final_classifier = nn.ModuleList(
             [
                 nn.Linear(OUT_DIM, num_labels) if self.task_types[i] not in ['multiple_choice', 'regression']
                 else nn.Linear(OUT_DIM, 1) for i, num_labels in enumerate(self.classes)
             ]
         )
-        self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
+        if self.new_model:# or True:
+            self.bert.pooling_layer = nn.Linear(OUT_DIM, OUT_DIM)
+        else:
+            self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
 
     def get_logits(self, task_id, input_ids, attention_mask, token_type_ids):
         name = self.task_types[task_id]
@@ -103,11 +111,20 @@ class BertForMultiTask(nn.Module):
             outputs = self.bert(input_ids=input_ids.long(),
                                 attention_mask=attention_mask.long())
         else:
-            outputs = self.bert(input_ids=input_ids.long(),
+            try:
+                outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
+            except Exception as e:
+                print(e)
+                breakpoint()
+                raise e
         if name == 'sequence_labeling':
             return outputs.last_hidden_state
+        elif self.new_model == 2:
+            return outputs.last_hidden_state[:, task_id]
+        elif self.new_model:
+            return torch.cat([outputs.last_hidden_state[:, 0], outputs.last_hidden_state[:, task_id + 1]], axis=1)
         else:
             return outputs.last_hidden_state[:, 0]
 
@@ -119,18 +136,27 @@ class BertForMultiTask(nn.Module):
             logits = self.bert.final_classifier[task_id](final_output)
             if labels is not None:
                 active_logits = logits.view(-1, self.classes[task_id])
-                if not self.multilabel[task_id]:
+                if self.multilabel[task_id] or self.binary_singlelabel_loss:
+                    loss_fct = BCEWithLogitsLoss()
+                    if self.binary_singlelabel_loss:
+                        labels = nn.functional.one_hot(labels, num_classes=2).float()
+                    try:
+                        loss = loss_fct(active_logits, labels)
+                    except Exception as e:
+                        breakpoint()
+                        raise e
+                elif not self.multilabel[task_id]:
                     loss_fct = CrossEntropyLoss()
                     loss = loss_fct(active_logits, labels.view(-1))
-                elif self.multilabel[task_id]:
-                    loss_fct = BCEWithLogitsLoss()
-                    loss = loss_fct(active_logits, labels)
                 return loss, logits
             else:
                 return logits
         elif name in ['classification', 'regression', 'multiple_choice']:
             #  last hidden state is a first token tensor
-            pooled_output = self.bert.pooler(last_hidden_state)
+            if self.new_model:# or True:
+                pooled_output = self.bert.pooling_layer(last_hidden_state)
+            else:
+                pooled_output = self.bert.pooler(last_hidden_state)
             pooled_output = self.activation(pooled_output)
             pooled_output = self.dropout(pooled_output)
             logits = self.bert.final_classifier[task_id](pooled_output)
@@ -142,17 +168,22 @@ class BertForMultiTask(nn.Module):
                         labels), f'Len of logits {l1} and labels {l2} not match'
             if labels is not None:
                 if name != "regression":
-                    if not self.multilabel[task_id]:
+                    if self.multilabel[task_id] or self.binary_singlelabel_loss:
+                        loss_fct = BCEWithLogitsLoss()
+                        if self.binary_singlelabel_loss:
+                            labels = nn.functional.one_hot(labels, num_classes=2).float()
+                        try:
+                            loss = loss_fct(logits, labels)
+                        except Exception as e:
+                            breakpoint()
+                            raise e
+                        loss = loss_fct(logits, labels)
+                    elif not self.multilabel[task_id]:
                         loss_fct = CrossEntropyLoss()
                         loss = loss_fct(logits, labels.view(-1))
-                    elif self.multilabel[task_id]:
-                        loss_fct = BCEWithLogitsLoss()
-                        loss = loss_fct(logits, labels)
                     return loss, logits
                 elif name == "regression":
                     loss_fct = MSELoss()
-                    logits = logits.cpu()
-                    labels = labels.cpu()
                     loss = loss_fct(logits, labels.unsqueeze(1))
                     return loss, logits
             else:
@@ -212,6 +243,8 @@ class TorchMultiTaskBert(TorchModel):
             one_hot_labels: bool = False,
             return_probas: bool = False,
             freeze_embeddings: bool = False,
+            new_model = False,
+            binary_singlelabel_loss=False,
             dropout: Optional[float] = None,
             cuda_cache_size: int = 3,
             *args,
@@ -228,6 +261,7 @@ class TorchMultiTaskBert(TorchModel):
         self.tasks_num_classes = []
         self.task_names = []
         self.multilabel = []
+        self.binary_singlelabel_loss=binary_singlelabel_loss
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task]['options'])
@@ -250,6 +284,7 @@ class TorchMultiTaskBert(TorchModel):
         self.freeze_embeddings = freeze_embeddings
         self.dropout = dropout
         self.cuda_cache_size = cuda_cache_size
+        self.new_model = new_model
         if self.cuda_cache_size:
             self.cuda_cache = FixSizeOrderedDict(max=self.cuda_cache_size)
         else:
@@ -278,6 +313,8 @@ class TorchMultiTaskBert(TorchModel):
             tasks_num_classes=self.tasks_num_classes,
             multilabel=self.multilabel,
             task_types=self.task_types,
+            new_model=self.new_model,
+            binary_singlelabel_loss=self.binary_singlelabel_loss,
             dropout=self.dropout)
         self.model = self.model.to(self.device)
         no_decay = ["bias", "gamma", "beta"]
@@ -448,7 +485,7 @@ class TorchMultiTaskBert(TorchModel):
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 last_hidden_state, cache_key = None, None
-                if self.cache:
+                if self.cuda_cache:
                     hashes_of_tensor_values = tuple([make_hash(args[task_id][name])
                                                for name in ["input_ids", "attention_mask", "token_type_ids"]
                                                if name in args[task_id]])
@@ -479,11 +516,13 @@ class TorchMultiTaskBert(TorchModel):
                                                          prediction in zip(seq_lengths, predicted_ids)]
                 elif self.task_types[task_id] == 'regression':
                     pred = logits[:, 0]
+                    pred = pred.cpu().numpy()
                 else:
                     if self.multilabel[task_id]:
                         probs = torch.sigmoid(logits)
                         if self.return_probas:
                             pred = probs
+                            pred = pred.cpu().numpy()                            
                         else:
                             numbers_of_sample, numbers_of_class = (probs > 0.5).nonzero(as_tuple=True)
                             numbers_of_sample, numbers_of_class = numbers_of_sample.cpu().numpy(), numbers_of_class.cpu().numpy()
@@ -502,8 +541,7 @@ class TorchMultiTaskBert(TorchModel):
             return self.validation_predictions[0]
         for i in range(len(self.validation_predictions)):
             if self.validation_predictions[i] is None:
-                self.validation_predictions[i] = [
-                    None for _ in range(batch_input_size)]
+                self.validation_predictions[i] = []
         return self.validation_predictions
 
     def set_gradient_accumulation_interval(self, task_id, interval):
