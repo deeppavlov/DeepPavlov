@@ -60,7 +60,7 @@ class BasicClassificationDatasetReader(DatasetReader):
         data_types = ["train", "valid", "test"]
 
         train_file = kwargs.get('train', 'train.csv')
-        print("PATH = ", Path(data_path, train_file))
+
         if not Path(data_path, train_file).exists():
             if url is None:
                 raise Exception(
