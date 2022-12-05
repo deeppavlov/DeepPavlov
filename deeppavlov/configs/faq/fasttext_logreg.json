@@ -12,19 +12,18 @@
     "shot": 5
   },
   "dataset_iterator": {
-    "class_name": "data_learning_iterator",
-    "seed": 42,
-    "shuffle": true
+    "class_name": "basic_classification_iterator",
+    "seed": 42
   },
   "chainer": {
-    "in": "q",
-    "in_y": "y",
+    "in": "text",
+    "in_y": "category",
     "pipe": [
       {
         "class_name": "stream_spacy_tokenizer",
-        "in": "q",
+        "in": "text",
         "id": "my_tokenizer",
-        "lemmas": true,
+        "lemmas": false,
         "out": "q_token_lemmas"
       },
       {
@@ -33,37 +32,27 @@
         "out": "q_lem"
       },
       {
-        "in": [
-          "q_lem"
-        ],
-        "out": [
-          "q_vect"
-        ],
-        "fit_on": [
-          "q_lem"
-        ],
-        "id": "tfidf_vec",
-        "class_name": "sklearn_component",
-        "save_path": "{MODELS_PATH}/tfidf.pkl",
-        "load_path": "{MODELS_PATH}/tfidf.pkl",
-        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
-        "infer_method": "transform"
+        "class_name": "fasttext",
+        "in": "q_token_lemmas",
+        "load_path": "{DOWNLOADS_PATH}/embeddings/wiki.en.bin",
+        "mean": true,
+        "out": "question_vector"
       },
       {
         "id": "answers_vocab",
         "class_name": "simple_vocab",
         "fit_on": [
-          "y"
+          "category"
         ],
-        "save_path": "{MODELS_PATH}/answers.dict",
-        "load_path": "{MODELS_PATH}/answers.dict",
-        "in": "y",
+        "save_path": "{MODELS_PATH}/cat_answers.dict",
+        "load_path": "{MODELS_PATH}/cat_answers.dict",
+        "in": "category",
         "out": "y_ids"
       },
       {
-        "in": "q_vect",
+        "in": "question_vector",
         "fit_on": [
-          "q_vect",
+          "question_vector",
           "y_ids"
         ],
         "out": [
@@ -71,11 +60,11 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/logreg.pkl",
-        "load_path": "{MODELS_PATH}/logreg.pkl",
+        "save_path": "{MODELS_PATH}/fasttext_logreg_augm.pkl",
+        "load_path": "{MODELS_PATH}/fasttext_logreg_augm.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
-        "C": 1000,
+        "C": 10,
         "penalty": "l2"
       },
       {
@@ -86,37 +75,33 @@
       },
       {
         "in": "y_pred_ids",
-        "out": "y_pred_answers",
+        "out": "y_pred_category",
         "ref": "answers_vocab"
       }
     ],
     "out": [
-      "y_pred_answers",
-      "y_pred_proba"
-    ]
+      "y_pred_category"
+      ]
   },
   "train": {
     "evaluation_targets": [
-      "train", 
+      "train",
       "valid",
       "test"
     ],
-    "class_name": "fit_trainer",
-    "metrics": [
-      {
-        "name": "accuracy",
-        "inputs": [
-          "y",
-          "y_pred_answers"
-        ]
-      }
-    ]
+    "class_name": "fit_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/tfidf_logreg_en_faq"
-    }
+      "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/fasttext_logreg"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings"
+      }
+    ]
   }
 }

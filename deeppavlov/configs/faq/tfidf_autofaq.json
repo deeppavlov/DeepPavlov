@@ -5,10 +5,11 @@
     "orient": "split",
     "x": "text",
     "y": "category",
-    "data_path": "/home/nchizhikova/clinc150/all_5shot",
+    "data_path": "/home/nchizhikova/clinc150/all/dnnc",
     "train": "train.json",
-    "valid": "dev.json",
-    "test": "test.json"
+    "valid": "valid.json",
+    "test": "test.json",
+    "shot": 5
   },
   "dataset_iterator": {
     "class_name": "data_learning_iterator"
