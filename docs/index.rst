@@ -30,6 +30,7 @@ Welcome to DeepPavlov's documentation!
    Context Question Answering <features/models/squad>
    Classification <features/models/classifiers>
    Entity Extraction <features/models/entity_extraction>
+   Few-shot Classification <features/models/few_shot_intent_classification>
    Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
    Spelling Correction <features/models/spelling_correction>
