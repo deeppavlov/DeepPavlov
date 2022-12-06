@@ -31,7 +31,8 @@ Welcome to DeepPavlov's documentation!
    Classification <features/models/classification.ipynb>
    Named Entity Recognition <features/models/NER.ipynb>
    Entity Extraction <features/models/entity_extraction>
-   BERT-based models <features/models/bert>
+   Few-shot Classification <features/models/few_shot_intent_classification>
+   Named Entity Recognition <features/models/ner>
    Neural Ranking <features/models/neural_ranking>
    Spelling Correction <features/models/spelling_correction>
    TF-IDF Ranking <features/models/tfidf_ranking>
