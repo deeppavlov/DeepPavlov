@@ -5,7 +5,7 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "/archive/savkin/parsed_datasets/clinc150/banking_oos/dnnc",
+        "data_path": "{DOWNLOADS_PATH}/clinc150",
         "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
@@ -37,7 +37,7 @@
                 "y": "category",
                 "format": "json",
                 "orient": "split",
-                "support_dataset_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json",
+                "support_dataset_path": "{SUPPORT_DATA_PATH}/parsed_dataset.json"
             },
             {
                 "class_name": "torch_transformers_preprocessor",
@@ -84,7 +84,7 @@
                     "y_pred"
                 ],
                 "multilabel": false,
-                "confidence_threshold": 0.5
+                "confidence_threshold": 0.0
             }
         ],
         "out": [
@@ -92,7 +92,7 @@
         ]
     },
     "train": {
-        "batch_size": 1,
+        "batch_size": 10,
         "metrics": [
             {
                 "name": "sklearn_accuracy",
@@ -128,11 +128,22 @@
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-            "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/classification/dnnc",
+            "SUPPORT_DATA_PATH": "{ROOT_PATH}/parsed_datasets",
+            "MODELS_PATH": "{ROOT_PATH}/models/trash",
+            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_binary_finetune",
             "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
             "BINARY_CLASSIFICATION": true,
             "BASE_MODEL": "roberta-base"
-        }
+        },
+        "download": [
+            {
+                "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_finetune.tar.gz",
+                "subdir": "{MODELS_PATH}"
+            },
+            {
+                "url": "https://files.deeppavlov.ai/datasets/clinc150.tar.gz",
+                "subdir": "{DOWNLOADS_PATH}/clinc150"
+            }
+        ]
     }
 }

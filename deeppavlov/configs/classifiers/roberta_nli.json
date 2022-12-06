@@ -5,7 +5,7 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "/archive/savkin/parsed_datasets/clinc150/banking/dnnc",
+        "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
         "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
@@ -15,7 +15,8 @@
         "seed": 0,
         "shuffle": true,
         "shot": 5,
-        "save_path": "/home/savkin/few_shot/DNNC/tmp/dataset/parsed_dataset.json"
+        "save_path": "{SUPPORT_DATA_PATH}/parsed_dataset.json",
+        "return_nli_format": true
     },
     "chainer": {
         "in": [
@@ -68,7 +69,7 @@
                 ],
                 "return_probas": true,
                 "pretrained_bert": "{BASE_MODEL}",
-                "save_path": "{DNNC_PATH}/model",
+                "save_path": "{MODEL_PATH}/model",
                 "load_path": "{MODEL_PATH}/model",
                 "is_binary": "{BINARY_CLASSIFICATION}",
                 "optimizer": "AdamW",
@@ -125,11 +126,21 @@
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-            "MODELS_PATH": "{ROOT_PATH}/models",
+            "SUPPORT_DATA_PATH": "{ROOT_PATH}/parsed_datasets",
+            "MODELS_PATH": "{ROOT_PATH}/models/trash",
             "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_binary_finetune",
-            "DNNC_PATH": "{MODELS_PATH}/classification/dnnc",
             "BASE_MODEL": "roberta-base",
             "BINARY_CLASSIFICATION": true
-        }
+        },
+        "download": [
+            {
+              "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_finetune.tar.gz",
+              "subdir": "{MODELS_PATH}"
+            },
+            {
+                "url": "https://files.deeppavlov.ai/datasets/clinc150_no_oos.tar.gz",
+                "subdir": "{DOWNLOADS_PATH}/clinc150_no_oos"
+            }
+        ]
     }
 }
