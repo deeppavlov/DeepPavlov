@@ -5,9 +5,9 @@
     "orient": "split",
     "x": "text",
     "y": "category",
-    "data_path": "/home/nchizhikova/clinc150/all/dnnc",
+    "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
     "train": "train.json",
-    "valid": "valid.json",
+    "valid": "dev.json",
     "test": "test.json",
     "shot": 5
   },
@@ -60,8 +60,8 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/fasttext_logreg_augm.pkl",
-        "load_path": "{MODELS_PATH}/fasttext_logreg_augm.pkl",
+        "save_path": "{MODELS_PATH}/fasttext_logreg.pkl",
+        "load_path": "{MODELS_PATH}/fasttext_logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
         "C": 10,
@@ -101,6 +101,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "https://files.deeppavlov.ai/datasets/clinc150_no_oos.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/clinc150_no_oos"
       }
     ]
   }

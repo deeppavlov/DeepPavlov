@@ -5,9 +5,9 @@
     "orient": "split",
     "x": "text",
     "y": "category",
-    "data_path": "/home/nchizhikova/clinc150/all/dnnc",
+    "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
     "train": "train.json",
-    "valid": "valid.json",
+    "valid": "dev.json",
     "test": "test.json",
     "shot": 5
   },
@@ -118,5 +118,11 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/tfidf_logreg_en_faq"
     }
-  }
+  },
+  "download": [
+    {
+      "url": "https://files.deeppavlov.ai/datasets/clinc150_no_oos.tar.gz",
+      "subdir": "{DOWNLOADS_PATH}/clinc150_no_oos"
+    }
+  ]
 }

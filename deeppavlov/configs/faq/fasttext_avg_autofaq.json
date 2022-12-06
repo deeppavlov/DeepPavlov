@@ -5,9 +5,9 @@
     "orient": "split",
     "x": "text",
     "y": "category",
-    "data_path": "/home/nchizhikova/clinc150/all/dnnc",
+    "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
     "train": "train.json",
-    "valid": "valid.json",
+    "valid": "dev.json",
     "test": "test.json",
     "shot": 5
   },
@@ -78,6 +78,10 @@
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/embeddings/wiki.en.bin",
         "subdir": "{DOWNLOADS_PATH}/embeddings"
+      },
+      {
+        "url": "https://files.deeppavlov.ai/datasets/clinc150_no_oos.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/clinc150_no_oos"
       }
     ]
   }
