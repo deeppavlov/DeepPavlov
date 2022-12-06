@@ -17,6 +17,7 @@ import json
 from random import Random
 from typing import Dict, Any, List, Tuple, Optional
 from logging import getLogger
+from pathlib import Path
 
 import numpy as np
 from overrides import overrides
@@ -39,17 +40,30 @@ class FewShotIterator(DataLearningIterator):
                  shot: Optional[int] = None,
                  shot_test: Optional[int] = None,
                  save_path: Optional[str] = None,
+                 return_nli_format: bool = False,
                  *args, **kwargs) -> None:
         self.shot = shot
         self.shot_test = shot_test
         self.shuffle = shuffle
         self.random = Random(seed)
-        train_shot_examples = self._get_shot_examples(data.get('train', []), self.shot)
-        valid_shot_examples = self._get_shot_examples(data.get('valid', []), self.shot_test)
-        test_shot_examples = self._get_shot_examples(data.get('test', []), self.shot_test)
-        self.train = self.preprocess(train_shot_examples, *args, **kwargs)
-        self.valid = self.preprocess(valid_shot_examples, *args, **kwargs)
-        self.test = self.preprocess(test_shot_examples, *args, **kwargs)
+
+        self.train = self.get_shot_examples(data.get('train', []), self.shot)
+        self.valid = self.get_shot_examples(data.get('valid', []), self.shot_test)
+        self.test = self.get_shot_examples(data.get('test', []), self.shot_test)
+
+        if save_path is not None:
+            save_path = Path(save_path).expanduser()
+            save_path.parent.mkdir(parents=True, exist_ok=True)
+            with save_path.open("w") as file:
+                json_dict = {"columns": ["text","category"]}
+                json_dict["data"] = [[text, label] for text, label in self.train]
+                json.dump(json_dict, file, indent=4)
+
+        if return_nli_format:
+            self.train = self.convert2nli(self.train)
+            self.valid = self.convert2nli(self.valid)
+            self.test = self.convert2nli(self.test)
+        
         self.data = {
             'train': self.train,
             'valid': self.valid,
@@ -57,14 +71,6 @@ class FewShotIterator(DataLearningIterator):
             'all': self.train + self.test + self.valid
         }
 
-
-        if save_path is None:
-            return
-        
-        with open(save_path, "w") as file:
-            json_dict = {"columns": ["text","category"]}
-            json_dict["data"] = [[text, label] for text, label in train_shot_examples]
-            json.dump(json_dict, file, indent=4)
     
     def _gather_info(self, data: List[Tuple[Any, Any]]):
         unique_labels = list(set([label for text, label in data]))
@@ -83,8 +89,7 @@ class FewShotIterator(DataLearningIterator):
         return label2examples, label2negative
 
 
-    @overrides
-    def preprocess(self, data: List[Tuple[Any, Any]], *args, **kwargs) -> List[Tuple[Any, Any]]:
+    def convert2nli(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:
         if len(data) == 0:
             return data
 
@@ -102,13 +107,14 @@ class FewShotIterator(DataLearningIterator):
             for positive_example in label2examples[label]:
                 if positive_example != text:
                     nli_triplets.append([[text, positive_example], ENTAILMENT])
-
+ 
         if self.shuffle:
             self.random.shuffle(nli_triplets)
+        
         return nli_triplets
         
 
-    def _get_shot_examples(self, data, shot):
+    def get_shot_examples(self, data, shot):
         if shot is None:
             return data
         
