@@ -75,6 +75,8 @@ class MultiTaskReader(DatasetReader):
                 {"class_name": reader_params.get('reader_class_name',reader_class_name),
                 })
             reader_params = {**reader_params, **kwargs}
+            if "data_path" not in reader_params:
+                reader_params["data_path"] = data_path
             reader_params['data_path'] = Path(
                 reader_params['data_path']).expanduser()
             if 'reader_class_name' in reader_params:

@@ -168,7 +168,6 @@ class FitTrainer:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
                 out += list(val)
-
         if examples == 0:
             log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
