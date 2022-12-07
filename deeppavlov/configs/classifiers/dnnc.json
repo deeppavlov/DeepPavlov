@@ -5,7 +5,7 @@
         "orient": "split",
         "x": "text",
         "y": "category",
-        "data_path": "{DOWNLOADS_PATH}/clinc150",
+        "data_path": "{DOWNLOADS_PATH}",
         "train": "train.json",
         "valid": "dev.json",
         "test": "test.json"
@@ -22,11 +22,7 @@
             {
                 "class_name": "dnnc_input_preprocessor",
                 "in": ["x"],
-                "out": [
-                    "x_support",
-                    "x_populated",
-                    "y_support"
-                ],
+                "out": ["x_support", "x_populated", "y_support"],
                 "x": "text",
                 "y": "category",
                 "format": "json",
@@ -35,10 +31,7 @@
             },
             {
                 "class_name": "torch_transformers_preprocessor",
-                "in": [
-                    "x_populated",
-                    "x_support"
-                ],
+                "in": ["x_populated", "x_support"],
                 "out": ["bert_features"],
                 "vocab_file": "{BASE_MODEL}",
                 "do_lower_case": true,
@@ -55,51 +48,35 @@
                 "save_path": "{MODEL_PATH}/model",
                 "load_path": "{MODEL_PATH}/model",
                 "is_binary": "{BINARY_CLASSIFICATION}",
-                "optimizer_parameters": {
-                    "lr": 2e-05
-                }
+                "optimizer_parameters": {"lr": 2e-05}
             },
             {
                 "class_name": "dnnc_proba2labels",
                 "is_binary": "{BINARY_CLASSIFICATION}",
-                "in": [
-                    "simmilarity_scores",
-                    "x",
-                    "x_populated",
-                    "y_support"
-                ],
+                "in": ["simmilarity_scores", "x", "x_populated", "y_support"],
                 "out": ["y_pred"],
                 "multilabel": false,
-                "confidence_threshold": 0.0
+                "confidence_threshold": 0.5
             }
         ],
         "out": ["y_pred"]
     },
     "train": {
-        "batch_size": 10,
+        "batch_size": 1,
         "metrics": [
             {
                 "name": "accuracy_oos",
-                "inputs": [
-                    "y_true",
-                    "y_pred"
-                ],
+                "inputs": ["y_true", "y_pred"],
                 "exclude_oos": true
             },
             {
                 "name": "balanced_accuracy_oos",
-                "inputs": [
-                    "y_true",
-                    "y_pred"
-                ],
+                "inputs": ["y_true", "y_pred"],
                 "exclude_oos": true
             },
             {
                 "name": "oos_scores",
-                "inputs": [
-                    "y_true",
-                    "y_pred"
-                ]
+                "inputs": ["y_true", "y_pred"]
             }
         ],
         "show_examples": false,
@@ -109,11 +86,9 @@
     "metadata": {
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
-            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+            "DOWNLOADS_PATH": "{ROOT_PATH}/downloads/clinc150",
             "SUPPORT_DATA_PATH": "{ROOT_PATH}/parsed_datasets",
-            "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_binary_finetune",
-            "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+            "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli",
             "BINARY_CLASSIFICATION": true,
             "BASE_MODEL": "roberta-base"
         },
@@ -124,7 +99,7 @@
             },
             {
                 "url": "https://files.deeppavlov.ai/datasets/clinc150.tar.gz",
-                "subdir": "{DOWNLOADS_PATH}/clinc150"
+                "subdir": "{DOWNLOADS_PATH}"
             }
         ]
     }

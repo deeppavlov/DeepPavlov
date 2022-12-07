@@ -30,7 +30,7 @@ def preprocess_scores(scores, is_binary, class_id: int = 1):
 class Proba2Labels(Component):
 
     def __init__(self,
-                 confidence_threshold: float = 0.8,
+                 confidence_threshold: float = 0.5,
                  pooling: str = 'mean',
                  multilabel: bool = False,
                  is_binary: bool = False,
