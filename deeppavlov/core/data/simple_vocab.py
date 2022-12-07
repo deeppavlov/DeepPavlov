@@ -98,6 +98,7 @@ class SimpleVocabulary(Estimator):
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
             looked_up_batch = zero_pad(looked_up_batch)
+
         return looked_up_batch
 
     def save(self):
