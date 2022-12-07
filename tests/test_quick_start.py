@@ -46,10 +46,9 @@ if api_port is not None:
 
 TEST_MODES = ['IP',  # test_inferring_pretrained_model
               'TI',  # test_consecutive_training_and_inferring
-              'SR',  # test_serialization
               ]
 
-ALL_MODES = ('IP', 'TI', 'SR')
+ALL_MODES = ('IP', 'TI')
 
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
@@ -119,7 +118,8 @@ PARAMS = {
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK]
+        ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK],
+        ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "distil": {
         ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -376,11 +376,6 @@ def teardown_module():
         shutil.rmtree(str(cache_dir), ignore_errors=True)
 
 
-def _serialize(config):
-    chainer = build_model(config, download=True)
-    return chainer.serialize()
-
-
 def _infer(config, inputs, download=False):
     chainer = build_model(config, download=download)
     if inputs:
@@ -390,18 +385,6 @@ def _infer(config, inputs, download=False):
     else:
         prediction = []
     return prediction
-
-
-def _deserialize(config, raw_bytes, examples):
-    chainer = build_model(config, serialized=raw_bytes)
-    for *query, expected_response in examples:
-        query = [[q] for q in query]
-        actual_response = chainer(*query)
-        if expected_response is not None:
-            if actual_response is not None and len(actual_response) > 0:
-                actual_response = actual_response[0]
-            assert expected_response == str(actual_response), \
-                f"Error in interacting with {model_dir} ({conf_file}): {query}"
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
@@ -547,6 +530,7 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        pytest.skip(f"Disabled")
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
@@ -555,28 +539,6 @@ class TestQuickStart(object):
         else:
             pytest.skip(f"Unsupported mode: {mode}")
 
-    def test_serialization(self, model, conf_file, model_dir, mode):
-        if 'SR' not in mode:
-            return pytest.skip("Unsupported mode: {}".format(mode))
-
-        config_file_path = test_configs_path / conf_file
-
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            f = executor.submit(_serialize, config_file_path)
-        raw_bytes = f.result()
-
-        serialized: list = pickle.loads(raw_bytes)
-        if not any(serialized):
-            pytest.skip("Serialization not supported: {}".format(conf_file))
-            return
-        serialized.clear()
-
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            f = executor.submit(_deserialize, config_file_path, raw_bytes, PARAMS[model][(conf_file, model_dir, mode)])
-
-        exc = f.exception()
-        if exc is not None:
-            raise exc
 
     def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
         if 'TI' in mode:

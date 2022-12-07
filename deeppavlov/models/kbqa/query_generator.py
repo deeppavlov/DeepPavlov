@@ -165,8 +165,11 @@ class QueryGenerator(QueryGeneratorBase):
         rel_combs = make_combs(rels, permut=False)
         entity_positions, type_positions = [elem.split('_') for elem in entities_and_types_select.split(' ')]
         log.debug(f"entity_positions {entity_positions}, type_positions {type_positions}")
-        selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
-        selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
+        selected_entity_ids, selected_type_ids = [], []
+        if entity_ids:
+            selected_entity_ids = [entity_ids[int(pos) - 1] for pos in entity_positions if int(pos) > 0]
+        if type_ids:
+            selected_type_ids = [type_ids[int(pos) - 1] for pos in type_positions if int(pos) > 0]
         entity_combs = make_combs(selected_entity_ids, permut=True)
         type_combs = make_combs(selected_type_ids, permut=False)
         log.debug(f"(query_parser)entity_combs: {entity_combs[:3]}, type_combs: {type_combs[:3]},"

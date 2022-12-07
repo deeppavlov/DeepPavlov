@@ -1,5 +1,5 @@
 =================================================
-Open Domain Question Answering Skill on Wikipedia
+Open Domain Question Answering Model on Wikipedia
 =================================================
 
 Task definition
@@ -63,7 +63,7 @@ languages in :doc:`DeepPavlov </index/>`.
 Models
 ======
 
-The architecture of **ODQA** skill is modular and consists of two models,
+The architecture of **ODQA** model is modular and consists of two models,
 a **ranker** and a **reader**. The **ranker** is based on `DrQA`_ proposed by Facebook Research
 and the **reader** is based on `R-NET`_ proposed by Microsoft Research Asia
 and its `implementation`_ by Wenxuan Zhou.
@@ -81,12 +81,12 @@ Training
 
 **ODQA ranker** and **ODQA reader** should be trained separately.
 Read about training the **ranker** :ref:`here <ranker_training>`.
-Read about training the **reader** in our separate :ref:`reader tutorial <reader_training>`.
+Read about training the **reader** in our separate [reader tutorial]<SQuAD.ipynb#4.-Train-the-model-on-your-data>.
 
 Interacting
 -----------
 
-When interacting, the **ODQA** skill returns a plain answer to the user's
+When interacting, the **ODQA** model returns a plain answer to the user's
 question.
 
 Run the following to interact with **English ODQA**:
@@ -107,7 +107,7 @@ Configuration
 .. _odqa_configuration:
 
 The **ODQA** configs suit only model inferring purposes. For training purposes use
-the :ref:`ranker configs <ranker_training>` and the :ref:`reader configs <reader_training>`
+the :ref:`ranker configs <ranker_training>` and the [reader tutorial]<SQuAD.ipynb#4.-Train-the-model-on-your-data>
 accordingly.
 
 There are several ODQA configs available:
@@ -134,7 +134,7 @@ There are several ODQA configs available:
 Comparison
 ==========
 
-Scores for **ODQA** skill:
+Scores for **ODQA** models:
 
 +----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+---------------------+---------------------+
 |                                                                                                                                  |      |                      |                |   Ranker@5          |   Ranker@25         |

@@ -90,42 +90,42 @@ class WikiParser:
                     candidate_output = self.execute(what_return, query_seq, filter_info, order_info,
                                                     query_answer_types, rel_types)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(candidate_output)
             elif parser_info == "find_rels":
                 rels = []
                 try:
                     rels = self.find_rels(*query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
             elif parser_info == "find_object":
                 objects = []
                 try:
                     objects = self.find_object(*query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(objects)
             elif parser_info == "check_triplet":
                 check_res = False
                 try:
                     check_res = self.check_triplet(*query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(check_res)
             elif parser_info == "find_label":
                 label = ""
                 try:
                     label = self.find_label(*query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(label)
             elif parser_info == "find_types":
                 types = []
                 try:
                     types = self.find_types(query)
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(types)
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
@@ -138,14 +138,14 @@ class WikiParser:
                         triplets.extend([triplet for triplet in triplets_backw
                                          if not triplet[0].startswith(self.prefixes["statement"])])
                     except:
-                        log.info("Wrong arguments are passed to wiki_parser")
+                        log.warning("Wrong arguments are passed to wiki_parser")
                     wiki_parser_output.append(list(triplets))
                 else:
                     triplets = {}
                     try:
                         triplets = self.document.get(query, {})
                     except:
-                        log.info("Wrong arguments are passed to wiki_parser")
+                        log.warning("Wrong arguments are passed to wiki_parser")
                     uncompressed_triplets = {}
                     if triplets:
                         if "forw" in triplets:
@@ -159,7 +159,7 @@ class WikiParser:
                     found_triplets, c = \
                         self.document.search_triples("", f"{self.prefixes['rels']['direct']}/{query}", "")
                 except:
-                    log.info("Wrong arguments are passed to wiki_parser")
+                    log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(list(found_triplets))
             elif parser_info == "parse_triplets" and self.file_format == "pickle":
                 for entity in query:

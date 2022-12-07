@@ -23,10 +23,7 @@ log = getLogger(__name__)
 
 
 class Serializable(metaclass=ABCMeta):
-    """
-    :class:`deeppavlov.models.model.serializable.Serializable` is an abstract base class that expresses the interface
-    for all models that can serialize data to a path.
-    """
+    """Abstract base class that expresses the interface for all models that can serialize data to a path."""
 
     def __init__(self, save_path: Optional[Union[str, Path]], load_path: Optional[Union[str, Path]] = None,
                  mode: str = 'infer',

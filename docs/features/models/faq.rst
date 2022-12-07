@@ -2,7 +2,7 @@
 Frequently Asked Questions (FAQ)
 ================================
 
-This is implementation of FAQ skill which helps to classify incoming questions.
+This is implementation of FAQ model which helps to classify incoming questions.
 
 ::
 

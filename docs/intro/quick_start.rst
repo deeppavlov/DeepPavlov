@@ -26,9 +26,8 @@ Before making choice of an interface, install model's package requirements
         
         python -m deeppavlov install <config_path>
 
-    * where ``<config_path>`` is path to the chosen model's config file (e.g.
-      ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``) or just name without
-      `.json` extension (e.g. ``insults_kaggle_bert``)
+    * where ``<config_path>`` is model name without ``.json`` extension (e.g. ``insults_kaggle_bert``) or path to the
+      chosen model's config file (e.g. ``deeppavlov/configs/classifiers/insults_kaggle_bert.json``)
 
 
 Command line interface (CLI)
@@ -38,19 +37,18 @@ To get predictions from a model interactively through CLI, run
 
     .. code:: bash
         
-        python -m deeppavlov interact <config_path> [-d]
+        python -m deeppavlov interact <config_path> [-d] [-i]
 
-    * ``-d`` downloads required data -- pretrained model files and embeddings
-      (optional).
+    * ``-d`` downloads required data -- pretrained model files and embeddings (optional).
+    * ``-i`` installs model requirements (optional).
 
 You can train it in the same simple way:
 
     .. code:: bash
         
-        python -m deeppavlov train <config_path> [-d]
+        python -m deeppavlov train <config_path> [-d] [-i]
 
-    Dataset will be downloaded regardless of whether there was ``-d`` flag or
-    not.
+    Dataset will be downloaded regardless of whether there was ``-d`` flag or not.
 
     To train on your own data, you need to modify dataset reader path in the
     `train section doc <configuration.html#Train-config>`__. The data format is
@@ -60,9 +58,10 @@ There are even more actions you can perform with configs:
 
     .. code:: bash
         
-        python -m deeppavlov <action> <config_path> [-d]
+        python -m deeppavlov <action> <config_path> [-d] [-i]
 
     * ``<action>`` can be
+        * ``install`` to install model requirements (same as ``-i``),
         * ``download`` to download model's data (same as ``-d``),
         * ``train`` to train the model on the data specified in the config file,
         * ``evaluate`` to calculate metrics on the same dataset,
@@ -71,10 +70,11 @@ There are even more actions you can perform with configs:
           </integrations/rest_api>`),
         * ``risesocket`` to run a socket API server (see :doc:`docs
           </integrations/socket_api>`),
-        * ``predict`` to get prediction for samples from `stdin` or from
-          `<file_path>` if ``-f <file_path>`` is specified.
+        * ``predict`` to get prediction for samples from ``stdin`` or from
+          ``<file_path>`` if ``-f <file_path>`` is specified.
     * ``<config_path>`` specifies path (or name) of model's config file
     * ``-d`` downloads required data
+    * ``-i`` installs model requirements
 
 
 Python
@@ -86,13 +86,15 @@ To get predictions from a model interactively through Python, run
         
         from deeppavlov import build_model
 
-        model = build_model(<config_path>, download=True)
+        model = build_model(<config_path>, install=True, download=True)
 
         # get predictions for 'input_text1', 'input_text2'
         model(['input_text1', 'input_text2'])
 
-    * where ``download=True`` downloads required data from web -- pretrained model
-      files and embeddings (optional),
+where
+
+    * ``install=True`` installs model requirements (optional),
+    * ``download=True`` downloads required data from web -- pretrained model files and embeddings (optional),
     * ``<config_path>`` is path to the chosen model's config file (e.g.
       ``"deeppavlov/configs/ner/ner_ontonotes_bert_mult.json"``) or
       ``deeppavlov.configs`` attribute (e.g.
@@ -104,13 +106,12 @@ You can train it in the same simple way:
         
         from deeppavlov import train_model 
 
-        model = train_model(<config_path>, download=True)
+        model = train_model(<config_path>, install=True, download=True)
 
     * ``download=True`` downloads pretrained model, therefore the pretrained
       model will be, first, loaded and then trained (optional).
 
-    Dataset will be downloaded regardless of whether there was ``-d`` flag or
-    not.
+    Dataset will be downloaded regardless of whether there was ``-d`` flag or not.
 
     To train on your own data, you need to modify dataset reader path in the
     `train section doc <configuration.html#Train-config>`__. The data format is
@@ -122,7 +123,7 @@ You can also calculate metrics on the dataset specified in your config file:
         
         from deeppavlov import evaluate_model 
 
-        model = evaluate_model(<config_path>, download=True)
+        model = evaluate_model(<config_path>, install=True, download=True)
 
 
 Using GPU
@@ -163,7 +164,7 @@ with model parameters `"device": "cpu"`.
 Pretrained models
 ~~~~~~~~~~~~~~~~~
 
-DeepPavlov provides a wide range of pretrained models and skills.
+DeepPavlov provides a wide range of pretrained models.
 See :doc:`features overview </features/overview>` for more info. Please
 note that most of our models are trained on specific datasets for
 specific tasks and may require further training on your data.
@@ -173,10 +174,10 @@ You can find a list of our out-of-the-box models `below <#out-of-the-box-pretrai
 Docker images
 ~~~~~~~~~~~~~
 
-You can run DeepPavlov models in :doc:`riseapi </integrations/rest_api>` mode
-via Docker without installing DP. Both your CPU and GPU (we support NVIDIA graphic
-processors) can be utilised, please refer our `CPU <https://hub.docker.com/r/deeppavlov/base-cpu>`_
-and `GPU <https://hub.docker.com/r/deeppavlov/base-gpu>`_ Docker images run instructions.
+You can run DeepPavlov models in :doc:`riseapi </integrations/rest_api>` mode or start Jupyter server
+via Docker without installing DeepPavlov. Both your CPU and GPU (we support NVIDIA graphic
+processors) can be utilised, please refer our `Docker <https://hub.docker.com/r/deeppavlov/deeppavlov>`_
+images run instructions.
 
 
 Out-of-the-box pretrained models

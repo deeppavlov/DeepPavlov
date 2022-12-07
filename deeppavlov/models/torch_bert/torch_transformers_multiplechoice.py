@@ -164,8 +164,8 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-            log.info(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes,
+            log.debug(f"From pretrained {self.pretrained_bert}.")
+            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
                                                 output_attentions=False, output_hidden_states=False)
 
             self.model = AutoModelForMultipleChoice.from_pretrained(self.pretrained_bert, config=config)
@@ -189,21 +189,21 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
                 self.optimizer, **self.lr_scheduler_parameters)
 
         if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
+            log.debug(f"Load path {self.load_path} is given.")
             if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
                 raise ConfigError("Provided load path is incorrect!")
 
             weights_path = Path(self.load_path.resolve())
             weights_path = weights_path.with_suffix(f".pth.tar")
             if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(f"Initializing `{self.__class__.__name__}` from saved.")
+                log.debug(f"Load path {weights_path} exists.")
+                log.debug(f"Initializing `{self.__class__.__name__}` from saved.")
 
                 # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
+                log.debug(f"Loading weights from {weights_path}.")
                 checkpoint = torch.load(weights_path, map_location=self.device)
                 self.model.load_state_dict(checkpoint["model_state_dict"])
                 self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
-                log.info(f"Init from scratch. Load path {weights_path} does not exist.")
+                log.warning(f"Init from scratch. Load path {weights_path} does not exist.")

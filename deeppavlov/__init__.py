@@ -26,13 +26,16 @@ from .download import deep_download
 
 
 # TODO: make better
-def train_model(config: [str, Path, dict], download: bool = False, recursive: bool = False) -> Chainer:
-    train_evaluate_model_from_config(config, download=download, recursive=recursive)
+def train_model(config: [str, Path, dict], install: bool = False,
+                download: bool = False, recursive: bool = False) -> Chainer:
+    train_evaluate_model_from_config(config, install=install, download=download, recursive=recursive)
     return build_model(config, load_trained=True)
 
 
-def evaluate_model(config: [str, Path, dict], download: bool = False, recursive: bool = False) -> dict:
-    return train_evaluate_model_from_config(config, to_train=False, download=download, recursive=recursive)
+def evaluate_model(config: [str, Path, dict], install: bool = False,
+                   download: bool = False, recursive: bool = False) -> dict:
+    return train_evaluate_model_from_config(config, to_train=False, install=install,
+                                            download=download, recursive=recursive)
 
 
 # check version
