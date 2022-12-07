@@ -619,7 +619,6 @@ def test_hashes_existence():
     url_root = 'http://files.deeppavlov.ai/'
     downloads_urls = set()
     for config in all_configs:
-        print(config)
         config = json.loads(config.read_text(encoding='utf-8'))
         downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
                            config.get('metadata', {}).get('download', [])}
