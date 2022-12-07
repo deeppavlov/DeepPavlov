@@ -137,7 +137,7 @@
         },
         "download": [
             {
-                "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_finetune.tar.gz",
+                "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli.tar.gz",
                 "subdir": "{MODEL_PATH}"
             },
             {
