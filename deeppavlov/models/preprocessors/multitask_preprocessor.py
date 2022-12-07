@@ -91,10 +91,8 @@ class MultiTaskPipelinePreprocessor(Component):
                  preprocessors: List[str] = None,
                  max_seq_length: int = 512,
                  strict=False,
-                 new_model=False,
                  *args, **kwargs):
         self.strict = strict
-        self.new = new_model
         self.printed = False
         self.prefix = ''
         if preprocessors is None:
@@ -175,19 +173,14 @@ class MultiTaskPipelinePreprocessor(Component):
                         if self.prefix:
                             for j in range(len(texts_a)):
                                  texts_a[j] = [' '.join([self.prefix, text]) for text in texts_a[j]]
-                        #print((texts_a,texts_b))
-                             
                     else:
                         if self.prefix:
                             texts_a = [' '.join([self.prefix, text]) for text in texts_a]
-                    try:
-                        answer.append(self.preprocessors[i](texts_a, texts_b))
-                        #if not self.printed:
-                            #print((texts_a, texts_b))
-                            #print(answer[-1])
-                    except Exception as e:
-                        breakpoint()
-        self.printed = True             
+                    answer.append(self.preprocessors[i](texts_a, texts_b))
+                    if not self.printed:
+                        print((texts_a, texts_b))
+                        print(answer[-1])
+                        self.printed = True
         assert answer != [[]], 'Empty answer'
         return answer
 
