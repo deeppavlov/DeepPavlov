@@ -159,7 +159,7 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         return pred
 
     @overrides
-    def load(self, fname=None):
+    def load(self, fname = None):
         if fname is not None:
             self.load_path = fname
 
