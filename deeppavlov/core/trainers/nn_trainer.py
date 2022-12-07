@@ -15,7 +15,6 @@
 import datetime
 import json
 import time
-from tqdm import tqdm
 from itertools import islice
 from logging import getLogger
 from pathlib import Path
@@ -93,7 +92,7 @@ class NNTrainer(FitTrainer):
 
     """
 
-    def __init__(self, chainer_config: dict, *,
+    def __init__(self, chainer_config: dict, *, 
                  batch_size: int = 1,
                  epochs: int = -1,
                  start_epoch_num: int = 0,
