@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from typing import List, Union, Optional
+from typing import List, Union
 
 import numpy as np
 import sklearn.metrics
