@@ -127,7 +127,7 @@
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "SUPPORT_DATA_PATH": "{ROOT_PATH}/parsed_datasets",
-            "MODELS_PATH": "{ROOT_PATH}/models/trash",
+            "MODELS_PATH": "{ROOT_PATH}/models",
             "MODEL_PATH": "{MODELS_PATH}/classification/roberta_nli_binary_finetune",
             "BASE_MODEL": "roberta-base",
             "BINARY_CLASSIFICATION": true
@@ -135,7 +135,7 @@
         "download": [
             {
               "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_finetune.tar.gz",
-              "subdir": "{MODELS_PATH}"
+              "subdir": "{MODEL_PATH}"
             },
             {
                 "url": "https://files.deeppavlov.ai/datasets/clinc150_no_oos.tar.gz",
