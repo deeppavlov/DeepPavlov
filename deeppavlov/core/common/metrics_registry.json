@@ -1,5 +1,6 @@
 {
   "acc": "deeppavlov.metrics.accuracy:round_accuracy",
+  "accuracy": "deeppavlov.metrics.accuracy:accuracy",
   "average__ner_f1__f1_macro__f1": "deeppavlov.metrics.fmeasure:ner_f1__f1_macro__f1",
   "average__roc_auc__roc_auc__ner_f1": "deeppavlov.metrics.fmeasure:roc_auc__roc_auc__ner_f1",
   "bleu": "deeppavlov.metrics.bleu:bleu",
