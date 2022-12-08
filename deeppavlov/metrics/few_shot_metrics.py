@@ -13,33 +13,30 @@
 # limitations under the License.
 
 
-from typing import List, Union, Optional
-
 import numpy as np
 from deeppavlov.core.common.metrics_registry import register_metric
 from sklearn.metrics import accuracy_score, \
                             balanced_accuracy_score, \
-                            precision_recall_fscore_support, \
-                            classification_report
+                            precision_recall_fscore_support
 
 def delete_oos(y_true, y_pred):
     y_true = np.array(y_true)
     y_pred = np.array(y_pred)
-
-    ind_mask = np.where(y_true == 'oos')
     
+    ind_mask = np.where(y_true == 'oos')
+
     y_true = np.delete(y_true, ind_mask, 0)
     y_pred = np.delete(y_pred, ind_mask, 0)
     return y_true, y_pred
 
-@register_metric('sklearn_accuracy')
+@register_metric('accuracy_oos')
 def accuracy(y_true, y_pred, exclude_oos: bool = False) -> float:
     if exclude_oos:
         y_true, y_pred = delete_oos(y_true, y_pred)
     return accuracy_score(y_true, y_pred)
 
 
-@register_metric('sklearn_balanced_accuracy')
+@register_metric('balanced_accuracy_oos')
 def balanced_accuracy(y_true, y_pred, exclude_oos: bool = False) -> float:
     if exclude_oos:
         y_true, y_pred = delete_oos(y_true, y_pred)
