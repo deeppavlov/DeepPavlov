@@ -35,7 +35,6 @@ class BasicClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
-             shot: int = None,
              *args, **kwargs) -> dict:
         """
         Read dataset from data_path directory.
@@ -110,10 +109,6 @@ class BasicClassificationDatasetReader(DatasetReader):
                     else:
                         # each sample is a tuple ("text", ["label", "label", ...])
                         data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
-                
-                if shot and data_type == 'train':
-                    few_shot_df = pd.DataFrame(data[data_type], columns=['text', 'label']).groupby('label').sample(shot, random_state=42)
-                    data[data_type] = few_shot_df.to_records(index=False).tolist()
             else:
                 log.warning("Cannot find {} file".format(file))
 

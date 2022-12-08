@@ -8,12 +8,14 @@
     "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
     "train": "train.json",
     "valid": "dev.json",
-    "test": "test.json",
-    "shot": 5
-  },
+    "test": "test.json"
+    },
   "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42
+      "class_name": "few_shot_iterator",
+      "seed": 42,
+      "shuffle": true,
+      "shot": 5,
+      "return_nli_format": false
   },
   "chainer": {
     "in": "text",
@@ -89,7 +91,16 @@
       "valid",
       "test"
     ],
-    "class_name": "fit_trainer"
+    "class_name": "fit_trainer",
+    "metrics": [
+      {
+        "name": "accuracy",
+        "inputs": [
+          "category",
+          "y_pred_category"
+        ]
+      }
+    ]
   },
   "metadata": {
     "variables": {

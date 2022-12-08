@@ -8,11 +8,14 @@
     "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
     "train": "train.json",
     "valid": "dev.json",
-    "test": "test.json",
-    "shot": 5
+    "test": "test.json"
   },
   "dataset_iterator": {
-    "class_name": "data_learning_iterator"
+      "class_name": "few_shot_iterator",
+      "seed": 42,
+      "shuffle": true,
+      "shot": 5,
+      "return_nli_format": false
   },
   "chainer": {
     "in": "q",
@@ -88,7 +91,7 @@
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/tfidf_autofaq"
+      "MODELS_PATH": "{ROOT_PATH}/models/new_faq/5shot/tfidf_cos_sim"
     }
   },
   "download": [
