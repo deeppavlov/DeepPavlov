@@ -5,11 +5,11 @@
     "orient": "split",
     "x": "text",
     "y": "category",
-    "data_path": "{DOWNLOADS_PATH}/clinc150_no_oos",
+    "data_path": "/home/nchizhikova/massive/{LANGUAGE}",
     "train": "train.json",
     "valid": "dev.json",
     "test": "test.json"
-    },
+  },
   "dataset_iterator": {
       "class_name": "few_shot_iterator",
       "seed": 42,
@@ -27,7 +27,7 @@
         "id": "my_tokenizer",
         "lemmas": false,
         "out": "q_token_lemmas",
-	"spacy_model": "{SPACY_MODEL}"
+	      "spacy_model": "{SPACY_MODEL}"
       },
       {
         "ref": "my_tokenizer",
@@ -105,12 +105,12 @@
   },
   "metadata": {
     "variables": {
-      "LANGUAGE": "en",
+      "LANGUAGE": "ru",
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIG_NAME": "fasttext_logreg",
-      "SPACY_MODEL": "en_core_web_sm",
+      "SPACY_MODEL": "ru_core_news_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/faq/{CONFIG_NAME}"
+      "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/{CONFIG_NAME}"
     },
     "download": [
       {
