@@ -27,7 +27,7 @@
                 "y": "category",
                 "format": "json",
                 "orient": "split",
-                "support_dataset_path": "{SUPPORT_DATA_PATH}/parsed_dataset.json"
+                "support_dataset_path": "{SUPPORT_DATA_PATH}/support_dataset.json"
             },
             {
                 "class_name": "torch_transformers_preprocessor",
@@ -87,7 +87,7 @@
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads/clinc150",
-            "SUPPORT_DATA_PATH": "{ROOT_PATH}/parsed_datasets",
+            "SUPPORT_DATA_PATH": "{ROOT_PATH}/preprocessed_datasets",
             "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli",
             "BINARY_CLASSIFICATION": true,
             "BASE_MODEL": "roberta-base"

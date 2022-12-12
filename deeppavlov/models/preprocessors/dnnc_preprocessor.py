@@ -1,13 +1,13 @@
 from pathlib import Path
-import pandas as pd
 from logging import exception, getLogger
-from typing import List
+from typing import List, Optional
 import numpy as np
+import pandas as pd
+from transformers import AutoTokenizer, BatchEncoding
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-
 
 log = getLogger(__name__)
 
@@ -17,7 +17,7 @@ class InputPreprocessor(Component):
                  support_dataset_path: str,
                  format: str = "csv",
                  *args, **kwargs) -> None:
-        file = Path(support_dataset_path)
+        file = Path(support_dataset_path).expanduser()
         if file.exists():
             if format == 'csv':
                 keys = ('sep', 'header', 'names')
@@ -35,6 +35,7 @@ class InputPreprocessor(Component):
             
             self.support_dataset = [(row[x], str(row[y])) for _, row in df.iterrows()]
         else:
+            self.support_dataset = None
             log.warning("Cannot find {} file".format(support_dataset_path))
     
     def __call__(self,
@@ -49,6 +50,7 @@ class InputPreprocessor(Component):
 
             for [premise, [hypotesis, hypotesis_labels]] in zip(input_texts * len(self.support_dataset),
                                                                 np.repeat(self.support_dataset, len(input_texts), axis=0)):
+   
                 premise_batch.append(premise)
                 hypotesis_batch.append(hypotesis)
                 hypotesis_labels_batch.append(hypotesis_labels)

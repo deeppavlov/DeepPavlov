@@ -25,6 +25,8 @@ from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 ENTAILMENT = 'entailment'
 NON_ENTAILMENT = 'non_entailment'
 
+SUPPORT_DATASET_PATH="~/.deeppavlov/preprocessed_datasets/support_dataset.json"
+
 log = getLogger(__name__)
 
 @register('few_shot_iterator')
@@ -36,7 +38,6 @@ class FewShotIterator(DataLearningIterator):
                  shuffle: bool = True, 
                  shot: Optional[int] = None,
                  shot_test: Optional[int] = None,
-                 save_path: Optional[str] = None,
                  return_nli_format: bool = False,
                  *args, **kwargs) -> None:
         self.shot = shot
@@ -44,17 +45,21 @@ class FewShotIterator(DataLearningIterator):
         self.shuffle = shuffle
         self.random = Random(seed)
 
-        self.train = self.get_shot_examples(data.get('train', []), self.shot)
-        self.valid = self.get_shot_examples(data.get('valid', []), self.shot_test)
-        self.test = self.get_shot_examples(data.get('test', []), self.shot_test)
+        self.train = self.delete_oos(data.get('train', []))
+        self.valid = self.delete_oos(data.get('valid', []))
+        self.test = self.delete_oos(data.get('test', []))
 
-        if save_path is not None:
-            save_path = Path(save_path).expanduser()
-            save_path.parent.mkdir(parents=True, exist_ok=True)
-            with save_path.open("w") as file:
-                json_dict = {"columns": ["text","category"]}
-                json_dict["data"] = [[text, label] for text, label in self.train]
-                json.dump(json_dict, file, indent=4)
+        self.train = self.get_shot_examples(self.train, self.shot)
+        self.valid = self.get_shot_examples(self.valid, self.shot_test)
+        self.test = self.get_shot_examples(self.test, self.shot_test)
+
+
+        save_path = Path(SUPPORT_DATASET_PATH).expanduser()
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with save_path.open("w") as file:
+            json_dict = {"columns": ["text","category"]}
+            json_dict["data"] = [[text, label] for text, label in self.train]
+            json.dump(json_dict, file, indent=4)
 
         if return_nli_format:
             self.train = self.convert2nli(self.train)
@@ -85,7 +90,6 @@ class FewShotIterator(DataLearningIterator):
         
         return label2examples, label2negative
 
-
     def convert2nli(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Tuple[Any, Any], Any]]:
         if len(data) == 0:
             return data
@@ -109,7 +113,13 @@ class FewShotIterator(DataLearningIterator):
             self.random.shuffle(nli_triplets)
         
         return nli_triplets
-        
+    
+    def delete_oos(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:
+        filtered_data = []
+        for text, label in data:
+            if label != 'oos':
+                filtered_data.append([text, label])
+        return filtered_data
 
     def get_shot_examples(self, data: List[Tuple[Any, Any]], shot: int) -> List[Tuple[Any, Any]]:
         if shot is None:
