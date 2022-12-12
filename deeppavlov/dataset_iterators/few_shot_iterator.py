@@ -19,9 +19,6 @@ from typing import Dict, Any, List, Tuple, Optional
 from logging import getLogger
 from pathlib import Path
 
-import numpy as np
-from overrides import overrides
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
@@ -72,7 +69,7 @@ class FewShotIterator(DataLearningIterator):
         }
 
     
-    def _gather_info(self, data: List[Tuple[Any, Any]]):
+    def _gather_info(self, data: List[Tuple[Any, Any]]) -> Tuple[Dict, Dict]:
         unique_labels = list(set([label for text, label in data]))
 
         label2examples = {}
@@ -89,7 +86,7 @@ class FewShotIterator(DataLearningIterator):
         return label2examples, label2negative
 
 
-    def convert2nli(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:
+    def convert2nli(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Tuple[Any, Any], Any]]:
         if len(data) == 0:
             return data
 
@@ -114,13 +111,12 @@ class FewShotIterator(DataLearningIterator):
         return nli_triplets
         
 
-    def get_shot_examples(self, data, shot):
+    def get_shot_examples(self, data: List[Tuple[Any, Any]], shot: int) -> List[Tuple[Any, Any]]:
         if shot is None:
             return data
         
         # shuffle data to select shot-examples
-        if self.shuffle:
-            self.random.shuffle(data)
+        self.random.shuffle(data)
 
         data_dict = {}
         for _, label in data:
@@ -137,4 +133,8 @@ class FewShotIterator(DataLearningIterator):
         for label in data_dict.keys():
             for text in data_dict[label]:
                 new_data.append((text, label))
+        
+        if self.shuffle:
+            self.random.shuffle(new_data)
+
         return new_data
