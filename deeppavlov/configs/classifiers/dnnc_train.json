@@ -18,23 +18,13 @@
         "return_nli_format": true
     },
     "chainer": {
-        "in": [
-            "premise",
-            "hypothesis"
-        ],
-        "in_y": [
-            "y_true_labels"
-        ],
+        "in": ["premise", "hypothesis"],
+        "in_y": ["y_true_labels"],
         "pipe": [
             {
                 "class_name": "torch_transformers_preprocessor",
-                "in": [
-                    "premise",
-                    "hypothesis"
-                ],
-                "out": [
-                    "bert_features"
-                ],
+                "in": ["premise", "hypothesis"],
+                "out": ["bert_features"],
                 "vocab_file": "{BASE_MODEL}",
                 "do_lower_case": false,
                 "max_seq_length": 128
@@ -42,30 +32,18 @@
             {
                 "id": "classes_vocab",
                 "class_name": "simple_vocab",
-                "fit_on": [
-                    "y_true_labels"
-                ],
+                "fit_on": ["y_true_labels"],
                 "save_path": "{MODEL_PATH}/classes.dict",
                 "load_path": "{MODEL_PATH}/classes.dict",
-                "in": [
-                    "y_true_labels"
-                ],
-                "out": [
-                    "y_true_ids"
-                ]
+                "in": ["y_true_labels"],
+                "out": ["y_true_ids"]
             },
             {
                 "class_name": "torch_transformers_classifier",
                 "n_classes": "#classes_vocab.len",
-                "in": [
-                    "bert_features"
-                ],
-                "in_y": [
-                    "y_true_ids"
-                ],
-                "out": [
-                    "y_pred_probas"
-                ],
+                "in": ["bert_features"],
+                "in_y": ["y_true_ids"],
+                "out": ["y_pred_probas"],
                 "return_probas": true,
                 "pretrained_bert": "{BASE_MODEL}",
                 "save_path": "{MODEL_PATH}/model",
@@ -78,27 +56,17 @@
             },
             {
                 "class_name": "proba2labels",
-                "in": [
-                    "y_pred_probas"
-                ],
-                "out": [
-                    "y_pred_ids"
-                ],
+                "in": ["y_pred_probas"],
+                "out": ["y_pred_ids"],
                 "max_proba": true
             },
             {
                 "ref": "classes_vocab",
-                "in": [
-                    "y_pred_ids"
-                ],
-                "out": [
-                    "y_pred_labels"
-                ]
+                "in": ["y_pred_ids"],
+                "out": ["y_pred_labels"]
             }
         ],
-        "out": [
-            "y_pred_labels"
-        ]
+        "out": ["y_pred_labels"]
     },
     "train": {
         "batch_size": 370,
@@ -110,10 +78,7 @@
         "metrics": [
             {
                 "name": "accuracy_oos",
-                "inputs": [
-                    "y_true_labels",
-                    "y_pred_labels"
-                ]
+                "inputs": ["y_true_labels", "y_pred_labels"]
             }
         ],
         "evaluation_targets": [
