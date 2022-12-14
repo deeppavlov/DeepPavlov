@@ -12,9 +12,9 @@
   },
   "dataset_iterator": {
       "class_name": "few_shot_iterator",
-      "seed": 2,
+      "seed": 42,
       "shuffle": true,
-      "shot": 10,
+      "shot": 5,
       "return_nli_format": false
   },
   "chainer": {
@@ -42,49 +42,25 @@
         "out": "text_vector"
       },
       {
-        "id": "answers_vocab",
-        "class_name": "simple_vocab",
-        "fit_on": [
-          "category"
-        ],
-        "save_path": "{MODELS_PATH}/cat_answers.dict",
-        "load_path": "{MODELS_PATH}/cat_answers.dict",
-        "in": "category",
-        "out": "y_ids"
-      },
-      {
+        "class_name": "cos_sim_classifier",
         "in": "text_vector",
         "fit_on": [
           "text_vector",
-          "y_ids"
+          "category"
         ],
+        "top_n": 1,
+        "save_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
+        "load_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
         "out": [
-          "y_pred_proba"
-        ],
-        "class_name": "sklearn_component",
-        "main": true,
-        "save_path": "{MODELS_PATH}/model.pkl",
-        "load_path": "{MODELS_PATH}/model.pkl",
-        "model_class": "sklearn.linear_model:LogisticRegression",
-        "infer_method": "predict_proba",
-        "C": 10,
-        "penalty": "l2"
-      },
-      {
-        "in": "y_pred_proba",
-        "out": "y_pred_ids",
-        "class_name": "proba2labels",
-        "max_proba": true
-      },
-      {
-        "in": "y_pred_ids",
-        "out": "y_pred_category",
-        "ref": "answers_vocab"
+          "y_pred_category",
+          "score"
+        ]
       }
     ],
     "out": [
-      "y_pred_category"
-      ]
+      "y_pred_category",
+      "score"
+    ]
   },
   "train": {
     "evaluation_targets": [
@@ -107,7 +83,7 @@
     "variables": {
       "LANGUAGE": "en",
       "ROOT_PATH": "~/.deeppavlov",
-      "CONFIG_NAME": "fasttext_logreg",
+      "CONFIG_NAME": "fasttext_cos_sim",
       "SPACY_MODEL": "en_core_web_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/{CONFIG_NAME}"

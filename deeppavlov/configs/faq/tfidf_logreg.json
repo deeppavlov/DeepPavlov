@@ -12,9 +12,9 @@
   },
   "dataset_iterator": {
       "class_name": "few_shot_iterator",
-      "seed": 2,
+      "seed": 42,
       "shuffle": true,
-      "shot": 10,
+      "shot": 5,
       "return_nli_format": false
   },
   "chainer": {
@@ -25,7 +25,7 @@
         "class_name": "stream_spacy_tokenizer",
         "in": "text",
         "id": "my_tokenizer",
-        "lemmas": false,
+        "lemmas": true,
         "out": "token_lemmas",
 	      "spacy_model": "{SPACY_MODEL}"
       },
@@ -35,11 +35,21 @@
         "out": "text_lem"
       },
       {
-        "class_name": "fasttext",
-        "in": "token_lemmas",
-        "load_path": "{DOWNLOADS_PATH}/embeddings/fasttext/{LANGUAGE}.bin",
-        "mean": true,
-        "out": "text_vector"
+        "in": [
+          "text_lem"
+        ],
+        "out": [
+          "text_vect"
+        ],
+        "fit_on": [
+          "text_lem"
+        ],
+        "id": "tfidf_vec",
+        "class_name": "sklearn_component",
+        "save_path": "{MODELS_PATH}/tfidf.pkl",
+        "load_path": "{MODELS_PATH}/tfidf.pkl",
+        "model_class": "sklearn.feature_extraction.text:TfidfVectorizer",
+        "infer_method": "transform"
       },
       {
         "id": "answers_vocab",
@@ -53,9 +63,9 @@
         "out": "y_ids"
       },
       {
-        "in": "text_vector",
+        "in": "text_vect",
         "fit_on": [
-          "text_vector",
+          "text_vect",
           "y_ids"
         ],
         "out": [
@@ -63,11 +73,11 @@
         ],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/model.pkl",
-        "load_path": "{MODELS_PATH}/model.pkl",
+        "save_path": "{MODELS_PATH}/logreg.pkl",
+        "load_path": "{MODELS_PATH}/logreg.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
-        "C": 10,
+        "C": 1000,
         "penalty": "l2"
       },
       {
@@ -83,12 +93,13 @@
       }
     ],
     "out": [
-      "y_pred_category"
-      ]
+      "y_pred_category",
+      "y_pred_proba"
+    ]
   },
   "train": {
     "evaluation_targets": [
-      "train",
+      "train", 
       "valid",
       "test"
     ],
@@ -107,16 +118,12 @@
     "variables": {
       "LANGUAGE": "en",
       "ROOT_PATH": "~/.deeppavlov",
-      "CONFIG_NAME": "fasttext_logreg",
+      "CONFIG_NAME": "tfidf_logreg",
       "SPACY_MODEL": "en_core_web_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/{CONFIG_NAME}"
     },
     "download": [
-      {
-        "url": "http://files.deeppavlov.ai/embeddings/fasttext/{LANGUAGE}.bin",
-        "subdir": "{DOWNLOADS_PATH}/embeddings/fasttext"
-      },
       {
         "url": "http://files.deeppavlov.ai/datasets/massive-{LANGUAGE}.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/massive/{LANGUAGE}"
