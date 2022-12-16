@@ -215,6 +215,9 @@ class TorchTransformersClassifierModel(TorchModel):
                 self.model = AutoModelForBinaryClassification(self.pretrained_bert, config)
             else:
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
+                # TODO need a better solution here and at
+                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
                 try:
                     hidden_size = self.model.classifier.out_proj.in_features
 
