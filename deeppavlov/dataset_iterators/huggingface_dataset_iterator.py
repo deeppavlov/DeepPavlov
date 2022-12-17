@@ -47,9 +47,8 @@ class HuggingFaceDatasetIterator(DataLearningIterator):
             try:
                 example = data[i]
             except Exception as e:
-                print(i)
-                print(features)
-                breakpoint()
+                print(f'Exception with features {features} and dataset index {i}')
+                raise e
             if isinstance(features, str):
                 feat = example[features]
             elif isinstance(features, list):

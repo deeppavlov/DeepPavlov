@@ -59,18 +59,10 @@ class BertForMultiTask(nn.Module):
                  max_seq_len=320):
 
         super(BertForMultiTask, self).__init__()
-        if 'palbert' in backbone_model:
-            from deeppavlov.models.torch_bert.pal_modeling import BertModel as PalBertModel
-            from deeppavlov.models.torch_bert.pal_modeling import plain_config, distil_config
-            if backbone_model == 'palbert_base_uncased':
-                self.bert = PalBertModel(plain_config)
-            if backbone_model == 'palbert_distil_base_uncased':
-                self.bert = PalBertModel(distil_config)
-        else:
-            config = AutoConfig.from_pretrained(
-            backbone_model, output_hidden_states=True, output_attentions=True)
-            self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
-                                                  config=config)
+        config = AutoConfig.from_pretrained(
+        backbone_model, output_hidden_states=True, output_attentions=True)
+        self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
+                                              config=config)
         self.classes = tasks_num_classes  # classes for every task
         self.multilabel = multilabel
         if dropout is not None:
