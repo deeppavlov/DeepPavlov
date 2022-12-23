@@ -143,6 +143,25 @@ class TorchTransformersClassifierModel(TorchModel):
 
         return {'loss': loss.item()}
 
+    def test(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
+        _input = {key: value.to(self.device) for key, value in features.items()}
+
+        if self.n_classes > 1 and not self.is_binary:
+            _input["labels"] = torch.from_numpy(np.array(y)).to(self.device)
+
+        # regression
+        else:
+            _input["labels"] = torch.from_numpy(np.array(y, dtype=np.float32)).unsqueeze(1).to(self.device)
+
+
+        tokenized = {key: value for (key, value) in _input.items()
+                     if key in self.accepted_keys}
+
+        loss = self.model(**tokenized).loss
+        if self.is_data_parallel:
+            loss = loss.mean()
+        return {'loss': loss.item()}
+
     def __call__(self, features: Dict[str, torch.tensor]) -> Union[List[int], List[List[float]]]:
         """Make prediction for given features (texts).
 

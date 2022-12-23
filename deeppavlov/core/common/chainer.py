@@ -167,9 +167,18 @@ class Chainer(Component):
                     return component.train_on_batch(**dict(zip(keys, preprocessed)))
                 else:
                     return component.train_on_batch(*preprocessed)
+            def test_component(*args, **kwargs):
+                preprocessed = preprocessor.compute(*args, **kwargs)
+                if len(in_x + in_y) == 1:
+                    preprocessed = [preprocessed]
+                if keys:
+                    return component.test(**dict(zip(keys, preprocessed)))
+                else:
+                    return component.test(*preprocessed)
 
             self.train_on_batch = train_on_batch
             self.process_event = component.process_event
+            self.test = test_component
         if main:
             self.main = component
         if self.forward_map.issuperset(in_x):

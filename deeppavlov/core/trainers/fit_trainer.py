@@ -161,7 +161,7 @@ class FitTrainer:
         examples = 0
 
         data = islice(data, self.max_test_batches)
-
+        losses = []
         for x, y_true in tqdm(data):
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
@@ -169,7 +169,7 @@ class FitTrainer:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
                 out += list(val)
-
+            losses.append(self._chainer.test(x, y_true)['loss'])
         if examples == 0:
             log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
@@ -197,7 +197,7 @@ class FitTrainer:
                 'y_predicted': y_predicted_item,
                 'y_true': y_true_item
             } for x_item, y_predicted_item, y_true_item in zip(x, y_predicted, y_true)]
-
+        report['loss'] = sum(losses) / len(losses)
         return report
 
     def evaluate(self, iterator: DataLearningIterator,
