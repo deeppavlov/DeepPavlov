@@ -11,11 +11,11 @@
     "test": "test.json"
   },
   "dataset_iterator": {
-      "class_name": "few_shot_iterator",
-      "seed": 42,
-      "shuffle": true,
-      "shot": 5,
-      "return_nli_format": false
+    "class_name": "few_shot_iterator",
+    "seed": 42,
+    "shuffle": true,
+    "shot": 5,
+    "return_nli_format": false
   },
   "chainer": {
     "in": "text",
@@ -27,7 +27,7 @@
         "id": "my_tokenizer",
         "lemmas": true,
         "out": "token_lemmas",
-	      "spacy_model": "{SPACY_MODEL}"
+        "spacy_model": "{SPACY_MODEL}"
       },
       {
         "ref": "my_tokenizer",
@@ -35,15 +35,9 @@
         "out": "text_lem"
       },
       {
-        "in": [
-          "text_lem"
-        ],
-        "out": [
-          "text_vect"
-        ],
-        "fit_on": [
-          "text_lem"
-        ],
+        "in": "text_lem",
+        "out": "text_vect",
+        "fit_on": "text_lem",
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/tfidf_vectorizer.pkl",
@@ -54,23 +48,14 @@
       {
         "class_name": "cos_sim_classifier",
         "in": "text_vect",
-        "fit_on": [
-          "text_vect",
-          "category"
-        ],
+        "fit_on": ["text_vect", "category"],
         "top_n": 1,
         "save_path": "{MODELS_PATH}/tfidf_cos_sim_classifier.pkl",
         "load_path": "{MODELS_PATH}/tfidf_cos_sim_classifier.pkl",
-        "out": [
-          "y_pred_category",
-          "score"
-        ]
+        "out": ["y_pred_category", "score"]
       }
     ],
-    "out": [
-      "y_pred_category",
-      "score"
-    ]
+    "out": ["y_pred_category", "score"]
   },
   "train": {
     "evaluation_targets": [
@@ -82,19 +67,16 @@
     "metrics": [
       {
         "name": "accuracy",
-        "inputs": [
-          "category",
-          "y_pred_category"
-        ]
+        "inputs": ["category", "y_pred_category"]
       }
     ]
   },
   "metadata": {
     "variables": {
-      "LANGUAGE": "en",
+      "LANGUAGE": "ru",
       "ROOT_PATH": "~/.deeppavlov",
       "CONFIG_NAME": "tfidf_cos_sim",
-      "SPACY_MODEL": "en_core_web_sm",
+      "SPACY_MODEL": "ru_core_news_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/{CONFIG_NAME}"
     },

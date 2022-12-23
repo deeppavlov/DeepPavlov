@@ -11,11 +11,11 @@
     "test": "test.json"
   },
   "dataset_iterator": {
-      "class_name": "few_shot_iterator",
-      "seed": 42,
-      "shuffle": true,
-      "shot": 5,
-      "return_nli_format": false
+    "class_name": "few_shot_iterator",
+    "seed": 42,
+    "shuffle": true,
+    "shot": 5,
+    "return_nli_format": false
   },
   "chainer": {
     "in": "text",
@@ -27,7 +27,7 @@
         "id": "my_tokenizer",
         "lemmas": true,
         "out": "token_lemmas",
-	      "spacy_model": "{SPACY_MODEL}"
+        "spacy_model": "{SPACY_MODEL}"
       },
       {
         "ref": "my_tokenizer",
@@ -35,15 +35,9 @@
         "out": "text_lem"
       },
       {
-        "in": [
-          "text_lem"
-        ],
-        "out": [
-          "text_vect"
-        ],
-        "fit_on": [
-          "text_lem"
-        ],
+        "in": "text_lem",
+        "out": "text_vect",
+        "fit_on": "text_lem",
         "id": "tfidf_vec",
         "class_name": "sklearn_component",
         "save_path": "{MODELS_PATH}/tfidf.pkl",
@@ -54,9 +48,7 @@
       {
         "id": "answers_vocab",
         "class_name": "simple_vocab",
-        "fit_on": [
-          "category"
-        ],
+        "fit_on": "category",
         "save_path": "{MODELS_PATH}/cat_answers.dict",
         "load_path": "{MODELS_PATH}/cat_answers.dict",
         "in": "category",
@@ -64,13 +56,8 @@
       },
       {
         "in": "text_vect",
-        "fit_on": [
-          "text_vect",
-          "y_ids"
-        ],
-        "out": [
-          "y_pred_proba"
-        ],
+        "fit_on": ["text_vect", "y_ids"],
+        "out": "y_pred_proba",
         "class_name": "sklearn_component",
         "main": true,
         "save_path": "{MODELS_PATH}/logreg.pkl",
@@ -92,10 +79,7 @@
         "ref": "answers_vocab"
       }
     ],
-    "out": [
-      "y_pred_category",
-      "y_pred_proba"
-    ]
+    "out": ["y_pred_category", "y_pred_proba"]
   },
   "train": {
     "evaluation_targets": [
@@ -107,10 +91,7 @@
     "metrics": [
       {
         "name": "accuracy",
-        "inputs": [
-          "category",
-          "y_pred_category"
-        ]
+        "inputs": ["category", "y_pred_category"]
       }
     ]
   },

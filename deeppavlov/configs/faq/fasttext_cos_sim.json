@@ -11,11 +11,11 @@
     "test": "test.json"
   },
   "dataset_iterator": {
-      "class_name": "few_shot_iterator",
-      "seed": 42,
-      "shuffle": true,
-      "shot": 5,
-      "return_nli_format": false
+    "class_name": "few_shot_iterator",
+    "seed": 42,
+    "shuffle": true,
+    "shot": 5,
+    "return_nli_format": false
   },
   "chainer": {
     "in": "text",
@@ -27,7 +27,7 @@
         "id": "my_tokenizer",
         "lemmas": false,
         "out": "token_lemmas",
-	      "spacy_model": "{SPACY_MODEL}"
+        "spacy_model": "{SPACY_MODEL}"
       },
       {
         "ref": "my_tokenizer",
@@ -44,23 +44,14 @@
       {
         "class_name": "cos_sim_classifier",
         "in": "text_vector",
-        "fit_on": [
-          "text_vector",
-          "category"
-        ],
+        "fit_on": ["text_vector", "category"],
         "top_n": 1,
         "save_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
         "load_path": "{MODELS_PATH}/fasttext_cos_classifier.pkl",
-        "out": [
-          "y_pred_category",
-          "score"
-        ]
+        "out": ["y_pred_category", "score"]
       }
     ],
-    "out": [
-      "y_pred_category",
-      "score"
-    ]
+    "out": ["y_pred_category", "score"]
   },
   "train": {
     "evaluation_targets": [
@@ -72,10 +63,7 @@
     "metrics": [
       {
         "name": "accuracy",
-        "inputs": [
-          "category",
-          "y_pred_category"
-        ]
+        "inputs": ["category", "y_pred_category"]
       }
     ]
   },
