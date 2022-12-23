@@ -40,7 +40,6 @@ Welcome to DeepPavlov's documentation!
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
    Open-Domain Question Answering <features/models/odqa>
-   Frequently Asked Questions Answering <features/models/faq>
 
 
 .. toctree::
