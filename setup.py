@@ -63,7 +63,7 @@ if __name__ == '__main__':
         extras_require={
             'tests': [
                 'flake8',
-                'pytest',
+                'pytest<7.2.0',
                 'pytest-instafail',
                 'pexpect'
             ],
