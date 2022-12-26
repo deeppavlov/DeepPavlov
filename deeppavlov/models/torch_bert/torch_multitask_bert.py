@@ -508,76 +508,61 @@ class TorchMultiTaskBert(TorchModel):
         # IMPROVE ARGS CHECKING AFTER DEBUG
         log.debug(f'Calling {args}')
         import time
-        t = time.time()
         self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
-            print(task_id)
-            t1=time.time()
             if len(args[task_id]):
-                with torch.autograd.profiler.profile() as prof:
-                    _input, batch_input_size = self._make_input(
-                        task_features=args[task_id], task_id=task_id)
+                _input, batch_input_size = self._make_input(
+                    task_features=args[task_id], task_id=task_id)
 
-                    assert 'input_ids' in _input, f'No input_ids in _input {_input}'
-                    cache_key = self.types_to_cache[task_id]
-                    if cache_key!= -1 and self.preds_cache[cache_key] is not None:
-                        last_hidden_state = self.preds_cache[cache_key]
-                    else:
-                        with torch.no_grad():
-                            if self.is_data_parallel:
-                                last_hidden_state = self.model.module.get_logits(task_id, **_input)
-                            else:
-                                last_hidden_state = self.model.get_logits(task_id, **_input)
-                            if cache_key != -1:
-                                self.preds_cache[cache_key] = last_hidden_state
-                print(prof.key_averages())
-                print(f'Hidden obtained for {time.time()-t1}')
-                t1=time.time()
-                with torch.autograd.profiler.profile() as prof:                
+                assert 'input_ids' in _input, f'No input_ids in _input {_input}'
+                cache_key = self.types_to_cache[task_id]
+                if cache_key!= -1 and self.preds_cache[cache_key] is not None:
+                    last_hidden_state = self.preds_cache[cache_key]
+                else:
                     with torch.no_grad():
                         if self.is_data_parallel:
-                            logits = self.model.module.predict_on_top(task_id, last_hidden_state)
+                            last_hidden_state = self.model.module.get_logits(task_id, **_input)
                         else:
-                            logits = self.model.predict_on_top(task_id, last_hidden_state)
-                #print(prof.key_averages())                
-                print(f'logits obtained for {time.time()-t1}')
-                t1=time.time()
-                with torch.autograd.profiler.profile() as prof:                           
-                    if self.task_types[task_id] == 'sequence_labeling':
-                        y_mask = _input['token_type_ids'].cpu()
-                        logits = token_from_subtoken(logits.cpu(), y_mask)
-                        predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
-                        seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
-                        pred = [prediction[:max_seq_len] for max_seq_len,
-                                                            prediction in zip(seq_lengths, predicted_ids)]
-                    elif self.task_types[task_id] in ['regression', 'binary_head']:
-                        pred = logits[:, 0]
-                        if self.task_types[task_id] == 'binary_head':
-                            pred = torch.sigmoid(logits).squeeze(1)
-                            if not self.return_probas:
-                                pred = (pred > self.binary_threshold).int()
-                        pred = pred.cpu().numpy()
+                            last_hidden_state = self.model.get_logits(task_id, **_input)
+                        if cache_key != -1:
+                            self.preds_cache[cache_key] = last_hidden_state
+                with torch.no_grad():
+                    if self.is_data_parallel:
+                        logits = self.model.module.predict_on_top(task_id, last_hidden_state)
                     else:
-                        if self.multilabel[task_id]:
-                            probs = torch.sigmoid(logits)
-                            if self.return_probas:
-                                pred = probs
-                                # pred = pred.cpu().numpy()                            
-                            else:
-                                numbers_of_sample, numbers_of_class = (probs > self.binary_threshold).nonzero(as_tuple=True)
-                                numbers_of_sample, numbers_of_class = numbers_of_sample.cpu().numpy(), numbers_of_class.cpu().numpy()
-                                pred = [[] for _ in range(len(logits))]
-                                for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
-                                    pred[sample_num].append(int(class_num))
+                        logits = self.model.predict_on_top(task_id, last_hidden_state)
+                if self.task_types[task_id] == 'sequence_labeling':
+                    y_mask = _input['token_type_ids'].cpu()
+                    logits = token_from_subtoken(logits.cpu(), y_mask)
+                    predicted_ids = torch.argmax(logits, dim=-1).int().tolist()
+                    seq_lengths = torch.sum(y_mask, dim=1).int().tolist()
+                    pred = [prediction[:max_seq_len] for max_seq_len,
+                                                        prediction in zip(seq_lengths, predicted_ids)]
+                elif self.task_types[task_id] in ['regression', 'binary_head']:
+                    pred = logits[:, 0]
+                    if self.task_types[task_id] == 'binary_head':
+                        pred = torch.sigmoid(logits).squeeze(1)
+                        if not self.return_probas:
+                            pred = (pred > self.binary_threshold).int()
+                    pred = pred.cpu().numpy()
+                else:
+                    if self.multilabel[task_id]:
+                        probs = torch.sigmoid(logits)
+                        if self.return_probas:
+                            pred = probs
+                            pred = pred.cpu().numpy()                            
                         else:
-                            if self.return_probas:
-                                pred = torch.softmax(logits, dim=-1)
-                            else:
-                                pred = torch.argmax(logits, dim=1)
-                            # pred = pred.cpu().numpy()
-                #print(prof.key_averages())
-                print(f'pred obtained for {time.time()-t1}')                
-
+                            numbers_of_sample, numbers_of_class = (probs > self.binary_threshold).nonzero(as_tuple=True)
+                            numbers_of_sample, numbers_of_class = numbers_of_sample.cpu().numpy(), numbers_of_class.cpu().numpy()
+                            pred = [[] for _ in range(len(logits))]
+                            for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
+                                pred[sample_num].append(int(class_num))
+                    else:
+                        if self.return_probas:
+                            pred = torch.softmax(logits, dim=-1)
+                        else:
+                            pred = torch.argmax(logits, dim=1)
+                        pred = pred.cpu().numpy()
                 self.validation_predictions[task_id] = pred
         log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
