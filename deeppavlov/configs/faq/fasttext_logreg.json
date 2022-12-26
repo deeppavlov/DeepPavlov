@@ -78,11 +78,7 @@
     "out": "y_pred_category"
   },
   "train": {
-    "evaluation_targets": [
-      "train",
-      "valid",
-      "test"
-    ],
+    "evaluation_targets": ["train", "valid", "test"],
     "class_name": "fit_trainer",
     "metrics": [
       {
@@ -95,10 +91,9 @@
     "variables": {
       "LANGUAGE": "en",
       "ROOT_PATH": "~/.deeppavlov",
-      "CONFIG_NAME": "fasttext_logreg",
       "SPACY_MODEL": "en_core_web_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/{CONFIG_NAME}"
+      "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
     },
     "download": [
       {
