@@ -150,9 +150,9 @@ class HashingTfIdfVectorizer(Estimator):
             None
 
         """
-        logger.info("Tokenizing batch...")
+        logger.debug("Tokenizing batch...")
         batch_ngrams = list(self.tokenizer(docs))
-        logger.info("Counting hash...")
+        logger.debug("Counting hash...")
         doc_id = iter(doc_ids)
         for ngrams in batch_ngrams:
             counts = Counter([hash_(gram, self.hash_size) for gram in ngrams])
@@ -261,7 +261,7 @@ class HashingTfIdfVectorizer(Estimator):
         if not self.load_path.exists():
             raise FileNotFoundError("HashingTfIdfVectorizer path doesn't exist!")
 
-        logger.info("Loading tfidf matrix from {}".format(self.load_path))
+        logger.debug("Loading tfidf matrix from {}".format(self.load_path))
         loader = np.load(self.load_path, allow_pickle=True)
         matrix = Sparse((loader['data'], loader['indices'],
                          loader['indptr']), shape=loader['shape'])

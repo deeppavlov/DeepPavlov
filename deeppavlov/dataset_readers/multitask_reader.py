@@ -75,6 +75,8 @@ class MultiTaskReader(DatasetReader):
                 {"class_name": reader_params.get('reader_class_name',reader_class_name),
                 })
             reader_params = {**reader_params, **kwargs}
+            if "data_path" not in reader_params:
+                reader_params["data_path"] = data_path
             reader_params['data_path'] = Path(
                 reader_params['data_path']).expanduser()
             if 'reader_class_name' in reader_params:
@@ -89,16 +91,16 @@ class MultiTaskReader(DatasetReader):
             log.info(
                 'For all tasks set in task_names,process those that were not explicitly set')
             task_names = [k for k in task_names if k not in data]
-            assert validation is not None
+            assert valid is not None
             for name in task_names:
-                if 'mnli' in name and '_' not in validation:
+                if 'mnli' in name and '_' not in valid:
                     log.warning(
                         f'MNLI task used in default setting. Validation on MNLI-matched assumed')
-                    validation_name = validation + '_matched'
+                    validation_name = valid + '_matched'
                     if test is not None:
                         test_name = test+'_matched'
                 else:
-                    validation_name = validation
+                    validation_name = valid
                     if test is not None:
                         test_name = test
                 reader_params = {'path': path,

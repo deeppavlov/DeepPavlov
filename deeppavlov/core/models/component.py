@@ -36,17 +36,3 @@ class Component(metaclass=ABCMeta):
             if hasattr(attr, 'destroy'):
                 attr.destroy()
             delattr(self, attr_name)
-
-    def serialize(self):
-        from deeppavlov.core.models.serializable import Serializable
-        if isinstance(self, Serializable):
-            log.warning(f'Method for {self.__class__.__name__} serialization is not implemented!'
-                        f' Will not be able to load without using load_path')
-        return None
-
-    def deserialize(self, data):
-        from deeppavlov.core.models.serializable import Serializable
-        if isinstance(self, Serializable):
-            log.warning(f'Method for {self.__class__.__name__} deserialization is not implemented!'
-                        f' Please, use traditional load_path for this component')
-        pass

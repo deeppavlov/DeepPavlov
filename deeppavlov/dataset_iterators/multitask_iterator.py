@@ -129,7 +129,6 @@ class MultiTaskIterator:
                         del self.data['train'][task][i]
                         log.info(
                             f'NAN for mode {mode} task {task} element {i} CLEARED')
-                        breakpoint()
                     elif isinstance(x, tuple) and len(x) == 1 and one_element_tuples:
                         # x is a tuple consisting of 1 element. return it as string
                         self.data[mode][task][i] = (x[0], y)
@@ -178,6 +177,18 @@ class MultiTaskIterator:
                 p ** alpha for p in self._get_data_size(data_type)]
             n_samples = sum(annealed_sizes)
             probs = [p / n_samples for p in annealed_sizes]
+        elif self.sampling_mode == 'myneal':
+            alpha = (self.epochs_done / self.num_train_epochs)
+            annealed_sizes = [
+                p ** alpha for p in self._get_data_size(data_type)]
+            n_samples = sum(annealed_sizes)
+            probs = [p / n_samples for p in annealed_sizes]
+        elif self.sampling_mode == 'myneal-r':
+            alpha = 1 - (self.epochs_done / self.num_train_epochs)
+            annealed_sizes = [
+                p ** alpha for p in self._get_data_size(data_type)]
+            n_samples = sum(annealed_sizes)
+            probs = [p / n_samples for p in annealed_sizes]                
         else:
             raise Exception(f'Unsupported sampling mode {self.sampling_mode}')
         return probs
@@ -277,7 +288,9 @@ class MultiTaskIterator:
                 for task_id in range(self.n_tasks):
                     x[task_id], y[task_id] = generators[task_id].__next__()
 
-                yield self._transform_before_yielding(x, y, eval_batch_size)
+                batchs = self._transform_before_yielding(x, y, eval_batch_size)
+                # print(batchs)
+                yield batchs
 
     def get_instances(self, data_type: str = "train"):
         """

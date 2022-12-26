@@ -225,8 +225,21 @@ def round_f1_macro(y_true, y_predicted):
     return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
 
+@register_metric('f1_weighted_with_confusion_matrix')
+def round_f1_weighted_with_confusion_matrix(y_true, y_predicted):
+    """
+    Calculates F1 weighted measure and prints confusion matrix.
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+    Returns:
+        F1 score
+    """
+    return round_f1_weighted(y_true, y_predicted, print_matrix=True)
+    
+
 @register_metric('f1_weighted')
-def round_f1_weighted(y_true, y_predicted, print_matrix=True):
+def round_f1_weighted(y_true, y_predicted, print_matrix=False):
     """
     Calculates F1 weighted measure.
     Args:
@@ -239,8 +252,8 @@ def round_f1_weighted(y_true, y_predicted, print_matrix=True):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-    if y_true == y_predicted:
-        # y_true and y_predicted are empty lists
+    if y_true == [] and y_predicted == []:
+        print('y_true and y_predicted are empty lists')
         return 1
     if all(isinstance(k, list) for k in y_true):
         mlb = MultiLabelBinarizer(sparse_output=False)

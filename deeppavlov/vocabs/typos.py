@@ -53,7 +53,7 @@ class StaticDictionary:
         words_trie_path = data_dir / 'words_trie.pkl'
 
         if not is_done(data_dir):
-            log.info('Trying to build a dictionary in {}'.format(data_dir))
+            log.debug('Trying to build a dictionary in {}'.format(data_dir))
             if data_dir.is_dir():
                 shutil.rmtree(str(data_dir))
             data_dir.mkdir(parents=True)
@@ -78,9 +78,9 @@ class StaticDictionary:
             save_pickle(words_trie, words_trie_path)
 
             mark_done(data_dir)
-            log.info('built')
+            log.debug('built')
         else:
-            log.info('Loading a dictionary from {}'.format(data_dir))
+            log.debug('Loading a dictionary from {}'.format(data_dir))
 
         self.alphabet = load_pickle(alphabet_path)
         self.words_set = load_pickle(words_path)
@@ -119,7 +119,7 @@ class RussianWordsVocab(StaticDictionary):
 
     @staticmethod
     def _get_source(*args, **kwargs):
-        log.info('Downloading russian vocab from https://github.com/danakt/russian-words/')
+        log.debug('Downloading russian vocab from https://github.com/danakt/russian-words/')
         url = 'https://github.com/danakt/russian-words/raw/master/russian.txt'
         page = requests.get(url)
         return [word.strip() for word in page.content.decode('cp1251').strip().split('\n')]
@@ -148,7 +148,7 @@ class Wiki100KDictionary(StaticDictionary):
     @staticmethod
     def _get_source(*args, **kwargs):
         words = []
-        log.info('Downloading english vocab from Wiktionary')
+        log.debug('Downloading english vocab from Wiktionary')
         for i in range(1, 100000, 10000):
             k = 10000 + i - 1
             url = 'https://en.wiktionary.org/wiki/Wiktionary:Frequency_lists/PG/2005/08/{}-{}'.format(i, k)

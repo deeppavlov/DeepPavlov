@@ -60,9 +60,12 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case)
+                                           do_lower_case=do_lower_case,
+                                           **kwargs)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
+                                                           do_lower_case=do_lower_case,
+                                                           **kwargs)
 
     def tokenize_mc_examples(self,
                              contexts: List[List[str]],
@@ -133,7 +136,7 @@ class TorchTransformersPreprocessor(Component):
                  max_seq_length: int = 512,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+        self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case, **kwargs)
 
     def __call__(self, texts_a: List, texts_b: Optional[List[str]] = None) -> Union[List[InputFeatures],
                                                                                     Tuple[List[InputFeatures],
