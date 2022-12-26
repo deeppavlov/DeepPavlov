@@ -252,8 +252,8 @@ def round_f1_weighted(y_true, y_predicted, print_matrix=False):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
-    if y_true == y_predicted:
-        # y_true and y_predicted are empty lists
+    if y_true == [] and y_predicted == []:
+        print('y_true and y_predicted are empty lists')
         return 1
     if all(isinstance(k, list) for k in y_true):
         mlb = MultiLabelBinarizer(sparse_output=False)
