@@ -510,7 +510,6 @@ class TorchMultiTaskBert(TorchModel):
         log.debug(f'Calling {args}')
         self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
-            t = time.time()
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(
                     task_features=args[task_id], task_id=task_id)
@@ -532,8 +531,6 @@ class TorchMultiTaskBert(TorchModel):
                         logits = self.model.module.predict_on_top(task_id, last_hidden_state)
                     else:
                         logits = self.model.predict_on_top(task_id, last_hidden_state)
-                log.exception(f'Hidden obtained {time.time()-t}')
-                t = time.time()
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
@@ -566,7 +563,6 @@ class TorchMultiTaskBert(TorchModel):
                         else:
                             pred = torch.argmax(logits, dim=1)
                         pred = pred.cpu().numpy()
-                log.exception(f'Final obtained {time.time()-t}')
                 self.validation_predictions[task_id] = pred
         log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
