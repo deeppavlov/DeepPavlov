@@ -4,6 +4,7 @@ from pathlib import Path
 import numpy as np
 from overrides import overrides
 from collections import OrderedDict
+import time
 import os
 
 import torch
@@ -301,7 +302,7 @@ class TorchMultiTaskBert(TorchModel):
             self.task_types.append(tasks[task]['type'])
             self.multilabel.append(tasks[task].get('multilabel', False))
             self.one_hot_labels.append(tasks[task].get('one_hot_labels',False))
-            self.types_to_cache.append(tasks[task].get('type_to_cache', -1))
+            self.types_to_cache.append(tasks[task].get('type_to_cache', None))
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -330,7 +331,7 @@ class TorchMultiTaskBert(TorchModel):
             **kwargs,
         )
     def _reset_cache(self):
-        self.preds_cache = {index_ : None for index_ in self.types_to_cache if index_ != -1}
+        self.preds_cache = {index_ : None for index_ in self.types_to_cache if index_ != None}
     @overrides
     def init_from_opt(self) -> None:
         """
@@ -507,16 +508,16 @@ class TorchMultiTaskBert(TorchModel):
         """
         # IMPROVE ARGS CHECKING AFTER DEBUG
         log.debug(f'Calling {args}')
-        import time
         self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
+            t = time.time()
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 cache_key = self.types_to_cache[task_id]
-                if cache_key!= -1 and self.preds_cache[cache_key] is not None:
+                if cache_key!= None and self.preds_cache[cache_key] is not None:
                     last_hidden_state = self.preds_cache[cache_key]
                 else:
                     with torch.no_grad():
@@ -524,13 +525,15 @@ class TorchMultiTaskBert(TorchModel):
                             last_hidden_state = self.model.module.get_logits(task_id, **_input)
                         else:
                             last_hidden_state = self.model.get_logits(task_id, **_input)
-                        if cache_key != -1:
+                        if cache_key != None:
                             self.preds_cache[cache_key] = last_hidden_state
                 with torch.no_grad():
                     if self.is_data_parallel:
                         logits = self.model.module.predict_on_top(task_id, last_hidden_state)
                     else:
                         logits = self.model.predict_on_top(task_id, last_hidden_state)
+                log.exception(f'Hidden obtained {time.time()-t}')
+                t = time.time()
                 if self.task_types[task_id] == 'sequence_labeling':
                     y_mask = _input['token_type_ids'].cpu()
                     logits = token_from_subtoken(logits.cpu(), y_mask)
@@ -563,6 +566,7 @@ class TorchMultiTaskBert(TorchModel):
                         else:
                             pred = torch.argmax(logits, dim=1)
                         pred = pred.cpu().numpy()
+                log.exception(f'Final obtained {time.time()-t}')
                 self.validation_predictions[task_id] = pred
         log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
