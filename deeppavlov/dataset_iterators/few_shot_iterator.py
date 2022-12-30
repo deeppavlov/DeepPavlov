@@ -14,13 +14,10 @@
 
 
 import json
-from random import Random
-from typing import Dict, Any, List, Tuple, Optional
 from logging import getLogger
 from pathlib import Path
-
-import numpy as np
-from overrides import overrides
+from random import Random
+from typing import Dict, Any, List, Tuple, Optional
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -30,13 +27,14 @@ NON_ENTAILMENT = 'non_entailment'
 
 log = getLogger(__name__)
 
+
 @register('few_shot_iterator')
 class FewShotIterator(DataLearningIterator):
 
     def __init__(self,
                  data: Dict[str, List[Tuple[Any, Any]]],
-                 seed: int = None, 
-                 shuffle: bool = True, 
+                 seed: int = None,
+                 shuffle: bool = True,
                  shot: Optional[int] = None,
                  shot_test: Optional[int] = None,
                  save_path: Optional[str] = None,
@@ -55,7 +53,7 @@ class FewShotIterator(DataLearningIterator):
             save_path = Path(save_path).expanduser()
             save_path.parent.mkdir(parents=True, exist_ok=True)
             with save_path.open("w") as file:
-                json_dict = {"columns": ["text","category"]}
+                json_dict = {"columns": ["text", "category"]}
                 json_dict["data"] = [[text, label] for text, label in self.train]
                 json.dump(json_dict, file, indent=4)
 
@@ -63,7 +61,7 @@ class FewShotIterator(DataLearningIterator):
             self.train = self.convert2nli(self.train)
             self.valid = self.convert2nli(self.valid)
             self.test = self.convert2nli(self.test)
-        
+
         self.data = {
             'train': self.train,
             'valid': self.valid,
@@ -71,7 +69,6 @@ class FewShotIterator(DataLearningIterator):
             'all': self.train + self.test + self.valid
         }
 
-    
     def _gather_info(self, data: List[Tuple[Any, Any]]):
         unique_labels = list(set([label for text, label in data]))
 
@@ -80,44 +77,42 @@ class FewShotIterator(DataLearningIterator):
             label2examples[label] = []
         for text, label in data:
             label2examples[label].append(text)
-        
+
         label2negative = {}
         for i, label in enumerate(unique_labels):
             label2negative[label] = unique_labels.copy()
             del label2negative[label][i]
-        
-        return label2examples, label2negative
 
+        return label2examples, label2negative
 
     def convert2nli(self, data: List[Tuple[Any, Any]]) -> List[Tuple[Any, Any]]:
         if len(data) == 0:
             return data
 
         label2examples, label2negative = self._gather_info(data)
-        
+
         nli_triplets = []
         # negative examples
         for text, label in data:
             for negative_label in label2negative[label]:
                 for negative_example in label2examples[negative_label]:
                     nli_triplets.append([[text, negative_example], NON_ENTAILMENT])
-                    
+
         # positive examples
         for text, label in data:
             for positive_example in label2examples[label]:
                 if positive_example != text:
                     nli_triplets.append([[text, positive_example], ENTAILMENT])
- 
+
         if self.shuffle:
             self.random.shuffle(nli_triplets)
-        
+
         return nli_triplets
-        
 
     def get_shot_examples(self, data, shot):
         if shot is None:
             return data
-        
+
         # shuffle data to select shot-examples
         if self.shuffle:
             self.random.shuffle(data)
@@ -129,7 +124,7 @@ class FewShotIterator(DataLearningIterator):
         for text, label in data:
             if len(data_dict[label]) < shot:
                 data_dict[label].append(text)
-        
+
         if max(len(x) for x in data_dict.values()) < shot:
             log.warning(f"Some labels have less than \"shot\"={shot} examples")
 

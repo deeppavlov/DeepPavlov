@@ -34,7 +34,7 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 [Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)
 
-[Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/odqa.html) | [Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
 
 **Embeddings**
 
