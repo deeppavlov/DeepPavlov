@@ -19,7 +19,7 @@ services:
       dockerfile: utils/Docker/Dockerfile
       args:
         - EPOCH=$EPOCH
-        - PYTHON_VERSION=3.7.11
+        - PYTHON_VERSION=3.7.16
         - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
     user: '${UID}:${GID}'
     environment:
@@ -32,7 +32,7 @@ services:
       dockerfile: utils/Docker/Dockerfile
       args:
         - EPOCH=$EPOCH
-        - PYTHON_VERSION=3.8.12
+        - PYTHON_VERSION=3.8.16
         - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
     user: '${UID}:${GID}'
     environment:
@@ -45,7 +45,33 @@ services:
       dockerfile: utils/Docker/Dockerfile
       args:
         - EPOCH=$EPOCH
-        - PYTHON_VERSION=3.9.10
+        - PYTHON_VERSION=3.9.16
+        - BASE_IMAGE=nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
+  py310:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.10.9
+        - BASE_IMAGE=nvidia/cuda:10.0-cudnn7-devel-ubuntu18.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True
+  py311:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.11.1
         - BASE_IMAGE=nvidia/cuda:11.5.1-cudnn8-runtime-ubuntu20.04
     user: '${UID}:${GID}'
     environment:
