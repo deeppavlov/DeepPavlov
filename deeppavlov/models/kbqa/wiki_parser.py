@@ -35,6 +35,7 @@ class WikiParser:
                  file_format: str = "hdt",
                  prefixes: Dict[str, Union[str, Dict[str, str]]] = None,
                  used_rels_filename: str = None,
+                 rel_q2name_filename: str = None,
                  max_comb_num: int = 1e6,
                  lang: str = "@en", **kwargs) -> None:
         """
@@ -75,6 +76,12 @@ class WikiParser:
         if used_rels_filename:
             self.used_rels = set(read_json(str(expand_path(used_rels_filename))))
             self.used_rels = {rel.split("/")[-1] for rel in self.used_rels}
+        self.rel_q2name = {}
+        if rel_q2name_filename:
+            if rel_q2name_filename.endswith("json"):
+                self.rel_q2name = read_json(str(expand_path(rel_q2name_filename)))
+            elif rel_q2name_filename.endswith("pickle"):
+                self.rel_q2name = load_pickle(str(expand_path(rel_q2name_filename)))
 
         self.max_comb_num = max_comb_num
         self.lang = lang
@@ -87,19 +94,20 @@ class WikiParser:
     def execute_queries_list(self, parser_info_list: List[str], queries_list: List[Any]):
         wiki_parser_output = []
         query_answer_types = []
-        for n, (parser_info, query) in enumerate(zip(parser_info_list, queries_list)):
+        for parser_info, query in zip(parser_info_list, queries_list):
             if parser_info == "query_execute":
-                answers, found_rels = [], []
+                answers, found_rels, found_combs = [], [], []
                 try:
                     what_return, rels_from_query, query_seq, filter_info, order_info, answer_types, rel_types, \
                     return_if_found = query
                     if answer_types:
                         query_answer_types = answer_types
-                    answers, found_rels = self.execute(what_return, rels_from_query, query_seq, filter_info, order_info,
-                                                       query_answer_types, rel_types)
+                    answers, found_rels, found_combs = \
+                        self.execute(what_return, rels_from_query, query_seq, filter_info, order_info,
+                                     query_answer_types, rel_types)
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
-                wiki_parser_output.append([answers, found_rels])
+                wiki_parser_output.append([answers, found_rels, found_combs])
             elif parser_info == "find_rels":
                 rels = []
                 try:
@@ -142,6 +150,13 @@ class WikiParser:
                 except:
                     log.info("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(types)
+            elif parser_info == "fill_triplets":
+                filled_triplets = []
+                try:
+                    filled_triplets = self.fill_triplets(*query)
+                except:
+                    log.info("Wrong arguments are passed to wiki_parser")
+                wiki_parser_output.append(filled_triplets)
             elif parser_info == "find_triplets":
                 if self.file_format == "hdt":
                     triplets = []
@@ -206,7 +221,7 @@ class WikiParser:
                 order_info: order_info(variable='?obj', sorting_order='asc')
         """
         extended_combs = []
-        answers, found_rels = [], []
+        answers, found_rels, found_combs = [], [], []
 
         for n, (query, rel_type) in enumerate(zip(query_seq, rel_types)):
             unknown_elem_positions = [(pos, elem) for pos, elem in enumerate(query) if elem.startswith('?')]
@@ -317,12 +332,13 @@ class WikiParser:
             if is_boolean:
                 answers = [["Yes" if len(triplets) > 0 else "No"]]
             found_rels = [[elem[key] for key in rels_from_query if key in elem] for elem in combs]
-            answers_and_rels = [(answer, rel) for answer, rel in zip(answers, found_rels)
+            ans_rels_combs = [(answer, rel, comb) for answer, rel, comb in zip(answers, found_rels, combs)
                                 if any([entity for entity in answer])]
-            answers = [elem[0] for elem in answers_and_rels]
-            found_rels = [elem[1] for elem in answers_and_rels]
+            answers = [elem[0] for elem in ans_rels_combs]
+            found_rels = [elem[1] for elem in ans_rels_combs]
+            found_combs = [elem[2] for elem in ans_rels_combs]
 
-        return answers, found_rels
+        return answers, found_rels, found_combs
 
     def define_is_boolean(self, query_hdt_seq):
         is_boolean = False
@@ -361,7 +377,7 @@ class WikiParser:
                                  if (any(triplet[1].startswith(tp) for tp in self.prefixes["rels"][rel_type])
                                      or triplet[1].startswith(self.prefixes["rels"]["type"]))]
             else:
-                log.debug("max comb num exceede")
+                log.debug("max comb num exceeds")
         else:
             triplets = []
             if subj:
@@ -380,7 +396,9 @@ class WikiParser:
 
         return combs, triplets
 
-    def find_label(self, entity: str, question: str) -> str:
+    def find_label(self, entity: str, question: str = None) -> str:
+        if question is None:
+            question = ""
         entity = str(entity).replace('"', '')
         if self.file_format == "hdt":
             if entity.startswith("Q") or entity.startswith("P"):
@@ -417,11 +435,15 @@ class WikiParser:
                 entity = self.format_date(entity, question).replace('$', '')
                 return entity
             
+            elif re.findall(r"[\d]{3,4}-[\d]{2}-[\d]{2}", entity):
+                entity = self.format_date(entity, question).replace('$', '')
+                return entity
+            
             elif entity in ["Yes", "No"]:
                 return entity
 
             elif entity.isdigit():
-                entity = str(entity).replace('.', ',')
+                entity = entity.replace('.', ',')
                 return entity
 
         if self.file_format == "pickle":
@@ -627,3 +649,45 @@ class WikiParser:
             triplets = self.document.get(subj, {}).get(direction, [])
             triplets = self.uncompress(triplets)
         return subj, triplets
+
+    def fill_triplets(self, init_triplets, what_to_return, comb):
+        filled_triplets = []
+        for n, (subj, rel, obj) in enumerate(init_triplets):
+            if "statement" in self.prefixes and subj.startswith("?") \
+                    and comb.get(subj, "").startswith(self.prefixes["statement"]) and not rel.startswith("?") \
+                    and (obj == what_to_return[0] or re.findall(r"[\d]{3,4}", comb.get(what_to_return[0], ""))):
+                continue
+            else:
+                if "statement" in self.prefixes and subj.startswith("?") \
+                        and str(comb.get(subj, "")).startswith(self.prefixes["statement"]):
+                    if not comb.get(what_to_return[0], "").startswith("http") \
+                            and re.findall(r"[\d]{3,4}", comb.get(what_to_return[0], "")):
+                        subj = init_triplets[1][2]
+                    else:
+                        subj = what_to_return[0]
+                if "statement" in self.prefixes and obj.startswith("?") \
+                        and str(comb.get(obj, "")).startswith(self.prefixes["statement"]):
+                    if not str(comb.get(what_to_return[0], "")).startswith("http") \
+                            and re.findall(r"[\d]{3,4}", str(comb.get(what_to_return[0], ""))):
+                        obj = init_triplets[1][2]
+                    else:
+                        obj = what_to_return[0]
+                subj, obj = str(subj), str(obj)
+                if subj.startswith("?"):
+                    subj = comb.get(subj, "")
+                if obj.startswith("?"):
+                    obj = comb.get(obj, "")
+                if rel.startswith("?"):
+                    rel = comb.get(rel, "")
+                subj_label = self.find_label(subj)
+                obj_label = self.find_label(obj)
+                if rel in self.rel_q2name:
+                    rel_label = self.rel_q2name[rel]
+                elif rel.split("/")[-1] in self.rel_q2name:
+                    rel_label = self.rel_q2name[rel.split("/")[-1]]
+                else:
+                    rel_label = self.find_label(rel)
+                if isinstance(rel_label, list) and rel_label:
+                    rel_label = rel_label[0]
+                filled_triplets.append([subj_label, rel_label, obj_label])
+        return filled_triplets

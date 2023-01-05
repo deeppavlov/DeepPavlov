@@ -11,13 +11,7 @@
         "config_path": "{CONFIGS_PATH}/classifiers/query_pr.json",
         "overwrite": {
             "metadata.variables.TRANSFORMER": "roberta-base",
-            "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction_lcquad2.0_roberta",
-            "metadata.download": [
-              {
-                "url": "http://files.deeppavlov.ai/kbqa/models/query_prediction_lcquad2.0_roberta.tar.gz",
-                "subdir": "{MODELS_PATH}/classifiers/query_prediction_lcquad2.0_roberta"
-              }
-            ]
+            "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/query_prediction_lcquad2.0_roberta"
         },
         "in": ["x_punct"],
         "out": ["template_type"]
@@ -35,13 +29,7 @@
                 "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_type_detection_lcquad2.0"
               }
             },
-            "metadata.variables.NER_PATH": "{MODELS_PATH}/entity_type_detection_lcquad2.0",
-            "metadata.download": [
-              {
-                "url": "http://files.deeppavlov.ai/kbqa/models/entity_type_detection_lcquad2.0.tar.gz",
-                "subdir": "{MODELS_PATH}/entity_type_detection_lcquad2.0"
-              }
-            ]
+            "metadata.variables.NER_PATH": "{MODELS_PATH}/entity_type_detection_lcquad2.0"
         },
         "in": ["x_punct", "template_type"],
         "out": ["entity_type_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
@@ -51,17 +39,7 @@
         "overwrite": {
             "chainer.in": ["entity_substr", "entity_tags", "sentences"],
             "chainer.pipe.1.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.entities_database_filename": "el_db_lcquad2.db",
-            "metadata.download": [
-              {
-                "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_lcquad2.tar.gz",
-                "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
-              },
-              {
-                "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_ranker_eng.tar.gz",
-                "subdir": "{MODELS_PATH}/entity_linking_eng"
-              }
-            ]
+            "chainer.pipe.1.entities_database_filename": "el_db_lcquad2.db"
         },
         "id": "entity_linker"
       },
@@ -86,13 +64,7 @@
                    "overwrite": {
                      "chainer.out": ["y_pred_probas"],
                      "metadata.variables.TRANSFORMER": "bert-base-cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2",
-                     "metadata.download": [
-                       {
-                         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_lcquad2.tar.gz",
-                         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
-                       }
-                     ]
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -122,6 +94,8 @@
         "return_answers": false,
         "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
                                 [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
+        "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "return_all_possible_answers": true,
         "in": ["x_punct", "x_punct", "template_type", "entity_substr", "type_substr", "entity_tags"],
         "out": ["cand_answers", "template_answers"]
@@ -132,13 +106,7 @@
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2",
-                     "metadata.download": [
-                       {
-                         "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_bert_lcquad2.tar.gz",
-                         "subdir": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
-                       }
-                     ]
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -162,6 +130,26 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/query_prediction_lcquad2.0_roberta.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/query_prediction_lcquad2.0_roberta"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_type_detection_lcquad2.0.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_type_detection_lcquad2.0"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_lcquad2.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_lcquad2.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_bert_lcquad2.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
+      },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_full.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"

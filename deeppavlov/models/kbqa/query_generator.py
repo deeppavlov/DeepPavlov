@@ -229,15 +229,18 @@ class QueryGenerator(QueryGeneratorBase):
             for query_hdt_elem in query_hdt_seq:
                 entity, rel = "", ""
                 if len(query_hdt_elem) == 3 and any([query_hdt_elem[i].startswith("?") for i in [0, 2]]):
-                    if not query_hdt_elem[0].startswith("?"):
-                        entity = query_hdt_elem[0].split("/")[-1]
-                    elif not query_hdt_elem[2].startswith("?"):
-                        entity = query_hdt_elem[2].split("/")[-1]
-                    if not query_hdt_elem[1].startswith("?"):
-                        rel = query_hdt_elem[1].split("/")[-1]
-                    if entity and rel and rel not in self.kb_prefixes["type_rels"] \
-                            and (entity, rel) not in entities_rel_conn:
-                        entity_rel_valid = False
+                    if "statement" in self.kb_prefixes and query_hdt_elem[1].startswith(self.kb_prefixes["statement"]):
+                        continue
+                    else:
+                        if not query_hdt_elem[0].startswith("?"):
+                            entity = query_hdt_elem[0].split("/")[-1]
+                        elif not query_hdt_elem[2].startswith("?"):
+                            entity = query_hdt_elem[2].split("/")[-1]
+                        if not query_hdt_elem[1].startswith("?"):
+                            rel = query_hdt_elem[1].split("/")[-1]
+                        if entity and rel and rel not in self.kb_prefixes["type_rels"] \
+                                and (entity, rel) not in entities_rel_conn:
+                            entity_rel_valid = False
         return entity_rel_valid
 
     def query_parser(self, question: str,
@@ -253,12 +256,12 @@ class QueryGenerator(QueryGeneratorBase):
         new_combs_list, query_info_list = [], []
         combs_num_list = [len(parsed_query_info["all_combs_list"]) for parsed_query_info in parsed_queries_info]
         if combs_num_list:
-            max_comb_nums = min(max(combs_num_list), self.max_comb_num)
+            max_comb_nums = max(combs_num_list)
         else:
             max_comb_nums = 0
         for comb_num in range(max_comb_nums):
             for parsed_query_info in parsed_queries_info:
-                if comb_num < len(parsed_query_info["all_combs_list"]):
+                if comb_num < min(len(parsed_query_info["all_combs_list"]), self.max_comb_num):
                     query_triplets = parsed_query_info["query_triplets"]
                     query_sequence = parsed_query_info["query_sequence"]
                     rels_from_query = parsed_query_info["rels_from_query"]
@@ -286,7 +289,7 @@ class QueryGenerator(QueryGeneratorBase):
                         new_combs_list.append(combs)
                         queries_list.append((answer_ent, rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
-                        query_info_list.append((query_triplets, answer_ent, filter_info, order_info))
+                        query_info_list.append((query_triplets, query_hdt_seq, answer_ent, filter_info, order_info))
                         parser_info_list.append("query_execute")
                     if comb_num < 3 and unk_rels:
                         unk_query_sequence = copy.deepcopy(query_sequence)
@@ -302,7 +305,7 @@ class QueryGenerator(QueryGeneratorBase):
                         new_combs_list.append(combs)
                         queries_list.append((answer_ent, unk_rels_from_query, query_hdt_seq, filter_info, order_info,
                                              answer_types, rel_types, return_if_found))
-                        query_info_list.append((query_triplets, answer_ent, filter_info, order_info))
+                        query_info_list.append((query_triplets, query_hdt_seq, answer_ent, filter_info, order_info))
                         parser_info_list.append("query_execute")
 
         outputs_list = self.wiki_parser(parser_info_list, queries_list)
@@ -315,9 +318,9 @@ class QueryGenerator(QueryGeneratorBase):
             outputs_len = len(outputs_list)
             combs_list = combs_list[:outputs_len]
             entity_conf_list = entity_conf_list[:outputs_len]
-            for combs, query_info, entity_conf, (answers_list, found_rels_list) in \
+            for combs, query_info, entity_conf, (answers_list, found_rels_list, found_combs_list) in \
                     zip(combs_list, query_info_list, entity_conf_list, outputs_list):
-                for answers, found_rels in zip(answers_list, found_rels_list):
+                for answers, found_rels, found_comb in zip(answers_list, found_rels_list, found_combs_list):
                     found_rels = [found_rel.split("/")[-1] for found_rel in found_rels]
                     new_combs = list(copy.deepcopy(combs))
                     found_unk_rel = False
@@ -333,44 +336,54 @@ class QueryGenerator(QueryGeneratorBase):
                     confidence = np.prod([score for rel, score in new_combs[2][:-1]])
                     if answers:
                         outputs.append([new_combs[0], new_combs[1]] + [rel for rel, score in new_combs[2][:-1]] +
-                                       answers + [(confidence, entity_conf), query_info, new_combs[2]])
+                                       answers + [(confidence, entity_conf), found_comb, query_info, new_combs[2]])
             outputs_dict = defaultdict(list)
             types_dict = defaultdict(list)
             for output in outputs:
-                key = (tuple(output[0]), tuple([rel.split("/")[-1] for rel in output[2:-4]]))
-                if key not in outputs_dict or output[-4:] not in outputs_dict[key]:
-                    outputs_dict[key].append(output[-4:])
+                key = (tuple(output[0]), tuple([rel.split("/")[-1] for rel in output[2:-5]]))
+                if key not in outputs_dict or output[-5:] not in outputs_dict[key]:
+                    outputs_dict[key].append(output[-5:])
                     types_dict[key].append(tuple(output[1]))
             outputs = []
             for (entity_comb, rel_comb), output in outputs_dict.items():
                 type_comb = types_dict[(entity_comb, rel_comb)]
                 output_conf = [elem[1] for elem in output]
                 output_conf = sorted(output_conf, key=lambda x: x[0] * x[1], reverse=True)
-                queries = [elem[2] for elem in output]
-                rel_combs = [elem[3] for elem in output]
+                found_combs = [elem[2] for elem in output]
+                queries = [elem[3] for elem in output]
+                rel_combs = [elem[4] for elem in output]
                 cur_rel_comb = rel_combs[0]
                 cur_rel_comb = [rel for rel, score in cur_rel_comb[:-1]]
                 sparql_query = make_sparql_query(queries[0], entity_comb, rel_combs[0], type_comb[0],
                                                  self.gold_query_info)
+                parser_info_list = ["fill_triplets"]
+                parser_query_list = [(queries[0][1], queries[0][2], found_combs[0])]
+                filled_triplets = self.wiki_parser(parser_info_list, parser_query_list)
                 outputs.append({"entities": entity_comb, "types": type_comb, "relations": list(cur_rel_comb),
                                 "answers": tuple([ans for ans, *_ in output]), "output_conf": output_conf[0],
-                                "sparql_query": sparql_query})
+                                "sparql_query": sparql_query, "triplets": filled_triplets[0]})
         return outputs
 
 
 @register('query_formatter')
 class QueryFormatter:
-    def __init__(self, query_info: Dict[str, str], **kwargs):
+    def __init__(self, query_info: Dict[str, str], replace_prefixes: Dict[str, str] = None, **kwargs):
         self.query_info = query_info
+        self.replace_prefixes = replace_prefixes
 
     def __call__(self, queries_batch):
         parsed_queries_batch = []
         for query in queries_batch:
             query_split = re.findall("{[ ]?(.*?)[ ]?}", query)
-            query_triplets = []
+            init_query_triplets, query_triplets = [], []
             if query_split:
-                query_triplets = query_split[0].split('. ')
-            query_triplets = [triplet.strip() for triplet in query_triplets]
+                init_query_triplets = query_split[0].split('. ')
+            for triplet in init_query_triplets:
+                triplet = " ".join([elem.strip("<>") for elem in triplet.strip().split()])
+                if self.replace_prefixes:
+                    for old_prefix, new_prefix in self.replace_prefixes.items():
+                        triplet = triplet.replace(old_prefix, new_prefix)
+                query_triplets.append(triplet)
             answer_ent, order_info, filter_from_query = find_query_features(query, order_from_query=True)
             query_info = (query_triplets, answer_ent, filter_from_query, order_info)
             query = merge_sparql_query(query_info, self.query_info)

@@ -143,7 +143,7 @@ class RelRankerInfer(Component, Serializable):
                                                     round(l_confs[j][0], 3), l_confs[j][1]))
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-3], reverse=True)
             if template_type == "simple_boolean" and not answers_with_scores:
-                answers_with_scores = [(["No"], "", [], [], [], [], 1.0, 1.0)]
+                answers_with_scores = [(["No"], "", [], [], [], [], [], 1.0, 1.0, 1.0)]
             res_answers_list, res_answer_ids_list, res_confidences_list, res_entities_and_rels_list = [], [], [], []
             res_queries_list, res_triplets_list = [], []
             if self.filter_high_rel_conf_flag:
@@ -152,6 +152,7 @@ class RelRankerInfer(Component, Serializable):
                 init_answer_ids, query, triplets, q_entities, q_types, _, q_rels, p_conf, r_conf, e_conf = ans_sc_elem
                 answer_ids = []
                 for answer_id in init_answer_ids:
+                    answer_id = str(answer_id).replace("@en", "").strip('"')
                     if answer_id not in answer_ids:
                         answer_ids.append(answer_id)
 
@@ -160,11 +161,15 @@ class RelRankerInfer(Component, Serializable):
                 answer_ids_input = [(answer_id, question) for answer_id in answer_ids]
                 answer_ids = [str(answer_id).split("/")[-1] for answer_id in answer_ids]
                 parser_info_list = ["find_label" for _ in answer_ids_input]
-                answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
+                init_answer_labels = self.wiki_parser(parser_info_list, answer_ids_input)
                 if n < 7:
                     log.debug(f"answers: {init_answer_ids[:3]} --- query {query} --- entities {q_entities} --- "
-                              f"types {q_types[:3]} {ans_sc_elem[5:]} answer_labels {answer_labels[:3]}")
-                answer_labels = list(set(answer_labels))
+                              f"types {q_types[:3]} --- q_rels {q_rels} --- {ans_sc_elem[5:]} --- "
+                              f"answer_labels {init_answer_labels[:3]}")
+                answer_labels = []
+                for label in init_answer_labels:
+                    if label not in answer_labels:
+                        answer_labels.append(label)
                 answer_labels = [label for label in answer_labels if (label and label != "Not Found")][:5]
                 answer_labels = [str(label) for label in answer_labels]
                 if len(answer_labels) > 2:

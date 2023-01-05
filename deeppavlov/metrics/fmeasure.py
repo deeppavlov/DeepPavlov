@@ -424,18 +424,25 @@ def kbqa_f1(question_batch, pred_answer_ids_batch, pred_query_batch, gold_answer
     precision, recall, f1 = 0, 0, 0
     for question, pred_answer_ids, pred_query, gold_answer_ids, gold_query in \
             zip(question_batch, pred_answer_ids_batch, pred_query_batch, gold_answer_ids_batch, gold_query_batch):
-        gold_answer_ids = [gold_ans_id.split("/")[-1].replace("@en", "").strip('"') for gold_ans_id in gold_answer_ids]
+        gold_answer_ids = [gold_ans_id.split("/")[-1].replace("@en", "").strip('"') if isinstance(gold_ans_id, str)
+                           else gold_ans_id for gold_ans_id in gold_answer_ids]
         inters = set(pred_answer_ids).intersection(set(gold_answer_ids))
         num_pred = len(set(pred_answer_ids))
         num_gold = len(set(gold_answer_ids))
-        if pred_query == gold_query or set(pred_answer_ids) == set(gold_answer_ids):
-            precision += 1.0
-            recall += 1.0
+        pred_query = [query.lower() for query in pred_query]
+        precision_incr, recall_incr = 0.0, 0.0
+        if gold_query.lower() in pred_query or set(pred_answer_ids) == set(gold_answer_ids):
+            precision_incr, recall_incr = 1.0, 1.0
+        elif (pred_answer_ids == ["Yes"] and gold_answer_ids == [True]) \
+                or (pred_answer_ids == ["No"] and gold_answer_ids == [False]):
+            precision_incr, recall_incr = 1.0, 1.0
         else:
             if num_pred > 0:
-                precision += 1.0 * len(inters) / num_pred
+                precision_incr = 1.0 * len(inters) / num_pred
             if num_gold > 0:
-                recall += 1.0 * len(inters) / num_gold
+                recall_incr = 1.0 * len(inters) / num_gold
+        precision += precision_incr
+        recall += recall_incr
     precision /= len(question_batch)
     recall /= len(question_batch)
     if precision + recall > 0:

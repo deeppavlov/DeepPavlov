@@ -19,7 +19,7 @@ from typing import List
 
 
 def find_query_features(query, qualifier_rels=None, question=None, order_from_query=None):
-    query = query.lower()
+    query = query.lower().replace("select distinct", "select")
     answer_ent = re.findall(r"select [\(]?([\S]+) ", query)
     order_info_nt = namedtuple("order_info", ["variable", "sorting_order"])
     order_variable = re.findall("order by (asc|desc)\((.*)\)", query)
@@ -118,17 +118,22 @@ def fill_slots(query, entity_comb, type_comb, rel_comb, delete_rel_prefix = Fals
 def correct_variables(query_triplets, answer_ent, query_info):
     for i in range(len(query_triplets)):
         for ent_var in answer_ent:
-            if answer_ent[0].lower().startswith("count"):
-                query_triplets[i] = query_triplets[i].replace(ent_var, query_info["mid_var"])
-            else:
-                query_triplets[i] = query_triplets[i].replace(ent_var, query_info["unk_var"])
+            triplet_elements = query_triplets[i].split()
+            for j in range(len(triplet_elements)):
+                if triplet_elements[j] not in ent_var and triplet_elements[j].startswith("?"):
+                    triplet_elements[j] = query_info["mid_var"]
+                if triplet_elements[j].startswith("?") \
+                        and triplet_elements[j] not in [query_info["mid_var"], query_info["unk_var"]]:
+                    triplet_elements[j] = query_info["unk_var"]
+            query_triplets[i] = " ".join(triplet_elements)
+            query_triplets[i] = query_triplets[i].replace(ent_var, query_info["unk_var"])
     return query_triplets
 
 
 def query_from_triplets(query_triplets, answer_ent, query_info):
     filled_query = " . ".join(query_triplets)
     if answer_ent and answer_ent[0].lower().startswith("count"):
-        filled_query = f"SELECT (COUNT({query_info['mid_var']}) as {query_info['unk_var']}) " + \
+        filled_query = f"SELECT COUNT({query_info['unk_var']}) " + \
                        f"WHERE {{ {filled_query}. }}"
     else:
         filled_query = f"SELECT {query_info['unk_var']} WHERE {{ {filled_query}. }}"
@@ -162,11 +167,13 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
 
 
 def make_sparql_query(query_info, entities, rels, types, query_info_dict):
-    query_triplets, answer_ent, filter_info, order_info = query_info
+    query_triplets, filled_triplets, answer_ent, filter_info, order_info = query_info
     query_triplets = [fill_slots(elem, entities, types, rels, delete_rel_prefix=True) for elem in query_triplets]
     query_triplets = correct_variables(query_triplets, answer_ent, query_info_dict)
-    filled_query = query_from_triplets(query_triplets, answer_ent, query_info_dict)
-    return filled_query
+    filled_queries = []
+    for triplets_p in list(itertools.permutations(query_triplets)):
+        filled_queries.append(query_from_triplets(triplets_p, answer_ent, query_info_dict))
+    return filled_queries
 
 
 def merge_sparql_query(query_info, query_info_dict):

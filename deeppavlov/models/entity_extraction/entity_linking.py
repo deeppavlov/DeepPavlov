@@ -419,10 +419,10 @@ class EntityLinker(Component, Serializable):
         cand_ent_init = defaultdict(set)
         for tag, tag_conf in tags:
             entity_substr = self.sanitize_substr(entity_substr, tag)
-            query = "SELECT * FROM inverted_index WHERE title MATCH '{}';".format(entity_substr)
+            query = "SELECT * FROM inverted_index WHERE title MATCH ?;"
             entities_and_ids = []
             try:
-                res = self.cur.execute(query)
+                res = self.cur.execute(query, (entity_substr,))
                 entities_and_ids = res.fetchall()
             except:
                 log.info(f"error in query execute {query}")
@@ -434,12 +434,15 @@ class EntityLinker(Component, Serializable):
     def find_fuzzy_match(self, entity_substr_split, tags, use_tags=True):
         cand_ent_init = defaultdict(set)
         for tag, tag_conf in tags:
+            if len(entity_substr_split) > 3:
+                entity_substr_split = [" ".join(entity_substr_split[i:i + 2])
+                                       for i in range(len(entity_substr_split) - 1)]
             for word in entity_substr_split:
                 if len(word) > 1 and word not in self.stopwords:
-                    query = "SELECT * FROM inverted_index WHERE title MATCH '{}';".format(word)
+                    query = "SELECT * FROM inverted_index WHERE title MATCH ?;"
                     part_entities_and_ids = []
                     try:
-                        res = self.cur.execute(query)
+                        res = self.cur.execute(query, (word,))
                         part_entities_and_ids = res.fetchall()
                     except:
                         log.info(f"error in query execute {query}")
@@ -510,6 +513,10 @@ class EntityLinker(Component, Serializable):
         label_tokens = entity_title.split()
         substr_score = self.match_tokens(entity_substr_split, label_tokens)
         substr_score = self.correct_substr_score(entity_substr_split, label_tokens, substr_score)
+        if re.findall(r" \(.*\)", entity_label):
+            entity_label_split = entity_label.replace("(", "").replace(")", "").lower().split()
+            lbl_substr_score = self.match_tokens(entity_substr_split, entity_label_split)
+            substr_score = max(substr_score, lbl_substr_score)
         if tag == ent_tag and tag.lower() == "person" and len(entity_substr_split) > 1 \
                 and len(entity_substr_split[-1]) > 1 and len(entity_substr_split[-2]) == 1 \
                 and len(label_tokens) == len(entity_substr_split):

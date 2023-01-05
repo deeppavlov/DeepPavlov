@@ -50,7 +50,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/distilrubert_tiny_cased_conversational_v1"
+      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1"
     },
     "download": [
       {

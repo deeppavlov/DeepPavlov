@@ -87,13 +87,7 @@
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
                      "metadata.variables.TRANSFORMER": "DeepPavlov/rubert-base-cased",
-                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru",
-                     "metadata.download": [
-                       {
-                         "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_bert_ru.tar.gz",
-                         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
-                       }
-                     ]
+                     "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
                    }
         },
         "wiki_parser": "#wiki_p",
@@ -156,6 +150,10 @@
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_bert_ru.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/kbqa_files_ru.tar.gz",
