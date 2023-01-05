@@ -15,7 +15,7 @@
 from collections import namedtuple
 import re
 import itertools
-from typing import List
+from typing import List, Tuple, Dict, Any
 
 
 def find_query_features(query, qualifier_rels=None, question=None, order_from_query=None):
@@ -89,8 +89,8 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     entity_ids = [[(entity, n) for n, entity in enumerate(entities_list)] for entities_list in entity_ids]
     entity_ids = list(itertools.product(*entity_ids))
     entity_ids = [comb for comb in entity_ids if not
-                  (all([comb[i][0][0].split("/")[-1] == comb[0][0][0].split("/")[-1] for i in range(len(comb))])
-                   and not all([comb[i][0][0] == comb[0][0][0] for i in range(len(comb))]))]
+    (all([comb[i][0][0].split("/")[-1] == comb[0][0][0].split("/")[-1] for i in range(len(comb))])
+     and not all([comb[i][0][0] == comb[0][0][0] for i in range(len(comb))]))]
     entity_ids_permut = []
     if permut:
         for comb in entity_ids:
@@ -102,7 +102,8 @@ def make_combs(entity_ids: List[List[str]], permut: bool) -> List[List[str]]:
     return ent_combs
 
 
-def fill_slots(query, entity_comb, type_comb, rel_comb, delete_rel_prefix = False):
+def fill_slots(query: str, entity_comb: List[str], type_comb: List[str], rel_comb: List[Tuple[str, float]],
+               delete_rel_prefix: bool = False) -> str:
     for n, entity in enumerate(entity_comb[:-1]):
         query = query.replace(f"e{n + 1}", entity)
     for n, entity_type in enumerate(type_comb[:-1]):  # type_entity
@@ -115,7 +116,7 @@ def fill_slots(query, entity_comb, type_comb, rel_comb, delete_rel_prefix = Fals
     return query
 
 
-def correct_variables(query_triplets, answer_ent, query_info):
+def correct_variables(query_triplets: List[str], answer_ent: List[str], query_info: Dict[str, str]):
     for i in range(len(query_triplets)):
         for ent_var in answer_ent:
             triplet_elements = query_triplets[i].split()
@@ -130,7 +131,7 @@ def correct_variables(query_triplets, answer_ent, query_info):
     return query_triplets
 
 
-def query_from_triplets(query_triplets, answer_ent, query_info):
+def query_from_triplets(query_triplets: List[str], answer_ent: List[str], query_info: Dict[str, str]) -> str:
     filled_query = " . ".join(query_triplets)
     if answer_ent and answer_ent[0].lower().startswith("count"):
         filled_query = f"SELECT COUNT({query_info['unk_var']}) " + \
@@ -141,7 +142,7 @@ def query_from_triplets(query_triplets, answer_ent, query_info):
     return filled_query
 
 
-def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[str],
+def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], rel_comb: List[Tuple[str, float]],
                map_query_str_to_kb) -> List[str]:
     ''' example of query: ["wd:E1", "p:R1", "?s"]
                    entity_comb: ["Q159"]
@@ -166,7 +167,9 @@ def fill_query(query: List[str], entity_comb: List[str], type_comb: List[str], r
     return query
 
 
-def make_sparql_query(query_info, entities, rels, types, query_info_dict):
+def make_sparql_query(query_info: Tuple[List[str], List[str], List[str], Dict[str, Any], Dict[str, Any]],
+                      entities: List[str], rels: List[Tuple[str, float]], types: List[str],
+                      query_info_dict: Dict[str, str]) -> List[str]:
     query_triplets, filled_triplets, answer_ent, filter_info, order_info = query_info
     query_triplets = [fill_slots(elem, entities, types, rels, delete_rel_prefix=True) for elem in query_triplets]
     query_triplets = correct_variables(query_triplets, answer_ent, query_info_dict)
@@ -176,13 +179,14 @@ def make_sparql_query(query_info, entities, rels, types, query_info_dict):
     return filled_queries
 
 
-def merge_sparql_query(query_info, query_info_dict):
+def merge_sparql_query(query_info: Tuple[List[str], List[str], Dict[str, Any], Dict[str, Any]],
+                       query_info_dict: Dict[str, str]) -> str:
     query_triplets, answer_ent, filter_info, order_info = query_info
     query = query_from_triplets(query_triplets, answer_ent, query_info_dict)
     return query
 
 
-def preprocess_template_queries(template_queries, kb_prefixes):
+def preprocess_template_queries(template_queries: Dict[str, Any], kb_prefixes: Dict[str, str]) -> Dict[str, Any]:
     for template_num in template_queries:
         template = template_queries[template_num]
         query = template["query_template"]

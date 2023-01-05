@@ -19,6 +19,22 @@ log = getLogger(__name__)
 
 @register('torch_transformers_nll_ranker')
 class TorchTransformersNLLRanker(TorchModel):
+    """Class for ranking of relations using the model trained with NLL loss
+    Args:
+        model_name: name of the function which initialises and returns the model class
+        pretrained_bert: pretrained transformer checkpoint path or key title (e.g. "bert-base-uncased")
+        encoder_save_path: path to save the encoder checkpoint
+        linear_save_path: path to save linear layer checkpoint
+        bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
+        criterion: name of loss function
+        optimizer: optimizer name from `torch.optim`
+        optimizer_parameters: dictionary with optimizer's parameters,
+                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
+        return_probas: set this to `True` if you need the probabilities instead of raw answers
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+        clip_norm: clip gradients by norm
+    """
 
     def __init__(
             self,
@@ -53,11 +69,11 @@ class TorchTransformersNLLRanker(TorchModel):
             return_probas=return_probas,
             **kwargs)
 
-    def train_on_batch(self, input_features, positive_idx) -> float:
-        _input = {'positive_idx': positive_idx}
-        _input["input_ids"] = torch.LongTensor(input_features["input_ids"]).to(self.device)
-        _input["attention_mask"] = torch.LongTensor(input_features["attention_mask"]).to(self.device)
-        _input["token_type_ids"] = torch.LongTensor(input_features["token_type_ids"]).to(self.device)
+    def train_on_batch(self, input_features: Dict[str, Any], positive_idx: List[int]) -> float:
+        _input = {'positive_idx': positive_idx,
+                  "input_ids": torch.LongTensor(input_features["input_ids"]).to(self.device),
+                  "attention_mask": torch.LongTensor(input_features["attention_mask"]).to(self.device),
+                  "token_type_ids": torch.LongTensor(input_features["token_type_ids"]).to(self.device)}
 
         self.model.train()
         self.model.zero_grad()
@@ -76,12 +92,11 @@ class TorchTransformersNLLRanker(TorchModel):
 
         return loss.item()
 
-    def __call__(self, input_features) -> Union[List[int], List[np.ndarray]]:
+    def __call__(self, input_features: Dict[str, Any]) -> Union[List[int], List[np.ndarray]]:
         self.model.eval()
-        _input = {}
-        _input["input_ids"] = torch.LongTensor(input_features["input_ids"]).to(self.device)
-        _input["attention_mask"] = torch.LongTensor(input_features["attention_mask"]).to(self.device)
-        _input["token_type_ids"] = torch.LongTensor(input_features["token_type_ids"]).to(self.device)
+        _input = {"input_ids": torch.LongTensor(input_features["input_ids"]).to(self.device),
+                  "attention_mask": torch.LongTensor(input_features["attention_mask"]).to(self.device),
+                  "token_type_ids": torch.LongTensor(input_features["token_type_ids"]).to(self.device)}
 
         with torch.no_grad():
             output = self.model(**_input)
@@ -123,6 +138,15 @@ class TorchTransformersNLLRanker(TorchModel):
 
 
 class NLLRanking(nn.Module):
+    """Class which implements the relation ranking model
+    Args:
+        pretrained_bert: pretrained transformer checkpoint path or key title (e.g. "bert-base-uncased")
+        encoder_save_path: path to save the encoder checkpoint
+        linear_save_path: path to save linear layer checkpoint
+        bert_tokenizer_config_file: path to configuration file of transformer tokenizer
+        bert_config_file: path to transformer configuration file, or None, if `pretrained_bert` is a string name
+        device: cpu or gpu
+    """
 
     def __init__(
             self,

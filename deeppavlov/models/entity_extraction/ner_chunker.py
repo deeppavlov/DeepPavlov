@@ -15,7 +15,7 @@
 import re
 from logging import getLogger
 from string import punctuation
-from typing import List, Tuple
+from typing import List, Tuple, Union, Any
 
 from nltk import sent_tokenize
 from transformers import AutoTokenizer
@@ -31,19 +31,19 @@ log = getLogger(__name__)
 @register('ner_chunker')
 class NerChunker(Component):
     """
-        Class to split documents into chunks of max_chunk_len symbols so that the length will not exceed
+        Class to split documents into chunks of max_seq_len symbols so that the length will not exceed
         maximal sequence length to feed into BERT
     """
 
-    def __init__(self, vocab_file: str, max_seq_len: int = 400, lowercase: bool = False, max_chunk_len: int = 180,
-                 batch_size: int = 2, **kwargs):
+    def __init__(self, vocab_file: str, max_seq_len: int = 400, lowercase: bool = False, batch_size: int = 2, **kwargs):
         """
         Args:
-            max_chunk_len: maximal length of chunks into which the document is split
+            vocab_file: vocab file of pretrained transformer model
+            max_seq_len: maximal length of chunks into which the document is split
+            lowercase: whether to lowercase text
             batch_size: how many chunks are in batch
         """
         self.max_seq_len = max_seq_len
-        self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
@@ -53,11 +53,12 @@ class NerChunker(Component):
         self.lowercase = lowercase
 
     def __call__(self, docs_batch: List[str],
-                 template_type_batch: List[str] = None) -> Tuple[List[List[str]], List[List[int]],
-                                                                 List[List[List[Tuple[int, int]]]], List[
-                                                                     List[List[str]]]]:
+                 template_type_batch: List[str] = None) -> Tuple[List[List[str]], List[List[int]], List[List[Union[
+        List[Union[Tuple[int, int], Tuple[Union[int, Any], Union[int, Any]]]], List[
+            Tuple[Union[int, Any], Union[int, Any]]], List[Tuple[int, int]]]]], List[List[Union[List[Any], List[str]]]],
+                                                                 List[List[str]]]:
         """
-        This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
+        This method splits each document in the batch into chunks wuth the maximal length of max_seq_len
  
         Args:
             docs_batch: batch of documents
@@ -204,6 +205,8 @@ class NerChunkModel(Component):
         Args:
             ner: config for entity detection
             ner_parser: component deeppavlov.models.entity_extraction.entity_detection_parser
+            ner2: config of additional entity detection model
+            ner_parser2: component deeppavlov.models.entity_extraction.entity_detection_parser
             **kwargs:
         """
         self.ner = ner

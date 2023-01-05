@@ -61,12 +61,12 @@ class QueryGeneratorBase(Component, Serializable):
 
         Args:
             template_matcher: component deeppavlov.models.kbqa.template_matcher
-            entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             load_path: path to folder with wikidata files
+            sparql_queries_filename: file with sparql query templates
+            entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
             rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
             rank_rels_filename_2: file with list of rels for second rels in questions with ranking
-            sparql_queries_filename: file with sparql query templates
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
@@ -76,6 +76,11 @@ class QueryGeneratorBase(Component, Serializable):
             use_el_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
                 Entity Linking
             use_alt_templates: whether to use alternative templates if no answer was found for default query template
+            use_add_templates: whether to use additional templates
+            return_answers: whether to rank relations paths and return answers
+            delete_rel_prefix: whether to delete relation prefixes after extraction from the knowledge base
+            map_query_str_to_kb: the dictionary with mapping of prefixes to urls in knowledge base
+            kb_prefixes: prefixes for entity, relation and type
         """
         super().__init__(save_path=None, load_path=load_path)
         self.template_matcher = template_matcher
@@ -177,7 +182,7 @@ class QueryGeneratorBase(Component, Serializable):
         return candidate_outputs, template_answer
 
     def get_entity_ids(self, entities: List[str], tags: List[str], probas: List[float], question: str,
-                             entities_to_link: List[str] = None) -> List[List[str]]:
+                       entities_to_link: List[str] = None) -> List[List[str]]:
         entity_ids, el_output = [], []
         try:
             el_output = self.entity_linker([entities], [tags], [probas], [[question]], [None], [None],
@@ -256,7 +261,8 @@ class QueryGeneratorBase(Component, Serializable):
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
         return candidate_outputs
 
-    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> List[Tuple[str, Any]]:
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> Tuple[
+        List[Tuple[str, Any]], dict, Set[Tuple[Any, Any]]]:
         ex_rels, entity_rel_conn = [], set()
         direction, source, rel_type, n_hop = triplet_info
         if source == "wiki":

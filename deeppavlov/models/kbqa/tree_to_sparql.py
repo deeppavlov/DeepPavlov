@@ -122,7 +122,7 @@ class SlovnetSyntaxParser(Component, Serializable):
     """Class for syntax parsing using Slovnet library"""
 
     def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, tree_patterns_filename: str,
-                       lang: str = "ru", **kwargs):
+                 lang: str = "ru", **kwargs):
         super().__init__(save_path=None, load_path=load_path)
         self.navec_filename = expand_path(navec_filename)
         self.syntax_parser_filename = expand_path(syntax_parser_filename)
@@ -131,7 +131,7 @@ class SlovnetSyntaxParser(Component, Serializable):
         self.lang = f"@{lang}"
         if self.lang == "@ru":
             self.pronouns = {"q_pronouns": {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как",
-                                          "когда", "где", "чем", "сколько"},
+                                            "когда", "где", "чем", "сколько"},
                              "how_many": {"сколько"}}
             self.first_tokens = {"первый", "первая", "первое"}
         elif self.lang == "@en":
@@ -270,13 +270,15 @@ class SlovnetSyntaxParser(Component, Serializable):
 
                     for j in range(len(before_markup_list)):
                         if int(before_markup_list[j]["head_id"]) > found_n + 1:
-                            before_markup_list[j]["head_id"] = int(before_markup_list[j]["head_id"]) + len(substr_tokens) - 1
+                            before_markup_list[j]["head_id"] = int(before_markup_list[j]["head_id"]) + \
+                                                               len(substr_tokens) - 1
                         if before_markup_list[j]["head_id"] == found_n + 1 and substr_type == "adj":
                             before_markup_list[j]["head_id"] = found_n + len(substr_tokens)
                     for j in range(len(after_markup_list)):
                         after_markup_list[j]["id"] = str(int(after_markup_list[j]["id"]) + len(substr_tokens) - 1)
                         if int(after_markup_list[j]["head_id"]) > found_n + 1:
-                            after_markup_list[j]["head_id"] = int(after_markup_list[j]["head_id"]) + len(substr_tokens) - 1
+                            after_markup_list[j]["head_id"] = int(after_markup_list[j]["head_id"]) + \
+                                                              len(substr_tokens) - 1
                         if after_markup_list[j]["head_id"] == found_n + 1 and substr_type == "adj":
                             after_markup_list[j]["head_id"] = found_n + len(substr_tokens)
 
@@ -439,7 +441,9 @@ class TreeToSparql(Component):
     def __call__(self, questions_batch: List[str], substr_batch: List[List[str]], tags_batch: List[List[str]],
                  offsets_batch: List[List[int]], positions_batch: List[List[List[int]]],
                  probas_batch: List[List[float]]) -> Tuple[
-        List[str], List[List[str]], List[List[str]], List[List[str]]]:
+        List[Union[str, Any]], List[Union[List[str], List[Union[str, Any]]]], List[Union[List[str], Any]], List[
+            Union[List[Union[str, Any]], Any]], List[Union[List[Union[float, Any]], Any]], List[List[int]], List[
+            Union[List[str], List[Any]]]]:
         substr_batch, tags_batch, offsets_batch, positions_batch, probas_batch = \
             self.sort_substr(substr_batch, tags_batch, offsets_batch, positions_batch, probas_batch)
         log.debug(f"substr: {substr_batch} tags: {tags_batch} positions: {positions_batch}")
@@ -565,9 +569,12 @@ class TreeToSparql(Component):
         log.debug(f"clean_questions: {clean_questions_batch} --- substr: {s_substr_batch} --- tags: {s_tags_batch} "
                   f"--- entities_to_link {entities_to_link_batch} --- types: {types_batch}")
         return clean_questions_batch, query_nums_batch, s_substr_batch, s_tags_batch, s_probas_batch, \
-            entities_to_link_batch, types_batch
+               entities_to_link_batch, types_batch
 
-    def sort_substr(self, substr_batch, tags_batch, offsets_batch, positions_batch, probas_batch):
+    def sort_substr(self, substr_batch: List[List[str]], tags_batch: List[List[str]],
+                    offsets_batch: List[List[List[int]]], positions_batch: List[List[List[int]]],
+                    probas_batch: List[List[float]]) -> Tuple[
+        List[List[str]], List[List[str]], List[List[List[int]]], List[List[List[int]]], List[List[float]]]:
         s_substr_batch, s_tags_batch, s_offsets_batch, s_positions_batch, s_probas_batch = [], [], [], [], []
         for substr_list, tags_list, offsets_list, positions_list, probas_list \
                 in zip(substr_batch, tags_batch, offsets_batch, positions_batch, probas_batch):
@@ -581,7 +588,8 @@ class TreeToSparql(Component):
             s_probas_batch.append([elem[4] for elem in substr_info])
         return s_substr_batch, s_tags_batch, s_offsets_batch, s_positions_batch, s_probas_batch
 
-    def syntax_parse(self, question, entity_offsets_list):
+    def syntax_parse(self, question: str, entity_offsets_list: List[List[int]]) -> Tuple[
+        Union[str, Any], Union[str, Any], Union[str, Any], str, str]:
         syntax_tree = self.syntax_parser([question], [entity_offsets_list])[0]
         log.debug(f"syntax tree: \n{syntax_tree}")
         root, tree, tree_desc, unknown_node, unknown_branch = "", "", "", "", ""
@@ -596,7 +604,8 @@ class TreeToSparql(Component):
             log.debug(f"syntax tree info, root: {root.form} unk_node: {unknown_node} unk_branch: {unknown_branch}")
         return root, tree, tree_desc, unknown_node, unknown_branch
 
-    def sanitize_question(self, tree, root, appos_token_nums, clause_token_nums):
+    def sanitize_question(self, tree: Node, root: Node, appos_token_nums: List[int], clause_token_nums: List[int]) -> \
+            Tuple[str, list]:
         ranking_tokens = self.find_ranking_tokens(root, appos_token_nums, clause_token_nums)
         question_tokens = []
         if self.lang == "@ru":
@@ -860,7 +869,7 @@ class TreeToSparql(Component):
                     types_list.append(node.form)
                 else:
                     grounded_entities_list += self.find_entities(node, positions)
-        
+
         if root_desc_deprels == ["nsubj", "obj", "obj"]:
             obj_desc = root_desc["obj"]
             qualifier_entities_list = self.find_entities(obj_desc[0], positions)
@@ -877,8 +886,8 @@ class TreeToSparql(Component):
             grounded_entities_list = self.find_entities(root_desc["xcomp"][0], positions)
 
         if (self.wh_leaf and root_desc_deprels in [["nsubj", "obj", "obl"], ["obj", "obl"]]) \
-                or (root_desc_deprels in [["nsubj", "obj", "obl"], ["obl", "xcomp"]] \
-                and self.find_year_or_number(root_desc["obl"][0])):
+                or (root_desc_deprels in [["nsubj", "obj", "obl"], ["obl", "xcomp"]]
+                    and self.find_year_or_number(root_desc["obl"][0])):
             found_year_or_number = self.find_year_or_number(root_desc["obl"][0])
             nsubj_ent_list, obj_ent_list = [], []
             if "nsubj" in root_desc_deprels:

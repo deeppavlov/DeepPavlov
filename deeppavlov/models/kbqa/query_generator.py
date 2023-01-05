@@ -25,8 +25,8 @@ import numpy as np
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
-from deeppavlov.models.kbqa.utils import extract_year, extract_number, order_of_answers_sorting, make_combs, \
-    fill_query, find_query_features, make_sparql_query, merge_sparql_query
+from deeppavlov.models.kbqa.utils import extract_year, extract_number, make_combs, fill_query, find_query_features, \
+    make_sparql_query, merge_sparql_query
 from deeppavlov.models.kbqa.wiki_parser import WikiParser
 
 log = getLogger(__name__)
@@ -52,8 +52,10 @@ class QueryGenerator(QueryGeneratorBase):
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             entities_to_leave: how many entities to leave after entity linking
+            types_to_leave: how many types to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
             max_comb_num: the maximum number of combinations of candidate entities and relations
+            gold_query_info: dict of variable names used for formatting output sparql queries
             return_all_possible_answers: whether to return all found answers
             **kwargs:
         """
@@ -78,10 +80,10 @@ class QueryGenerator(QueryGeneratorBase):
                  entity_tags_batch: List[List[str]],
                  probas_batch: List[List[float]],
                  answer_types_batch: List[Set[str]] = None,
-                 entities_to_link_batch: List[List[int]] = None) -> List[str]:
+                 entities_to_link_batch: List[List[int]] = None) -> Tuple[List[Any], List[Any]]:
 
         candidate_outputs_batch, template_answers_batch = [], []
-        if not answer_types_batch or answer_types_batch[0] is None :
+        if not answer_types_batch or answer_types_batch[0] is None:
             answer_types_batch = [[] for _ in question_batch]
         if not entities_to_link_batch or entities_to_link_batch[0] is None:
             entities_to_link_batch = [[1 for _ in substr_list] for substr_list in entities_from_ner_batch]
@@ -162,7 +164,7 @@ class QueryGenerator(QueryGeneratorBase):
             log.debug(f"(query_parser)rels: {rels}")
             rels_from_query = [triplet[1] for triplet in query_triplets_split if triplet[1].startswith('?')]
             qualifier_rels = [triplet[1] for triplet in query_triplets_split if triplet[1].startswith("pq:P")]
-            
+
             answer_ent, order_info, filter_from_query = find_query_features(query, qualifier_rels, question)
             log.debug(f"(query_parser) filter_from_query: {filter_from_query} --- order_info: {order_info}")
 
@@ -281,8 +283,7 @@ class QueryGenerator(QueryGeneratorBase):
                                                 self.map_query_str_to_kb)
                                      for query_hdt_elem in query_sequence]
                     if comb_num == 0:
-                        log.debug(
-                            f"\n__________________________\nfilled query: {query_hdt_seq}\n__________________________\n")
+                        log.debug(f"\n______________________\nfilled query: {query_hdt_seq}\n______________________\n")
 
                     entity_rel_valid = self.check_valid_query(entities_rel_conn, query_hdt_seq)
                     if entity_rel_valid:
