@@ -1,0 +1,52 @@
+{
+    "chainer": {
+      "in": ["questions"],
+      "out": ["par_text"],
+      "pipe": [
+        {
+          "class_name": "bpr",
+          "load_path": "{MODEL_PATH}",
+          "query_encoder_file": "query_encoder_en.pth.tar",
+          "bpr_index": "bpr_finetuned_nq_adv.idx",
+          "pretrained_model": "bert-base-uncased",
+          "top_n": 10,
+          "in": ["questions"],
+          "out": ["par_ids"]
+        },
+        {
+          "class_name": "wiki_sqlite_vocab",
+          "in": ["par_ids"],
+          "out": ["par_text"],
+          "join_docs": false,
+          "shuffle": false,
+          "load_path": "{DOWNLOADS_PATH}/bpr/eng/enwiki_l100.db"
+        }
+      ]
+    },
+    "metadata": {
+      "variables": {
+        "ROOT_PATH": "/archive/evseev/.deeppavlov",
+        "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+        "MODELS_PATH": "{ROOT_PATH}/models",
+        "MODEL_PATH": "{MODELS_PATH}/bpr/eng"
+      },
+    "requirements": [
+        "{DEEPPAVLOV_PATH}/requirements/faiss.txt"
+    ],
+    "download": [
+        {
+          "url": "http://files.deeppavlov.ai/deeppavlov_data/bpr/bpr_db_eng_l100.tar.gz",
+          "subdir": "{DOWNLOADS_PATH}/bpr/eng"
+        },
+        {
+          "url": "http://files.deeppavlov.ai/deeppavlov_data/bpr/query_encoder_en.tar.gz",
+          "subdir": "{MODEL_PATH}"
+        },
+        {
+            "url": "http://files.deeppavlov.ai/deeppavlov_data/bpr/bpr_ivf_index_nq.idx",
+            "subdir": "{MODEL_PATH}"
+        }
+    ]
+    }
+  }
+  
