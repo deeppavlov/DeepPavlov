@@ -43,10 +43,6 @@ class WikiParser:
         Args:
             wiki_filename: file with Wikidata
             file_format: format of Wikidata file
-            prefixes: entity, relations, labels and aliases prefixes
-            used_rels_filename: file with list of used relations
-            rel_q2name_filename: file with dictionary where the keys are relation IDs and values are relation names
-            max_comb_num: maximal number of output triplets for a query
             lang: Russian or English language
             **kwargs:
         """
@@ -210,8 +206,7 @@ class WikiParser:
                 filter_info: List[Tuple[str]] = None,
                 order_info: namedtuple = None,
                 answer_types: List[str] = None,
-                rel_types: List[str] = None) -> Tuple[
-        Union[List[List[str]], List[Any]], Union[List[List[Any]], List[Any]], List[Any]]:
+                rel_types: List[str] = None) -> List[List[str]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -220,8 +215,7 @@ class WikiParser:
             arguments:
                 what_return: ["?obj"]
                 query_seq: [["?ent", "http://www.wikidata.org/prop/direct/P17", "http://www.wikidata.org/entity/Q159"]
-                            ["?ent", "http://www.wikidata.org/prop/direct/P31",
-                                     "http://www.wikidata.org/entity/Q23397"],
+                            ["?ent", "http://www.wikidata.org/prop/direct/P31", "http://www.wikidata.org/entity/Q23397"],
                             ["?ent", "http://www.wikidata.org/prop/direct/P4511", "?obj"]]
                 filter_info: []
                 order_info: order_info(variable='?obj', sorting_order='asc')
@@ -339,7 +333,7 @@ class WikiParser:
                 answers = [["Yes" if len(triplets) > 0 else "No"]]
             found_rels = [[elem[key] for key in rels_from_query if key in elem] for elem in combs]
             ans_rels_combs = [(answer, rel, comb) for answer, rel, comb in zip(answers, found_rels, combs)
-                              if any([entity for entity in answer])]
+                                if any([entity for entity in answer])]
             answers = [elem[0] for elem in ans_rels_combs]
             found_rels = [elem[1] for elem in ans_rels_combs]
             found_combs = [elem[2] for elem in ans_rels_combs]
@@ -362,8 +356,7 @@ class WikiParser:
                 new_comb[key] = comb2[key]
         return new_comb
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> Tuple[
-        Union[List[dict], List[Any]], Union[Union[List[Any], List[List[str]]], Any]]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         if self.file_format == "hdt":
@@ -441,11 +434,11 @@ class WikiParser:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('$', '')
                 return entity
-
+            
             elif re.findall(r"[\d]{3,4}-[\d]{2}-[\d]{2}", entity):
                 entity = self.format_date(entity, question).replace('$', '')
                 return entity
-
+            
             elif entity in ["Yes", "No"]:
                 return entity
 

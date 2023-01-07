@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import Tuple, List, Any, Optional, Union
+from typing import Tuple, List, Any, Optional
 
 from scipy.special import softmax
 
@@ -58,20 +58,10 @@ class RelRankerInfer(Component, Serializable):
             return_elements: what elements return in output
             ranker: component deeppavlov.models.ranking.rel_ranker
             wiki_parser: component deeppavlov.models.wiki_parser
-            bs: infering batch size
+            batch_size: infering batch size
             softmax: whether to process relation scores with softmax function
             use_api_requester: whether wiki parser will be used as external api
             rank: whether to rank relations or simple copy input
-            delete_rel_prefix: whether to delete relation prefixes after extraction from the knowledge base
-            nll_rel_ranking: whether to rank relations with model trained with NLL loss
-            nll_path_ranking: whether to rank relation paths with model trained with NLL loss
-            top_possible_answers: maximal number of answer entities in the output
-            top_n: number of candidate answers
-            pos_class_num: in the model of relation ranking, the number of positive class in the output
-            rel_thres: threshold to filter out unprobable relation paths
-            filter_high_rel_conf_flag: whether to leave only candidate answers with confidence of relation path upper
-                threshold
-            type_rels: relations which connect entity and its type in the knowledge base
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
@@ -115,7 +105,7 @@ class RelRankerInfer(Component, Serializable):
                  raw_answers_batch: List[List[Tuple[str]]],
                  entity_substr_batch: List[List[str]],
                  template_answers_batch: List[str],
-                 equal_flag_batch: List[str] = None) -> Tuple[List[Union[Union[str, List[Union[str, Any]]], Any]]]:
+                 equal_flag_batch: List[str] = None) -> List[str]:
         answers_batch, outp_confidences_batch, answer_ids_batch = [], [], []
         entities_and_rels_batch, queries_batch, triplets_batch = [], [], []
         if equal_flag_batch is None:
@@ -126,31 +116,30 @@ class RelRankerInfer(Component, Serializable):
                     template_answers_batch, equal_flag_batch):
             answers_with_scores = []
             l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_triplets, \
-            l_confs = self.preprocess_ranking_input(question, raw_answers, equal_flag)
+                l_confs = self.preprocess_ranking_input(question, raw_answers, equal_flag)
             if not l_cur_answers and equal_flag:
                 oppos_equal_flag = self.equal_flag_oppos[equal_flag]
                 l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_triplets, \
-                l_confs = self.preprocess_ranking_input(question, raw_answers, oppos_equal_flag)
+                    l_confs = self.preprocess_ranking_input(question, raw_answers, oppos_equal_flag)
 
             n_batches = len(l_questions) // self.bs + int(len(l_questions) % self.bs > 0)
             for i in range(n_batches):
                 if self.rank:
                     if self.nll_path_ranking:
-                        probas = self.ranker([l_questions[0]], [l_rels_labels[self.bs * i:self.bs * (i + 1)]])
+                        probas = self.ranker([l_questions[0]], [l_rels_labels[self.bs*i:self.bs*(i+1)]])
                         probas = probas[0]
                     else:
-                        probas = self.ranker(l_questions[self.bs * i:self.bs * (i + 1)],
-                                             l_rels_labels[self.bs * i:self.bs * (i + 1)])
+                        probas = self.ranker(l_questions[self.bs*i:self.bs*(i+1)],
+                                             l_rels_labels[self.bs*i:self.bs*(i+1)])
                         probas = [proba[0] for proba in probas]
                 else:
-                    probas = [rel_conf for rel_conf, entity_conf in l_confs[self.bs * i:self.bs * (i + 1)]]
-                for j in range(self.bs * i, self.bs * (i + 1)):
-                    if j < len(l_cur_answers) and (probas[j - self.bs * i] > self.rel_thres or
-                                                   (len(l_rels[j]) > 1 and not set(l_rels[j]).intersection(
-                                                       self.type_rels))):
+                    probas = [rel_conf for rel_conf, entity_conf in l_confs[self.bs*i:self.bs*(i+1)]]
+                for j in range(self.bs*i, self.bs*(i+1)):
+                    if j < len(l_cur_answers) and (probas[j - self.bs*i] > self.rel_thres or \
+                            (len(l_rels[j]) > 1 and not set(l_rels[j]).intersection(self.type_rels))):
                         answers_with_scores.append((l_cur_answers[j], l_sparql_queries[j], l_triplets[j],
                                                     l_entities[j], l_types[j], l_rels_labels[j], l_rels[j],
-                                                    round(probas[j - self.bs * i], 3),
+                                                    round(probas[j - self.bs*i], 3),
                                                     round(l_confs[j][0], 3), l_confs[j][1]))
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-3], reverse=True)
             if template_type == "simple_boolean" and not answers_with_scores:
@@ -193,7 +182,7 @@ class RelRankerInfer(Component, Serializable):
                         answer = sentence_answer(question, answer, entities, template_answer)
                     except:
                         log.info("Error in sentence answer")
-
+                
                 res_answers_list.append(answer)
                 res_answer_ids_list.append(answer_ids)
                 if "several_confidences" in self.return_elements:
@@ -243,7 +232,7 @@ class RelRankerInfer(Component, Serializable):
 
     def preprocess_ranking_input(self, question, answers, equal_flag):
         l_questions, l_rels, l_rels_labels, l_cur_answers = [], [], [], []
-        l_entities, l_types, l_sparql_queries, l_triplets, l_confs = [], [], [], [], []
+        l_entities, l_types, l_sparql_queries, l_triplets, l_confs = [], [], [], [], []    
         for ans_and_rels in answers:
             answer, sparql_query, confidence = "", "", []
             entities, types, rels, rels_labels, triplets = [], [], [], [], []
@@ -265,8 +254,8 @@ class RelRankerInfer(Component, Serializable):
                             label = label[0]
                         rels_labels.append(label.lower())
             check_equal = False
-            if len(rels_labels) == 2 and ((rels_labels[0] == rels_labels[1] and equal_flag == "equal") or
-                                          (rels_labels[0] != rels_labels[1] and equal_flag == "not_equal")):
+            if len(rels_labels) == 2 and ((rels_labels[0] == rels_labels[1] and equal_flag == "equal") or \
+                    (rels_labels[0] != rels_labels[1] and equal_flag == "not_equal")):
                 check_equal = True
             if rels_labels and ((len(rels_labels) == 2 and equal_flag and check_equal)
                                 or not equal_flag or len(rels_labels) == 1):
@@ -280,7 +269,7 @@ class RelRankerInfer(Component, Serializable):
                 l_triplets.append(triplets)
                 l_confs.append(confidence)
         return l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_triplets, \
-               l_confs
+            l_confs
 
     def filter_high_rel_conf(self, template_type, answers_with_scores):
         for tp, thres in [("2_hop", 0.98), ("simple", 0.99)]:

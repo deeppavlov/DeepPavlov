@@ -134,7 +134,7 @@ class StrUTF8Encoder(Estimator):
     def load(self) -> None:
         if self.load_path:
             if self.load_path.is_file():
-                log.info(f"[loading vocabulary from {self.load_path}]")
+                log.debug(f"[loading vocabulary from {self.load_path}]")
                 self.tokens = []
                 for ln in self.load_path.open('r', encoding='utf8'):
                     token = ln.strip().split()[0]

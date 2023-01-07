@@ -309,7 +309,7 @@ class TorchTransformersSequenceTagger(TorchModel):
                     checkpoint = torch.load(weights_path_crf, map_location=self.device)
                     self.crf.load_state_dict(checkpoint["model_state_dict"], strict=False)
                 else:
-                    log.info(f"Init from scratch. Load path {weights_path_crf} does not exist.")
+                    log.warning(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
