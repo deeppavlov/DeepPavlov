@@ -64,7 +64,8 @@
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "slovnet_syntax_parser": [
-    "{DEEPPAVLOV_PATH}/requirements/slovnet.txt"
+    "{DEEPPAVLOV_PATH}/requirements/slovnet.txt",
+    "{DEEPPAVLOV_PATH}/requirements/razdel.txt"
   ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
@@ -147,7 +148,8 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "tree_to_sparql": [
-    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt",
+    "{DEEPPAVLOV_PATH}/requirements/razdel.txt"
   ],
   "typos_custom_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
