@@ -2,7 +2,7 @@ aio-pika>=3.2.2,<6.9.0
 fastapi>=0.47.0,<0.78.0
 filelock>=3.0.0,<3.10.0
 nltk>=3.2.5,<3.10.0
-numpy
+numpy<1.24
 overrides==4.1.2
 pandas>=1.0.0,<1.6.0
 prometheus-client>=0.13.0,<0.15.0
