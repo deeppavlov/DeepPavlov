@@ -2,7 +2,7 @@ Installation
 ============
 
 
-We support ``Linux`` platform, ``Python 3.6``, ``3.7``, ``3.8`` and ``3.9``.
+We support ``Linux`` platform, ``Python 3.6``, ``3.7``, ``3.8``, ``3.9``, ``3.10`` and ``3.11``.
 
 .. note::
 
