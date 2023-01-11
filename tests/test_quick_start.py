@@ -88,10 +88,7 @@ PARAMS = {
             ]
     },
     "faq": {
-        ("faq/tfidf_logreg.json", "tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/tfidf_cos_sim.json", "tfidf_cos_sim", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("faq/fasttext_logreg.json", "fasttext_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/fasttext_cos_sim.json", "fasttext_cos_sim", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
     },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
@@ -566,7 +563,7 @@ class TestQuickStart(object):
 
 def test_crossvalidation():
     model_dir = 'faq'
-    conf_file = 'faq/tfidf_logreg.json'
+    conf_file = 'faq/fasttext_logreg.json'
 
     download_config(conf_file)
 
