@@ -151,7 +151,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/dream_data/sfc_bert_base_cased_convers_v5.tar.gz",
+        "url": "http://files.deeppavlov.ai/dream_data/speech_functions/sfc_bert_base_cased_convers_v5.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers/"
       }
     ]
