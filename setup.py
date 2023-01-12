@@ -65,7 +65,7 @@ if __name__ == '__main__':
                 'flake8',
                 'pytest',
                 'pytest-instafail',
-                'pytest-timeout'
+                'pytest-timeout',
                 'pexpect'
             ],
             'docs': [
