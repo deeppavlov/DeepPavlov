@@ -150,6 +150,10 @@
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sfc_distilbert_base_uncased_v6"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/dream_data/sfc_distilbert_base_uncased_v6.tar.gz",
+        "subdir": "{MODELS_PATH}/classifiers/"
+      }
     ]
   }
 }
