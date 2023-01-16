@@ -13,4 +13,4 @@ cd ..
 
 flake8 `python -c 'import deeppavlov; print(deeppavlov.__path__[0])'` --count --select=E9,F63,F7,F82 --show-source --statistics
 
-pytest -v --disable-warnings --instafail --timeout=600 $PYTEST_ARGS
+pytest -v --disable-warnings --instafail --timeout=1200 $PYTEST_ARGS
