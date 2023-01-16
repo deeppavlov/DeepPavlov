@@ -51,6 +51,7 @@ class TorchTransformersElRanker(TorchModel):
             self,
             encoder_save_path: str,
             bilinear_save_path: str,
+            block_size: int,
             emb_size: int,
             pretrained_bert: str = None,
             criterion: str = "CrossEntropyLoss",
