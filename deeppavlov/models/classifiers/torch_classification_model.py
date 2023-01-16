@@ -13,16 +13,14 @@
 # limitations under the License.
 
 import logging
-from overrides import overrides
 from typing import List, Union, Optional
 
 import numpy as np
 import torch
-import torch.nn as nn
 
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.torch_model import TorchModel
 from .torch_nets import ShallowAndWideCnn
 
 log = logging.getLogger(__name__)
