@@ -21,6 +21,9 @@ from sklearn.model_selection import train_test_split
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
+from collections import defaultdict
+import random
+
 log = getLogger(__name__)
 
 
@@ -37,6 +40,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
         split_proportions: list of corresponding proportions for splitting
         seed: random seed for iterating
+        shot: number of examples to sample for each class in training data
         shuffle: whether to shuffle examples in batches
         split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
         stratify: whether to use stratified split
@@ -52,6 +56,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                  field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
                  seed: int = None, shuffle: bool = True, split_seed: int = None,
                  stratify: bool = None,
+                 shot: int = None,
                  *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
@@ -80,6 +85,29 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                                  stratify=stratify)
             else:
                 raise IOError("Given field to split BUT not given names of split fields")
+        
+        if shot is not None:
+            train_data = self.data['train']
+            # shuffle data to select shot-examples
+            random.shuffle(train_data)
+
+            data_dict = defaultdict(list)
+            for text, label in train_data:
+                if len(data_dict[label]) < shot:
+                    data_dict[label].append(text)
+            
+            if min(len(x) for x in data_dict.values()) < shot:
+                log.warning(f"Some labels have less than {shot} examples")
+
+            new_data = []
+            for label in data_dict.keys():
+                for text in data_dict[label]:
+                    new_data.append((text, label))
+
+            if shuffle:
+                random.shuffle(new_data)
+
+            self.data['train'] = new_data
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
                     split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:

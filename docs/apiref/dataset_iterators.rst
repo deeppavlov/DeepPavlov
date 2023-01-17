@@ -5,8 +5,6 @@ Concrete DatasetIterator classes.
 .. autoclass:: deeppavlov.dataset_iterators.basic_classification_iterator.BasicClassificationDatasetIterator
     :members:
 
-.. autoclass:: deeppavlov.dataset_iterators.few_shot_iterator.FewShotIterator
-
 .. autoclass:: deeppavlov.dataset_iterators.siamese_iterator.SiameseIterator
 
 .. autoclass:: deeppavlov.dataset_iterators.sqlite_iterator.SQLiteDataIterator
