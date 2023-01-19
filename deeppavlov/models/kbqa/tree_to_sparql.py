@@ -19,7 +19,7 @@ from logging import getLogger
 from typing import Any, List, Tuple, Dict, Union
 
 import numpy as np
-import pymorphy2
+import spacy
 from navec import Navec
 from scipy.sparse import csr_matrix
 from slovnet import Syntax
@@ -66,11 +66,10 @@ class RuAdjToNoun:
         self.adj_set = set([word for word, freq in pos_freq_dict["a"]])
         self.nouns = [noun[0] for noun in self.nouns_with_freq]
         self.matrix = self.make_sparse_matrix(self.nouns).transpose()
-        self.morph = pymorphy2.MorphAnalyzer()
+        self.nlp = spacy.load("ru_core_news_sm")
 
     def search(self, word: str):
-        word = self.morph.parse(word)[0]
-        word = word.normal_form
+        word = self.nlp(word)[0].lemma_
         if word in self.adj_set:
             q_matrix = self.make_sparse_matrix([word])
             scores = q_matrix * self.matrix
@@ -190,6 +189,7 @@ class TreeToSparql(Component):
             self.begin_tokens = {"начинать", "начать"}
             self.end_tokens = {"завершить", "завершать", "закончить"}
             self.ranking_tokens = {"самый"}
+            self.nlp = spacy.load("ru_core_news_sm")
         elif self.lang == "eng":
             self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
             self.how_many = "how many"
@@ -199,12 +199,12 @@ class TreeToSparql(Component):
             self.begin_tokens = set()
             self.end_tokens = set()
             self.ranking_tokens = set()
+            self.nlp = spacy.load("en_core_news_sm")
         else:
             raise ValueError(f"unsupported language {lang}")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
         self.template_queries = read_json(self.sparql_queries_filename)
         self.adj_to_noun = adj_to_noun
-        self.morph = pymorphy2.MorphAnalyzer()
 
     def __call__(self, syntax_tree_batch: List[str],
                  positions_batch: List[List[List[int]]]) -> Tuple[
@@ -274,7 +274,7 @@ class TreeToSparql(Component):
                     self.root_entity = True
 
                 temporal_order = self.find_first_last(new_root)
-                new_root_nf = self.morph.parse(new_root.form)[0].normal_form
+                new_root_nf = self.nlp(new_root.form)[0].lemma_
                 if new_root_nf in self.begin_tokens or new_root_nf in self.end_tokens:
                     temporal_order = new_root_nf
                 ranking_tokens = self.find_ranking_tokens(new_root)
@@ -288,7 +288,7 @@ class TreeToSparql(Component):
                         question = []
                         for node in tree.descendants:
                             if node.ord in ranking_tokens or node.form.lower() in self.q_pronouns:
-                                question.append(self.morph.parse(node.form)[0].normal_form)
+                                question.append(self.nlp(node.form)[0].lemma_)
                             else:
                                 question.append(node.form)
                         question = ' '.join(question)
@@ -496,7 +496,7 @@ class TreeToSparql(Component):
             for node in nodes:
                 node_desc = defaultdict(set)
                 for elem in node.children:
-                    parsed_elem = self.morph.parse(elem.form.lower())[0].inflect({"masc", "sing", "nomn"})
+                    parsed_elem = self.nlp(elem.form.lower())[0].lemma_
                     if parsed_elem is not None:
                         node_desc[elem.deprel].add(parsed_elem.word)
                     else:
@@ -511,7 +511,7 @@ class TreeToSparql(Component):
     def find_ranking_tokens(self, node: Node) -> list:
         ranking_tokens = []
         for elem in node.descendants:
-            if self.morph.parse(elem.form)[0].normal_form in self.ranking_tokens:
+            if self.nlp(elem.form)[0].lemma_ in self.ranking_tokens:
                 ranking_tokens.append(elem.ord)
                 ranking_tokens.append(elem.parent.ord)
                 return ranking_tokens
