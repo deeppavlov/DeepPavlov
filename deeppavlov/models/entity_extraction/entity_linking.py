@@ -85,7 +85,7 @@ class EntityLinker(Component, Serializable):
         self.lang = f"@{lang}"
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
-            self.nlp = spacy.load("en_core_news_sm")
+            self.nlp = spacy.load("en_core_web_sm")
         elif self.lang == "@ru":
             self.stopwords = set(stopwords.words("russian"))
             self.nlp = spacy.load("ru_core_news_sm")

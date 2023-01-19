@@ -199,7 +199,7 @@ class TreeToSparql(Component):
             self.begin_tokens = set()
             self.end_tokens = set()
             self.ranking_tokens = set()
-            self.nlp = spacy.load("en_core_news_sm")
+            self.nlp = spacy.load("en_core_web_sm")
         else:
             raise ValueError(f"unsupported language {lang}")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
