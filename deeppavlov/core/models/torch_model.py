@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from abc import abstractmethod
-from copy import deepcopy
 from logging import getLogger
 from pathlib import Path
 from typing import Optional
@@ -48,8 +47,6 @@ class TorchModel(NNModel):
         model: torch model
         epochs_done: number of epochs that were done
         optimizer: `torch.optim` instance
-        optimizer_parameters: dictionary with optimizer parameters
-        criterion: `torch.nn` criterion instance
         learning_rate_drop_patience: how many validations with no improvements to wait
         learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
             validations
@@ -64,7 +61,6 @@ class TorchModel(NNModel):
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
                  min_learning_rate: float = 1e-07,
-                 criterion: Optional[str] = None,
                  *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -74,24 +70,14 @@ class TorchModel(NNModel):
 
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
         self.model.to(self.device)
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(self.model.parameters(), **self.optimizer_parameters)
-        if criterion is not None:
-            self.criterion = getattr(torch.nn, criterion)()
-        self.optimizer = None
-        self.criterion = None
-        self.epochs_done = 0
-
         if optimizer_parameters is None:
             optimizer_parameters = {"lr": 0.01}
-        self.optimizer_name = optimizer
-        self.optimizer_parameters = optimizer_parameters
-
+        self.optimizer = getattr(torch.optim, optimizer)(self.model.parameters(), **optimizer_parameters)
+        self.epochs_done = 0
         self.learning_rate_drop_patience = learning_rate_drop_patience
         self.learning_rate_drop_div = learning_rate_drop_div
         self.load_before_drop = load_before_drop
         self.min_learning_rate = min_learning_rate
-        # TODO: replace opt dict with explicit arguments/structure
-        self.opt = deepcopy(kwargs)
 
         self.load()
         # we need to switch to eval mode here because by default it's in `train` mode.

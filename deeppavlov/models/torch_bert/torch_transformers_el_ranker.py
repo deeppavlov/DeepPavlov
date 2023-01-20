@@ -42,7 +42,6 @@ class TorchTransformersElRanker(TorchModel):
         emb_size: entity embedding size
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        criterion: name of loss function
         return_probas: set this to `True` if you need the probabilities instead of raw answers
         clip_norm: clip gradients by norm
     """
@@ -54,7 +53,6 @@ class TorchTransformersElRanker(TorchModel):
             block_size: int,
             emb_size: int,
             pretrained_bert: str = None,
-            criterion: str = "CrossEntropyLoss",
             return_probas: bool = False,
             clip_norm: Optional[float] = None,
             **kwargs
@@ -72,7 +70,7 @@ class TorchTransformersElRanker(TorchModel):
             emb_size=emb_size
         )
 
-        super().__init__(criterion=criterion, **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self, q_features: List[Dict],
                        c_features: List[Dict],

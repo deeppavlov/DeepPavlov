@@ -20,7 +20,6 @@ class REBertModel(TorchModel):
             n_classes: int,
             num_ner_tags: int,
             pretrained_bert: str = None,
-            criterion: str = "CrossEntropyLoss",
             return_probas: bool = False,
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
@@ -36,7 +35,6 @@ class REBertModel(TorchModel):
             n_classes: number of output classes
             num_ner_tags: number of NER tags
             pretrained_bert: key title of pretrained Bert model (e.g. "bert-base-uncased")
-            criterion: criterion name from `torch.nn`
             return_probas: set this to `True` if you need the probabilities instead of raw answers
             attention_probs_keep_prob: keep_prob for Bert self-attention layers
             hidden_keep_prob: keep_prob for Bert hidden layers
@@ -63,7 +61,7 @@ class REBertModel(TorchModel):
             device=self.device
         )
 
-        super().__init__(criterion=criterion, **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(
             self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List, labels: List

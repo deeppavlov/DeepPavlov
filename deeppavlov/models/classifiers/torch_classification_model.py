@@ -78,8 +78,8 @@ class TorchTextClassificationModel(TorchModel):
                                        dense_size=dense_size, dropout_rate=dropout_rate,
                                        embedded_tokens=embedded_tokens,
                                        vocab_size=vocab_size)
-
-        super().__init__(criterion=criterion, **kwargs)
+        self.criterion = getattr(torch.nn, criterion)()
+        super().__init__(**kwargs)
 
     def __call__(self, texts: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.
