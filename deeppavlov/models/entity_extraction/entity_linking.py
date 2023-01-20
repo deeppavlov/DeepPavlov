@@ -14,19 +14,19 @@
 
 import re
 import sqlite3
+from collections import defaultdict
 from logging import getLogger
 from typing import List, Dict, Tuple, Union, Any
-from collections import defaultdict
 
 import spacy
 from hdt import HDTDocument
 from nltk.corpus import stopwords
 from rapidfuzz import fuzz
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
@@ -304,9 +304,7 @@ class EntityLinker(Component, Serializable):
         if entity_substr_lemm != entity_substr:
             entities_and_ids = self.find_title(entity_substr_lemm)
             if entities_and_ids:
-                cand_ent_init = self.process_cand_ent(
-                    cand_ent_init, entities_and_ids, entity_substr_split_lemm, tag
-                )
+                cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split_lemm, tag)
         return cand_ent_init
 
     def find_fuzzy_match(self, entity_substr_split, tag):
