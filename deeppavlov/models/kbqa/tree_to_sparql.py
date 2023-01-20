@@ -498,7 +498,7 @@ class TreeToSparql(Component):
                 for elem in node.children:
                     parsed_elem = self.nlp(elem.form.lower())[0].lemma_
                     if parsed_elem is not None:
-                        node_desc[elem.deprel].add(parsed_elem.word)
+                        node_desc[elem.deprel].add(parsed_elem)
                     else:
                         node_desc[elem.deprel].add(elem.form)
                 if "amod" in node_desc.keys() and "nmod" in node_desc.keys() and \
