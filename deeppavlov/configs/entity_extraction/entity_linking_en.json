@@ -21,7 +21,6 @@
         "entity_ranker": "#entity_descr_ranking",
         "rank_in_runtime": true,
         "num_entities_for_bert_ranking": 20,
-        "use_gpu": false,
         "include_mention": false,
         "num_entities_to_return": 3,
         "lemmatize": true,
