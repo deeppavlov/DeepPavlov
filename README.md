@@ -179,6 +179,9 @@ from deeppavlov import evaluate_model
 model = evaluate_model(<config_path>, install=True, download=True)
 ```
 
+DeepPavlov also [allows](https://docs.deeppavlov.ai/en/master/features/python.html) to build a model from components for
+inference using Python.
+
 ## License
 
 DeepPavlov is Apache 2.0 - licensed.
