@@ -21,6 +21,7 @@
         "max_seq_length": 512,
         "max_subword_length": 15,
         "token_masking_prob": 0.0,
+        "from_file": false,
         "in": [
           "x"
         ],
@@ -141,12 +142,12 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "bert-base-uncased",
-      "MODEL_PATH": "{MODELS_PATH}/dialog_entity_detection2"
+      "MODEL_PATH": "{MODELS_PATH}/dialog_entity_detection"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_torch_bert.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/tmp/dialog_entity_detection_dataset.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/dialog_entity_detection"
       }
     ]
   }
