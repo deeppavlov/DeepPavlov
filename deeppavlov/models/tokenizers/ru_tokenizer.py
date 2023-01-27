@@ -17,7 +17,7 @@ from typing import List, Generator, Any, Optional, Union, Tuple
 
 # from nltk.corpus import stopwords
 # STOPWORDS = stopwords.words('russian')
-import pymorphy2
+import spacy
 from nltk.tokenize.toktok import ToktokTokenizer
 
 from deeppavlov.core.common.registry import register
@@ -30,7 +30,7 @@ logger = getLogger(__name__)
 @register('ru_tokenizer')
 class RussianTokenizer(Component):
     """Tokenize or lemmatize a list of documents for Russian language. Default models are
-    :class:`ToktokTokenizer` tokenizer and :mod:`pymorphy2` lemmatizer.
+    :class:`ToktokTokenizer` tokenizer and :mod:`spacy` lemmatizer.
     Return a list of tokens or lemmas for a whole document.
     If is called onto ``List[str]``, performs detokenizing procedure.
 
@@ -48,7 +48,7 @@ class RussianTokenizer(Component):
         stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
          and ngrams creation
         tokenizer: an instance of :class:`ToktokTokenizer` tokenizer class
-        lemmatizer: an instance of :class:`pymorphy2.MorphAnalyzer` lemmatizer class
+        lemmatizer: an instance of :class:`spacy.lang.ru.Russian` lemmatizer class
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
         lowercase: whether to perform lowercasing or not; is performed by default by :meth:`_tokenize`
@@ -67,7 +67,7 @@ class RussianTokenizer(Component):
             ngram_range = [1, 1]
         self.stopwords = stopwords or []
         self.tokenizer = ToktokTokenizer()
-        self.lemmatizer = pymorphy2.MorphAnalyzer()
+        self.lemmatizer = spacy.load("ru_core_news_sm")
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
         self.lowercase = lowercase
@@ -164,7 +164,7 @@ class RussianTokenizer(Component):
                 try:
                     lemma = self.tok2morph[token]
                 except KeyError:
-                    lemma = self.lemmatizer.parse(token)[0].normal_form
+                    lemma = self.lemmatizer(token)[0].lemma_
                     self.tok2morph[token] = lemma
                 lemmas.append(lemma)
             filtered = self._filter(lemmas)
