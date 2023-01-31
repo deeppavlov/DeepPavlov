@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 from overrides import overrides
 from collections import OrderedDict
-import time
 import os
 
 import torch
@@ -260,6 +259,7 @@ class TorchMultiTaskBert(TorchModel):
         If not set, defaults to the parameter hidden_dropout_prob of original model
         cuda_cache_size(default:3): predicts cache size. Recommended if we need classify one samples for many tasks. 0 if we don't use cache
         cuda_cache(default:True): if True, store cache on GPU
+        seed(default:42): Torch manual_random_seed
     """
 
     def __init__(
@@ -280,6 +280,7 @@ class TorchMultiTaskBert(TorchModel):
             new_model = False,
             dropout: Optional[float] = None,
             binary_threshold: float=0.5,
+            seed: int=42,
             *args,
             **kwargs,
     ) -> None:
@@ -302,7 +303,7 @@ class TorchMultiTaskBert(TorchModel):
             self.task_types.append(tasks[task]['type'])
             self.multilabel.append(tasks[task].get('multilabel', False))
             self.one_hot_labels.append(tasks[task].get('one_hot_labels',False))
-            self.types_to_cache.append(tasks[task].get('type_to_cache', None))
+            self.types_to_cache.append(tasks[task].get('type_to_cache', -1))
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -323,6 +324,7 @@ class TorchMultiTaskBert(TorchModel):
         self.binary_threshold = binary_threshold
         self.focal = focal
         self._reset_cache()
+        torch.manual_seed(seed)
 
         super().__init__(
             optimizer_parameters=self.optimizer_parameters,
@@ -331,7 +333,7 @@ class TorchMultiTaskBert(TorchModel):
             **kwargs,
         )
     def _reset_cache(self):
-        self.preds_cache = {index_ : None for index_ in self.types_to_cache if index_ != None}
+        self.preds_cache = {index_ : None for index_ in self.types_to_cache if index_ != -1}
     @overrides
     def init_from_opt(self) -> None:
         """
@@ -508,15 +510,17 @@ class TorchMultiTaskBert(TorchModel):
         """
         # IMPROVE ARGS CHECKING AFTER DEBUG
         log.debug(f'Calling {args}')
+        import time
         self.validation_predictions = [None for _ in range(len(args))]
         for task_id in range(len(self.task_names)):
+            t1=time.time()
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(
                     task_features=args[task_id], task_id=task_id)
 
                 assert 'input_ids' in _input, f'No input_ids in _input {_input}'
                 cache_key = self.types_to_cache[task_id]
-                if cache_key!= None and self.preds_cache[cache_key] is not None:
+                if cache_key!= -1 and self.preds_cache[cache_key] is not None:
                     last_hidden_state = self.preds_cache[cache_key]
                 else:
                     with torch.no_grad():
@@ -524,7 +528,7 @@ class TorchMultiTaskBert(TorchModel):
                             last_hidden_state = self.model.module.get_logits(task_id, **_input)
                         else:
                             last_hidden_state = self.model.get_logits(task_id, **_input)
-                        if cache_key != None:
+                        if cache_key != -1:
                             self.preds_cache[cache_key] = last_hidden_state
                 with torch.no_grad():
                     if self.is_data_parallel:
@@ -558,19 +562,31 @@ class TorchMultiTaskBert(TorchModel):
                             for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
                                 pred[sample_num].append(int(class_num))
                     else:
-                        if self.return_probas:
-                            pred = torch.softmax(logits, dim=-1)
+                        if self.multilabel[task_id]:
+                            probs = torch.sigmoid(logits)
+                            if self.return_probas:
+                                pred = probs
+                                pred = pred.cpu().numpy()                            
+                            else:
+                                numbers_of_sample, numbers_of_class = (probs > self.binary_threshold).nonzero(as_tuple=True)
+                                numbers_of_sample, numbers_of_class = numbers_of_sample.cpu().numpy(), numbers_of_class.cpu().numpy()
+                                pred = [[] for _ in range(len(logits))]
+                                for sample_num, class_num in zip(numbers_of_sample, numbers_of_class):
+                                    pred[sample_num].append(int(class_num))
                         else:
-                            pred = torch.argmax(logits, dim=1)
-                        pred = pred.cpu().numpy()
+                            if self.return_probas:
+                                pred = torch.softmax(logits, dim=-1)
+                            else:
+                                pred = torch.argmax(logits, dim=1)
+                            pred = pred.cpu().numpy()
                 self.validation_predictions[task_id] = pred
-        log.debug(f'Predictions {self.validation_predictions}')
         if len(args) == 1:
             return self.validation_predictions[0]
         for i in range(len(self.validation_predictions)):
             if self.validation_predictions[i] is None:
                 self.validation_predictions[i] = []
         self._reset_cache()
+        log.debug(self.validation_predictions)
         return self.validation_predictions
 
     def set_gradient_accumulation_interval(self, task_id, interval):
@@ -590,6 +606,8 @@ class TorchMultiTaskBert(TorchModel):
                     f'Correct is {2 * self.n_tasks} as n_tasks is {self.n_tasks}'
         assert len(args) == 2 * self.n_tasks, error_msg
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k]) > 0]
+        assert len(
+            ids_to_iterate) >0, f'No examples given! Given args {args}'        
         assert len(
             ids_to_iterate) == 1, 'Samples from more than 1 task in train_on_batch'
         task_id = ids_to_iterate[0]
@@ -624,5 +642,5 @@ class TorchMultiTaskBert(TorchModel):
             self.optimizer.zero_grad()
         self.train_losses[task_id] = loss.item()
         self.steps_taken += 1
-        #print(f'train {task_id} {logits}')
+        log.debug(f'train {task_id} {logits}')
         return {"losses": self.train_losses}
