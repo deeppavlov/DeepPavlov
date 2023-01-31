@@ -2,7 +2,8 @@
    "metadata": {
         "variables": {
             "ROOT_PATH": "~/.deeppavlov",
-            "MODELS_PATH": "{ROOT_PATH}/models_en",
+            "MODELS_PATH": "{ROOT_PATH}/models_superglue",
+            "NAME":"8task",
             "NUM_TRAIN_EPOCHS": 5,
             "SEQ_LEN": 320,
             "GRADIENT_ACC_STEPS": 1,
@@ -105,8 +106,8 @@
                 "learning_rate_drop_div": 2.0,
                 "return_probas": true,
                 "max_seq_len":"{SEQ_LEN}",
-                "save_path": "{MODELS_PATH}/engbertsuperglue1",
-                "load_path": "{MODELS_PATH}/engbertsuperglue1",
+                "save_path": "{MODELS_PATH}/{NAME}",
+                "load_path": "{MODELS_PATH}/{NAME}",
                 "tasks": {
                     "wsc":{"type":"classification","options": 2},
                     "multirc":{"type":"classification","options": 2},
