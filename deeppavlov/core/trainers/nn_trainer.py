@@ -76,6 +76,8 @@ class NNTrainer(FitTrainer):
         log_on_k_batches: count of random train batches to calculate metrics in log (default is ``1``)
         max_test_batches: maximum batches count for pipeline testing and evaluation, overrides ``log_on_k_batches``,
             ignored if negative (default is ``-1``)
+        always_save_model: if True, we always save the obtained weights of our model, regardless of the metric.
+            (default if ``False``)
         **kwargs: additional parameters whose names will be logged but otherwise ignored
 
 
@@ -107,6 +109,7 @@ class NNTrainer(FitTrainer):
                  validate_first: bool = True,
                  validation_patience: int = 5, val_every_n_epochs: int = -1, val_every_n_batches: int = -1,
                  log_every_n_batches: int = -1, log_every_n_epochs: int = -1, log_on_k_batches: int = 1,
+                 always_save_model: bool = False,
                  **kwargs) -> None:
         super().__init__(chainer_config, batch_size=batch_size, metrics=metrics, evaluation_targets=evaluation_targets,
                          show_examples=show_examples, max_test_batches=max_test_batches, **kwargs)
@@ -141,6 +144,7 @@ class NNTrainer(FitTrainer):
         self.max_epochs = epochs
         self.epoch = start_epoch_num
         self.max_batches = max_batches
+        self.always_save_model = always_save_model
 
         self.train_batches_seen = 0
         self.examples = 0
@@ -206,6 +210,11 @@ class NNTrainer(FitTrainer):
             log.info(f'Improved best {m_name} from {self.score_best} to {score}')
             self.score_best = score
             log.info('Saving model')
+            self.save()
+        elif self.always_save_model:
+            log.info(f'Changed {m_name} from {self.score_best} to {score}')
+            self.score_best = score
+            log.info('But due to always_save_model, saving the model')
             self.save()
         else:
             log.info('Did not improve on the {} of {}'.format(m_name, self.score_best))
