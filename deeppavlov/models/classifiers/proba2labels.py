@@ -66,20 +66,22 @@ class Proba2Labels(Component):
             or list of the following lists (in multitask setting) for every argument
         """
         answer = []
+        log.debug(f'input {args}')
         for data in args:
-            #if data[0] is None:
-            #    answer.append([])
-            if self.confidence_threshold:
+            if all([k is None for k in data]):
+                answer.append([])
+            elif self.confidence_threshold:
                 if self.is_binary:
                     answer.append([int(el > self.confidence_threshold) for el in data])
                 else:
-                    answer = []
+                    answer_ = []
                     for d in data:
                         try:
-                            answer.append(list(np.where(np.array(d) > self.confidence_threshold)[0]))
+                            answer_.append(list(np.where(np.array(d) > self.confidence_threshold)[0]))
                         except Exception as e:
                             print(f'Exception in element {d} of input list')
                             raise e
+                    answer.append(answer_)
             elif self.max_proba:
                 answer.append([np.argmax(d) for d in data])
             elif self.top_n:
@@ -88,6 +90,7 @@ class Proba2Labels(Component):
                 raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
                                   "float `confidence_threshold` for multi-label classification or"
                                   "integer `top_n` for choosing several labels with the highest probabilities")
-        if len(answer) == 1:
+        if len(args) == 1:  # only one argument
             answer = answer[0]
+        log.debug(f'output {answer}')
         return answer
