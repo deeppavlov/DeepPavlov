@@ -203,15 +203,13 @@ def round_f1(y_true, y_predicted):
     return f1_score(y_true, predictions)
 
 
-@register_metric('f1_macro')
-def round_f1_macro(y_true, y_predicted):
-    """
-    Calculates F1 macro measure.
 
+def _f1_macro_weighted(y_true, y_predicted,print_matrix=False, average='macro'):
+    """
+    Function to calculate f1 macro and f1 weighted. Used in the metrics.
     Args:
         y_true: list of true values
         y_predicted: list of predicted values
-
     Returns:
         F1 score
     """
@@ -219,28 +217,75 @@ def round_f1_macro(y_true, y_predicted):
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
         predictions = y_predicted
+    if not len(y_true) and not len(y_predicted):
+        # y_true and y_predicted are empty lists. This situation can happen in multitask setting
+        return -1
+    if print_matrix and all(isinstance(k, list) for k in y_true):
+        mlb = MultiLabelBinarizer(sparse_output=False)
+        mlb.fit(y_true + y_predicted)
+        y_true_binarized = mlb.transform(y_true)
+        y_predicted_binarized = mlb.transform(y_predicted)
+        f_score = f1_score(np.array(y_true_binarized), np.array(y_predicted_binarized), average=average)
+        if print_matrix:
+            print(multilabel_confusion_matrix(np.array(y_true_binarized), np.array(y_predicted_binarized)).tolist())
+    else:
+        f_score = f1_score(np.array(y_true), np.array(y_predicted), average=average)
+        if print_matrix:
+            print(confusion_matrix(np.array(y_true), np.array(y_predicted)).tolist())
+    return f_score
 
-    return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
+@register_metric('f1_macro_with_confusion_matrix')
+def round_f1_macro_with_confusion_matrix(y_true, y_predicted):
+    """
+    Calculates F1 macro measure and prints confusion matrix.
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+    Returns:
+        F1 score
+    """
+    return _f1_macro_weighted(y_true, y_predicted, print_matrix=True, average='macro')
+
+
+@register_metric('f1_macro')
+def round_f1_macro(y_true, y_predicted):
+    """
+    Calculates F1 macro measure.
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+    Returns:
+        F1 score
+    """
+    return _f1_macro_weighted(y_true, y_predicted, print_matrix=False,average='macro')
+
+
+@register_metric('f1_weighted_with_confusion_matrix')
+def round_f1_weighted_with_confusion_matrix(y_true, y_predicted):
+    """
+    Calculates F1 weighted measure and prints confusion matrix.
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+    Returns:
+        F1 score
+    """
+    return _f1_macro_weighted(y_true, y_predicted, print_matrix=True,average='weighted')
+    
 
 @register_metric('f1_weighted')
 def round_f1_weighted(y_true, y_predicted):
     """
     Calculates F1 weighted measure.
-
     Args:
         y_true: list of true values
         y_predicted: list of predicted values
-
     Returns:
         F1 score
     """
-    try:
-        predictions = [np.round(x) for x in y_predicted]
-    except TypeError:
-        predictions = y_predicted
+    return _f1_macro_weighted(y_true, y_predicted, print_matrix=False,average='weighted')
 
-    return f1_score(np.array(y_true), np.array(predictions), average="weighted")
 
 
 def chunk_finder(current_token, previous_token, tag):
