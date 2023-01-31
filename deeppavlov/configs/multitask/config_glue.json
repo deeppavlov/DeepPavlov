@@ -1,4 +1,14 @@
 {
+   "metadata":{
+      "variables":{
+         "ROOT_PATH":"~/.deeppavlov",
+         "BACKBONE":"bert-base-uncased",
+         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
+         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_glue",
+         "NUM_TRAIN_EPOCHS":5,
+         "GRADIENT_ACC_STEPS":1
+      }
+   }
    "dataset_reader":{
       "class_name":"multitask_reader",
       "path":"glue",
@@ -344,15 +354,5 @@
          "valid"
       ],
       "class_name":"torch_trainer"
-   },
-   "metadata":{
-      "variables":{
-         "ROOT_PATH":"~/.deeppavlov",
-         "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_glue",
-         "NUM_TRAIN_EPOCHS":5,
-         "GRADIENT_ACC_STEPS":1
-      }
    }
 }
