@@ -3,8 +3,8 @@
       "variables":{
          "ROOT_PATH":"~/.deeppavlov",
          "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/models_glue_clean",
-         "SAVE_LOAD_PATH":"{MODELS_PATH}/model_glue",
+         "MODELS_PATH":"{ROOT_PATH}/models_glue",
+         "NAME":"8task",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }
@@ -149,8 +149,8 @@
             "learning_rate_drop_div":2.0,
             "return_probas":true,
             "backbone_model":"{BACKBONE}",
-            "save_path":"{SAVE_LOAD_PATH}8taskv2",
-            "load_path":"{SAVE_LOAD_PATH}8taskv2",
+            "save_path":"{MODELS_PATH}/{NAME}",
+            "load_path":"{MODELS_PATH}/{NAME}",
             "tasks":{
                "cola":{
                   "type":"classification",
