@@ -105,14 +105,9 @@ class MultiTaskPipelinePreprocessor(Component):
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
             self.n_task = len(preprocessors)
-            additional_special_tokens = []
-            if self.new:
-                additional_special_tokens = [f"[unused{i}]" for i in range(1, self.n_task+1)]
-                self.prefix = ' '.join(additional_special_tokens)
-            self.preprocessors = [
-                preprocessors[i](vocab_file=vocab_file, do_lower_case=do_lower_case, max_seq_length=max_seq_length,
-                                 additional_special_tokens=additional_special_tokens, *args, **kwargs)
-                for i in range(len(preprocessors))]
+            self.preprocessors = [preprocessors[i](vocab_file=vocab_file, do_lower_case=do_lower_case,
+                                                   max_seq_length=max_seq_length,
+                                                   *args, **kwargs) for i in range(len(preprocessors))]
 
     def split(self, features):
         if all([isinstance(k, str) for k in features]) or all([k is None for k in features]):
