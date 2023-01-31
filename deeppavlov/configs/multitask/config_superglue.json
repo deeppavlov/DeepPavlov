@@ -11,7 +11,7 @@
             "BACKBONE_MODEL":"bert-base-uncased",
             "SEED": 42
         }
-    }
+    },
    "dataset_reader":{
     "class_name":"multitask_reader",
     "path":"super_glue",

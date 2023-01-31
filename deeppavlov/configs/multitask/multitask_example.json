@@ -9,7 +9,7 @@
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
       }
-   }
+   },
    "dataset_reader":{
       "class_name":"multitask_reader",
       "path":"glue",
