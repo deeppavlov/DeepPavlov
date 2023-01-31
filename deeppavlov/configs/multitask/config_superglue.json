@@ -1,4 +1,16 @@
 {
+   "metadata": {
+        "variables": {
+            "ROOT_PATH": "~/.deeppavlov",
+            "MODELS_PATH": "{ROOT_PATH}/models_en",
+            "NUM_TRAIN_EPOCHS": 5,
+            "SEQ_LEN": 320,
+            "GRADIENT_ACC_STEPS": 1,
+            "BATCH_SIZE": 8,
+            "BACKBONE_MODEL":"bert-base-uncased",
+            "SEED": 42
+        }
+    }
    "dataset_reader":{
     "class_name":"multitask_reader",
     "path":"super_glue",
@@ -296,17 +308,5 @@
             "valid", "train"
         ],
         "class_name": "torch_trainer"
-    },
-    "metadata": {
-        "variables": {
-            "ROOT_PATH": "~/.deeppavlov",
-            "MODELS_PATH": "{ROOT_PATH}/models_en",
-            "NUM_TRAIN_EPOCHS": 5,
-            "SEQ_LEN": 320,
-            "GRADIENT_ACC_STEPS": 1,
-            "BATCH_SIZE": 8,
-            "BACKBONE_MODEL":"bert-base-uncased",
-            "SEED": 42
-        }
     }
 }
