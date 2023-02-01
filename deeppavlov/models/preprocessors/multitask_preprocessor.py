@@ -33,7 +33,7 @@ class MultiTaskInputSplitter:
             A list of lists of values of dictionaries from ``inp``
         """
         if all([isinstance(k, str) for k in inp]):
-            log.warning(f'You want to split an input that is already {type(inp[0])}')
+            log.debug(f'You want to split an input that is already not splittable or empty')
             return inp
 
         extracted = [[] for _ in self.keys_to_extract]
