@@ -89,7 +89,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         if shot is not None:
             train_data = self.data['train']
             # shuffle data to select shot-examples
-            random.seed(self.seed)
+            random.seed(seed)
             random.shuffle(train_data)
 
             data_dict = defaultdict(list)
