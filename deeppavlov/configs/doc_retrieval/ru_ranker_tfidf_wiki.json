@@ -33,8 +33,12 @@
         "save_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
         "load_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
         "tokenizer": {
-          "class_name": "ru_tokenizer",
+          "class_name": "stream_spacy_tokenizer",
+          "lang": "ru",
+          "spacy_model": "ru_core_news_sm",
           "lemmas": true,
+          "lowercase": true,
+          "filter_stopwords": true,
           "ngram_range": [
             1,
             2

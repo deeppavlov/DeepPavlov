@@ -17,6 +17,7 @@ from typing import List, Generator, Any, Optional, Union, Tuple, Iterable
 
 import spacy
 import spacy.language
+from nltk.corpus import stopwords
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -76,9 +77,9 @@ class StreamSpacyTokenizer(Component):
 
     """
 
-    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False,
-                 batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
-                 lemmas: bool = False, lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
+    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False, lang: str = "en",
+                 batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None, lemmas: bool = False,
+                 lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
                  spacy_model: str = 'en_core_web_sm', **kwargs):
 
         if disable is None:
@@ -87,7 +88,12 @@ class StreamSpacyTokenizer(Component):
             ngram_range = [1, 1]
         self.model = _try_load_spacy_model(spacy_model, disable=disable)
         self.filter_stopwords = filter_stopwords
-        self.stopwords = spacy.lang.en.stop_words.STOP_WORDS if self.filter_stopwords else []
+        self.stopwords = []
+        if self.filter_stopwords:
+            if lang == "en":
+                self.stopwords = set(stopwords.words("english"))
+            elif lang == "ru":
+                self.stopwords = set(stopwords.words("russian"))
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
