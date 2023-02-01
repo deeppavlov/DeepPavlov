@@ -32,11 +32,36 @@ class MultiTaskInputSplitter:
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        if all([isinstance(k, str) for k in inp]):
-            log.debug(f'You want to split an input that is already not splittable or empty')
-            return inp
+class MultiTaskInputSplitter:
+    """
+    The instance of these class in pipe splits a batch of sequences of identical length or dictionaries with
+    identical keys into tuple of batches.
 
+    Args:
+        keys_to_extract: a sequence of ints or strings that have to match keys of split dictionaries.
+    """
+
+    def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
+        self.keys_to_extract = keys_to_extract
+
+    def __call__(self, inp: Union[List[dict], List[List[int]], List[Tuple[int]]]) -> Union[List[list], List[str]]:
+        """
+        Returns batches of values from ``inp``. Every batch contains values that have same key from
+        ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
+
+        Args:
+            inp: A sequence of dictionaries with identical keys
+
+        Returns:
+            A list of lists of values of dictionaries from ``inp``
+        """
+        
         extracted = [[] for _ in self.keys_to_extract]
+        if not inp:
+            return extracted
+        if all([isinstance(k, str) for k in inp]):
+            log.exception(f'Wrong input type {inp}')
+            return inp
         for item in inp:
             for i, key in enumerate(self.keys_to_extract):
                 if item is not None:
