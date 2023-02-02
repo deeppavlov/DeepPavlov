@@ -7,7 +7,7 @@
             "NUM_TRAIN_EPOCHS": 5,
             "SEQ_LEN": 320,
             "GRADIENT_ACC_STEPS": 1,
-            "BATCH_SIZE": 8,
+            "BATCH_SIZE": 64,
             "BACKBONE_MODEL":"bert-base-uncased",
             "SEED": 42
         }
@@ -44,7 +44,7 @@
            "record":{"features":["idx","query","passage","entities","num_examples"]},         
            "boolq":{"features":["question","passage"]},
            "copa":{"features":["premise","choices"]},
-           "rte":{"features":["sentence1", "sentence2"]},
+           "rte":{"features":["premise", "hypothesis"]},
            "wic":{"features":["sentence1", "sentence2"]}
         }
      },
