@@ -32,11 +32,36 @@ class MultiTaskInputSplitter:
         Returns:
             A list of lists of values of dictionaries from ``inp``
         """
-        if all([isinstance(k, str) for k in inp]):
-            log.warning(f'You want to split an input that is already {type(inp[0])}')
-            return inp
+class MultiTaskInputSplitter:
+    """
+    The instance of these class in pipe splits a batch of sequences of identical length or dictionaries with
+    identical keys into tuple of batches.
 
+    Args:
+        keys_to_extract: a sequence of ints or strings that have to match keys of split dictionaries.
+    """
+
+    def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
+        self.keys_to_extract = keys_to_extract
+
+    def __call__(self, inp: Union[List[dict], List[List[int]], List[Tuple[int]]]) -> Union[List[list], List[str]]:
+        """
+        Returns batches of values from ``inp``. Every batch contains values that have same key from
+        ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
+
+        Args:
+            inp: A sequence of dictionaries with identical keys
+
+        Returns:
+            A list of lists of values of dictionaries from ``inp``
+        """
+        
         extracted = [[] for _ in self.keys_to_extract]
+        if not inp:
+            return extracted
+        if all([isinstance(k, str) for k in inp]):
+            log.exception(f'Wrong input type {inp}')
+            return inp
         for item in inp:
             for i, key in enumerate(self.keys_to_extract):
                 if item is not None:
@@ -105,14 +130,9 @@ class MultiTaskPipelinePreprocessor(Component):
             for i in range(len(preprocessors)):
                 preprocessors[i] = eval(preprocessors[i])
             self.n_task = len(preprocessors)
-            additional_special_tokens = []
-            if self.new:
-                additional_special_tokens = [f"[unused{i}]" for i in range(1, self.n_task+1)]
-                self.prefix = ' '.join(additional_special_tokens)
-            self.preprocessors = [
-                preprocessors[i](vocab_file=vocab_file, do_lower_case=do_lower_case, max_seq_length=max_seq_length,
-                                 additional_special_tokens=additional_special_tokens, *args, **kwargs)
-                for i in range(len(preprocessors))]
+            self.preprocessors = [preprocessors[i](vocab_file=vocab_file, do_lower_case=do_lower_case,
+                                                   max_seq_length=max_seq_length,
+                                                   *args, **kwargs) for i in range(len(preprocessors))]
 
     def split(self, features):
         if all([isinstance(k, str) for k in features]) or all([k is None for k in features]):
