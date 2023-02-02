@@ -35,8 +35,8 @@ np.random.seed(1488666)
 
 
 
-MAX_DEBUG_VALID_SAMPLES_BY_TASK=500 # MAX EVAL LEN
-DEBUG = False
+MAX_VALID_SAMPLES_BY_TASK=500 # MAX SAMPLES BY TASK ON WHICH THE EVALIATION IS PERFORMED. THE EVALUATION IS ADDED AS A SANITY CHECK
+TASK_IS_LONG = False
 
 config_name = sys.argv[1]
 print('building model')
@@ -84,8 +84,8 @@ rusuperglue_tasks = [Task('rwsd', 'RWSD.jsonl', ["False", "True"], 0),
              Task('lidirus', 'LiDiRus.jsonl', ['not_entailment', 'entailment'], 6)]
 ensuperglue_tasks = [Task('wsc', 'WSC.jsonl', ["False", "True"], 0),
              Task('multirc', 'MultiRC.jsonl', [0, 1], 1),
-             Task('cb', 'CB.jsonl', ['contradiction', 'entailment', 'neutral'], 2),
-             Task('record', 'ReCoRD.jsonl', [1, 0], 3),
+             Task('cb', 'CB.jsonl', ['entailment','contradiction','neutral'], 2),
+             Task('record', 'ReCoRD.jsonl', [0, 1], 3),
              Task('boolq', 'BoolQ.jsonl', ['false', 'true'], 4),
              Task('copa', 'COPA.jsonl', [0, 1], 5),
              Task('rte', 'RTE.jsonl', ['entailment', 'not_entailment'], 6),
@@ -191,7 +191,9 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
     loader = DataLoader(dataset, batch_size=1)
     index_list,entities_list,predictions=[],[],[] # for rucos
     printed_first_batch=False
+    k=0
     for batch in tqdm(loader):
+        k+=1
         if not printed_first_batch:
             print(batch)
             printed_first_batch=True
@@ -271,21 +273,21 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
                         question["answers"].append(dict(idx=answer_idx, label=prediction))
         else:
             if task.name in ['rucos', 'record']:
-                prediction = float(prediction[1])
+                prediction = float(prediction[0])
                 record_predictions += [prediction]
                 record_indexes += indices
                 record_entities += entities
             else:
                 output.append(dict(idx=int(index), label=prediction)) # universal?
         if split == 'validation':
-            if isinstance(prediction, float):
+            if isinstance(prediction, float) and task.name not in ['rucos', 'record']:
                 prediction = int(round(prediction, 0)) # for float-like preds for RECORD
             true_to_total[prediction][true_class] += 1
             if prediction == true_class:
                 true_count += 1
             total_count += 1
             accuracies[task] = true_count / total_count
-            if DEBUG and total_count >= MAX_DEBUG_VALID_SAMPLES_BY_TASK:
+            if total_count >= MAX_VALID_SAMPLES_BY_TASK:
                 break
     # postprocess for record
     
@@ -345,7 +347,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
         if k==0:
             print(batch)
             k+=1
-        if DEBUG and k==MAX_DEBUG_VALID_SAMPLES_BY_TASK:
+        if k==MAX_VALID_SAMPLES_BY_TASK:
             break
         if task.name in ['cola','sst2']:
             examples = [j for j in batch['sentence']]
@@ -425,8 +427,6 @@ for task in tasks:
         splits = ['validation', 'test']
     else:
         splits = ['test']
-    if DEBUG:
-        splits=splits[:1]
     for split in splits:
         print(f'Evaluating on the {split} set')
         obtain_predicts(task, dataset_type,log_dict=True,submit_dir=SUBMIT_DIR,split=split)
