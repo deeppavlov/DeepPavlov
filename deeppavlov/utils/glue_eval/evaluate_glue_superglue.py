@@ -2,6 +2,7 @@ from lib2to3.pgen2.token import BACKQUOTE
 
 #Using script: python deeppavlov/utils/glue_eval/evaluate_glue_superglue.py PATH_TO_CONFIG DATASET_TYPE DIRECTORY_TO_WRITE_SUBMIT TASK_ID
 #If the model is multilabel dont provide TASK_ID. Otherwise TASK_ID must be exactly as the field task_id that corresponding object of type Task has
+#Outputs of model ( first N_TASK outputs ) should be probabilities, except for sts-b. Order of tasks must be exactly the same as in the original configs
 
 from zmq import PROTOCOL_ERROR_ZAP_BAD_REQUEST_ID
 import _pickle as cPickle
