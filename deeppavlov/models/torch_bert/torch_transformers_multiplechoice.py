@@ -43,7 +43,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         return_probas: set True if return class probabilites instead of most probable label needed
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
     """
 
@@ -54,7 +53,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
                  return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
 
@@ -66,7 +64,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
-        self.clip_norm = clip_norm
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')

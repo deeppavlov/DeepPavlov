@@ -23,7 +23,6 @@ class REBertModel(TorchModel):
             return_probas: bool = False,
             attention_probs_keep_prob: Optional[float] = None,
             hidden_keep_prob: Optional[float] = None,
-            clip_norm: Optional[float] = None,
             threshold: Optional[float] = None,
             device: str = "cpu",
             **kwargs
@@ -38,7 +37,6 @@ class REBertModel(TorchModel):
             return_probas: set this to `True` if you need the probabilities instead of raw answers
             attention_probs_keep_prob: keep_prob for Bert self-attention layers
             hidden_keep_prob: keep_prob for Bert hidden layers
-            clip_norm: clip gradients by norm
             threshold: manually set value for defining the positively predicted classes (instead of adaptive one)
             device: cpu/gpu device to use for training the model
         """
@@ -46,7 +44,6 @@ class REBertModel(TorchModel):
         self.return_probas = return_probas
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
         self.device = device
 
         if self.n_classes == 0:

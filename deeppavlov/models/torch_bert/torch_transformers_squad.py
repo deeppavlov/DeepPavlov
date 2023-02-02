@@ -51,7 +51,6 @@ class TorchTransformersSquad(TorchModel):
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        clip_norm: clip gradients by norm
         batch_size: batch size for inference of squad model
     """
 
@@ -60,14 +59,11 @@ class TorchTransformersSquad(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
-                 clip_norm: Optional[float] = None,
                  batch_size: int = 10,
                  **kwargs) -> None:
 
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
-
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.batch_size = batch_size

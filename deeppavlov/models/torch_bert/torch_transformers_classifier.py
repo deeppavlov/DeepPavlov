@@ -46,7 +46,6 @@ class TorchTransformersClassifierModel(TorchModel):
         return_probas: set True if return class probabilites instead of most probable label needed
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        clip_norm: clip gradients by norm coefficient
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
         is_binary: whether classification task is binary or multi-class
         num_special_tokens: number of special tokens used by classification model
@@ -59,7 +58,6 @@ class TorchTransformersClassifierModel(TorchModel):
                  return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  is_binary: Optional[bool] = False,
                  num_special_tokens: int = None,
@@ -73,7 +71,6 @@ class TorchTransformersClassifierModel(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
-        self.clip_norm = clip_norm
         self.is_binary = is_binary
         self.bert_config = None
         self.num_special_tokens = num_special_tokens

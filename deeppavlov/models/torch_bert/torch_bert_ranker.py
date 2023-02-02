@@ -48,14 +48,12 @@ class TorchBertRankerModel(TorchModel):
                  bert_config_file: Optional[str] = None,
                  n_classes: int = 2,
                  return_probas: bool = True,
-                 clip_norm: Optional[float] = None,
                  **kwargs) -> None:
 
         self.return_probas = return_probas
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
         self.n_classes = n_classes
-        self.clip_norm = clip_norm
 
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')

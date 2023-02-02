@@ -43,7 +43,6 @@ class TorchTransformersElRanker(TorchModel):
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        clip_norm: clip gradients by norm
     """
 
     def __init__(
@@ -54,11 +53,9 @@ class TorchTransformersElRanker(TorchModel):
             emb_size: int,
             pretrained_bert: str = None,
             return_probas: bool = False,
-            clip_norm: Optional[float] = None,
             **kwargs
     ):
         self.return_probas = return_probas
-        self.clip_norm = clip_norm
 
         # TODO: consider returning device argument to model initialization
         self.model = SiameseBertElModel(

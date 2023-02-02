@@ -52,6 +52,7 @@ class TorchModel(NNModel):
             validations
         load_before_drop: whether to load best model before dropping learning rate or not
         min_learning_rate: min value of learning rate if learning rate decay is used
+        clip_norm: clip gradients by norm coefficient
     """
 
     def __init__(self, device: str = "gpu",
@@ -61,6 +62,7 @@ class TorchModel(NNModel):
                  learning_rate_drop_div: Optional[float] = None,
                  load_before_drop: bool = True,
                  min_learning_rate: float = 1e-07,
+                 clip_norm: Optional[float] = None,
                  *args, **kwargs):
 
         super().__init__(*args, **kwargs)
@@ -78,7 +80,7 @@ class TorchModel(NNModel):
         self.learning_rate_drop_div = learning_rate_drop_div
         self.load_before_drop = load_before_drop
         self.min_learning_rate = min_learning_rate
-
+        self.clip_norm = clip_norm
         self.load()
         # we need to switch to eval mode here because by default it's in `train` mode.
         # But in case of `interact/build_model` usage, we need to have model in eval mode.

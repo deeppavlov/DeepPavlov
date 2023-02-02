@@ -142,7 +142,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        clip_norm: clip gradients by norm
         use_crf: whether to use Conditional Ramdom Field to decode tags
     """
 
@@ -152,14 +151,12 @@ class TorchTransformersSequenceTagger(TorchModel):
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 clip_norm: Optional[float] = None,
                  use_crf: bool = False,
                  **kwargs) -> None:
 
         self.n_classes = n_tags
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
