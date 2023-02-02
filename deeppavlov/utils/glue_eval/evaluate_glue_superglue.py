@@ -89,7 +89,7 @@ ensuperglue_tasks = [Task('wsc', 'WSC.jsonl', ["False", "True"], 0),
              Task('copa', 'COPA.jsonl', [0, 1], 5),
              Task('rte', 'RTE.jsonl', ['entailment', 'not_entailment'], 6),
              Task('wic', 'WiC.jsonl', ['false', 'true'], 7),
-             Task('axb', 'Ax-b.jsonl', ['entailment', 'not_entailment'], 6)]
+             Task('axb', 'AX-b.jsonl', ['entailment', 'not_entailment'], 6)]
 
 dataset_type = sys.argv[2]
 assert dataset_type in ['glue','rusuperglue','ensuperglue','superglue','all']
@@ -242,7 +242,7 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
                                     return_probas = task.name in ['rucos','record'])
         true_class = task.classes[int(batch['label'][0].int())]
         if task.name in ['muserc', 'multirc']: # postprocess
-            if paragraph_idx not in output:
+            if paragraph_idx not in muserc_output:
                 muserc_output[paragraph_idx] = dict(
                     idx=paragraph_idx, passage=dict(
                         questions=[
