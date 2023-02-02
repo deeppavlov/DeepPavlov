@@ -240,6 +240,14 @@
          }
       ],
       "out":[
+                          "y_cola_pred_probas",
+                    "y_sst2_pred_probas",
+                    "y_qqp_pred_probas",
+                    "y_mrpc_pred_probas",
+                    "y_rte_pred_probas",
+                    "y_mnli_pred_probas",
+                    "y_qnli_pred_probas",
+                    "y_stsb_pred",
                     "y_cola_pred_ids",
                     "y_sst2_pred_ids",
                     "y_qqp_pred_ids",

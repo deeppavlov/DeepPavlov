@@ -44,7 +44,7 @@
            "record":{"features":["idx","query","passage","entities","num_examples"]},         
            "boolq":{"features":["question","passage"]},
            "copa":{"features":["premise","choices"]},
-           "rte":{"features":["premise", "hypothesis"]},
+           "rte":{"features":["sentence1", "sentence2"]},
            "wic":{"features":["sentence1", "sentence2"]}
         }
      },
@@ -172,27 +172,21 @@
                 ],
                 "class_name": "proba2labels",
                 "max_proba": true
-            },
-            {
-                "class_name": "torch_record_postprocessor",
-                "in": [
-                  "idx_record",
-                  "y_record",
-                  "y_record_pred_probas",
-                  "entities_record",
-                  "num_examples_record"
-                ],
-                "out": [
-                  "record_examples"
-                ]
-              }
+            }
         ],
         "out": [
+            "y_wsc_pred_probas",
+            "y_multirc_pred_probas",
+            "y_cb_pred_probas",
+            "y_record_pred_probas",
+            "y_boolq_pred_probas",
+            "y_copa_pred_probas",
+            "y_rte_pred_probas",
+            "y_wic_pred_probas",
             "y_wsc_pred",
             "y_multirc_pred",
             "y_cb_pred",
             "y_record_pred",
-            "record_examples",
             "y_boolq_pred",
             "y_copa_pred",
             "y_rte_pred",
@@ -254,18 +248,6 @@
                 "inputs": [
                   "y_record",
                   "y_record_pred"
-                ]
-              },
-              {
-                "name": "record_em_score",
-                "inputs": [
-                  "record_examples"
-                ]
-              },
-              {
-                "name": "record_f1_score",
-                "inputs": [
-                  "record_examples"
                 ]
               },
               {
