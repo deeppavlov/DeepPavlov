@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
@@ -52,10 +51,6 @@ class TorchTransformersSquad(TorchModel):
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
-        load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         batch_size: batch size for inference of squad model
     """
@@ -65,9 +60,6 @@ class TorchTransformersSquad(TorchModel):
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
-                 learning_rate_drop_patience: int = 20,
-                 learning_rate_drop_div: float = 2.0,
-                 load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  batch_size: int = 10,
                  **kwargs) -> None:
@@ -80,10 +72,7 @@ class TorchTransformersSquad(TorchModel):
         self.bert_config_file = bert_config_file
         self.batch_size = batch_size
 
-        super().__init__(learning_rate_drop_patience=learning_rate_drop_patience,
-                         learning_rate_drop_div=learning_rate_drop_div,
-                         load_before_drop=load_before_drop,
-                         **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self, features: List[List[InputFeatures]],
                        y_st: List[List[int]], y_end: List[List[int]]) -> Dict:

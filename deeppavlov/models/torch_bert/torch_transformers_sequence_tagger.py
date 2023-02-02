@@ -142,10 +142,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
-        load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         use_crf: whether to use Conditional Ramdom Field to decode tags
     """
@@ -156,9 +152,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 learning_rate_drop_patience: int = 20,
-                 learning_rate_drop_div: float = 2.0,
-                 load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  use_crf: bool = False,
                  **kwargs) -> None:
@@ -172,10 +165,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         self.bert_config_file = bert_config_file
         self.use_crf = use_crf
 
-        super().__init__(learning_rate_drop_patience=learning_rate_drop_patience,
-                         learning_rate_drop_div=learning_rate_drop_div,
-                         load_before_drop=load_before_drop,
-                         **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
