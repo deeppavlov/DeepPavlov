@@ -96,7 +96,8 @@ The dataset_reader code for config:`multitask_example.json <configs/multitask/mu
 
 A ``multitask_iterator`` configuration  has the main parameters ``class_name`` and ``tasks``. ``tasks`` is a dictionary of
 configurations of task iterators. In configurations of task iterators, ``iterator_class_name`` is used instead of
-``class_name``. This parameter denotes the name of iterator for every task. Auhillary parameters are ``num_train_epochs``, ``gradient_accumulation_steps``(which denote train epoch number and number of gradient accumulation steps respectively). Name of label is denoted by ``label`` parameter. Parameters for ``iteraror_class_name``, such as ``use_label_name`` and ``seed``, can also be handed down there. If some parameters need to be defined or redefined for every task (e.g features), these parameters will be redefined as values in ``tasks`` dictionary. 
+``class_name``. This parameter denotes the name of iterator for every task. Auhillary parameters are ``num_train_epochs``, ``gradient_accumulation_steps``(which denote train epoch number and number of gradient accumulation steps respectively). Name of label is denoted by ``label`` parameter. Parameters for ``iteraror_class_name``, such as ``use_label_name`` and ``seed``, can also be handed down there. If some parameters need to be defined or redefined for every task (e.g features), these parameters will be redefined as values in ``tasks`` dictionary.  Instead of using this dictionary, you can put all task names into the task_names field if all parameters for these tasks are the same.
+NOTE THAT ORDER OF TASKS HANDED IN ALL NEXT COMPONENTS OF TRAINER MATTERS(IF THE COMPONENT GETS VARIABLES FOR MORE THAN 1 TASK)!!!!
 The dataset iterator configuration for config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>` is as follows:
 
 .. code:: json
@@ -299,3 +300,13 @@ metric. To register metric, add the decorator ``register_metric`` and run the co
 You can make an inference-only config. In this config, there is no need in dataset reader and dataset iterator. A ``train`` field and components
 preparing ``in_y`` are removed. In ``multitask_bert`` component configuration all training parameters (learning rate,
 optimizer, etc.) are omitted.
+
+Here are the results of ``deeppavlov/configs/multitask/glue.json`` compared to the analogous singletask configs, according to the test server.
+
++---------------------+--------------+-----------------+-----------+----------------+------------------------+----------------+-----------+----------+-----------+
+| Task                | Score        | CoLA            | SST-2     | MRPC           | STS-B                  | QQP            | MNLI-m    | MNLI-mm  | QNLI      |
++=====================+==============+=================+===========+================+========================+================+===========+==========+===========+
+| Metric              | from server  | Matthew's Corr  | Accuracy  | F1 / Accuracy  | Pearson/Spearman Corr  | F1 / Accuracy  | Accuracy  | Accuracy | Accuracy  |
+| Multitask config    | 77.8         | 43.6            | 93.2      | 88.6/84.2      | 84.3/84.0              | 70.1/87.9      | 83.0      | 82.6     | 90.6      |
+| Singletask configs  | 77.6         | 53.6            | 92.7      | 87.7/83.6      | 84.4/83.1              | 70.5/88.9      | 84.4      | 83.2     | 90.3      |
++---------------------+--------------+-----------------+-----------+----------------+------------------------+----------------+-----------+----------+-----------+
