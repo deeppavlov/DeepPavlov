@@ -2,7 +2,6 @@ import io
 import json
 import logging
 import os
-import pickle
 import shutil
 import signal
 import socket
@@ -22,6 +21,7 @@ import requests
 import deeppavlov
 from deeppavlov import build_model
 from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.commands.utils import parse_value_with_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
@@ -616,8 +616,11 @@ def test_hashes_existence():
     downloads_urls = set()
     for config in all_configs:
         config = json.loads(config.read_text(encoding='utf-8'))
-        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
-                           config.get('metadata', {}).get('download', [])}
+        # TODO: replace with get downloads from config
+        # TODO: download only headers
+        # TODO: make requests in async mode
+        config_urls = {d if isinstance(d, str) else d['url'] for d in config.get('metadata', {}).get('download', [])}
+        downloads_urls |= {parse_value_with_config(url, config) for url in config_urls}
     downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
     messages = []
 
