@@ -131,6 +131,5 @@ class TorchTextClassificationModel(TorchModel):
         outputs = self.model(inputs)
         labels = labels.view(-1).long()
         loss = self.criterion(outputs, labels)
-        loss.backward()
-        self.optimizer.step()
+        self._make_step(loss)
         return loss.item()

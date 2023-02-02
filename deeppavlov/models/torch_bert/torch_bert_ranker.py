@@ -83,13 +83,7 @@ class TorchBertRankerModel(TorchModel):
 
         loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
                                   labels=b_labels, return_dict=False)
-        loss.backward()
-        # Clip the norm of the gradients to 1.0.
-        # This is to help prevent the "exploding gradients" problem.
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-
-        self.optimizer.step()
+        self._make_step(loss)
 
         return {'loss': loss.item()}
 

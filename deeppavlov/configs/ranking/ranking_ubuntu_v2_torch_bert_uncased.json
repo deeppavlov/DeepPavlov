@@ -43,6 +43,7 @@
           ],
           "eps": 1e-6
         },
+        "clip_norm": 1.0,
         "in": [
           "bert_features"
         ],

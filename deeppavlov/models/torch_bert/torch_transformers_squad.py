@@ -111,13 +111,7 @@ class TorchTransformersSquad(TorchModel):
         loss = self.model(**input_).loss
         if self.is_data_parallel:
             loss = loss.mean()
-        loss.backward()
-        # Clip the norm of the gradients to 1.0.
-        # This is to help prevent the "exploding gradients" problem.
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
-
-        self.optimizer.step()
+        self._make_step(loss)
 
         return {'loss': loss.item()}
 

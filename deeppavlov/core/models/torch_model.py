@@ -205,3 +205,9 @@ class TorchModel(NNModel):
     @abstractmethod
     def train_on_batch(self, x: list, y: list):
         pass
+
+    def _make_step(self, loss: torch.Tensor) -> None:
+        loss.backward()
+        if self.clip_norm is not None:
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
+        self.optimizer.step()

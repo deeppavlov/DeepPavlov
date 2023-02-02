@@ -98,12 +98,7 @@ class TorchTransformersElRanker(TorchModel):
         self.optimizer.zero_grad()  # zero the parameter gradients
 
         loss, softmax_scores = self.model(**_input)
-        loss.backward()
-        self.optimizer.step()
-
-        # Clip the norm of the gradients to prevent the "exploding gradients" problem
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
+        self._make_step(loss)
 
         return loss.item()
 
