@@ -14,7 +14,8 @@
 	},
 	"dataset_reader": {
 		"class_name": "multitask_reader",
-		"path":"super_glue",
+		"path": "super_glue",
+		"data_path":"super_glue",
 		"reader_class_name": "huggingface_dataset_reader",
 		"train": "train",
 		"valid": "validation",
