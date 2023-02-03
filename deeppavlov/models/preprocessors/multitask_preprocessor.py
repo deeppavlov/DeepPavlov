@@ -181,7 +181,7 @@ class MultiTaskPipelinePreprocessor(Component):
                 answer.append([])
             else:
                 texts_a, texts_b = self.split(args[i])
-                log.debug(f'Preprocessor {self.preprocessors[i]}')
+                #log.debug(f'Preprocessor {self.preprocessors[i]}')
                 if all([j is None for j in texts_a]):
                     log.debug('All nones')
                     answer.append([])

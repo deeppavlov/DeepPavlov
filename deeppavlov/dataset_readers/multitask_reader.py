@@ -77,6 +77,8 @@ class MultiTaskReader(DatasetReader):
             reader_params = {**reader_params, **kwargs}
             if "data_path" not in reader_params:
                 reader_params["data_path"] = data_path
+            if 'path' not in reader_params:
+                reader_params['path'] = path
             reader_params['data_path'] = Path(
                 reader_params['data_path']).expanduser()
             if 'reader_class_name' in reader_params:
@@ -84,6 +86,7 @@ class MultiTaskReader(DatasetReader):
             for param_ in ['train', 'test', 'valid']:
                 if param_ not in reader_params:
                     reader_params[param_] = eval(param_)
+            reader_params['name'] = task_name
             print(reader_params)
             data[task_name] = tasks[task_name].read(**reader_params)
         if task_names is not None:
