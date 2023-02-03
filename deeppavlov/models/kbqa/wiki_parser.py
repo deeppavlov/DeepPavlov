@@ -481,11 +481,11 @@ class WikiParser:
                 query = [f"{self.prefixes['entity']}/{entity}", "", ""]
             else:
                 query = ["", "", f"{self.prefixes['entity']}/{entity}"]
-            triplets, c = self.document.search_triples(*query)
-
-            start_str = f"{self.prefixes['rels'][rel_type]}/P"
-            rels = {triplet[1] for triplet in triplets if triplet[1].startswith(start_str)}
-            rels = list(rels)
+            triplets, num_tr = self.document.search_triples(*query)
+            if num_tr < 2000:
+                start_str = f"{self.prefixes['rels'][rel_type]}/P"
+                rels = {triplet[1] for triplet in triplets if triplet[1].startswith(start_str)}
+                rels = list(rels)
         if self.file_format == "pickle":
             triplets = self.document.get(entity, {}).get(direction, [])
             triplets = self.uncompress(triplets)
