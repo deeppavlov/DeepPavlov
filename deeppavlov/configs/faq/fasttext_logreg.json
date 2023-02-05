@@ -102,6 +102,10 @@
       {
         "url": "http://files.deeppavlov.ai/datasets/massive-{LANGUAGE}.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/massive/{LANGUAGE}"
+      },
+      {
+        "url": "https://files.deeppavlov.ai/faq/fasttext_logreg.tar.gz",
+        "subdir": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
       }
     ]
   }
