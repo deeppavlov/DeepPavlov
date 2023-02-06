@@ -41,7 +41,6 @@ class TorchTransformersClassifierModel(TorchModel):
     Args:
         n_classes: number of classes
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
-        one_hot_labels: set True if one-hot encoding for labels is used
         multilabel: set True if it is multi-label classification
         return_probas: set True if return class probabilites instead of most probable label needed
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
@@ -53,7 +52,6 @@ class TorchTransformersClassifierModel(TorchModel):
 
     def __init__(self, n_classes,
                  pretrained_bert,
-                 one_hot_labels: bool = False,
                  multilabel: bool = False,
                  return_probas: bool = False,
                  attention_probs_keep_prob: Optional[float] = None,
@@ -64,13 +62,9 @@ class TorchTransformersClassifierModel(TorchModel):
                  **kwargs) -> None:
 
         self.return_probas = return_probas
-        self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
         self.n_classes = n_classes
         self.is_binary = is_binary
-
-        if self.multilabel and not self.one_hot_labels:
-            raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
 
         if self.multilabel and not self.return_probas:
             raise RuntimeError('Set return_probas to True for multilabel classification!')

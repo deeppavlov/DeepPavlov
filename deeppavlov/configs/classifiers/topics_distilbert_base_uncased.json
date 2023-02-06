@@ -61,7 +61,6 @@
       },
       {
         "class_name": "torch_transformers_classifier",
-        "one_hot_labels": true,
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "pretrained_bert": "{TRANSFORMER}",
