@@ -59,10 +59,6 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
 
         if self.multilabel and not self.one_hot_labels:
@@ -74,7 +70,24 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
 
-        super().__init__(**kwargs)
+        if pretrained_bert:
+            log.debug(f"From pretrained {pretrained_bert}.")
+            config = AutoConfig.from_pretrained(pretrained_bert, num_labels=self.n_classes,
+                                                output_attentions=False, output_hidden_states=False)
+
+            model = AutoModelForMultipleChoice.from_pretrained(pretrained_bert, config=config)
+
+        elif bert_config_file and Path(bert_config_file).is_file():
+            bert_config = AutoConfig.from_json_file(str(expand_path(bert_config_file)))
+            if attention_probs_keep_prob is not None:
+                bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            model = AutoModelForMultipleChoice.from_config(config=bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
@@ -135,47 +148,3 @@ class TorchTransformersMultiplechoiceModel(TorchModel):
             pred = logits.squeeze(-1).detach().cpu().numpy()
 
         return pred
-
-    @overrides
-    def load(self, fname = None):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert:
-            log.debug(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes, 
-                                                output_attentions=False, output_hidden_states=False)
-
-            self.model = AutoModelForMultipleChoice.from_pretrained(self.pretrained_bert, config=config)
-
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = AutoModelForMultipleChoice.from_config(config=self.bert_config)
-        else:
-            raise ConfigError("No pre-trained BERT model is given.")
-
-        self.model.to(self.device)
-
-        if self.load_path:
-            log.debug(f"Load path {self.load_path} is given.")
-            if isinstance(self.load_path, Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                log.debug(f"Load path {weights_path} exists.")
-                log.debug(f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # now load the weights, optimizer from saved
-                log.debug(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.warning(f"Init from scratch. Load path {weights_path} does not exist.")

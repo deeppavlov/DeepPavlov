@@ -21,10 +21,7 @@ class REBertModel(TorchModel):
             num_ner_tags: int,
             pretrained_bert: str = None,
             return_probas: bool = False,
-            attention_probs_keep_prob: Optional[float] = None,
-            hidden_keep_prob: Optional[float] = None,
             threshold: Optional[float] = None,
-            device: str = "cpu",
             **kwargs
     ) -> None:
         """
@@ -35,30 +32,23 @@ class REBertModel(TorchModel):
             num_ner_tags: number of NER tags
             pretrained_bert: key title of pretrained Bert model (e.g. "bert-base-uncased")
             return_probas: set this to `True` if you need the probabilities instead of raw answers
-            attention_probs_keep_prob: keep_prob for Bert self-attention layers
-            hidden_keep_prob: keep_prob for Bert hidden layers
             threshold: manually set value for defining the positively predicted classes (instead of adaptive one)
-            device: cpu/gpu device to use for training the model
         """
         self.n_classes = n_classes
         self.return_probas = return_probas
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
-        self.device = device
 
         if self.n_classes == 0:
             raise ConfigError("Please provide a valid number of classes.")
 
-        self.model = BertWithAdaThresholdLocContextPooling(
+        model = BertWithAdaThresholdLocContextPooling(
             n_classes=self.n_classes,
             pretrained_bert=pretrained_bert,
             bert_tokenizer_config_file=pretrained_bert,
             num_ner_tags=num_ner_tags,
             threshold=threshold,
-            device=self.device
         )
 
-        super().__init__(**kwargs)
+        super().__init__(model, **kwargs)
 
     def train_on_batch(
             self, input_ids: List, attention_mask: List, entity_pos: List, entity_tags: List, labels: List

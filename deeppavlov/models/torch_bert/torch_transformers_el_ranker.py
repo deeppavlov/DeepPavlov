@@ -57,8 +57,7 @@ class TorchTransformersElRanker(TorchModel):
     ):
         self.return_probas = return_probas
 
-        # TODO: consider returning device argument to model initialization
-        self.model = SiameseBertElModel(
+        model = SiameseBertElModel(
             pretrained_bert=pretrained_bert,
             encoder_save_path=encoder_save_path,
             bilinear_save_path=bilinear_save_path,
@@ -67,7 +66,7 @@ class TorchTransformersElRanker(TorchModel):
             emb_size=emb_size
         )
 
-        super().__init__(**kwargs)
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, q_features: List[Dict],
                        c_features: List[Dict],

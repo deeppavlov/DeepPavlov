@@ -73,13 +73,15 @@ class TorchTextClassificationModel(TorchModel):
 
         self.multilabel = multilabel
         self.return_probas = return_probas
-        self.model = ShallowAndWideCnn(n_classes=n_classes, embedding_size=embedding_size,
-                                       kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
-                                       dense_size=dense_size, dropout_rate=dropout_rate,
-                                       embedded_tokens=embedded_tokens,
-                                       vocab_size=vocab_size)
+        model = ShallowAndWideCnn(
+            n_classes=n_classes, embedding_size=embedding_size,
+            kernel_sizes_cnn=kernel_sizes_cnn, filters_cnn=filters_cnn,
+            dense_size=dense_size, dropout_rate=dropout_rate,
+            embedded_tokens=embedded_tokens,
+            vocab_size=vocab_size
+        )
         self.criterion = getattr(torch.nn, criterion)()
-        super().__init__(**kwargs)
+        super().__init__(model, **kwargs)
 
     def __call__(self, texts: List[np.ndarray], *args) -> Union[List[List[float]], List[int]]:
         """Infer on the given data.

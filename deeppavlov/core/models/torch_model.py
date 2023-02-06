@@ -30,6 +30,7 @@ class TorchModel(NNModel):
     """Class implements torch model's main methods.
 
     Args:
+        model: TODO!!!!!!!!!!!
         device: `cpu` or `cuda` device to use
         optimizer: name of `torch.optim` optimizer
         optimizer_parameters: dictionary with optimizer parameters
@@ -55,7 +56,8 @@ class TorchModel(NNModel):
         clip_norm: clip gradients by norm coefficient
     """
 
-    def __init__(self, device: str = "gpu",
+    def __init__(self, model: torch.nn.Module,
+                 device: str = "gpu",
                  optimizer: str = "AdamW",
                  optimizer_parameters: Optional[dict] = None,
                  learning_rate_drop_patience: Optional[int] = None,
@@ -66,12 +68,10 @@ class TorchModel(NNModel):
                  *args, **kwargs):
 
         super().__init__(*args, **kwargs)
-
-        if not hasattr(self, 'model'):
-            raise AttributeError("Model is not defined.")
-
+        self.model = model
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
-        self.model.to(self.device)
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
         if optimizer_parameters is None:
             optimizer_parameters = {"lr": 0.01}
         self.optimizer = getattr(torch.optim, optimizer)(self.model.parameters(), **optimizer_parameters)
@@ -124,7 +124,7 @@ class TorchModel(NNModel):
                 checkpoint = torch.load(weights_path, map_location=self.device)
                 model_state = checkpoint["model_state_dict"]
                 optimizer_state = checkpoint["optimizer_state_dict"]
-
+                # if data is parallel, should we remove module. from keys as well?!!!!!
                 # load a multi-gpu model on a single device
                 if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
                     model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
@@ -136,9 +136,10 @@ class TorchModel(NNModel):
                 self.optimizer.load_state_dict(optimizer_state)
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
-                log.debug(f"Init from scratch. Load path {weights_path} does not exist.")
+                log.warning(f"Init from scratch. Load path {weights_path} does not exist.")
         else:
-            log.debug(f"Init from scratch. Load path {self.load_path} is not provided.")
+            log.warning(f"Init from scratch. Load path {self.load_path} is not provided.")
+        self.model.to(self.device)
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:

@@ -66,14 +66,8 @@ class TorchTransformersClassifierModel(TorchModel):
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
         self.multilabel = multilabel
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
         self.n_classes = n_classes
         self.is_binary = is_binary
-        self.bert_config = None
-        self.num_special_tokens = num_special_tokens
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -84,7 +78,55 @@ class TorchTransformersClassifierModel(TorchModel):
         if self.return_probas and self.n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
 
-        super().__init__(**kwargs)
+        if pretrained_bert:
+            log.debug(f"From pretrained {pretrained_bert}.")
+            config = AutoConfig.from_pretrained(pretrained_bert,
+                                                # num_labels=self.n_classes,
+                                                output_attentions=False,
+                                                output_hidden_states=False)
+
+            if self.is_binary:
+                config.add_pooling_layer = False
+                model = AutoModelForBinaryClassification(pretrained_bert, config)
+            else:
+                model = AutoModelForSequenceClassification.from_pretrained(pretrained_bert, config=config)
+
+                # TODO need a better solution here and at
+                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
+                try:
+                    hidden_size = model.classifier.out_proj.in_features
+
+                    if self.n_classes != model.num_labels:
+                        model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes,
+                                                                                               hidden_size))
+                        model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                        model.classifier.out_proj.out_features = self.n_classes
+                        model.num_labels = self.n_classes
+
+                except AttributeError:
+                    hidden_size = model.classifier.in_features
+
+                    if self.n_classes != model.num_labels:
+                        model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
+                        model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
+                        model.classifier.out_features = self.n_classes
+                        model.num_labels = self.n_classes
+
+        elif bert_config_file and Path(bert_config_file).is_file():
+            bert_config = AutoConfig.from_pretrained(str(expand_path(bert_config_file)))
+            if attention_probs_keep_prob is not None:
+                bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            model = AutoModelForSequenceClassification.from_config(config=bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
+
+        tokenizer = AutoTokenizer.from_pretrained(pretrained_bert)
+        if num_special_tokens is not None:
+            model.resize_token_embeddings(len(tokenizer) + num_special_tokens)
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, features: Dict[str, torch.tensor], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train model on given batch.
@@ -165,68 +207,6 @@ class TorchTransformersClassifierModel(TorchModel):
         else:
             accepted_keys = self.model.forward.__code__.co_varnames
         return accepted_keys
-
-    # TODO this method requires massive refactoring
-    @overrides
-    def load(self, fname=None):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert:
-            log.debug(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                # num_labels=self.n_classes,
-                                                output_attentions=False,
-                                                output_hidden_states=False)
-
-            if self.is_binary:
-                config.add_pooling_layer = False
-                self.model = AutoModelForBinaryClassification(self.pretrained_bert, config)
-            else:
-                self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
-
-                # TODO need a better solution here and at
-                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
-                try:
-                    hidden_size = self.model.classifier.out_proj.in_features
-
-                    if self.n_classes != self.model.num_labels:
-                        self.model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes,
-                                                                                               hidden_size))
-                        self.model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                        self.model.classifier.out_proj.out_features = self.n_classes
-                        self.model.num_labels = self.n_classes
-
-                except AttributeError:
-                    hidden_size = self.model.classifier.in_features
-
-                    if self.n_classes != self.model.num_labels:
-                        self.model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
-                        self.model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                        self.model.classifier.out_features = self.n_classes
-                        self.model.num_labels = self.n_classes
-
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_pretrained(str(expand_path(self.bert_config_file)))
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
-        else:
-            raise ConfigError("No pre-trained BERT model is given.")
-
-        tokenizer = AutoTokenizer.from_pretrained(self.pretrained_bert)
-        if self.num_special_tokens:
-            self.model.resize_token_embeddings(len(tokenizer) + self.num_special_tokens)
-
-        # TODO that should probably be parametrized in config
-        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
-
-        self.model.to(self.device)
-
-        super().load()
 
 
 class AutoModelForBinaryClassification(torch.nn.Module):

@@ -18,7 +18,6 @@ from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForQuestionAnswering, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
@@ -61,14 +60,25 @@ class TorchTransformersSquad(TorchModel):
                  bert_config_file: Optional[str] = None,
                  batch_size: int = 10,
                  **kwargs) -> None:
-
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
         self.batch_size = batch_size
 
-        super().__init__(**kwargs)
+        if pretrained_bert:
+            logger.debug(f"From pretrained {pretrained_bert}.")
+            config = AutoConfig.from_pretrained(pretrained_bert, output_attentions=False, output_hidden_states=False)
+            model = AutoModelForQuestionAnswering.from_pretrained(pretrained_bert, config=config)
+
+        elif bert_config_file and Path(bert_config_file).is_file():
+            bert_config = AutoConfig.from_json_file(str(expand_path(bert_config_file)))
+
+            if attention_probs_keep_prob is not None:
+                bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            model = AutoModelForQuestionAnswering(config=bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, features: List[List[InputFeatures]],
                        y_st: List[List[int]], y_end: List[List[int]]) -> Dict:
@@ -224,33 +234,3 @@ class TorchTransformersSquad(TorchModel):
             ind_batch.append(max_ind)
 
         return start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch
-
-    @overrides
-    def load(self, fname=None):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert:
-            logger.debug(f"From pretrained {self.pretrained_bert}.")
-            config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                output_attentions=False,
-                                                output_hidden_states=False)
-
-            self.model = AutoModelForQuestionAnswering.from_pretrained(self.pretrained_bert, config=config)
-
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = AutoModelForQuestionAnswering(config=self.bert_config)
-        else:
-            raise ConfigError("No pre-trained BERT model is given.")
-
-        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
-
-        self.model.to(self.device)
-        super().load()
