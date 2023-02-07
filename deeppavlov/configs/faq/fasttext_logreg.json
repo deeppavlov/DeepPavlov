@@ -104,7 +104,7 @@
         "subdir": "{DOWNLOADS_PATH}/massive/{LANGUAGE}"
       },
       {
-        "url": "https://files.deeppavlov.ai/faq/fasttext_logreg.tar.gz",
+        "url": "https://files.deeppavlov.ai/faq/fasttext_logreg_{LANGUAGE}.tar.gz",
         "subdir": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
       }
     ]
