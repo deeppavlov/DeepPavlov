@@ -24,13 +24,15 @@ from deeppavlov.core.data.dataset_reader import DatasetReader
 class SQReader(DatasetReader):
     """Class to read training datasets"""
 
-    def read(self, data_path: str):
+    def read(self, data_path: str, valid_size: int = None):
         if str(data_path).endswith(".pickle"):
             with open(data_path, 'rb') as f:
                 dataset = pickle.load(f)
         elif str(data_path).endswith(".json"):
             with open(data_path, 'r') as f:
                 dataset = json.load(f)
+        if valid_size:
+            dataset["valid"] = dataset["valid"][:valid_size]
 
         return dataset
 
@@ -45,7 +47,7 @@ class RuBQReader(SQReader):
         for data_type in ["valid", "test"]:
             samples = dataset[data_type]
             samples = [sample for sample in samples if float(sample["RuBQ_version"]) <= float(version) and
-                       (all([tp in sample["tags"] for tp in question_types]) or question_types == ["all"])]
+                       (any(tp in sample["tags"] for tp in question_types) or question_types == ["all"])]
             if not_include_question_types:
                 samples = [sample for sample in samples if all([tp not in sample["tags"]
                            for tp in not_include_question_types])]
@@ -72,16 +74,16 @@ class RuBQReader(SQReader):
 class LCQuADReader(SQReader):
     """Class to read LCQuAD dataset"""
 
-    def read(self, data_path: str, question_type: List[str] = "all",
+    def read(self, data_path: str, question_types: List[str] = "all",
                    not_include_question_types: List[str] = None, num_samples: int = -1):
         dataset = super().read(data_path)
         for data_type in ["valid", "test"]:
             samples = dataset[data_type]
-            samples = [sample for sample in samples if (question_type == sample["query_type"]
-                                                        or question_type == "all")]
+            samples = [sample for sample in samples if (any(tp == sample["subgraph"] for tp in question_types) \
+                                                        or question_types == ["all"])]
             if not_include_question_types:
                 samples = [sample for sample in samples
-                           if sample["query_type"] not in not_include_question_types]
+                           if sample["subgraph"] not in not_include_question_types]
             samples = [self.preprocess(sample) for sample in samples]
             if num_samples > 0:
                 samples = samples[:num_samples]
@@ -89,7 +91,8 @@ class LCQuADReader(SQReader):
         return dataset
 
     def preprocess(self, sample):
-        question = sample.get("corrected_question", "")
+        question = sample.get("question", "")
         answers = sample.get("answer", [])
-        query = sample.get("sparql_query", "")
-        return [question, [answers, query]]
+        answer_labels = sample.get("answer_label", [])
+        query = sample.get("sparql_wikidata", "")
+        return [question, [answers, answer_labels, query]]

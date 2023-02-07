@@ -312,6 +312,7 @@ class EntityLinker(Component, Serializable):
                 cand_ent_scores_list.append(cand_ent_scores)
                 entity_ids = [elem[0] for elem in cand_ent_scores]
                 scores = [elem[1:4] for elem in cand_ent_scores]
+                conf_list.append(scores)
                 entities_scores_list.append(
                     {entity_id: entity_scores for entity_id, entity_scores in zip(entity_ids, scores)}
                 )
@@ -327,11 +328,10 @@ class EntityLinker(Component, Serializable):
             if self.use_connections and self.kb:
                 scores_dict = self.rank_by_connections(ids_list)
 
-            if self.use_descriptions:
-                substr_lens = [len(entity_substr.split()) for entity_substr in substr_list]
-                ids_list, conf_list = self.rank_by_description(substr_list, tags_list, offsets_list, ids_list,
-                                                               descr_list, entities_scores_list, sentences_list,
-                                                               sentences_offsets_list, substr_lens, scores_dict)
+            substr_lens = [len(entity_substr.split()) for entity_substr in substr_list]
+            ids_list, conf_list = self.rank_by_description(substr_list, tags_list, offsets_list, ids_list,
+                                                           descr_list, entities_scores_list, sentences_list,
+                                                           sentences_offsets_list, substr_lens, scores_dict)
         label_list = [[label_dict.get(entity_id, "") for entity_id in entity_ids]
                       for entity_ids, label_dict in zip(ids_list, label_list)]
         pages_list = [[pages_dict.get(entity_id, "") for entity_id in entity_ids]
@@ -615,7 +615,11 @@ class EntityLinker(Component, Serializable):
             log.debug(f"rank, context: {context}")
             contexts.append(context)
 
-        scores_list = self.entity_ranker(contexts, cand_ent_list, cand_ent_descr_list)
+        if self.use_descriptions:
+            scores_list = self.entity_ranker(contexts, cand_ent_list, cand_ent_descr_list)
+        else:
+            scores_list = [[(entity_id, 1.0) for entity_id in cand_ent] for cand_ent in cand_ent_list]
+
         for entity_substr, tag, context, candidate_entities, substr_len, entities_scores, scores in zip(
                 entity_substr_list, tags_list, contexts, cand_ent_list, substr_lens, entities_scores_list, scores_list
         ):

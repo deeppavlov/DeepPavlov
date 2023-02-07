@@ -191,7 +191,7 @@ class QueryGeneratorBase(Component, Serializable):
                 if isinstance(el_output[0], dict):
                     entity_ids = [entity_info.get("entity_ids", []) for entity_info in el_output]
                 if isinstance(el_output[0], list):
-                    entity_substr, entity_ids, *_ = el_output
+                    entity_ids, *_ = el_output
             if not self.use_el_api_requester and entity_ids:
                 entity_ids = entity_ids[0]
 

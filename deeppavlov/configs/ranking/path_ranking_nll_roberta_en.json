@@ -1,12 +1,4 @@
 {
-  "dataset_reader": {
-    "class_name": "sq_reader",
-    "data_path": "{DOWNLOADS_PATH}/lcquad/path_ranking_nll2.0.json"
-  },
-  "dataset_iterator": {
-    "class_name": "basic_classification_iterator",
-    "seed": 42
-  },
   "chainer": {
     "in": ["question", "rels"],
     "in_y": ["y"],
@@ -56,17 +48,13 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/roberta_tiny_cased",
+      "TRANSFORMER": "haisongzhang/roberta-tiny-cased",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_roberta_lcquad2"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/rel_ranking_bert_eng_torch.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/path_ranking_nll_roberta_lcquad2.tar.gz",
         "subdir": "{MODEL_PATH}"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/lcquad_rel_ranking.pickle",
-        "subdir": "{DOWNLOADS_PATH}/rel_ranking_eng"
       }
     ]
   }

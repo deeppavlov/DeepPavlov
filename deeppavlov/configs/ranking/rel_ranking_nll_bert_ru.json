@@ -34,12 +34,12 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "TRANSFORMER": "DeepPavlov/distilrubert-tiny-cased-conversational-v1",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_distilbert_ru"
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_distilbert_ru.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/rel_ranking_nll_bert_ru.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
