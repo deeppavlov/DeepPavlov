@@ -20,8 +20,7 @@ import requests
 
 import deeppavlov
 from deeppavlov import build_model
-from deeppavlov.core.commands.utils import parse_config
-from deeppavlov.core.commands.utils import parse_value_with_config
+from deeppavlov.core.commands.utils import parse_config, parse_value_with_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download

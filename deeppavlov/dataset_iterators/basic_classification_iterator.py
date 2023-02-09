@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import random
+from collections import defaultdict
 from logging import getLogger
 from typing import List
 
@@ -20,9 +22,6 @@ from sklearn.model_selection import train_test_split
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
-
-from collections import defaultdict
-import random
 
 log = getLogger(__name__)
 
