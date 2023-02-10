@@ -17,7 +17,6 @@ from typing import List, Generator, Any, Optional, Union, Tuple, Iterable
 
 import spacy
 import spacy.language
-from nltk.corpus import stopwords
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -50,7 +49,6 @@ class StreamSpacyTokenizer(Component):
     Args:
         disable: spacy pipeline elements to disable, serves a purpose of performing; if nothing
         filter_stopwords: whether to ignore stopwords during tokenizing/lemmatizing and ngrams creation
-        lang: language of stopwords taken from `nltk.corpus.stopwords`
         batch_size: a batch size for spaCy buffering
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
@@ -77,7 +75,7 @@ class StreamSpacyTokenizer(Component):
 
     """
 
-    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False, lang: str = 'english',
+    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False,
                  batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
                  lemmas: bool = False, lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
                  spacy_model: str = 'en_core_web_sm', **kwargs):
@@ -87,7 +85,7 @@ class StreamSpacyTokenizer(Component):
         if ngram_range is None:
             ngram_range = [1, 1]
         self.model = _try_load_spacy_model(spacy_model, disable=disable)
-        self.stopwords = set(stopwords.words(lang)) if filter_stopwords else set()
+        self.stopwords = self.model.Defaults.stop_words if filter_stopwords else set()
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas
