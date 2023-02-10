@@ -34,7 +34,7 @@
         "load_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
-          "lang": "ru",
+          "lang": "russian",
           "spacy_model": "ru_core_news_sm",
           "lemmas": true,
           "lowercase": true,

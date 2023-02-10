@@ -49,8 +49,8 @@ class StreamSpacyTokenizer(Component):
 
     Args:
         disable: spacy pipeline elements to disable, serves a purpose of performing; if nothing
-        stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
-         and ngrams creation
+        filter_stopwords: whether to ignore stopwords during tokenizing/lemmatizing and ngrams creation
+        lang: language of stopwords taken from `nltk.corpus.stopwords`
         batch_size: a batch size for spaCy buffering
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
@@ -77,9 +77,9 @@ class StreamSpacyTokenizer(Component):
 
     """
 
-    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False, lang: str = "en",
-                 batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None, lemmas: bool = False,
-                 lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
+    def __init__(self, disable: Optional[Iterable[str]] = None, filter_stopwords: bool = False, lang: str = 'english',
+                 batch_size: Optional[int] = None, ngram_range: Optional[List[int]] = None,
+                 lemmas: bool = False, lowercase: Optional[bool] = None, alphas_only: Optional[bool] = None,
                  spacy_model: str = 'en_core_web_sm', **kwargs):
 
         if disable is None:
@@ -87,13 +87,7 @@ class StreamSpacyTokenizer(Component):
         if ngram_range is None:
             ngram_range = [1, 1]
         self.model = _try_load_spacy_model(spacy_model, disable=disable)
-        self.filter_stopwords = filter_stopwords
-        self.stopwords = []
-        if self.filter_stopwords:
-            if lang == "en":
-                self.stopwords = set(stopwords.words("english"))
-            elif lang == "ru":
-                self.stopwords = set(stopwords.words("russian"))
+        self.stopwords = set(stopwords.words(lang)) if filter_stopwords else set()
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas

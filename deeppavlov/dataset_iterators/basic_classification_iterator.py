@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import random
 from collections import defaultdict
 from logging import getLogger
 from typing import List
@@ -39,10 +38,10 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         split_fields: list of fields (out of ``"train", "valid", "test"``) to which save splitted field
         split_proportions: list of corresponding proportions for splitting
         seed: random seed for iterating
-        shot: number of examples to sample for each class in training data
         shuffle: whether to shuffle examples in batches
         split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
         stratify: whether to use stratified split
+        shot: number of examples to sample for each class in training data. If None, all examples will remain in data.
         *args: arguments
         **kwargs: arguments
 
@@ -87,9 +86,8 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         
         if shot is not None:
             train_data = self.data['train']
-            # shuffle data to select shot-examples
-            random.seed(seed)
-            random.shuffle(train_data)
+            self.random.shuffle(train_data)
+            self.random.seed(seed)
 
             data_dict = defaultdict(list)
             for text, label in train_data:
@@ -99,15 +97,8 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
             if min(len(x) for x in data_dict.values()) < shot:
                 log.warning(f"Some labels have less than {shot} examples")
 
-            new_data = []
-            for label in data_dict.keys():
-                for text in data_dict[label]:
-                    new_data.append((text, label))
-
-            if shuffle:
-                random.shuffle(new_data)
-
-            self.data['train'] = new_data
+            self.data['train'] = [(text, label) for label in data_dict for text in data_dict[label]]
+            raise ValueError(self.data['train'])
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
                     split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:
