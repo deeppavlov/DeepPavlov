@@ -87,7 +87,7 @@ PARAMS = {
             ]
     },
     "faq": {
-        ("faq/fasttext_logreg.json", "fasttext_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
+        ("faq/fasttext_logreg.json", "fasttext_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],  # TODO: add ru test
     },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
@@ -261,8 +261,7 @@ PARAMS = {
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
-            ONE_ARGUMENT_INFER_CHECK]
+        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],

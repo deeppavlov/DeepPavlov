@@ -17,12 +17,12 @@
     "shot": 5
   },
   "chainer": {
-    "in": "text",
-    "in_y": "category",
+    "in": ["text"],
+    "in_y": ["category"],
     "pipe": [
       {
         "class_name": "stream_spacy_tokenizer",
-        "in": "text",
+        "in": ["text"],
         "id": "my_tokenizer",
         "lemmas": false,
         "out": "token_lemmas",
@@ -30,51 +30,51 @@
       },
       {
         "ref": "my_tokenizer",
-        "in": "token_lemmas",
-        "out": "text_lem"
+        "in": ["token_lemmas"],
+        "out": ["text_lem"]
       },
       {
         "class_name": "fasttext",
-        "in": "token_lemmas",
+        "in": ["token_lemmas"],
         "load_path": "{DOWNLOADS_PATH}/embeddings/fasttext/{LANGUAGE}.bin",
         "mean": true,
-        "out": "text_vector"
+        "out": ["text_vector"]
       },
       {
         "id": "answers_vocab",
         "class_name": "simple_vocab",
         "fit_on": "category",
-        "save_path": "{MODELS_PATH}/cat_answers.dict",
-        "load_path": "{MODELS_PATH}/cat_answers.dict",
-        "in": "category",
-        "out": "y_ids"
+        "save_path": "{MODEL_PATH}/cat_answers.dict",
+        "load_path": "{MODEL_PATH}/cat_answers.dict",
+        "in": ["category"],
+        "out": ["y_ids"]
       },
       {
-        "in": "text_vector",
+        "in": ["text_vector"],
         "fit_on": ["text_vector", "y_ids"],
-        "out": "y_pred_proba",
+        "out": ["y_pred_proba"],
         "class_name": "sklearn_component",
         "main": true,
-        "save_path": "{MODELS_PATH}/model.pkl",
-        "load_path": "{MODELS_PATH}/model.pkl",
+        "save_path": "{MODEL_PATH}/model.pkl",
+        "load_path": "{MODEL_PATH}/model.pkl",
         "model_class": "sklearn.linear_model:LogisticRegression",
         "infer_method": "predict_proba",
         "C": 10,
         "penalty": "l2"
       },
       {
-        "in": "y_pred_proba",
-        "out": "y_pred_ids",
+        "in": ["y_pred_proba"],
+        "out": ["y_pred_ids"],
         "class_name": "proba2labels",
         "max_proba": true
       },
       {
-        "in": "y_pred_ids",
-        "out": "y_pred_category",
+        "in": ["y_pred_ids"],
+        "out": ["y_pred_category"],
         "ref": "answers_vocab"
       }
     ],
-    "out": "y_pred_category"
+    "out": ["y_pred_category"]
   },
   "train": {
     "evaluation_targets": ["train", "valid", "test"],
@@ -92,7 +92,7 @@
       "ROOT_PATH": "~/.deeppavlov",
       "SPACY_MODEL": "en_core_web_sm",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
+      "MODEL_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
     },
     "download": [
       {
@@ -105,7 +105,7 @@
       },
       {
         "url": "https://files.deeppavlov.ai/faq/fasttext_logreg_{LANGUAGE}.tar.gz",
-        "subdir": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
