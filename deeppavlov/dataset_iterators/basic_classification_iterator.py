@@ -98,7 +98,6 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                 log.warning(f"Some labels have less than {shot} examples")
 
             self.data['train'] = [(text, label) for label in data_dict for text in data_dict[label]]
-            raise ValueError(self.data['train'])
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
                     split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:
