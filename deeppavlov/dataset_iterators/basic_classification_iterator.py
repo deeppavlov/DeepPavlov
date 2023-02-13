@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from collections import defaultdict
 from logging import getLogger
 from typing import List
 
@@ -40,6 +41,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
         shuffle: whether to shuffle examples in batches
         split_seed: random seed for splitting dataset, if ``split_seed`` is None, division is based on `seed`.
         stratify: whether to use stratified split
+        shot: number of examples to sample for each class in training data. If None, all examples will remain in data.
         *args: arguments
         **kwargs: arguments
 
@@ -52,6 +54,7 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                  field_to_split: str = None, split_fields: List[str] = None, split_proportions: List[float] = None,
                  seed: int = None, shuffle: bool = True, split_seed: int = None,
                  stratify: bool = None,
+                 shot: int = None,
                  *args, **kwargs):
         """
         Initialize dataset using data from DatasetReader,
@@ -80,6 +83,21 @@ class BasicClassificationDatasetIterator(DataLearningIterator):
                                  stratify=stratify)
             else:
                 raise IOError("Given field to split BUT not given names of split fields")
+        
+        if shot is not None:
+            train_data = self.data['train']
+            self.random.shuffle(train_data)
+            self.random.seed(seed)
+
+            data_dict = defaultdict(list)
+            for text, label in train_data:
+                if len(data_dict[label]) < shot:
+                    data_dict[label].append(text)
+            
+            if min(len(x) for x in data_dict.values()) < shot:
+                log.warning(f"Some labels have less than {shot} examples")
+
+            self.data['train'] = [(text, label) for label in data_dict for text in data_dict[label]]
 
     def _split_data(self, field_to_split: str = None, split_fields: List[str] = None,
                     split_proportions: List[float] = None, split_seed: int = None, stratify: bool = None) -> bool:
