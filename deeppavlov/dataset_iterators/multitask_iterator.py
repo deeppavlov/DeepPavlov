@@ -126,7 +126,8 @@ class MultiTaskIterator:
                     x = self.data[mode][task][i][0]
                     y = self.data[mode][task][i][1]
                     if is_nan(x) or any([is_nan(z) for z in x]) or is_nan(y):
-                        del self.data['train'][task][i]
+                        log.info(f'NAN detected {self.data[mode][task][i-1:i]}')
+                        del self.data[mode][task][i]
                         log.info(
                             f'NAN for mode {mode} task {task} element {i} CLEARED')
                     elif isinstance(x, tuple) and len(x) == 1 and one_element_tuples:
