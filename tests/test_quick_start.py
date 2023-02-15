@@ -2,7 +2,6 @@ import io
 import json
 import logging
 import os
-import pickle
 import shutil
 import signal
 import socket
@@ -21,7 +20,7 @@ import requests
 
 import deeppavlov
 from deeppavlov import build_model
-from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.commands.utils import parse_config, parse_value_with_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
@@ -88,11 +87,7 @@ PARAMS = {
             ]
     },
     "faq": {
-        ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/tfidf_logreg_autofaq.json", "faq_tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/fasttext_avg_autofaq.json", "faq_fasttext_avg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/fasttext_tfidf_autofaq.json", "faq_fasttext_tfidf", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("faq/fasttext_logreg.json", "fasttext_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],  # TODO: add ru test
     },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
@@ -266,8 +261,7 @@ PARAMS = {
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
-            ONE_ARGUMENT_INFER_CHECK]
+        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -567,7 +561,7 @@ class TestQuickStart(object):
 
 def test_crossvalidation():
     model_dir = 'faq'
-    conf_file = 'cv/cv_tfidf_autofaq.json'
+    conf_file = 'faq/fasttext_logreg.json'
 
     download_config(conf_file)
 
@@ -589,39 +583,17 @@ def test_crossvalidation():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def test_param_search():
-    model_dir = 'faq'
-    conf_file = 'paramsearch/tfidf_logreg_autofaq_psearch.json'
-
-    download_config(conf_file)
-
-    c = test_configs_path / conf_file
-    model_path = download_path / model_dir
-
-    install_config(c)
-    deep_download(c)
-
-    shutil.rmtree(str(model_path), ignore_errors=True)
-
-    logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
-                                       timeout=None, logfile=logfile)
-    p.readlines()
-    if p.wait() != 0:
-        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                           .format(model_dir, logfile.getvalue().decode()))
-
-    shutil.rmtree(str(download_path), ignore_errors=True)
-
-
 def test_hashes_existence():
     all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
     url_root = 'http://files.deeppavlov.ai/'
     downloads_urls = set()
     for config in all_configs:
         config = json.loads(config.read_text(encoding='utf-8'))
-        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
-                           config.get('metadata', {}).get('download', [])}
+        # TODO: replace with get downloads from config
+        # TODO: download only headers
+        # TODO: make requests in async mode
+        config_urls = {d if isinstance(d, str) else d['url'] for d in config.get('metadata', {}).get('download', [])}
+        downloads_urls |= {parse_value_with_config(url, config) for url in config_urls}
     downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
     messages = []
 

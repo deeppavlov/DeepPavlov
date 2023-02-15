@@ -57,7 +57,6 @@
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",
   "response_base_loader": "deeppavlov.models.preprocessors.response_base_loader:ResponseBaseLoader",
   "ru_adj_to_noun": "deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun",
-  "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",
   "rured_reader": "deeppavlov.dataset_readers.rured_reader:RuREDDatasetReader",
   "russian_words_vocab": "deeppavlov.vocabs.typos:RussianWordsVocab",
   "sanitizer": "deeppavlov.models.preprocessors.sanitizer:Sanitizer",

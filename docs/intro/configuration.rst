@@ -362,10 +362,6 @@ string).
       ``nltk.tokenize.moses.MosesDetokenizer``,
       ``nltk.tokenize.moses.MosesTokenizer``.
 
-    - :class:`~deeppavlov.models.tokenizers.ru_tokenizer.RussianTokenizer`
-      (registered as ``ru_tokenizer``) tokenizes or lemmatizes Russian texts
-      using ``nltk.tokenize.toktok.ToktokTokenizer``.
-
     - :class:`~deeppavlov.models.tokenizers.spacy_tokenizer.StreamSpacyTokenizer`
       (registered as ``stream_spacy_tokenizer``) tokenizes or lemmatizes texts
       with spacy ``en_core_web_sm`` models by default.

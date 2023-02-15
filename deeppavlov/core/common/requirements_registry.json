@@ -79,7 +79,8 @@
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "stream_spacy_tokenizer": [
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "torch_bert_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",

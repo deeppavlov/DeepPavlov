@@ -1,0 +1,112 @@
+{
+  "dataset_reader": {
+    "class_name": "basic_classification_reader",
+    "format": "json",
+    "orient": "split",
+    "x": "text",
+    "y": "category",
+    "data_path": "{DOWNLOADS_PATH}/massive/{LANGUAGE}",
+    "train": "train.json",
+    "valid": "dev.json",
+    "test": "test.json"
+  },
+  "dataset_iterator": {
+    "class_name": "basic_classification_iterator",
+    "seed": 42,
+    "shuffle": true,
+    "shot": 5
+  },
+  "chainer": {
+    "in": ["text"],
+    "in_y": ["category"],
+    "pipe": [
+      {
+        "class_name": "stream_spacy_tokenizer",
+        "in": ["text"],
+        "id": "my_tokenizer",
+        "lemmas": false,
+        "out": "token_lemmas",
+        "spacy_model": "{SPACY_MODEL}"
+      },
+      {
+        "ref": "my_tokenizer",
+        "in": ["token_lemmas"],
+        "out": ["text_lem"]
+      },
+      {
+        "class_name": "fasttext",
+        "in": ["token_lemmas"],
+        "load_path": "{DOWNLOADS_PATH}/embeddings/fasttext/{LANGUAGE}.bin",
+        "mean": true,
+        "out": ["text_vector"]
+      },
+      {
+        "id": "answers_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": "category",
+        "save_path": "{MODEL_PATH}/cat_answers.dict",
+        "load_path": "{MODEL_PATH}/cat_answers.dict",
+        "in": ["category"],
+        "out": ["y_ids"]
+      },
+      {
+        "in": ["text_vector"],
+        "fit_on": ["text_vector", "y_ids"],
+        "out": ["y_pred_proba"],
+        "class_name": "sklearn_component",
+        "main": true,
+        "save_path": "{MODEL_PATH}/model.pkl",
+        "load_path": "{MODEL_PATH}/model.pkl",
+        "model_class": "sklearn.linear_model:LogisticRegression",
+        "infer_method": "predict_proba",
+        "C": 10,
+        "penalty": "l2"
+      },
+      {
+        "in": ["y_pred_proba"],
+        "out": ["y_pred_ids"],
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": ["y_pred_ids"],
+        "out": ["y_pred_category"],
+        "ref": "answers_vocab"
+      }
+    ],
+    "out": ["y_pred_category"]
+  },
+  "train": {
+    "evaluation_targets": ["train", "valid", "test"],
+    "class_name": "fit_trainer",
+    "metrics": [
+      {
+        "name": "accuracy",
+        "inputs": ["category", "y_pred_category"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "LANGUAGE": "en",
+      "ROOT_PATH": "~/.deeppavlov",
+      "SPACY_MODEL": "en_core_web_sm",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODEL_PATH": "{ROOT_PATH}/models/faq/{LANGUAGE}/fasttext_logreg"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/embeddings/fasttext/{LANGUAGE}.bin",
+        "subdir": "{DOWNLOADS_PATH}/embeddings/fasttext"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/datasets/massive-{LANGUAGE}.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/massive/{LANGUAGE}"
+      },
+      {
+        "url": "https://files.deeppavlov.ai/faq/fasttext_logreg_{LANGUAGE}.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}
