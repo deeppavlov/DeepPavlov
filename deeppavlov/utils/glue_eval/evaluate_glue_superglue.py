@@ -347,7 +347,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
         if k==0:
             print(batch)
             k+=1
-        if k==MAX_VALID_SAMPLES_BY_TASK and split != 'test':
+        if k==MAX_VALID_SAMPLES_BY_TASK and 'test' not in split:
             break
         if task.name in ['cola','sst2']:
             examples = [j for j in batch['sentence']]
