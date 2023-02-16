@@ -306,7 +306,7 @@ Here are the results of ``deeppavlov/configs/multitask/glue.json`` compared to t
 |-------------------|-------------|----------------|----------|---------------|-----------------------|---------------|----------|----------|----------|----------|----------------|
 | Metric            | from server | Matthew's Corr | Accuracy | F1 / Accuracy | Pearson/Spearman Corr | F1 / Accuracy | Accuracy | Accuracy | Accuracy | Accuracy | Matthew's Corr |
 | Multitask config  | 77.8        | 43.6           | 93.2     | 88.6/84.2     | 84.3/84.0             | 70.1/87.9     | 83.0     | 82.6     | 90.6     | 75.4     | 35.4           |
-| Singletask config | 77.6        | 53.6           | 92.7     | 87.7/83.6     | 84.4/83.1             | 70.5/88.9     | 84.4     | 83.2     | 90.3     | 63.4     | 36.3           |
+| Singletask config | 77.6        | 53.6           | 92.7     | 87.7/83.6     | 84.4/83.1             | 70.5/88.9     | 84.4     | 83.2     | 90.3     | 63.4     | 36.3           | 
 
 
 Here are the same results for SuperGLUE tasks.
