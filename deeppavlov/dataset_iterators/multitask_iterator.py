@@ -34,7 +34,6 @@ class MultiTaskIterator:
     Class merges data from several dataset iterators. When used for batch generation batches from
     merged dataset iterators are united into one batch. If sizes of merged datasets are different
     smaller datasets are repeated until their size becomes equal to the largest dataset.
-
     Args:
         data: dictionary which keys are task names and values are dictionaries with fields
             ``"train", "valid", "test"``.
@@ -48,7 +47,6 @@ class MultiTaskIterator:
         use_label_name, seed, features - parameters for the iterator class
         one_element_tuples: if True, tuple of x consisting of one element is returned in this element. Default: True
         seed - random seed for sampling
-
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """
@@ -64,7 +62,9 @@ class MultiTaskIterator:
             steps_per_epoch: int = 0,
             iterator_class_name=None,
             one_element_tuples=True,
+            use_label_name=None,
             seed=42,
+            features=None,
             *args,
             **kwargs
     ):
@@ -209,7 +209,7 @@ class MultiTaskIterator:
         """
 
         if len(x) != len(y):
-            raise Exception(f'x has len {len(x}} but y has len {len(y)}')
+            raise Exception(f'x has len {len(x)} but y has len {len(y)}')
         new_x, new_y = [], []
         for i in range(batch_size):
             x_tuple = tuple([x[id][i] for id in range(self.n_tasks)])
@@ -227,12 +227,10 @@ class MultiTaskIterator:
         """
         Generates batches and expected output to train neural networks.
         If there are not enough samples forom any task, samples are padded with None
-
         Args:
             batch_size: number of samples in batch
             data_type: can be either 'train', 'test', or 'valid'
             shuffle: whether to shuffle dataset before batching
-
         Yields:
             A tuple of a batch of inputs and a batch of expected outputs.
             Inputs and outputs are tuples. Element of inputs or outputs is a tuple which
@@ -298,10 +296,8 @@ class MultiTaskIterator:
         and outputs are equal to the size of the largest dataset. Smaller
         datasets are padded with Nones until their sizes are equal to the size of the
         largest dataset.
-
         Args:
             data_type: can be either 'train', 'test', or 'valid'
-
         Returns:
             A tuple of all inputs for a data type and all expected outputs
             for a data type.
@@ -333,7 +329,6 @@ class SingleTaskBatchGenerator:
     """
     Batch generator for a single task.
     If there are no elements in the dataset to form another batch, Nones are returned.
-
     Args:
         dataset_iterator: dataset iterator from which batches are drawn.
         batch_size: size fo the batch.
