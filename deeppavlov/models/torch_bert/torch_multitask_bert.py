@@ -72,7 +72,11 @@ class BertForMultiTask(nn.Module):
     Params:
     task_num_classes
     task_types
-    backbone_model - na
+    backbone_model
+    dropout
+    new_model
+    focal
+    one_hot_labels
     """
 
     def __init__(self, tasks_num_classes, multilabel, task_types,
@@ -171,8 +175,8 @@ class BertForMultiTask(nn.Module):
                 logits = logits.view((-1, self.classes[task_id]))
                 if labels is not None:
                     l1, l2 = len(logits), len(labels)
-                    assert len(logits) == len(
-                        labels), f'Len of logits {l1} and labels {l2} not match'
+                    if len(logits) != len(labels):
+                        raise Exception(f'Len of logits {l1} and labels {l2} not match')
             if labels is not None:
                 if name != "regression":
                     if self.multilabel[task_id]:
@@ -496,7 +500,8 @@ class TorchMultiTaskBert(TorchModel):
                 _input[elem] = _input[elem].to(self.device)
         if 'labels' in _input and self.task_types[task_id] != 'multiple_choice':
             error_msg = f'Len of labels {len(_input["labels"])} does not match len of ids {len(_input["input_ids"])}'
-            assert len(_input['labels']) == len(_input['input_ids']), error_msg
+            if len(_input['labels']) != len(_input['input_ids']):
+                raise Exception(error_msg)
         return _input, batch_input_size
 
     def __call__(self, *args):
@@ -513,7 +518,8 @@ class TorchMultiTaskBert(TorchModel):
             if len(args[task_id]):
                 _input, batch_input_size = self._make_input(task_features=args[task_id], task_id=task_id)
 
-                assert 'input_ids' in _input, f'No input_ids in _input {_input}'
+                if 'input_ids' not in _input:
+                    raise Exception(f'No input_ids in _input {_input}')
                 cache_key = self.types_to_cache[task_id]
                 if cache_key != -1 and self.preds_cache[cache_key] is not None:
                     last_hidden_state = self.preds_cache[cache_key]
@@ -595,14 +601,18 @@ class TorchMultiTaskBert(TorchModel):
         log.debug(f'Training for {args}')
         error_msg = f'Len of arguments {len(args)} is WRONG. ' \
                     f'Correct is {2 * self.n_tasks} as n_tasks is {self.n_tasks}'
-        assert len(args) == 2 * self.n_tasks, error_msg
+        if len(args) != 2 * self.n_tasks:
+            raise Exception(error_msg)
         ids_to_iterate = [k for k in range(self.n_tasks) if len(args[k]) > 0]
-        assert len(ids_to_iterate) > 0, f'No examples given! Given args {args}'
-        assert len(ids_to_iterate) == 1, 'Samples from more than 1 task in train_on_batch'
+        if len(ids_to_iterate) == 0:
+            raise Exception(f'No examples given! Given args {args}')
+        elif len(ids_to_iterate) > 1:
+            raise Exception('Samples from more than 1 task in train_on_batch')
         task_id = ids_to_iterate[0]
         _input, batch_size = self._make_input(task_features=args[task_id], task_id=task_id,
                                               labels=args[task_id + self.n_tasks])
-        assert _input != {}, 'Empty input!'
+        if _input == {}:
+            raise Exception('Empty input!')
 
         if self.prev_id is None:
             self.prev_id = task_id
