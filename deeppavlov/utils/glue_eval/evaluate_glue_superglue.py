@@ -287,7 +287,7 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
                 true_count += 1
             total_count += 1
             accuracies[task] = true_count / total_count
-            if total_count >= MAX_VALID_SAMPLES_BY_TASK:
+            if total_count >= args.max_valid_samples_by_task:
                 break
     # postprocess for record
     
@@ -340,7 +340,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
         if k==0:
             print(batch)
             k+=1
-        if k==MAX_VALID_SAMPLES_BY_TASK and 'test' not in split:
+        if k==args.max_valid_samples_by_task and 'test' not in split:
             break
         if task.name in ['cola','sst2']:
             examples = [j for j in batch['sentence']]
