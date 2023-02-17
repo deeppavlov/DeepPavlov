@@ -14,19 +14,19 @@
 
 import re
 import sqlite3
+from collections import defaultdict
 from logging import getLogger
 from typing import List, Dict, Tuple, Union, Any
-from collections import defaultdict
 
-import pymorphy2
+import spacy
 from hdt import HDTDocument
 from nltk.corpus import stopwords
 from rapidfuzz import fuzz
 
+from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
-from deeppavlov.core.commands.utils import expand_path
 
 log = getLogger(__name__)
 
@@ -75,7 +75,6 @@ class EntityLinker(Component, Serializable):
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
-        self.morph = pymorphy2.MorphAnalyzer()
         self.lemmatize = lemmatize
         self.entities_database_filename = entities_database_filename
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
@@ -86,8 +85,10 @@ class EntityLinker(Component, Serializable):
         self.lang = f"@{lang}"
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
+            self.nlp = spacy.load("en_core_web_sm")
         elif self.lang == "@ru":
             self.stopwords = set(stopwords.words("russian"))
+            self.nlp = spacy.load("ru_core_news_sm")
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
         self.max_paragraph_len = max_paragraph_len
@@ -198,7 +199,7 @@ class EntityLinker(Component, Serializable):
             ):
                 cand_ent_scores = []
                 if len(entity_substr) > 1:
-                    entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
+                    entity_substr_split_lemm = [self.nlp(tok)[0].lemma_ for tok in entity_substr_split]
                     cand_ent_init = self.find_exact_match(entity_substr, tag)
                     if not cand_ent_init or entity_substr_split != entity_substr_split_lemm:
                         cand_ent_init = self.find_fuzzy_match(entity_substr_split, tag)
@@ -297,28 +298,23 @@ class EntityLinker(Component, Serializable):
             entity_substr_split = entity_substr_split[1:]
             entities_and_ids = self.find_title(entity_substr)
             cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split, tag)
-        if self.lang == "@ru":
-            entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
-            entity_substr_lemm = " ".join(entity_substr_split_lemm)
-            if entity_substr_lemm != entity_substr:
-                entities_and_ids = self.find_title(entity_substr_lemm)
-                if entities_and_ids:
-                    cand_ent_init = self.process_cand_ent(
-                        cand_ent_init, entities_and_ids, entity_substr_split_lemm, tag
-                    )
+
+        entity_substr_split_lemm = [self.nlp(tok)[0].lemma_ for tok in entity_substr_split]
+        entity_substr_lemm = " ".join(entity_substr_split_lemm)
+        if entity_substr_lemm != entity_substr:
+            entities_and_ids = self.find_title(entity_substr_lemm)
+            if entities_and_ids:
+                cand_ent_init = self.process_cand_ent(cand_ent_init, entities_and_ids, entity_substr_split_lemm, tag)
         return cand_ent_init
 
     def find_fuzzy_match(self, entity_substr_split, tag):
-        if self.lang == "@ru":
-            entity_substr_split_lemm = [self.morph.parse(tok)[0].normal_form for tok in entity_substr_split]
-        else:
-            entity_substr_split_lemm = entity_substr_split
+        entity_substr_split_lemm = [self.nlp(tok)[0].lemma_ for tok in entity_substr_split]
         cand_ent_init = defaultdict(set)
         for word in entity_substr_split:
             part_entities_and_ids = self.find_title(word)
             cand_ent_init = self.process_cand_ent(cand_ent_init, part_entities_and_ids, entity_substr_split, tag)
             if self.lang == "@ru":
-                word_lemm = self.morph.parse(word)[0].normal_form
+                word_lemm = self.nlp(word)[0].lemma_
                 if word != word_lemm:
                     part_entities_and_ids = self.find_title(word_lemm)
                     cand_ent_init = self.process_cand_ent(
@@ -328,11 +324,6 @@ class EntityLinker(Component, Serializable):
                         tag
                     )
         return cand_ent_init
-
-    def morph_parse(self, word):
-        morph_parse_tok = self.morph.parse(word)[0]
-        normal_form = morph_parse_tok.normal_form
-        return normal_form
 
     def calc_substr_score(self, cand_entity_title, entity_substr_split):
         label_tokens = cand_entity_title.split()

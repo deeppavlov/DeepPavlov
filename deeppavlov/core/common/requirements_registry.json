@@ -5,7 +5,9 @@
   ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
-    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt"
+    "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "fasttext": [
     "{DEEPPAVLOV_PATH}/requirements/fasttext.txt"
@@ -58,6 +60,7 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ru_adj_to_noun": [
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
   ],
   "russian_words_vocab": [
@@ -76,7 +79,8 @@
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "stream_spacy_tokenizer": [
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt"
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "torch_bert_ranker": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
@@ -147,7 +151,9 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "tree_to_sparql": [
-    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+    "{DEEPPAVLOV_PATH}/requirements/udapi.txt",
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "typos_custom_reader": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
