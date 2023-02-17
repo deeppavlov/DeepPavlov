@@ -106,7 +106,8 @@ class MultiTaskPipelinePreprocessor(Component):
     Overrides preprocessor . The length of list must be equal to the number of tasks
     max_seq_length(int): Maximum sequence length for tokenizer. Default: 512
     strict(bool): if True, we always try to split data assuming predefined modes as in multitask_example.json  
-    If False, we go without splitting if we are not sure how to split the data. Default, False
+    If False, we go without splitting if we are not sure how to split the data. Default: False
+    print_first_example(bool): if True, we print the first input example after initialization. Default: False 
     """
 
     def __init__(self,
@@ -116,9 +117,11 @@ class MultiTaskPipelinePreprocessor(Component):
                  preprocessors: List[str] = None,
                  max_seq_length: int = 512,
                  strict=False,
+                 print_first_example=False,
                  *args, **kwargs):
         self.strict = strict
         self.printed = False
+        self.print_first_example = print_first_example
         self.prefix = ''
         if preprocessors is None:
             log.info(
@@ -197,10 +200,11 @@ class MultiTaskPipelinePreprocessor(Component):
                         if self.prefix:
                             texts_a = [' '.join([self.prefix, text]) for text in texts_a]
                     answer.append(self.preprocessors[i](texts_a, texts_b))
-                    if not self.printed:
+                    if not self.printed and self.print_first_example:
                         print((texts_a, texts_b))
                         print(answer[-1])
                         self.printed = True
-        assert answer != [[]], 'Empty answer'
+        if answer != [[]]:
+            raise Exception('Empty answer')
         return answer
 
