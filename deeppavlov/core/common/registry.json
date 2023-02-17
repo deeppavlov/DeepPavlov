@@ -26,7 +26,6 @@
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
   "multitask_input_splitter": "deeppavlov.models.preprocessors.multitask_preprocessor:MultiTaskInputSplitter",
-  "multitask_input_joiner": "deeppavlov.models.preprocessors.multitask_preprocessor:MultiTaskInputJoiner",
   "multitask_reader":"deeppavlov.dataset_readers.multitask_reader:MultiTaskReader",
   "multitask_preprocessor":"deeppavlov.models.preprocessors.multitask_preprocessor:MultiTaskPreprocessor",
   "multitask_pipeline_preprocessor":"deeppavlov.models.preprocessors.multitask_preprocessor:MultiTaskPipelinePreprocessor",
