@@ -32,7 +32,7 @@ class MultiTaskReader(DatasetReader):
     Class to read several datasets simultaneuosly
     """
 
-    def read(self, data_path, tasks: Dict[str, Dict[str, str]] = {}, task_names=None, path=None,
+    def read(self, path, tasks: Dict[str, Dict[str, str]] = {}, task_names=None,data_path='',
              train=None, valid=None, test=None, reader_class_name=None,**kwargs):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
         Args:
@@ -61,7 +61,6 @@ class MultiTaskReader(DatasetReader):
         data = {}
         if tasks is None:
             tasks = {}
-
         for task_name, reader_params in tasks.items():
             log.info('Processing explicitly set tasks')
             reader_params = copy.deepcopy(reader_params)
@@ -77,18 +76,18 @@ class MultiTaskReader(DatasetReader):
                 })
             reader_params = {**reader_params, **kwargs}
             if "data_path" not in reader_params:
-                reader_params["data_path"] = data_path
-            if 'path' not in reader_params:
+                reader_params["data_path"] = path
+                reader_params['data_path'] = Path(
+                    reader_params['data_path']).expanduser()
+            elif reader_class_name == 'huggingface_dataset_reader':
                 reader_params['path'] = path
-            reader_params['data_path'] = Path(
-                reader_params['data_path']).expanduser()
             if 'reader_class_name' in reader_params:
                 del reader_params['reader_class_name']
             for param_ in ['train', 'test', 'valid']:
                 if param_ not in reader_params:
                     reader_params[param_] = eval(param_)
             reader_params['name'] = task_name
-            print(reader_params)
+            print(f'Reading data for {task_name}')
             data[task_name] = tasks[task_name].read(**reader_params)
         if task_names is not None:
             if not isinstance(task_names, Iterable):
@@ -109,21 +108,24 @@ class MultiTaskReader(DatasetReader):
                     validation_name = valid
                     if test is not None:
                         test_name = test
-                reader_params = {'path': path,
-                                 'data_path': data_path,
-                                 'name': name,
+                reader_params = {'name': name,
                                  'train': train,
                                  'valid': validation_name,
                                  **kwargs}
                 if test is not None:
                     reader_params['test'] = test_name
+                if "data_path" not in reader_params:
+                    reader_params["data_path"] = path
+                    reader_params['data_path'] = Path(
+                        reader_params['data_path']).expanduser()
+                elif reader_class_name == 'huggingface_dataset_reader':
+                    reader_params['path'] = path
                 for key in reader_params:
                     if reader_params[key] is None:
                         raise Exception(f'Set value for {key} if tasks argument is None')
                 if reader_class_name is None:
                     raise Exception(f'Set the argument reader_class_name if using task_names')
                 tasks[name] = from_params({"class_name": reader_class_name})
-                reader_params['data_path'] = Path(
-                    reader_params['data_path']).expanduser()
+                print(f'Reading data for {task_name}')
                 data[name] = tasks[name].read(**reader_params)
         return data
