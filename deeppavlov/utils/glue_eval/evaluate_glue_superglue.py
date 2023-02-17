@@ -33,7 +33,7 @@ parser.add_argument('dataset_type', type=str,required=True,
                     help='Type of the dataset to evaluate')
 parser.add_argument('submit_dir', type=str,required=True,
                     help='Directory to submit predicts')
-parser.add_argument('task_id',nargs='?', const=1,type=int, default=None,
+parser.add_argument('task_id',nargs='?', const=1,type=int, default=None)
                     help='Id of task to evaluate. None if multitask model used')
 parser.add_argument('max_valid_samples_by_task',nargs='?', const=1,type=int, default=100000,
                     help='Max valid samples by task to perform the evaluation on')
