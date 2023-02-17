@@ -369,8 +369,6 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
                 labels = labels + list([float(k) for k in batch['label']])
             else:
                 labels = labels + list([task.classes[int(s)] for s in batch['label']])
-    print(predictions[:10])
-    print(labels[:10])
     if 'test' not in split:
         for prediction, label in zip(predictions, labels):
             pred_to_true[prediction][label]+=1
