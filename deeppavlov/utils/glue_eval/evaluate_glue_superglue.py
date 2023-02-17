@@ -9,6 +9,7 @@ import sys
 from collections import defaultdict, namedtuple
 from copy import deepcopy
 from typing import Iterable
+import argparse
 
 import numpy as np
 import pandas as pd
@@ -24,16 +25,31 @@ from deeppavlov.dataset_readers.huggingface_dataset_reader import add_num_exampl
 
 np.random.seed(282)
 
-MAX_VALID_SAMPLES_BY_TASK=1e7 # MAX SAMPLES BY TASK ON WHICH THE EVALIATION IS PERFORMED. THE EVALUATION IS ADDED AS A SANITY CHECK
-TASK_IS_LONG = False
+parser = argparse.ArgumentParser()
+parser.add_argument('config_name',type=str, required=True,
+                    help='Name of config to evaluate')
+parser.add_argument('dataset_type', type=str,required=True,
+                    choices=['glue','rusuperglue','ensuperglue','superglue','all'],
+                    help='Type of the dataset to evaluate')
+parser.add_argument('submit_dir', type=str,required=True,
+                    help='Directory to submit predicts')
+parser.add_argument('task_id',nargs='?', const=1,type=int, default=None)
+                    help='Id of task to evaluate. None if multitask model used')
+parser.add_argument('max_valid_samples_by_task',nargs='?', const=1,type=int, default=100000,
+                    help='Max valid samples by task to perform the evaluation on')
+parser.add_argument('model_name',nargs='?', const=1,type=str, default='MultiTaskBert',
+                    help='Max valid samples by task to perform the evaluation on')
+args = parser.parse_args()
 
-config_name = sys.argv[1]
-print('building model')
-model = build_model(config_name, download=True)
+print('Building model')
+logging.warning(f'Before evaluating, make sure that a) model returns probabilities first b) the order of task-specific arguments, if model is multitask, is exactly as in this script')
+model = build_model(args.config_name, download=True)
 model_index = None
 for i in range(len(model.pipe)):
-    if 'MultiTaskBert' in str(model.pipe[i][-1]):
+    if args.model_name in str(model.pipe[i][-1]):
         model_index = i
+if model_index == None:
+    raise Exception(f'{args.model_name} not found in {model.pipe}')
 model.pipe[model_index][-1].load()
 
 Task = namedtuple('Task', 'name filename classes task_id')
@@ -75,48 +91,43 @@ ensuperglue_tasks = [Task('wsc', 'WSC.jsonl', ["False", "True"], 0),
              Task('wic', 'WiC.jsonl', ['false', 'true'], 7),
              Task('axb', 'AX-b.jsonl', ['entailment', 'not_entailment'], 6)]
 
-dataset_type = sys.argv[2]
-assert dataset_type in ['glue','rusuperglue','ensuperglue','superglue','all']
+eval_tasks = ['axb','lidirus','ax']  # Tasks only for evaluation
 
-eval_tasks = ['axb','lidirus','ax']
-
-if dataset_type == 'glue':
+if args.dataset_type == 'glue':
     logging.info('GLUE task set')
     tasks = deepcopy(glue_tasks)
     tasks_to_train = deepcopy(glue_tasks_to_train)
-elif dataset_type=='rusuperglue':
+elif args.dataset_type=='rusuperglue':
     logging.info('RUSUPERGLUE task set')
     tasks = rusuperglue_tasks
     tasks_to_train = deepcopy(tasks[:-1])
-elif dataset_type=='ensuperglue' or dataset_type=='superglue':
+elif args.dataset_type=='ensuperglue' or dataset_type=='superglue':
     logging.info('ENSUPERGLUE task set')
     dataset_type='super_glue' # backward compatibility
     tasks = ensuperglue_tasks
     tasks_to_train = deepcopy(tasks[:-1])
-elif dataset_type=='all':
+elif args.dataset_type=='all':
     tasks = deepcopy(ensuperglue_tasks + rusuperglue_tasks)
     num_superglue_tasks = len(ensuperglue_tasks) - 1  # 8
     for i in range(len(ensuperglue_tasks), len(tasks)):
         tasks[i].task_id = tasks[i].task_id + num_superglue_tasks
     tasks_to_train = tasks[:len(ensuperglue_tasks)-1] + tasks[len(ensuperglue_tasks):-1]
 
-SUBMIT_DIR = sys.argv[3]
-try:
-    task_id = int(sys.argv[4])
-    print(f'Task id {task_id}')
-    print(f'From all tasks of {dataset_type} {[k.__dict__ for k in tasks]}')
-    tasks = [task for task in tasks if task.task_id == task_id]
+args.SUBMIT_DIR = sys.argv[3]
+if args.task_id is not None:
+    tasks = [task for task in tasks if task.task_id == args.task_id]
     for i in range(len(tasks)):
         tasks[i].task_id=0
-    print(f'was chosen  {[k.__dict__ for k in tasks]}')    
     tasks_to_train = [task for task in tasks if task.name not in eval_tasks]
-except:
-    print('assuming multitask')
+    print(f'Assuming singletask setting')
+else:
+    print('Assuming multitask setting')
     task_id = None
 NUM_TASKS = len(tasks_to_train)
 
-print(f'Tasks {[k.__dict__ for k in tasks]}')
-print(f'Tasks to train {[k.__dict__ for k in tasks_to_train]}')
+print(f'Assuming that tasks to evaluate are {[k.name for k in tasks]}')
+print(f'Assuming that tasks to train are {[k.name for k in tasks_to_train]}')
+print('Check the order of tasks carefully')
 
 
 class NpEncoder(json.JSONEncoder):
@@ -300,8 +311,7 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
     if log_dict:
         print(counter)
         print(true_to_total)
-#1) MNLI - what?
-#2)For submit - what?
+
 def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
     look_name = task.name.split('-m')[0]
     if 'mnli' not in task.name:
@@ -391,5 +401,5 @@ for task in tasks:
     else:
         splits = ['test']
     for split in splits:
-        print(f'Evaluating on the {split} set')
-        obtain_predicts(task, dataset_type,log_dict=True,submit_dir=SUBMIT_DIR,split=split)
+        print(f'Evaluating {task.name} on the {split} set')
+        obtain_predicts(task, dataset_type,log_dict=True,submit_dir=args.submit_dir, split=split)
