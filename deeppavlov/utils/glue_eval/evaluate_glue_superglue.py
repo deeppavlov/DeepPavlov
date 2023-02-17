@@ -52,7 +52,14 @@ if model_index == None:
     raise Exception(f'{args.model_name} not found in {model.pipe}')
 model.pipe[model_index][-1].load()
 
-Task = namedtuple('Task', 'name filename classes task_id')
+class Task:
+    def __init__(self, name, filename, classes, task_id):
+        self.name = name
+        self.filename = filename
+        self.classes = classes
+        self.task_id = task_id
+    def __str__(self):
+        print(self.__dict__)
 
 glue_tasks = [Task('cola', 'CoLA.tsv', [0,1], 0),
             Task('sst2', 'SST-2.tsv', [0, 1], 1),
