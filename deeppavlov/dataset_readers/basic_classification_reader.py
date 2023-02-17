@@ -84,7 +84,8 @@ class BasicClassificationDatasetReader(DatasetReader):
 
         supported_label_types = ['int','str','float']
         error_msg = f'Wrong label type {label_type} given! Needs to be one of the built-in Python types'
-        assert label_type in supported_label_types, error_msg
+        if label_type not in supported_label_types:
+            raise Exception(error_msg)
         label_type = eval(label_type)
         data=defaultdict(list)
         for data_type in data_types:
