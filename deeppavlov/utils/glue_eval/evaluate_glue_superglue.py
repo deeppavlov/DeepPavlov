@@ -409,4 +409,4 @@ for task in tasks:
         splits = ['test']
     for split in splits:
         print(f'Evaluating {task.name} on the {split} set')
-        obtain_predicts(task, dataset_type,log_dict=True,submit_dir=args.submit_dir, split=split)
+        obtain_predicts(task, args.dataset_type,log_dict=True,submit_dir=args.submit_dir, split=split)
