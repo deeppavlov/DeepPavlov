@@ -24,7 +24,7 @@ from deeppavlov.dataset_readers.huggingface_dataset_reader import add_num_exampl
 
 np.random.seed(282)
 
-MAX_VALID_SAMPLES_BY_TASK=500 # MAX SAMPLES BY TASK ON WHICH THE EVALIATION IS PERFORMED. THE EVALUATION IS ADDED AS A SANITY CHECK
+MAX_VALID_SAMPLES_BY_TASK=1e7 # MAX SAMPLES BY TASK ON WHICH THE EVALIATION IS PERFORMED. THE EVALUATION IS ADDED AS A SANITY CHECK
 TASK_IS_LONG = False
 
 config_name = sys.argv[1]
@@ -368,6 +368,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
             metric = pearsonr(predictions, labels)[0]
         else:
             metric = accuracy_score(predictions, labels)
+        print(f'{Metric is {metric}')
         return metric
     if log_dict and task.name != 'stsb':
         from collections import Counter
