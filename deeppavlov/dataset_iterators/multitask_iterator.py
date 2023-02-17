@@ -19,6 +19,7 @@ from logging import getLogger
 from typing import Iterator, Optional, Tuple, Union
 
 import numpy as np
+import random
 
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
@@ -46,7 +47,7 @@ class MultiTaskIterator:
         iterator_class_name: name of iterator class.
         use_label_name, seed, features - parameters for the iterator class
         one_element_tuples: if True, tuple of x consisting of one element is returned in this element. Default: True
-
+        seed - random seed for sampling
 
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
@@ -63,6 +64,7 @@ class MultiTaskIterator:
             steps_per_epoch: int = 0,
             iterator_class_name=None,
             one_element_tuples=True,
+            seed=42,
             *args,
             **kwargs
     ):
@@ -137,6 +139,7 @@ class MultiTaskIterator:
             self.max_task_data_len[data_type] = max(sizes)
         self.sample_x_instances = None
         self.sample_y_instances = None
+        random.seed(seed)
 
     def _get_data_size(self, data_type):
         """
