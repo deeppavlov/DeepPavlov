@@ -378,7 +378,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
             metric = pearsonr(predictions, labels)[0]
         else:
             metric = accuracy_score(predictions, labels)
-        print(f'{Metric is {metric}')
+        print(f'Metric is {metric}')
         return metric
     if log_dict and task.name != 'stsb':
         from collections import Counter
