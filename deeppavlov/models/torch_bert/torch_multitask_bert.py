@@ -72,27 +72,24 @@ class BertForMultiTask(nn.Module):
     Params:
     task_num_classes
     task_types
-    backbone_model
-    dropout
-    new_model
-    focal
-    one_hot_labels
+    backbone_model - na
     """
 
     def __init__(self, tasks_num_classes, multilabel, task_types,
                  weights, backbone_model='bert_base_uncased',
-                 dropout=None, new_model=False, focal=False, one_hot_labels=None,
-                 max_seq_len=320):
+                 dropout=None, new_model=False,focal=False,one_hot_labels=None,
+                 max_seq_len=320, model_takes_token_type_ids=True):
 
         super(BertForMultiTask, self).__init__()
         config = AutoConfig.from_pretrained(backbone_model, output_hidden_states=True, output_attentions=True)
         self.bert = AutoModel.from_pretrained(pretrained_model_name_or_path=backbone_model,
-                                              config=config)
+                                                config=config)
         self.classes = tasks_num_classes  # classes for every task
         self.weights = weights
         self.multilabel = multilabel
         self.new_model = new_model
-        self.one_hot_labels = one_hot_labels
+        self.one_hot_labels=one_hot_labels
+        self.model_takes_token_type_ids = model_takes_token_type_ids
         if dropout is not None:
             self.dropout = nn.Dropout(dropout)
         elif hasattr(config, 'hidden_dropout_prob'):
@@ -106,9 +103,9 @@ class BertForMultiTask(nn.Module):
         self.max_seq_len = max_seq_len
         self.activation = nn.Tanh()
         self.task_types = task_types
-        self.focal = focal
+        self.focal=focal
         OUT_DIM = config.hidden_size
-        if self.new_model and self.new_model != 2:
+        if self.new_model and self.new_model!=2:
             OUT_DIM = OUT_DIM * 2
         self.bert.final_classifier = nn.ModuleList(
             [
@@ -117,25 +114,34 @@ class BertForMultiTask(nn.Module):
                 else nn.Linear(OUT_DIM, 1) for i, num_labels in enumerate(self.classes)
             ]
         )
-        if self.new_model:  # or True:
+        if self.new_model:# or True:
             self.bert.pooling_layer = nn.Linear(OUT_DIM, OUT_DIM)
         else:
             self.bert.pooler = nn.Linear(OUT_DIM, OUT_DIM)
 
     def get_logits(self, task_id, input_ids, attention_mask, token_type_ids):
         name = self.task_types[task_id]
+        outputs = None
         if we_transform_input(name):
             input_ids = input_ids.view(-1, input_ids.size(-1))
             attention_mask = attention_mask.view(-1, attention_mask.size(-1))
             if token_type_ids is not None:
                 token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1))
-        if token_type_ids is None:
+        if token_type_ids is None or not self.model_takes_token_type_ids:
             outputs = self.bert(input_ids=input_ids.long(),
                                 attention_mask=attention_mask.long())
         else:
-            outputs = self.bert(input_ids=input_ids.long(),
+            try:
+                outputs = self.bert(input_ids=input_ids.long(),
                                 token_type_ids=token_type_ids.long(),
                                 attention_mask=attention_mask.long())
+            except Exception as e:
+                if "forward() got an unexpected keyword argument 'token_type_ids'" in str(e):
+                    outputs = self.bert(input_ids=input_ids.long(),
+                                        attention_mask=attention_mask.long())
+                    self.model_takes_token_type_ids=False
+                else:                    
+                    raise e
         if name == 'sequence_labeling':
             return outputs.last_hidden_state
         elif self.new_model == 2:
