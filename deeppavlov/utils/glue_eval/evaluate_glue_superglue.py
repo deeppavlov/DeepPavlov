@@ -1,39 +1,28 @@
-from lib2to3.pgen2.token import BACKQUOTE
-
 #Using script: python deeppavlov/utils/glue_eval/evaluate_glue_superglue.py PATH_TO_CONFIG DATASET_TYPE DIRECTORY_TO_WRITE_SUBMIT TASK_ID
-#If the model is multilabel dont provide TASK_ID. Otherwise TASK_ID must be exactly as the field task_id that corresponding object of type Task has
+#If the model is multilabel don't provide TASK_ID. Otherwise, TASK_ID must be exactly as the field task_id that corresponding object of type Task has
 #Outputs of model ( first N_TASK outputs ) should be probabilities, except for sts-b. Order of tasks must be exactly the same as in the original configs
 
-from zmq import PROTOCOL_ERROR_ZAP_BAD_REQUEST_ID
-import _pickle as cPickle
-from typing import Iterable
-import numpy as np
-import sys
-import os
-from tqdm import tqdm
-from deeppavlov import build_model
 import json
-from collections import defaultdict
+import logging
+import os
+import sys
+from collections import defaultdict, namedtuple
 from copy import deepcopy
-from pathlib import Path
+from typing import Iterable
+
+import numpy as np
+import pandas as pd
 from datasets import load_dataset
+from scipy.stats import pearsonr
+from sklearn.metrics import accuracy_score
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
-import pandas as pd
-from deeppavlov.dataset_readers.huggingface_dataset_reader import preprocess_record, add_num_examples
-from deeppavlov.dataset_readers.huggingface_dataset_reader import preprocess_wsc, preprocess_multirc
-import sys
-from sklearn.metrics import confusion_matrix,accuracy_score
+
 from deeppavlov import build_model
-from deeppavlov.models.preprocessors.torch_transformers_preprocessor import TorchTransformersPreprocessor
-from torch.distributions import Categorical
-from scipy.stats import pearsonr
-import logging
-import torch
+from deeppavlov.dataset_readers.huggingface_dataset_reader import add_num_examples, preprocess_multirc, \
+    preprocess_record, preprocess_wsc
 
-np.random.seed(1488666)
-
-
+np.random.seed(282)
 
 MAX_VALID_SAMPLES_BY_TASK=500 # MAX SAMPLES BY TASK ON WHICH THE EVALIATION IS PERFORMED. THE EVALUATION IS ADDED AS A SANITY CHECK
 TASK_IS_LONG = False
@@ -47,14 +36,8 @@ for i in range(len(model.pipe)):
         model_index = i
 model.pipe[model_index][-1].load()
 
-class Task:
-    def __init__(self, name, filename, classes, task_id):
-        self.name = name
-        self.filename = filename
-        self.classes = classes
-        self.task_id = task_id
-    def __str__(self):
-        print(self.__dict__)
+Task = namedtuple('Task', 'name filename classes task_id')
+
 glue_tasks = [Task('cola', 'CoLA.tsv', [0,1], 0),
             Task('sst2', 'SST-2.tsv', [0, 1], 1),
             Task('qqp', 'QQP.tsv', [0, 1], 2),
@@ -135,7 +118,6 @@ NUM_TASKS = len(tasks_to_train)
 print(f'Tasks {[k.__dict__ for k in tasks]}')
 print(f'Tasks to train {[k.__dict__ for k in tasks_to_train]}')
 
-assert tasks and tasks_to_train, breakpoint()
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -330,13 +312,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
     elif task.name == 'mnli-mm':
         name = 'mnli_mismatched'
         split = split + '_mismatched'
-    try:
-        dataset = load_dataset("glue", look_name, split=split)
-    except Exception as e:
-        print(e)
-        breakpoint()
-        dataset = None
-        assert False
+    dataset = load_dataset("glue", look_name, split=split)
 
     loader = DataLoader(dataset, batch_size=1)
     predictions = []
@@ -368,21 +344,16 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
 
         batch_to_use = [[] for _ in tasks_to_train] + [[] for _ in tasks_to_train]
         batch_to_use[task.task_id] = examples
-        try:
-            pred = model(*batch_to_use)[task.task_id]
-            k+=1           
-            if task.name == 'stsb':
-                if isinstance(pred, Iterable):
-                    pred = float(pred[0])
-                new_pred = min(5, max(0,float(pred)))
-                predictions = predictions + [float(new_pred)]
-            else:
-                new_pred = [np.argmax(pred)]
-                predictions = predictions + [task.classes[int(k)] for k in new_pred]
-        except Exception as e:
-            print(e)
-            raise e
-            #breakpoint()
+        pred = model(*batch_to_use)[task.task_id]
+        k+=1
+        if task.name == 'stsb':
+            if isinstance(pred, Iterable):
+                pred = float(pred[0])
+            new_pred = min(5, max(0,float(pred)))
+            predictions = predictions + [float(new_pred)]
+        else:
+            new_pred = [np.argmax(pred)]
+            predictions = predictions + [task.classes[int(k)] for k in new_pred]
         if split != 'test':
             if task.name=='stsb':
                 labels = labels + list([float(k) for k in batch['label']])
@@ -397,20 +368,11 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
             metric = pearsonr(predictions, labels)[0]
         else:
             metric = accuracy_score(predictions, labels)
-        print(metric)
-        if metric<0.5:
-            print(pred_to_true)
-            breakpoint()
         return metric
     if log_dict and task.name != 'stsb':
         from collections import Counter
         print(Counter(predictions))
-    try:
-        default_pred = pd.DataFrame({'predictions': predictions})
-    except Exception as e:
-        # print(e)
-        breakpoint()
-        raise e
+    default_pred = pd.DataFrame({'predictions': predictions})
     default_pred.to_csv(f'{submit_dir}/{task.filename}', sep='\t')
 
 

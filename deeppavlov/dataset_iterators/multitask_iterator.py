@@ -1,4 +1,4 @@
-# Copyright 2022 Neural Networks and Deep Learning lab, MIPT
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
-import numpy as np
 import copy
-from logging import getLogger
+import math
 from collections import defaultdict
-from typing import Iterator, List, Optional, Tuple, Union, Dict
+from logging import getLogger
+from typing import Iterator, Optional, Tuple, Union
 
-from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
+import numpy as np
+
 from deeppavlov.core.common.params import from_params
 from deeppavlov.core.common.registry import register
-
+from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 
 log = getLogger(__name__)
 
@@ -62,9 +62,6 @@ class MultiTaskIterator:
             gradient_accumulation_steps: Optional[int] = 1,
             steps_per_epoch: int = 0,
             iterator_class_name=None,
-            use_label_name=False,
-            seed=42,
-            features=None,
             one_element_tuples=True,
             *args,
             **kwargs
@@ -119,17 +116,18 @@ class MultiTaskIterator:
         else:
             self.steps_per_epoch = steps_per_epoch
 
-        def is_nan(a): return a != a
+        def is_nan(a):
+            return a != a
+
         for mode in ['train', 'valid', 'test']:
             for task in self.data[mode]:
                 for i in range(len(self.data[mode][task]) - 1, -1, -1):
                     x = self.data[mode][task][i][0]
                     y = self.data[mode][task][i][1]
                     if is_nan(x) or any([is_nan(z) for z in x]) or is_nan(y):
-                        log.info(f'NAN detected {self.data[mode][task][i-1:i]}')
+                        log.info(f'NAN detected {self.data[mode][task][i - 1:i]}')
                         del self.data[mode][task][i]
-                        log.info(
-                            f'NAN for mode {mode} task {task} element {i} CLEARED')
+                        log.info(f'NAN for mode {mode} task {task} element {i} CLEARED')
                     elif isinstance(x, tuple) and len(x) == 1 and one_element_tuples:
                         # x is a tuple consisting of 1 element. return it as string
                         self.data[mode][task][i] = (x[0], y)
@@ -169,7 +167,7 @@ class MultiTaskIterator:
             n_samples = sum(sizes)
             probs_plain = [p / n_samples for p in sizes]
             probs_uniform = [1 / len(sizes) for _ in sizes]
-            probs = [0.5*(prob_plain + prob_uniform) 
+            probs = [0.5 * (prob_plain + prob_uniform)
                      for prob_plain, prob_uniform in zip(probs_plain, probs_uniform)]
             probs = [k / sum(probs) for k in probs]
         elif self.sampling_mode == 'anneal':
@@ -189,7 +187,7 @@ class MultiTaskIterator:
             annealed_sizes = [
                 p ** alpha for p in self._get_data_size(data_type)]
             n_samples = sum(annealed_sizes)
-            probs = [p / n_samples for p in annealed_sizes]                
+            probs = [p / n_samples for p in annealed_sizes]
         else:
             raise Exception(f'Unsupported sampling mode {self.sampling_mode}')
         return probs
@@ -245,7 +243,7 @@ class MultiTaskIterator:
         if size_of_last_batch == 0:
             size_of_last_batch = batch_size
         log.info(f'Batch size {batch_size} with gradient accumulation steps {self.gradient_accumulation_steps}')
-        log.info(f'Efficient batch size {batch_size//self.gradient_accumulation_steps}')
+        log.info(f'Efficient batch size {batch_size // self.gradient_accumulation_steps}')
         batch_size = batch_size // self.gradient_accumulation_steps
         n_batches = math.ceil(max_task_data_len / batch_size)
 
@@ -290,7 +288,6 @@ class MultiTaskIterator:
                     x[task_id], y[task_id] = generators[task_id].__next__()
 
                 batchs = self._transform_before_yielding(x, y, eval_batch_size)
-                # print(batchs)
                 yield batchs
 
     def get_instances(self, data_type: str = "train"):

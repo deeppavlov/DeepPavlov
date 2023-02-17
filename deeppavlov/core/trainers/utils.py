@@ -67,4 +67,4 @@ class NumpyArrayEncoder(JSONEncoder):
         elif 'NestedExample' in str(obj.__class__):
             return obj.__dict__
         else:
-            JSONEncoder.default(self, obj)
+            return JSONEncoder.default(self, obj)

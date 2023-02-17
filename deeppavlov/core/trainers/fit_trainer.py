@@ -18,7 +18,6 @@ import time
 from itertools import islice
 from logging import getLogger
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
-from tqdm import tqdm
 
 from tqdm import tqdm
 
