@@ -75,7 +75,8 @@ class MultiTaskIterator:
                 if param_name not in task_iterator_params:
                     if param_name != 'features':
                         error_msg = f'Set {param_name} either in scope for {param_name} or as default_params'
-                        assert eval(param_name) is not None, error_msg
+                        if eval(param_name) is None:
+                            raise Exception(error_msg)
                         log.info(
                             f'Using {param_name} as set on the reader level')
                         if param_name != 'iterator_class_name':
@@ -112,7 +113,6 @@ class MultiTaskIterator:
                 log.info(
                     f'{task_name} has {len(self.data[mode][task_name])} examples')
         self.train_sizes = self._get_data_size("train")
-        assert self.train_sizes
         if steps_per_epoch == 0:
             self.steps_per_epoch = sum(self.train_sizes) // batch_size
         else:
@@ -145,7 +145,6 @@ class MultiTaskIterator:
         """
         Returns list of sizes of each dataset for the given data_type: train,test or valid.
         """
-
         return [len(self.data[data_type][key]) for key in self.data[data_type]]
 
     def _get_probs(self, data_type):
@@ -153,7 +152,6 @@ class MultiTaskIterator:
         Returns sampling probabilities for different sampling modes - plain, uniform or anneal
         """
 
-        assert data_type in self.data
         curr_data = self.data[data_type]
 
         if self.sampling_mode == 'uniform':
@@ -210,7 +208,8 @@ class MultiTaskIterator:
         Function that transforms data from dataset before yielding
         """
 
-        assert len(x) == len(y)
+        if len(x) != len(y):
+            raise Exception(f'x has len {len(x}} but y has len {len(y)}')
         new_x, new_y = [], []
         for i in range(batch_size):
             x_tuple = tuple([x[id][i] for id in range(self.n_tasks)])
@@ -324,7 +323,8 @@ class MultiTaskIterator:
             x_instances.append(x[:max_task_data_len])
             y_instances.append(y[:max_task_data_len])
         error_msg = f'Len of x_instances {len(x_instances)} and y_instances {len(y_instances)} dont match'
-        assert len(x_instances) == len(y_instances), error_msg
+        if len(x_instances) != len(y_instances):
+            raise Exception(error_msg)
         instances = (tuple(zip(*x_instances)), tuple(zip(*y_instances)))
         return instances
 
@@ -386,7 +386,6 @@ class SingleTaskBatchGenerator:
                 y_nones = x_nones
                 return x_nones, y_nones
 
-        assert len(x) == self.batch_size and len(y) == self.batch_size
         self.batch_count += 1
         if self.batch_count == self.n_batches:
             x = x[: self.size_of_last_batch]
