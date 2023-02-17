@@ -26,12 +26,12 @@ from deeppavlov.dataset_readers.huggingface_dataset_reader import add_num_exampl
 np.random.seed(282)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('config_name',type=str, required=True,
+parser.add_argument('config_name',type=str,
                     help='Name of config to evaluate')
-parser.add_argument('dataset_type', type=str,required=True,
+parser.add_argument('dataset_type', type=str,
                     choices=['glue','rusuperglue','ensuperglue','superglue','all'],
                     help='Type of the dataset to evaluate')
-parser.add_argument('submit_dir', type=str,required=True,
+parser.add_argument('submit_dir', type=str,
                     help='Directory to submit predicts')
 parser.add_argument('task_id',nargs='?', const=1,type=int, default=None)
                     help='Id of task to evaluate. None if multitask model used')
