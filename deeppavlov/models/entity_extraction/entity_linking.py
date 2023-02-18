@@ -19,10 +19,9 @@ from typing import List, Dict, Tuple, Any, Union
 from collections import defaultdict
 
 import nltk
-import pymorphy2
+import spacy
 from hdt import HDTDocument
 from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
 from rapidfuzz import fuzz
 
 from deeppavlov.core.commands.utils import expand_path
@@ -106,11 +105,10 @@ class EntityLinker(Component, Serializable):
         self.lang = f"@{lang}"
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
-            nltk.download('wordnet')
-            self.morph = WordNetLemmatizer()
+            self.nlp = spacy.load("en_core_web_sm")
         elif self.lang == "@ru":
             self.stopwords = set(stopwords.words("russian"))
-            self.morph = pymorphy2.MorphAnalyzer()
+            self.nlp = spacy.load("ru_core_news_sm")
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
         self.sort_low_conf = sort_low_conf
@@ -247,37 +245,31 @@ class EntityLinker(Component, Serializable):
                         substr_split = [word for word in substr.lower().split(" ")
                                         if word not in self.stopwords and len(word) > 0]
 
-                    substr_split_lemm1, substr_split_lemm2 = self.morph_parse(substr_split)
-                    substr_lemm1 = " ".join(substr_split_lemm1)
-                    substr_lemm2 = " ".join(substr_split_lemm2)
-                    if substr_split != substr_split_lemm1 \
+                    substr_split_lemm = [self.nlp(tok)[0].lemma_ for tok in substr_split]
+                    substr_lemm = " ".join(substr_split_lemm)
+                    if substr_split != substr_split_lemm \
                             or (tags[0][0] == "work_of_art"
                                 and len(substr_split) != len(init_substr_split)):
                         new_cand_ent_init = self.find_fuzzy_match(substr_split, tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                    if substr_split != substr_split_lemm1:
-                        new_cand_ent_init = self.find_exact_match(substr_lemm1, tags, use_tags=use_tags_flag)
+                    if substr_split != substr_split_lemm:
+                        new_cand_ent_init = self.find_exact_match(substr_lemm, tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, tags, use_tags=use_tags_flag)
-                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                    if substr_split != substr_split_lemm2 and substr_split_lemm1 != substr_split_lemm2:
-                        new_cand_ent_init = self.find_exact_match(substr_lemm2, tags, use_tags=use_tags_flag)
-                        cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm2, tags, use_tags=use_tags_flag)
+                        new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm, tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
 
                     all_low_conf = self.define_all_low_conf(cand_ent_init, 1.0)
                     clean_tags, corr_tags, corr_clean_tags = self.correct_tags(tags)
-                    log.debug(f"substr: {substr} --- lemm: {substr_split_lemm1} --- tags: {tags} --- corr_tags: "
+                    log.debug(f"substr: {substr} --- lemm: {substr_split_lemm} --- tags: {tags} --- corr_tags: "
                               f"{corr_tags} --- all_low_conf: {all_low_conf} --- cand_ent_init: {len(cand_ent_init)}")
 
                     if (not cand_ent_init or all_low_conf) and corr_tags:
                         corr_cand_ent_init = self.find_exact_match(substr, corr_tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, corr_cand_ent_init)
-                        if substr_split != substr_split_lemm1:
-                            new_cand_ent_init = self.find_exact_match(substr_lemm1, corr_tags, use_tags=use_tags_flag)
+                        if substr_split != substr_split_lemm:
+                            new_cand_ent_init = self.find_exact_match(substr_lemm, corr_tags, use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, corr_tags,
+                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm, corr_tags,
                                                                       use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
 
@@ -295,10 +287,10 @@ class EntityLinker(Component, Serializable):
                         use_tags_flag = False
                         new_cand_ent_init = self.find_exact_match(substr, tags, use_tags=use_tags_flag)
                         cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                        if substr_split != substr_split_lemm1 and (tags[0][0] == "e" or not cand_ent_init):
+                        if substr_split != substr_split_lemm and (tags[0][0] == "e" or not cand_ent_init):
                             new_cand_ent_init = self.find_fuzzy_match(substr_split, tags, use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
-                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm1, tags, use_tags=use_tags_flag)
+                            new_cand_ent_init = self.find_fuzzy_match(substr_split_lemm, tags, use_tags=use_tags_flag)
                             cand_ent_init = self.unite_dicts(cand_ent_init, new_cand_ent_init)
 
                 cand_ent_scores = []
@@ -379,37 +371,6 @@ class EntityLinker(Component, Serializable):
             else:
                 cand_ent_init[entity_id] = new_cand_ent_init[entity_id]
         return cand_ent_init
-
-    def nomn_case(self, word):
-        morph_parse_tok = self.morph.parse(word)[0].inflect({"nomn"})
-        if morph_parse_tok:
-            normal_form = morph_parse_tok.word
-        else:
-            normal_form = word
-        return normal_form
-
-    def normal_form(self, word):
-        morph_parse_tok = self.morph.parse(word)[0]
-        if morph_parse_tok:
-            normal_form = morph_parse_tok.normal_form
-        else:
-            normal_form = word
-        return normal_form
-
-    def morph_parse(self, words):
-        if self.lang == "@ru":
-            words = [self.nomn_case(word) for word in words]
-            if len(words) > 1 and self.morph.parse(words[-1])[0].tag.POS == "NOUN":
-                gender = self.morph.parse(words[-1])[0].tag.gender
-                if gender:
-                    for i in range(len(words) - 1):
-                        if self.morph.parse(words[i])[0].tag.POS == "ADJF":
-                            words[i] = self.morph.parse(words[i])[0].inflect({gender}).word
-            words_n = [self.normal_form(word) for word in words]
-        elif self.lang == "@en":
-            words = [self.morph.lemmatize(word) for word in words]
-            words_n = words
-        return words, words_n
 
     def process_cand_ent(self, cand_ent_init, entities_and_ids, substr_split, tag, tag_conf, use_tags):
         for title, entity_id, rels, ent_tag, page, label, descr in entities_and_ids:

@@ -9,6 +9,7 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
+   Python pipelines <intro/python.ipynb>
    Models overview <features/overview>
 
 
@@ -40,7 +41,6 @@ Welcome to DeepPavlov's documentation!
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
    Open-Domain Question Answering <features/models/odqa>
-   Frequently Asked Questions Answering <features/models/faq>
 
 
 .. toctree::

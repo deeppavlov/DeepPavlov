@@ -54,7 +54,6 @@
   "rel_ranking_reader": "deeppavlov.dataset_readers.rel_ranking_reader:ParaphraserReader",
   "response_base_loader": "deeppavlov.models.preprocessors.response_base_loader:ResponseBaseLoader",
   "ru_adj_to_noun": "deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun",
-  "ru_tokenizer": "deeppavlov.models.tokenizers.ru_tokenizer:RussianTokenizer",
   "rubq_reader": "deeppavlov.dataset_readers.sq_reader:RuBQReader",
   "rule_based_query_prediction": "deeppavlov.models.entity_extraction.entity_detection_parser:rule_based_query_prediction",
   "rured_reader": "deeppavlov.dataset_readers.rured_reader:RuREDDatasetReader",

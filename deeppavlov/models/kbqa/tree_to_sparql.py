@@ -20,7 +20,7 @@ from logging import getLogger
 from typing import Any, List, Tuple, Dict, Union
 
 import numpy as np
-import pymorphy2
+import spacy
 from navec import Navec
 from razdel import tokenize
 from scipy.sparse import csr_matrix
@@ -69,11 +69,10 @@ class RuAdjToNoun:
         self.adj_set = set([word for word, freq in pos_freq_dict["a"]])
         self.nouns = [noun[0] for noun in self.nouns_with_freq]
         self.matrix = self.make_sparse_matrix(self.nouns).transpose()
-        self.morph = pymorphy2.MorphAnalyzer()
+        self.nlp = spacy.load("ru_core_news_sm")
 
     def search(self, word: str):
-        word = self.morph.parse(word)[0]
-        word = word.normal_form
+        word = self.nlp(word)[0].lemma_
         if word in self.adj_set:
             q_matrix = self.make_sparse_matrix([word])
             scores = q_matrix * self.matrix
@@ -134,11 +133,12 @@ class SlovnetSyntaxParser(Component, Serializable):
                                             "когда", "где", "чем", "сколько"},
                              "how_many": {"сколько"}}
             self.first_tokens = {"первый", "первая", "первое"}
+            self.nlp = spacy.load("ru_core_news_sm")
         elif self.lang == "@en":
             self.pronouns = {"q_pronouns": {"what", "who", "how", "when", "where", "which"},
                              "how_many": {"how many"}}
             self.first_tokens = {"first"}
-        self.morph = pymorphy2.MorphAnalyzer()
+            self.nlp = spacy.load("en_core_web_sm")
         self.load()
 
     def load(self) -> None:
@@ -177,7 +177,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                 if len(work_of_art.split()) > 1:
                     short_substr = ""
                     for tok in work_of_art_tokens:
-                        if self.morph.parse(tok)[0].tag.POS == "NOUN":
+                        if self.nlp(tok)[0].pos_ == "NOUN":
                             short_substr = tok
                             break
                     if not short_substr:
@@ -193,8 +193,8 @@ class SlovnetSyntaxParser(Component, Serializable):
                         if len(tokens[j]) < 2 or tokens[j][0] in '("' or tokens[j][-1] in '"),.?':
                             found = False
                     if found and i > 0:
-                        token_tags = [self.morph.parse(tokens[j])[0].tag.POS for j in range(i, i + 3)]
-                        lemm_tokens = self.normal_form(tokens[i:i + 3])
+                        token_tags = [self.nlp(tokens[j])[0].pos_ for j in range(i, i + 3)]
+                        lemm_tokens = [self.nlp(tok)[0].lemma_ for tok in tokens[i:i + 3]]
                         if token_tags == ["ADJF", "ADJF", "NOUN"] \
                                 and not any([tok in self.first_tokens for tok in lemm_tokens]):
                             long_substr = " ".join(tokens[i:i + 3])
@@ -210,16 +210,6 @@ class SlovnetSyntaxParser(Component, Serializable):
             log.debug(f"replace_dict: {replace_dict} --- sentence: {sentence_tokens}")
             replace_dict_batch.append(replace_dict)
         return sentences_tokens_batch, replace_dict_batch
-
-    def normal_form(self, tokens):
-        lemm_tokens = []
-        for token in tokens:
-            parsed_tok = self.morph.parse(token)[0].inflect({"nomn"})
-            if parsed_tok:
-                lemm_tokens.append(parsed_tok.word)
-            else:
-                lemm_tokens.append(token)
-        return lemm_tokens
 
     def get_markup(self, proc_syntax_batch, replace_dict_batch):
         markup_batch = []
@@ -297,7 +287,7 @@ class SlovnetSyntaxParser(Component, Serializable):
 
     def correct_markup(self, words, head_ids, rels, root_n):
         if len(words) > 3:
-            pos = [self.morph.parse(words[i])[0].tag.POS for i in range(len(words))]
+            pos = [self.nlp(words[i])[0].pos_ for i in range(len(words))]
             for tree_pattern in self.tree_patterns:
                 first_word = tree_pattern.get("first_word", "")
                 (r_start, r_end), rel_info = tree_pattern.get("rels", [[0, 0], ""])
@@ -364,7 +354,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                             found_root = True
                 if not found_root:
                     for n in range(len(ids)):
-                        if self.morph.parse(words[n])[0].tag.POS == "VERB":
+                        if self.nlp(words[n])[0].pos_ == "VERB":
                             rels[n] = "root"
                             head_ids[n] = 0
 
@@ -418,6 +408,7 @@ class TreeToSparql(Component):
             self.end_tokens = {"завершить", "завершать", "закончить"}
             self.ranking_tokens = {"самый"}
             self.date_tokens = {"год", "месяц"}
+            self.nlp = spacy.load("ru_core_news_sm")
         elif self.lang == "@en":
             self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
             self.how_many = "how many"
@@ -428,6 +419,7 @@ class TreeToSparql(Component):
             self.end_tokens = set()
             self.ranking_tokens = set()
             self.date_tokens = {"year", "month"}
+            self.nlp = spacy.load("en_core_web_sm")
         else:
             raise ValueError(f"unsupported language {lang}")
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
@@ -436,7 +428,6 @@ class TreeToSparql(Component):
         self.template_queries = preprocess_template_queries(template_queries, kb_prefixes)
         self.syntax_parser = syntax_parser
         self.adj_to_noun = adj_to_noun
-        self.morph = pymorphy2.MorphAnalyzer()
 
     def __call__(self, questions_batch: List[str], substr_batch: List[List[str]], tags_batch: List[List[str]],
                  offsets_batch: List[List[int]], positions_batch: List[List[List[int]]],
@@ -522,7 +513,7 @@ class TreeToSparql(Component):
                         self.root_entity = True
 
                     temporal_order = self.find_first_last(new_root)
-                    new_root_nf = self.morph.parse(new_root.form)[0].normal_form
+                    new_root_nf = self.nlp(new_root.form)[0].lemma_
                     if new_root_nf in self.begin_tokens or new_root_nf in self.end_tokens:
                         temporal_order = new_root_nf
                     query_nums, s_substr_list, types_list = self.build_query(new_root, unknown_branch, root_desc,
@@ -612,7 +603,7 @@ class TreeToSparql(Component):
             for node in tree.descendants:
                 if node.ord not in appos_token_nums + clause_token_nums:
                     if ranking_tokens and (node.ord in ranking_tokens or node.form.lower() in self.q_pronouns):
-                        question_tokens.append(self.morph.parse(node.form)[0].normal_form)
+                        question_tokens.append(self.nlp(node.form)[0].lemma_)
                     else:
                         question_tokens.append(node.form)
         else:
@@ -756,12 +747,8 @@ class TreeToSparql(Component):
             for node in nodes:
                 node_desc = defaultdict(set)
                 for elem in node.children:
-                    parsed_elem = self.morph.parse(elem.form.lower())[0]
-                    normal_form = parsed_elem.inflect({"nomn"})
-                    if normal_form is not None:
-                        node_desc[elem.deprel].add(normal_form.word)
-                    else:
-                        node_desc[elem.deprel].add(elem.form)
+                    normal_form = self.nlp(elem.form.lower())[0].lemma_
+                    node_desc[elem.deprel].add(normal_form)
                 log.debug(f"find_first_last {node_desc}")
                 if "amod" in node_desc.keys() and "nmod" in node_desc.keys() and \
                         node_desc["amod"].intersection(self.first_tokens | self.last_tokens):
@@ -773,7 +760,7 @@ class TreeToSparql(Component):
     def find_ranking_tokens(self, node: Node, appos_token_nums: List[int], clause_token_nums: List[int]) -> list:
         ranking_tokens = []
         for elem in node.descendants:
-            if self.morph.parse(elem.form)[0].normal_form in self.ranking_tokens \
+            if self.nlp(elem.form)[0].lemma_ in self.ranking_tokens \
                     and elem.ord not in appos_token_nums + clause_token_nums:
                 ranking_tokens.append(elem.ord)
                 ranking_tokens.append(elem.parent.ord)
@@ -951,7 +938,7 @@ class TreeToSparql(Component):
         grounded_entities_list = self.choose_grounded_entity(grounded_entities_list, entities_dict)
         entities_list = grounded_entities_list + qualifier_entities_list + modifiers_list
         types_list = [tp for tp in types_list
-                      if not (len(tp.split()) == 1 and self.morph.parse(tp)[0].normal_form in self.date_tokens)]
+                      if not (len(tp.split()) == 1 and self.nlp(tp)[0].lemma_ in self.date_tokens)]
 
         gr_len = len(grounded_entities_list)
         types_len = len(types_list)

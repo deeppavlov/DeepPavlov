@@ -137,7 +137,7 @@
     },
     "download": [
       {
-        "url": "https://files.deeppavlov.ai/0.16/classifiers/glue_rte.tar.gz",
+        "url": "http://files.deeppavlov.ai/0.16/classifiers/glue_rte.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]

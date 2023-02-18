@@ -15,7 +15,6 @@
 import pickle
 from typing import List
 
-import pymorphy2
 import spacy
 from nltk.corpus import stopwords
 
@@ -44,7 +43,6 @@ class AnswerTypesExtractor:
         self.types_sets_filename = str(expand_path(types_sets_filename))
         self.num_types_to_return = num_types_to_return
         self.use_type_substr = use_type_substr
-        self.morph = pymorphy2.MorphAnalyzer()
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
             self.nlp = spacy.load("en_core_web_sm")
@@ -103,7 +101,7 @@ class AnswerTypesExtractor:
                 types_substr_tokens = types_substr.split()
                 types_substr_tokens = [tok for tok in types_substr_tokens if tok not in self.stopwords]
                 if self.lang == "@ru":
-                    types_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in types_substr_tokens]
+                    types_substr_tokens = [self.nlp(tok)[0].lemma_ for tok in types_substr_tokens]
                 types_substr_tokens = set(types_substr_tokens)
                 types_scores = []
                 for entity in self.types_dict:
