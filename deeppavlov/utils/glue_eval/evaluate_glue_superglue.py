@@ -33,7 +33,7 @@ parser.add_argument('dataset_type', type=str,
                     help='Type of the dataset to evaluate')
 parser.add_argument('submit_dir', type=str,
                     help='Directory to submit predicts')
-parser.add_argument('task_id',nargs='?', const=1,type=int, default=None)
+parser.add_argument('task_id',nargs='?', const=1,type=int, default=None,
                     help='Id of task to evaluate. None if multitask model used')
 parser.add_argument('max_valid_samples_by_task',nargs='?', const=1,type=int, default=100000,
                     help='Max valid samples by task to perform the evaluation on')
@@ -102,11 +102,13 @@ eval_tasks = ['axb','lidirus','ax']  # Tasks only for evaluation
 
 if args.dataset_type == 'glue':
     logging.info('GLUE task set')
+    dataset_type = args.dataset_type
     tasks = deepcopy(glue_tasks)
     tasks_to_train = deepcopy(glue_tasks_to_train)
 elif args.dataset_type=='rusuperglue':
     logging.info('RUSUPERGLUE task set')
     tasks = rusuperglue_tasks
+    dataset_type = args.dataset_type
     tasks_to_train = deepcopy(tasks[:-1])
 elif args.dataset_type=='ensuperglue' or args.dataset_type=='superglue':
     logging.info('ENSUPERGLUE task set')
@@ -150,9 +152,9 @@ class NpEncoder(json.JSONEncoder):
 
 ids = None
 
-def get_superglue_metric(task, log_dict=False,split='test',
+def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
                               default_batch_size=1):
-    global model, args
+    global model, args, dataset_type
     accuracies = {}
     def get_prediction(classes, i, batch, return_probas=False):
         x=[[] for _ in range(NUM_TASKS)]
@@ -172,9 +174,9 @@ def get_superglue_metric(task, log_dict=False,split='test',
     total_count = 0
     true_to_total = defaultdict(lambda: defaultdict(int))
     label_counter = defaultdict(int)
-    filename = f'{args.submit_dir}/{task.filename}'
+    filename = f'{submit_dir}/{task.filename}'
     output = []
-    dataset = load_dataset(args.dataset_type, task.name, split=split)
+    dataset = load_dataset(dataset_type, task.name, split=split)
     if task.name in ['rwsd','wsc']:
         dataset = dataset.map(preprocess_wsc,batched=True,remove_columns=["span1_index", "span2_index", "span1_text", "span2_text"])
     elif task.name in ['muserc','multirc']:
@@ -319,8 +321,7 @@ def get_superglue_metric(task, log_dict=False,split='test',
         print(counter)
         print(true_to_total)
 
-def get_glue_metric(task,split='test',log_dict=True):
-    global model, args
+def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
     look_name = task.name.split('-m')[0]
     if 'mnli' not in task.name:
         name = task.name
@@ -392,7 +393,7 @@ def get_glue_metric(task,split='test',log_dict=True):
         from collections import Counter
         print(Counter(predictions))
     default_pred = pd.DataFrame({'predictions': predictions})
-    default_pred.to_csv(f'{args.submit_dir}/{task.filename}', sep='\t')
+    default_pred.to_csv(f'{submit_dir}/{task.filename}', sep='\t')
 
 
 def obtain_predicts(task,dataset_type,log_dict=True,submit_dir='',split='test'):
@@ -410,4 +411,4 @@ for task in tasks:
         splits = ['test']
     for split in splits:
         print(f'Evaluating {task.name} on the {split} set')
-        obtain_predicts(task, log_dict=True, split=split)
+        obtain_predicts(task, dataset_type,log_dict=True,submit_dir=args.submit_dir, split=split)
