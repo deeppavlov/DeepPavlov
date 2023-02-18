@@ -108,7 +108,7 @@ elif args.dataset_type=='rusuperglue':
     logging.info('RUSUPERGLUE task set')
     tasks = rusuperglue_tasks
     tasks_to_train = deepcopy(tasks[:-1])
-elif args.dataset_type=='ensuperglue' or dataset_type=='superglue':
+elif args.dataset_type=='ensuperglue' or args.dataset_type=='superglue':
     logging.info('ENSUPERGLUE task set')
     dataset_type='super_glue' # backward compatibility
     tasks = ensuperglue_tasks
@@ -150,9 +150,9 @@ class NpEncoder(json.JSONEncoder):
 
 ids = None
 
-def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
+def get_superglue_metric(task, log_dict=False,split='test',
                               default_batch_size=1):
-    global model, dataset_type
+    global model, args
     accuracies = {}
     def get_prediction(classes, i, batch, return_probas=False):
         x=[[] for _ in range(NUM_TASKS)]
@@ -172,9 +172,9 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
     total_count = 0
     true_to_total = defaultdict(lambda: defaultdict(int))
     label_counter = defaultdict(int)
-    filename = f'{submit_dir}/{task.filename}'
+    filename = f'{args.submit_dir}/{task.filename}'
     output = []
-    dataset = load_dataset(dataset_type, task.name, split=split)
+    dataset = load_dataset(args.dataset_type, task.name, split=split)
     if task.name in ['rwsd','wsc']:
         dataset = dataset.map(preprocess_wsc,batched=True,remove_columns=["span1_index", "span2_index", "span1_text", "span2_text"])
     elif task.name in ['muserc','multirc']:
@@ -319,7 +319,8 @@ def get_superglue_metric(task, log_dict=False,submit_dir='',split='test',
         print(counter)
         print(true_to_total)
 
-def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
+def get_glue_metric(task,split='test',log_dict=True):
+    global model, args
     look_name = task.name.split('-m')[0]
     if 'mnli' not in task.name:
         name = task.name
@@ -391,7 +392,7 @@ def get_glue_metric(task,split='test',log_dict=True,submit_dir=''):
         from collections import Counter
         print(Counter(predictions))
     default_pred = pd.DataFrame({'predictions': predictions})
-    default_pred.to_csv(f'{submit_dir}/{task.filename}', sep='\t')
+    default_pred.to_csv(f'{args.submit_dir}/{task.filename}', sep='\t')
 
 
 def obtain_predicts(task,dataset_type,log_dict=True,submit_dir='',split='test'):
@@ -409,4 +410,4 @@ for task in tasks:
         splits = ['test']
     for split in splits:
         print(f'Evaluating {task.name} on the {split} set')
-        obtain_predicts(task, args.dataset_type,log_dict=True,submit_dir=args.submit_dir, split=split)
+        obtain_predicts(task, log_dict=True, split=split)
