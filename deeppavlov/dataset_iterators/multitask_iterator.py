@@ -62,7 +62,7 @@ class MultiTaskIterator:
             steps_per_epoch: int = 0,
             iterator_class_name=None,
             one_element_tuples=True,
-            use_label_name=None,
+            use_label_name=False,
             seed=42,
             features=None,
             *args,
@@ -85,7 +85,7 @@ class MultiTaskIterator:
                             task_iterator_params['class_name'] = iterator_class_name
                     elif param_name == 'features':
                         log.warning(
-                            'Features nos specified. Experimentally not passing it on as a param')
+                            'Features not specified. Experimentally not passing it on as a param')
                 elif param_name == 'iterator_class_name' and 'iterator_class_name' in task_iterator_params:
                     task_iterator_params["class_name"] = task_iterator_params[
                         "iterator_class_name"]
