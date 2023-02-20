@@ -2,13 +2,19 @@
    "metadata":{
       "variables":{
          "ROOT_PATH":"~/.deeppavlov",
+         "DOWNLOADS_PATH":"{ROOT_PATH}/downloads",
          "BACKBONE":"distilbert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/models_multitask",
+         "MODELS_PATH":"{ROOT_PATH}/{DOWNLOADS_PATH}/multitask_example",
          "SAVE_LOAD_PATH":"{MODELS_PATH}/{BACKBONE}",
          "NER_DATA_PATH":"~/GLUE/CONLL2003",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
-      }
+      },
+      "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/multitask/multitask_example.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}"
+      }]
    },
    "dataset_reader":{
       "class_name":"multitask_reader",
