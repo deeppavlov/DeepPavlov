@@ -2,9 +2,8 @@
    "metadata":{
       "variables":{
          "ROOT_PATH":"~/.deeppavlov",
-         "DOWNLOADS_PATH":"{ROOT_PATH}/downloads",
          "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{DOWNLOADS_PATH}/glue",
+         "MODELS_PATH":"{ROOT_PATH}/glue",
          "NAME":"8task",
          "NUM_TRAIN_EPOCHS":5,
          "GRADIENT_ACC_STEPS":1
@@ -12,7 +11,7 @@
       "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/multitask/glue.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "subdir": "{MODELS_PATH}"
       }]
    },
    "dataset_reader":{
