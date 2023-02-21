@@ -221,7 +221,7 @@ def _f1_macro_weighted(y_true, y_predicted,print_matrix=False, average='macro'):
     if not len(y_true) and not len(y_predicted):
         # y_true and y_predicted are empty lists. This situation can happen in multitask setting
         return -1
-    if print_matrix and all(isinstance(k, list) for k in y_true):
+    if all(isinstance(k, list) for k in y_true):
         mlb = MultiLabelBinarizer(sparse_output=False)
         mlb.fit(y_true + y_predicted)
         y_true_binarized = mlb.transform(y_true)
