@@ -8,89 +8,6 @@ from deeppavlov.models.preprocessors.torch_transformers_preprocessor import *
 log = getLogger(__name__)
 
 
-@register("multitask_input_splitter")
-class MultiTaskInputSplitter:
-    """
-    The instance of these class in pipe splits a batch of sequences of identical length or dictionaries with
-    identical keys into tuple of batches.
-
-    Args:
-        keys_to_extract: a sequence of ints or strings that have to match keys of split dictionaries.
-    """
-
-    def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
-        self.keys_to_extract = keys_to_extract
-
-    def __call__(self, inp: Union[List[dict], List[List[int]], List[Tuple[int]]]) -> Union[List[list], List[str]]:
-        """
-        Returns batches of values from ``inp``. Every batch contains values that have same key from
-        ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
-
-        Args:
-            inp: A sequence of dictionaries with identical keys
-
-        Returns:
-            A list of lists of values of dictionaries from ``inp``
-        """
-class MultiTaskInputSplitter:
-    """
-    The instance of these class in pipe splits a batch of sequences of identical length or dictionaries with
-    identical keys into tuple of batches.
-
-    Args:
-        keys_to_extract: a sequence of ints or strings that have to match keys of split dictionaries.
-    """
-
-    def __init__(self, keys_to_extract: Union[List[str], Tuple[str, ...]], **kwargs):
-        self.keys_to_extract = keys_to_extract
-
-    def __call__(self, inp: Union[List[dict], List[List[int]], List[Tuple[int]]]) -> Union[List[list], List[str]]:
-        """
-        Returns batches of values from ``inp``. Every batch contains values that have same key from
-        ``keys_to_extract`` attribute. The order of elements of ``keys_to_extract`` is preserved.
-
-        Args:
-            inp: A sequence of dictionaries with identical keys
-
-        Returns:
-            A list of lists of values of dictionaries from ``inp``
-        """
-        
-        extracted = [[] for _ in self.keys_to_extract]
-        if not inp:
-            return extracted
-        if all([isinstance(k, str) for k in inp]):
-            log.exception(f'Wrong input type {inp}')
-            return inp
-        for item in inp:
-            for i, key in enumerate(self.keys_to_extract):
-                if item is not None:
-                    if key < len(item):
-                        extracted[i].append(item[key])
-        return extracted
-
-
-@register("multitask_input_joiner")
-class MultiTaskInputJoiner:
-    """
-    The instance of these class in pipe joins inputs to one list
-    """
-
-    def __init__(self, **kwargs):
-        pass
-
-    def __call__(self, *args):
-        """
-        Returns list of joined values
-        Args:
-            inp: any values
-
-        Returns:
-            A list of these values
-        """
-        return [k for k in args]
-
-
 @register('multitask_pipeline_preprocessor')
 class MultiTaskPipelinePreprocessor(Component):
     """
@@ -207,4 +124,3 @@ class MultiTaskPipelinePreprocessor(Component):
         if answer != [[]]:
             raise Exception('Empty answer')
         return answer
-
