@@ -121,6 +121,6 @@ class MultiTaskPipelinePreprocessor(Component):
                         print((texts_a, texts_b))
                         print(answer[-1])
                         self.printed = True
-        if answer != [[]]:
+        if answer == [[]]:
             raise Exception('Empty answer')
         return answer
