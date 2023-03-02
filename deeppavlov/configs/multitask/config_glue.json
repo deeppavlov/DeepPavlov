@@ -37,58 +37,22 @@
       "class_name":"multitask_iterator",
       "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
       "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
-      "iterator_class_name":"huggingface_dataset_iterator",
-      "label":"label",
-      "use_label_name":false,
       "seed":42,
+      "task_defaults": {
+        "class_name":"huggingface_dataset_iterator",
+        "label":"label",
+        "use_label_name":false,
+        "seed":42
+      },
       "tasks":{
-         "cola":{
-            "features":[
-               "sentence"
-            ]
-         },
-         "sst2":{
-            "features":[
-               "sentence"
-            ]
-         },
-         "qqp":{
-            "features":[
-               "question1",
-               "question2"
-            ]
-         },
-         "mrpc":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },         
-         "rte":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },
-         "mnli":{
-            "features":[
-               "premise",
-               "hypothesis"
-            ]
-         },
-         "qnli":{
-            "features":[
-               "question",
-               "sentence"
-            ]
-         },
-         "stsb":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         }
-
+         "cola":{"features":["sentence"]},
+         "sst2":{"features":["sentence"]},
+         "qqp":{"features":["question1", "question2"]},
+         "mrpc":{"features":["sentence1", "sentence2"]},
+         "rte":{"features":["sentence1", "sentence2"]},
+         "mnli":{"features":["premise", "hypothesis"]},
+         "qnli":{"features":["question", "sentence"]},
+         "stsb":{"features":["sentence1", "sentence2"]}
       }
    },
    "chainer":{

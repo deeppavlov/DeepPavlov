@@ -61,8 +61,8 @@ def read_data_by_config(config: dict):
 def get_iterator_from_config(config: dict, data: dict):
     """Create iterator (from config) for specified data."""
     iterator_config = config['dataset_iterator']
-    iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
-                                                                             data=data)
+    iterator: Union[DataLearningIterator, DataFittingIterator] = get_model(iterator_config.pop('class_name'))(
+        **iterator_config, data=data)
     return iterator
 
 

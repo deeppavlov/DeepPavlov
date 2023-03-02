@@ -45,37 +45,22 @@
       "class_name":"multitask_iterator",
       "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
       "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
-      "iterator_class_name":"huggingface_dataset_iterator",
-      "label":"label",
-      "use_label_name":false,
       "seed":42,
+      "task_defaults": {
+        "class_name":"huggingface_dataset_iterator",
+        "label":"label",
+        "use_label_name":false,
+        "seed":42
+      },
       "tasks":{
-         "cola":{
-            "features":[
-               "sentence"
-            ]
-         },
-         "rte":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },
-         "stsb":{
-            "features":[
-               "sentence1",
-               "sentence2"
-            ]
-         },
-         "copa":{
-            "features":[
-               "contexts",
-               "choices"
-            ]
-         },
+         "cola":{"features":["sentence"]},
+         "rte":{"features":["sentence1", "sentence2"]},
+         "stsb":{"features":["sentence1", "sentence2"]},
+         "copa":{"features":["contexts", "choices"]},
          "conll":{
-            "iterator_class_name":"basic_classification_iterator"
-
+            "class_name":"basic_classification_iterator",
+            "seed":42,
+            "use_task_defaults": false
          }
       }
    },
