@@ -49,17 +49,13 @@ def read_data_by_config(config: dict):
     except KeyError:
         raise ConfigError("No dataset reader is provided in the JSON config.")
 
-    reader_class_name = reader_config.pop('class_name')
-    reader = get_model(reader_class_name)()
-    if reader_class_name != 'multitask_reader':
-        data_path = reader_config.pop('data_path', '')
-        if isinstance(data_path, list):
-            data_path = [expand_path(x) for x in data_path]
-        else:
-            data_path = expand_path(data_path)
-        return reader.read(data_path, **reader_config)
-    else:
-        return reader.read(**reader_config)
+    reader = get_model(reader_config.pop('class_name'))()
+    data_path = reader_config.get('data_path')
+    if isinstance(data_path, list):
+        reader_config['data_path'] = [expand_path(path) for path in data_path]
+    elif data_path is not None:
+        reader_config['data_path'] = expand_path(data_path)
+    return reader.read(**reader_config)
 
 
 def get_iterator_from_config(config: dict, data: dict):

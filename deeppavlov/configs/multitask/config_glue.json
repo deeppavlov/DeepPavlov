@@ -16,20 +16,22 @@
    },
    "dataset_reader":{
       "class_name":"multitask_reader",
-      "path":"glue",
-      "reader_class_name":"huggingface_dataset_reader",
-      "train":"train",
-      "valid":"validation",
-      "task_names":[
-         "cola",
-         "sst2",
-         "qqp",
-         "mrpc",
-         "rte",
-         "mnli",
-         "qnli",
-         "stsb"
-      ]
+      "task_defaults": {
+        "class_name":"huggingface_dataset_reader",
+        "path":"glue",
+        "train":"train",
+        "valid":"validation"
+      },
+      "tasks": {
+        "cola": {"name": "cola"},
+        "sst2": {"name": "sst2"},
+        "qqp": {"name": "qqp"},
+        "mrpc": {"name": "mrpc"},
+        "rte": {"name": "rte"},
+        "mnli": {"name": "mnli", "valid": "validation_matched"},
+        "qnli": {"name": "qnli"},
+        "stsb": {"name": "stsb"}
+      }
    },
    "dataset_iterator":{
       "class_name":"multitask_iterator",

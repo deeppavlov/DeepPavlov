@@ -17,28 +17,24 @@
    },
    "dataset_reader":{
       "class_name":"multitask_reader",
-      "path":"glue",
-      "reader_class_name":"huggingface_dataset_reader",
-      "train":"train",
-      "valid":"validation",
-      "test":"test",
-      "task_names":[
-         "cola",
-         "rte",
-         "stsb"
-      ],
-      "tasks":{
-         "copa":{
-            "reader_class_name":"huggingface_dataset_reader",
-            "data_path":"super_glue",
+      "task_defaults": {
+        "class_name":"huggingface_dataset_reader",
+        "path":"glue",
+        "train":"train",
+        "valid":"validation",
+        "test":"test"
+      },
+      "tasks": {
+        "cola": {"name": "cola"},
+        "rte": {"name": "rte"},
+        "stsb": {"name": "stsb"},
+        "copa":{
             "path":"super_glue",
-            "name":"copa",
-            "train":"train",
-            "valid":"validation",
-            "test":"test"
+            "name":"copa"
          },
       "conll": {
-        "reader_class_name": "conll2003_reader",
+        "class_name": "conll2003_reader",
+        "use_task_defaults": false,
         "data_path": "{NER_DATA_PATH}/conll2003/",
         "dataset_name": "conll2003",
         "provide_pos": false
