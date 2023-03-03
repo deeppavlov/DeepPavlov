@@ -52,7 +52,7 @@ Multi-task BERT model is saved in
 Train config
 ------------
 
-When using ``multitask_bert`` component, you can use the same inference file as the train file. 
+When using ``multitask_transformer`` component, you can use the same inference file as the train file.
 
 Data reading and iteration is performed by ``multitask_reader`` and ``multitask_iterator``. These classes are composed
 of task readers and iterators and generate batches that contain data from heterogeneous datasets.
@@ -195,18 +195,18 @@ For streamlining the code, however, ``input_splitter``and ``tokenizer`` can be u
             }
 
 
-The multitask_bert component has common and task_specific parameters. Shared parameters are provided inside the tasks parameter.
+The multitask_transformer component has common and task_specific parameters. Shared parameters are provided inside the tasks parameter.
 The tasks is a dictionary that keys are task names and values are task-specific parameters(type, options).
 Common parameters, are backbone_model(same parameter as in the tokenizer) and all parameters from torch_bert. 
 **The order of tasks MATTERS.**
 
 
-Here is the definition of ``multitask_bert`` from the config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>`.
+Here is the definition of ``multitask_transformer`` from the config:`multitask_example.json <configs/multitask/multitask_distilbert_example.json>`.
 .. code:: json
 
         {
-            "id":"multitask_bert",
-            "class_name":"multitask_bert",
+            "id":"multitask_transformer",
+            "class_name":"multitask_transformer",
             "optimizer_parameters":{"lr":2e-5},
             "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
             "learning_rate_drop_patience":2,
@@ -298,7 +298,7 @@ metric. To register metric, add the decorator ``register_metric`` and run the co
 
 
 You can make an inference-only config. In this config, there is no need in dataset reader and dataset iterator. A ``train`` field and components
-preparing ``in_y`` are removed. In ``multitask_bert`` component configuration all training parameters (learning rate,
+preparing ``in_y`` are removed. In ``multitask_transformer`` component configuration all training parameters (learning rate,
 optimizer, etc.) are omitted.
 
 Here are the results of ``deeppavlov/configs/multitask/glue.json`` compared to the analogous singletask configs, according to the test server.

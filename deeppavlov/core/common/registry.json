@@ -27,7 +27,7 @@
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
   "multitask_reader":"deeppavlov.dataset_readers.multitask_reader:MultiTaskReader",
   "multitask_pipeline_preprocessor":"deeppavlov.models.preprocessors.multitask_preprocessor:MultiTaskPipelinePreprocessor",
-  "multitask_bert":"deeppavlov.models.torch_bert.torch_multitask_bert:TorchMultiTaskBert",
+  "multitask_transformer":"deeppavlov.models.torch_bert.multitask_transformer:MultiTaskTransformer",
   "multitask_iterator":"deeppavlov.dataset_iterators.multitask_iterator:MultiTaskIterator",
   "multi_squad_dataset_reader": "deeppavlov.dataset_readers.squad_dataset_reader:MultiSquadDatasetReader",
   "multi_squad_iterator": "deeppavlov.dataset_iterators.squad_iterator:MultiSquadIterator",

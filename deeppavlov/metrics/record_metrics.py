@@ -25,7 +25,7 @@ def record_f1_score(record_examples: List[RecordNestedExample]):
     for example in record_examples:
         example_f1s = []
         for answer in example.answers:
-            example_f1s.append(exact_match_score(example.prediction, answer)) 
+            example_f1s.append(exact_match_score(example.prediction, answer))
         if example_f1s:
             f1_scores.append(max(example_f1s))
     return np.mean(f1_scores)

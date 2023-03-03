@@ -110,8 +110,8 @@
             ]
          },
          {
-            "id":"multitask_bert",
-            "class_name":"multitask_bert",
+            "id":"multitask_transformer",
+            "class_name":"multitask_transformer",
             "optimizer_parameters":{
                "lr":2e-5
             },

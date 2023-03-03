@@ -242,8 +242,8 @@ class BertForMultiTask(nn.Module):
         return self.predict_on_top(task_id, last_hidden_state, labels)
 
 
-@register('multitask_bert')
-class TorchMultiTaskBert(TorchModel):
+@register('multitask_transformer')
+class MultiTaskTransformer(TorchModel):
     """
     Multi-Task transformer-agnostic model
     Args:
