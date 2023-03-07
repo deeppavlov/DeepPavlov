@@ -30,8 +30,8 @@ def preprocess_scores(scores, is_binary, class_id: int = 1):
 class Proba2Labels(Component):
 
     def __init__(self,
-                 confidence_threshold: float = 0.5,
-                 pooling: str = 'mean',
+                 confidence_threshold: float = 0.0,
+                 pooling: str = 'max',
                  multilabel: bool = False,
                  is_binary: bool = False,
                  **kwargs) -> None:
@@ -65,7 +65,7 @@ class Proba2Labels(Component):
             probability_by_label = []
             for label in unique_labels:
                 ind_mask = np.where(example_y_support == label)
-                if self.pooling == 'mean':
+                if self.pooling == 'avg':
                     label_probability = np.mean(example_simmilarity_scores[ind_mask])
                 elif self.pooling == 'max':
                     label_probability = np.max(example_simmilarity_scores[ind_mask])

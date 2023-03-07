@@ -16,18 +16,15 @@
         "shuffle": true
     },
     "chainer": {
-        "in": ["x"],
+        "in": ["input"],
         "in_y": ["y_true"],
         "pipe": [
             {
                 "class_name": "dnnc_input_preprocessor",
-                "in": ["x"],
-                "out": ["x_support", "x_populated", "y_support"],
-                "x": "text",
-                "y": "category",
-                "format": "json",
-                "orient": "split",
-                "support_dataset_path": "{SUPPORT_DATA_PATH}/support_dataset.json"
+                "in": ["input"],
+                "out": ["x", "x_support", "x_populated", "y_support"],
+                "support_dataset_path": "{SUPPORT_DATA_PATH}/support_dataset.json",
+                "bidirectional": true
             },
             {
                 "class_name": "torch_transformers_preprocessor",
@@ -56,7 +53,8 @@
                 "in": ["simmilarity_scores", "x", "x_populated", "y_support"],
                 "out": ["y_pred"],
                 "multilabel": false,
-                "confidence_threshold": 0.5
+                "confidence_threshold": 0.0,
+                "pooling": "max"
             }
         ],
         "out": ["y_pred"]
@@ -66,11 +64,6 @@
         "metrics": [
             {
                 "name": "accuracy_oos",
-                "inputs": ["y_true", "y_pred"],
-                "exclude_oos": true
-            },
-            {
-                "name": "balanced_accuracy_oos",
                 "inputs": ["y_true", "y_pred"],
                 "exclude_oos": true
             },

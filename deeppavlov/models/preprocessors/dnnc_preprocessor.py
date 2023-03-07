@@ -1,6 +1,6 @@
 from pathlib import Path
 from logging import exception, getLogger
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import numpy as np
 import pandas as pd
 from transformers import AutoTokenizer, BatchEncoding
@@ -14,47 +14,41 @@ log = getLogger(__name__)
 @register('dnnc_input_preprocessor')
 class InputPreprocessor(Component):
     def __init__(self,
-                 support_dataset_path: str,
-                 format: str = "csv",
+                 support_dataset_path: str = None,
+                 bidirectional: bool = False,
                  *args, **kwargs) -> None:
-        file = Path(support_dataset_path).expanduser()
-        if file.exists():
-            if format == 'csv':
-                keys = ('sep', 'header', 'names')
-                options = {k: kwargs[k] for k in keys if k in kwargs}
-                df = pd.read_csv(file, **options)
-            elif format == 'json':
-                keys = ('orient', 'lines')
-                options = {k: kwargs[k] for k in keys if k in kwargs}
-                df = pd.read_json(file, **options)
+        self.bidirectional = bidirectional
+        if support_dataset_path:
+            file = Path(support_dataset_path).expanduser()
+            if file.exists():
+                df = pd.read_json(file, orient='split')
+                self.support_dataset = [(row["text"], str(row["category"])) for _, row in df.iterrows()]
             else:
-                raise Exception('Unsupported file format: {}'.format(format))
+                log.error(f"Cannot find {support_dataset_path} file")
+                self.support_dataset = None
 
-            x = kwargs.get("x", "text")
-            y = kwargs.get('y', 'labels')
-            
-            self.support_dataset = [(row[x], str(row[y])) for _, row in df.iterrows()]
-        else:
-            self.support_dataset = None
-            log.warning("Cannot find {} file".format(support_dataset_path))
-    
-    def __call__(self,
-                 input_texts : List[str]) -> List[List[str]]:
+    def __call__(self, input) -> List[List[str]]:
         '''
             Generates all possible ordread pairs from 'input_texts' and 'self.support_dataset'
         '''
-        if self.support_dataset:
-            hypotesis_batch = []
-            premise_batch = []
-            hypotesis_labels_batch = []
 
-            for [premise, [hypotesis, hypotesis_labels]] in zip(input_texts * len(self.support_dataset),
-                                                                np.repeat(self.support_dataset, len(input_texts), axis=0)):
-   
-                premise_batch.append(premise)
-                hypotesis_batch.append(hypotesis)
-                hypotesis_labels_batch.append(hypotesis_labels)
-
-            return hypotesis_batch, premise_batch, hypotesis_labels_batch
+        if len(input) <= 1 or isinstance(input[1], str):
+            texts = input
         else:
-            log.warning("Error: no support dataset")
+            texts, self.support_dataset = input
+
+        hypotesis_batch = []
+        premise_batch = []
+        hypotesis_labels_batch = []
+        for [premise, [hypotesis, hypotesis_labels]] in zip(texts * len(self.support_dataset),
+                                                            np.repeat(self.support_dataset, len(texts), axis=0)):
+            premise_batch.append(premise)
+            hypotesis_batch.append(hypotesis)
+            hypotesis_labels_batch.append(hypotesis_labels)
+
+            if self.bidirectional:
+                premise_batch.append(hypotesis)
+                hypotesis_batch.append(premise)
+                hypotesis_labels_batch.append(hypotesis_labels)
+        return texts, hypotesis_batch, premise_batch, hypotesis_labels_batch
+        
