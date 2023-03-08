@@ -20,7 +20,6 @@ from deeppavlov.core.commands.train import train_evaluate_model_from_config
 from deeppavlov.core.common.cross_validation import calc_cv_score
 from deeppavlov.core.common.file import find_config
 from deeppavlov.download import deep_download
-from deeppavlov.utils.agent import start_rabbit_service
 from deeppavlov.utils.pip_wrapper import install_from_config
 from deeppavlov.utils.server import start_model_server
 from deeppavlov.utils.socket import start_socket_server
