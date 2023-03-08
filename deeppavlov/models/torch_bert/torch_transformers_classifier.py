@@ -196,7 +196,7 @@ class TorchTransformersClassifierModel(TorchModel):
         return isinstance(self.model, torch.nn.DataParallel)
 
     # TODO this method requires massive refactoring
-    @overrides
+    @overrides(check_signature=False)
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname
