@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from collections import OrderedDict, namedtuple
+from dataclasses import is_dataclass
 from functools import partial
 from json import JSONEncoder
 from typing import List, Tuple, Union, Iterable
@@ -64,7 +65,6 @@ class NumpyArrayEncoder(JSONEncoder):
             return int(obj)
         elif isinstance(obj, np.floating):
             return float(obj)
-        elif 'NestedExample' in str(obj.__class__):
+        elif is_dataclass(obj):
             return obj.__dict__
-        else:
-            return JSONEncoder.default(self, obj)
+        return JSONEncoder.default(self, obj)
