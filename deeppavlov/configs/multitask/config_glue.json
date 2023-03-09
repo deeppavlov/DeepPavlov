@@ -1,337 +1,287 @@
 {
-   "metadata":{
-      "variables":{
-         "ROOT_PATH":"~/.deeppavlov",
-         "BACKBONE":"bert-base-uncased",
-         "MODELS_PATH":"{ROOT_PATH}/glue",
-         "NAME":"8task",
-         "NUM_TRAIN_EPOCHS":5,
-         "GRADIENT_ACC_STEPS":1
+  "dataset_reader": {
+    "class_name": "multitask_reader",
+    "task_defaults": {
+      "class_name": "huggingface_dataset_reader",
+      "path": "glue",
+      "train": "train",
+      "valid": "validation"
+    },
+    "tasks": {
+      "cola": {"name": "cola"},
+      "sst2": {"name": "sst2"},
+      "qqp": {"name": "qqp"},
+      "mrpc": {"name": "mrpc"},
+      "rte": {"name": "rte"},
+      "mnli": {
+        "name": "mnli",
+        "valid": "validation_matched"
       },
-      "download": [
+      "qnli": {"name": "qnli"},
+      "stsb": {"name": "stsb"}
+    }
+  },
+  "dataset_iterator": {
+    "class_name": "multitask_iterator",
+    "num_train_epochs": "{NUM_TRAIN_EPOCHS}",
+    "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+    "seed": 42,
+    "task_defaults": {
+      "class_name": "huggingface_dataset_iterator",
+      "label": "label",
+      "use_label_name": false,
+      "seed": 42
+    },
+    "tasks": {
+      "cola": {
+        "features": ["sentence"]
+      },
+      "sst2": {
+        "features": ["sentence"]
+      },
+      "qqp": {
+        "features": ["question1", "question2"]
+      },
+      "mrpc": {
+        "features": ["sentence1", "sentence2"]
+      },
+      "rte": {
+        "features": ["sentence1", "sentence2"]
+      },
+      "mnli": {
+        "features": ["premise", "hypothesis"]
+      },
+      "qnli": {
+        "features": ["question", "sentence"]
+      },
+      "stsb": {
+        "features": ["sentence1", "sentence2"]
+      }
+    }
+  },
+  "chainer": {
+    "in": ["x_cola", "x_sst2", "x_qqp", "x_mrpc", "x_rte", "x_mnli", "x_qnli", "x_stsb"],
+    "in_y": ["y_cola", "y_sst2", "y_qqp", "y_mrpc", "y_rte", "y_mnli", "y_qnli", "y_stsb"
+    ],
+    "pipe": [
+      {
+        "class_name": "multitask_pipeline_preprocessor",
+        "possible_keys_to_extract": [0, 1],
+        "preprocessor": "TorchTransformersPreprocessor",
+        "vocab_file": "{BACKBONE}",
+        "max_seq_length": 128,
+        "do_lower_case": true,
+        "n_task": 8,
+        "in": ["x_cola", "x_sst2", "x_qqp", "x_mrpc", "x_rte", "x_mnli", "x_qnli", "x_stsb"],
+        "out": [
+          "bert_features_cola",
+          "bert_features_sst2",
+          "bert_features_qqp",
+          "bert_features_mrpc",
+          "bert_features_rte",
+          "bert_features_mnli",
+          "bert_features_qnli",
+          "bert_features_stsb"
+        ]
+      },
+      {
+        "id": "multitask_transformer",
+        "class_name": "multitask_transformer",
+        "optimizer_parameters": {"lr": 2e-5},
+        "gradient_accumulation_steps": "{GRADIENT_ACC_STEPS}",
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "return_probas": true,
+        "backbone_model": "{BACKBONE}",
+        "save_path": "{MODEL_PATH}",
+        "load_path": "{MODEL_PATH}",
+        "tasks": {
+          "cola": {
+            "type": "classification",
+            "options": 2
+          },
+          "sst2": {
+            "type": "classification",
+            "options": 2
+          },
+          "qqp": {
+            "type": "classification",
+            "options": 2
+          },
+          "mrpc": {
+            "type": "classification",
+            "options": 2
+          },
+          "rte": {
+            "type": "classification",
+            "options": 2
+          },
+          "mnli": {
+            "type": "classification",
+            "options": 3
+          },
+          "qnli": {
+            "type": "classification",
+            "options": 2
+          },
+          "stsb": {
+            "type": "regression",
+            "options": 1
+          }
+        },
+        "in": [
+          "bert_features_cola",
+          "bert_features_sst2",
+          "bert_features_qqp",
+          "bert_features_mrpc",
+          "bert_features_rte",
+          "bert_features_mnli",
+          "bert_features_qnli",
+          "bert_features_stsb"
+        ],
+        "in_y": ["y_cola", "y_sst2", "y_qqp", "y_mrpc", "y_rte", "y_mnli", "y_qnli", "y_stsb"],
+        "out": [
+          "y_cola_pred_probas",
+          "y_sst2_pred_probas",
+          "y_qqp_pred_probas",
+          "y_mrpc_pred_probas",
+          "y_rte_pred_probas",
+          "y_mnli_pred_probas",
+          "y_qnli_pred_probas",
+          "y_stsb_pred"
+        ]
+      },
+      {
+        "in": [
+          "y_cola_pred_probas",
+          "y_sst2_pred_probas",
+          "y_qqp_pred_probas",
+          "y_mrpc_pred_probas",
+          "y_rte_pred_probas",
+          "y_mnli_pred_probas",
+          "y_qnli_pred_probas"
+        ],
+        "out": [
+          "y_cola_pred_ids",
+          "y_sst2_pred_ids",
+          "y_qqp_pred_ids",
+          "y_mrpc_pred_ids",
+          "y_rte_pred_ids",
+          "y_mnli_pred_ids",
+          "y_qnli_pred_ids"
+        ],
+        "class_name": "proba2labels",
+        "max_proba": true
+      }
+    ],
+    "out": [
+      "y_cola_pred_probas",
+      "y_sst2_pred_probas",
+      "y_qqp_pred_probas",
+      "y_mrpc_pred_probas",
+      "y_rte_pred_probas",
+      "y_mnli_pred_probas",
+      "y_qnli_pred_probas",
+      "y_stsb_pred",
+      "y_cola_pred_ids",
+      "y_sst2_pred_ids",
+      "y_qqp_pred_ids",
+      "y_mrpc_pred_ids",
+      "y_rte_pred_ids",
+      "y_mnli_pred_ids",
+      "y_qnli_pred_ids",
+      "y_stsb_pred"
+    ]
+  },
+  "train": {
+    "epochs": "{NUM_TRAIN_EPOCHS}",
+    "batch_size": 32,
+    "metrics": [
+      {
+        "name": "multitask_accuracy",
+        "inputs": [
+          "y_rte",
+          "y_mnli",
+          "y_qnli",
+          "y_mrpc",
+          "y_cola",
+          "y_sst2",
+          "y_qqp",
+          "y_rte_pred_ids",
+          "y_mnli_pred_ids",
+          "y_qnli_pred_ids",
+          "y_mrpc_pred_ids",
+          "y_cola_pred_ids",
+          "y_sst2_pred_ids",
+          "y_qqp_pred_ids"
+        ]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_mrpc",
+        "inputs": ["y_mrpc", "y_mrpc_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_rte",
+        "inputs": ["y_rte", "y_rte_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_mnli",
+        "inputs": ["y_mnli", "y_mnli_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_qnli",
+        "inputs": ["y_qnli", "y_qnli_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_sst",
+        "inputs": ["y_sst2", "y_sst2_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_cola",
+        "inputs": ["y_cola", "y_cola_pred_ids"]
+      },
+      {
+        "name": "accuracy",
+        "alias": "accuracy_qqp",
+        "inputs": ["y_qqp", "y_qqp_pred_ids"]
+      },
+      {
+        "name": "pearson_correlation",
+        "alias": "pearson_correlation_stsb",
+        "inputs": ["y_stsb", "y_stsb_pred"]
+      },
+      {
+        "name": "spearman_correlation",
+        "alias": "spearman_correlation_stsb",
+        "inputs": ["y_stsb", "y_stsb_pred"]
+      }
+    ],
+    "validation_patience": 3,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "evaluation_targets": ["valid"],
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "BACKBONE": "bert-base-uncased",
+      "MODELS_PATH": "~/.deeppavlov/models/glue",
+      "MODEL_PATH": "{MODELS_PATH}/8task",
+      "NUM_TRAIN_EPOCHS": 5,
+      "GRADIENT_ACC_STEPS": 1
+    },
+    "download": [
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/multitask/glue.tar.gz",
         "subdir": "{MODELS_PATH}"
-      }]
-   },
-   "dataset_reader":{
-      "class_name":"multitask_reader",
-      "task_defaults": {
-        "class_name":"huggingface_dataset_reader",
-        "path":"glue",
-        "train":"train",
-        "valid":"validation"
-      },
-      "tasks": {
-        "cola": {"name": "cola"},
-        "sst2": {"name": "sst2"},
-        "qqp": {"name": "qqp"},
-        "mrpc": {"name": "mrpc"},
-        "rte": {"name": "rte"},
-        "mnli": {"name": "mnli", "valid": "validation_matched"},
-        "qnli": {"name": "qnli"},
-        "stsb": {"name": "stsb"}
       }
-   },
-   "dataset_iterator":{
-      "class_name":"multitask_iterator",
-      "num_train_epochs":"{NUM_TRAIN_EPOCHS}",
-      "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
-      "seed":42,
-      "task_defaults": {
-        "class_name":"huggingface_dataset_iterator",
-        "label":"label",
-        "use_label_name":false,
-        "seed":42
-      },
-      "tasks":{
-         "cola":{"features":["sentence"]},
-         "sst2":{"features":["sentence"]},
-         "qqp":{"features":["question1", "question2"]},
-         "mrpc":{"features":["sentence1", "sentence2"]},
-         "rte":{"features":["sentence1", "sentence2"]},
-         "mnli":{"features":["premise", "hypothesis"]},
-         "qnli":{"features":["question", "sentence"]},
-         "stsb":{"features":["sentence1", "sentence2"]}
-      }
-   },
-   "chainer":{
-      "in":[
-            "x_cola",
-            "x_sst2",
-            "x_qqp",
-            "x_mrpc",
-            "x_rte",
-            "x_mnli",
-            "x_qnli",
-            "x_stsb"
-      ],
-      "in_y":[
-            "y_cola",
-            "y_sst2",
-            "y_qqp",
-            "y_mrpc",
-            "y_rte",
-            "y_mnli",
-            "y_qnli",
-            "y_stsb"
-      ],
-      "pipe":[
-         {
-            "class_name":"multitask_pipeline_preprocessor",
-            "possible_keys_to_extract":[
-               0,
-               1
-            ],
-            "preprocessor":"TorchTransformersPreprocessor",
-            "vocab_file":"{BACKBONE}",
-            "max_seq_length":128,
-            "do_lower_case":true,
-            "n_task":8,
-            "in":[
-            "x_cola",
-            "x_sst2",
-            "x_qqp",
-            "x_mrpc",
-            "x_rte",
-            "x_mnli",
-            "x_qnli",
-            "x_stsb"
-            ],
-            "out":[
-                    "bert_features_cola",
-                    "bert_features_sst2",
-                    "bert_features_qqp",
-                    "bert_features_mrpc",
-                    "bert_features_rte",
-                    "bert_features_mnli",
-                    "bert_features_qnli",
-                    "bert_features_stsb"
-            ]
-         },
-         {
-            "id":"multitask_transformer",
-            "class_name":"multitask_transformer",
-            "optimizer_parameters":{
-               "lr":2e-5
-            },
-            "gradient_accumulation_steps":"{GRADIENT_ACC_STEPS}",
-            "learning_rate_drop_patience":2,
-            "learning_rate_drop_div":2.0,
-            "return_probas":true,
-            "backbone_model":"{BACKBONE}",
-            "save_path":"{MODELS_PATH}/{NAME}",
-            "load_path":"{MODELS_PATH}/{NAME}",
-            "tasks":{
-               "cola":{
-                  "type":"classification",
-                  "options":2
-               },
-              "sst2":{
-                  "type":"classification",
-                  "options":2
-               },
-              "qqp":{
-                  "type":"classification",
-                  "options":2
-               },
-              "mrpc":{
-                  "type":"classification",
-                  "options":2
-               },
-               "rte":{
-                  "type":"classification",
-                  "options":2
-               },
-              "mnli":{
-                  "type":"classification",
-                  "options":3
-               },
-              "qnli":{
-                  "type":"classification",
-                  "options":2
-               },
-               "stsb":{
-                  "type":"regression",
-                  "options":1
-               }
-            },
-            "in":[
-                    "bert_features_cola",
-                    "bert_features_sst2",
-                    "bert_features_qqp",
-                    "bert_features_mrpc",
-                    "bert_features_rte",
-                    "bert_features_mnli",
-                    "bert_features_qnli",
-                    "bert_features_stsb"
-            ],
-            "in_y":[
-                    "y_cola",
-                    "y_sst2",
-                    "y_qqp",
-                    "y_mrpc",
-                    "y_rte",
-                    "y_mnli",
-                    "y_qnli",
-                    "y_stsb"
-            ],
-            "out":[
-                    "y_cola_pred_probas",
-                    "y_sst2_pred_probas",
-                    "y_qqp_pred_probas",
-                    "y_mrpc_pred_probas",
-                    "y_rte_pred_probas",
-                    "y_mnli_pred_probas",
-                    "y_qnli_pred_probas",
-                    "y_stsb_pred"
-            ]
-         },
-         {
-            "in":[
-                    "y_cola_pred_probas",
-                    "y_sst2_pred_probas",
-                    "y_qqp_pred_probas",
-                    "y_mrpc_pred_probas",
-                    "y_rte_pred_probas",
-                    "y_mnli_pred_probas",
-                    "y_qnli_pred_probas"
-            ],
-            "out":[
-                    "y_cola_pred_ids",
-                    "y_sst2_pred_ids",
-                    "y_qqp_pred_ids",
-                    "y_mrpc_pred_ids",
-                    "y_rte_pred_ids",
-                    "y_mnli_pred_ids",
-                    "y_qnli_pred_ids"
-            ],
-            "class_name":"proba2labels",
-            "max_proba":true
-         }
-      ],
-      "out":[
-                          "y_cola_pred_probas",
-                    "y_sst2_pred_probas",
-                    "y_qqp_pred_probas",
-                    "y_mrpc_pred_probas",
-                    "y_rte_pred_probas",
-                    "y_mnli_pred_probas",
-                    "y_qnli_pred_probas",
-                    "y_stsb_pred",
-                    "y_cola_pred_ids",
-                    "y_sst2_pred_ids",
-                    "y_qqp_pred_ids",
-                    "y_mrpc_pred_ids",
-                    "y_rte_pred_ids",
-                    "y_mnli_pred_ids",
-                    "y_qnli_pred_ids",
-                    "y_stsb_pred"
-      ]
-   },
-   "train":{
-      "epochs":"{NUM_TRAIN_EPOCHS}",
-      "batch_size":32,
-      "metrics":[
-            {
-                "name": "multitask_accuracy",
-                "inputs": [
-                    "y_rte",
-                    "y_mnli",
-                    "y_qnli",
-                    "y_mrpc",
-                    "y_cola",
-                    "y_sst2",
-                    "y_qqp",
-                    "y_rte_pred_ids",
-                    "y_mnli_pred_ids",
-                    "y_qnli_pred_ids",
-                    "y_mrpc_pred_ids",
-                    "y_cola_pred_ids",
-                    "y_sst2_pred_ids",
-                    "y_qqp_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_mrpc",
-                "inputs": [
-                    "y_mrpc",
-                    "y_mrpc_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_rte",
-                "inputs": [
-                    "y_rte",
-                    "y_rte_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_mnli",
-                "inputs": [
-                    "y_mnli",
-                    "y_mnli_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_qnli",
-                "inputs": [
-                    "y_qnli",
-                    "y_qnli_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_sst",
-                "inputs": [
-                    "y_sst2",
-                    "y_sst2_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_cola",
-                "inputs": [
-                    "y_cola",
-                    "y_cola_pred_ids"
-                ]
-            },
-            {
-                "name": "accuracy",
-                "alias":"accuracy_qqp",
-                "inputs": [
-                    "y_qqp",
-                    "y_qqp_pred_ids"
-                ]
-            },
-            {
-                "name": "pearson_correlation",
-                "alias":"pearson_correlation_stsb",
-                "inputs": [
-                    "y_stsb",
-                    "y_stsb_pred"
-                ]
-            },
-            {
-                "name": "spearman_correlation",
-                "alias":"spearman_correlation_stsb",
-                "inputs": [
-                    "y_stsb",
-                    "y_stsb_pred"
-                ]
-            }
-      ],
-      "validation_patience":3,
-      "val_every_n_epochs":1,
-      "log_every_n_epochs":1,
-      "show_examples":false,
-      "evaluation_targets":[
-         "valid"
-      ],
-      "class_name":"torch_trainer"
-   }
+    ]
+  }
 }
