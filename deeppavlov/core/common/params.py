@@ -27,7 +27,7 @@ log = getLogger(__name__)
 _refs = {}
 
 
-def _resolve(val):
+def resolve(val):
     if isinstance(val, str) and val.startswith('#'):
         component_id, *attributes = val[1:].split('.')
         try:
@@ -44,7 +44,7 @@ def _resolve(val):
 
 def _init_param(param, mode):
     if isinstance(param, str):
-        param = _resolve(param)
+        param = resolve(param)
     elif isinstance(param, (list, tuple)):
         param = [_init_param(p, mode) for p in param]
     elif isinstance(param, dict):
@@ -58,7 +58,7 @@ def _init_param(param, mode):
 def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Union[Component, FunctionType]:
     """Builds and returns the Component from corresponding dictionary of parameters."""
     # what is passed in json:
-    config_params = {k: _resolve(v) for k, v in params.items()}
+    config_params = {k: resolve(v) for k, v in params.items()}
 
     # get component by reference (if any)
     if 'ref' in config_params:

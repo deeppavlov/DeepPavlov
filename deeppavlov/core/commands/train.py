@@ -18,7 +18,7 @@ from typing import Dict, Union, Optional, Iterable
 
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.params import resolve
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
@@ -60,7 +60,7 @@ def read_data_by_config(config: dict):
 
 def get_iterator_from_config(config: dict, data: dict):
     """Create iterator (from config) for specified data."""
-    iterator_config = config['dataset_iterator']
+    iterator_config = {k: resolve(v) for k, v in config['dataset_iterator'].items()}
     iterator: Union[DataLearningIterator, DataFittingIterator] = get_model(iterator_config.pop('class_name'))(
         **iterator_config, data=data)
     return iterator
