@@ -13,3 +13,6 @@ Concrete DatasetIterator classes.
 
 .. automodule:: deeppavlov.dataset_iterators.typos_iterator
     :members:
+
+.. automodule:: deeppavlov.dataset_iterators.multitask_iterator
+    :members:

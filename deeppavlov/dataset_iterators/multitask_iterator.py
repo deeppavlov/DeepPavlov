@@ -34,11 +34,13 @@ class MultiTaskIterator:
     Class merges data from several dataset iterators. When used for batch generation batches from
     merged dataset iterators are united into one batch. If sizes of merged datasets are different
     smaller datasets are repeated until their size becomes equal to the largest dataset.
+
     Args:
         data: dictionary which keys are task names and values are dictionaries with fields
             ``"train", "valid", "test"``.
         num_train_epochs: number of training epochs
-        tasks: dictionary which keys are task names and values are init params of dataset iterators.
+        tasks: dictionary which keys are task names and values are init params of dataset iterators. If task has
+            key-value pair ``'use_task_defaults': False`` task_defaults for this task dataset iterator will be ignored.
         batch_size: batch_size
         sampling_mode: mode of sampling we use. It can be plain, uniform or anneal.
         gradient_accumulation_steps: number of gradient accumulation steps. Default is 1
@@ -46,7 +48,9 @@ class MultiTaskIterator:
         iterator_class_name: name of iterator class.
         use_label_name, seed, features - parameters for the iterator class
         one_element_tuples: if True, tuple of x consisting of one element is returned in this element. Default: True
+        task_defaults: default task parameters.
         seed - random seed for sampling
+
     Attributes:
         data: dictionary of data with fields "train", "valid" and "test" (or some of them)
     """

@@ -28,24 +28,13 @@ class MultiTaskReader(DatasetReader):
 
     def read(self, tasks: Dict[str, Dict[str, dict]], task_defaults: dict = None, **kwargs):
         """Creates dataset readers for tasks and returns what task dataset readers `read()` methods return.
+
         Args:
-            tasks: dictionary which keys are task names and values are dictionaries with `DatasetReader`
-                subclasses specs. `DatasetReader` specs are provided in the same format as "dataset_reader"
-                in the model config except for "class_name" field which has to be named "reader_class_name".
-                ```json
-                "tasks": {
-                  "query_prediction": {
-                    "reader_class_name": "basic_classification_reader",
-                    "x": "Question",
-                    "y": "Class",
-                    "data_path": "{DOWNLOADS_PATH}/query_prediction"
-                  }
-                }
-                ```
-            reader_class_name - name of default dataset reader
-            path - parameter path for dataset reader reader_class_name. Must be provided!
-            task_names: tasks from path for which we use the params train, validation and test
-            train,validation, test - parameters for dataset reader reader_class_name
+            tasks: dictionary which keys are task names and values are dictionaries with param name - value pairs for
+                nested dataset readers initialization. If task has key-value pair ``'use_task_defaults': False``,
+                task_defaults for this task dataset reader will be ignored.
+            task_defaults: default task parameters.
+
         Returns:
             dictionary which keys are task names and values are what task readers `read()` methods returned.
         """
