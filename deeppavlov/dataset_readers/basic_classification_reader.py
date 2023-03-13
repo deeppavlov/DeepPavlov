@@ -15,10 +15,8 @@
 
 from logging import getLogger
 from pathlib import Path
-from collections import defaultdict
 
 import pandas as pd
-from tqdm import tqdm
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -37,7 +35,7 @@ class BasicClassificationDatasetReader(DatasetReader):
     @overrides
     def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
-             label_type: str = "str", *args, **kwargs) -> dict:
+             *args, **kwargs) -> dict:
         """
         Read dataset from data_path directory.
         Reading files are all data_types + extension
@@ -54,18 +52,11 @@ class BasicClassificationDatasetReader(DatasetReader):
             names (array): list of column names to use
             orient (str): indication of expected JSON string format
             lines (boolean): read the file as a json object per line. Default: ``False``
-            label_type(str): expected type of labels. Default: ``"str"``
 
         Returns:
             dictionary with types from data_types.
             Each field of dictionary is a list of tuples (x_i, y_i)
         """
-        def row_list_process(row, y):
-            if pd.isna(row[y]):
-                return []
-            else:
-                return [label_type(label) for label in str(row[y]).split(class_sep)]
-
         data_types = ["train", "valid", "test"]
 
         train_file = kwargs.get('train', 'train.csv')
@@ -81,13 +72,6 @@ class BasicClassificationDatasetReader(DatasetReader):
         data = {"train": [],
                 "valid": [],
                 "test": []}
-
-        supported_label_types = ['int','str','float']
-        error_msg = f'Wrong label type {label_type} given! Needs to be one of the built-in Python types'
-        if label_type not in supported_label_types:
-            raise Exception(error_msg)
-        label_type = eval(label_type)
-        data=defaultdict(list)
         for data_type in data_types:
             file_name = kwargs.get(data_type, '{}.{}'.format(data_type, format))
             if file_name is None:
@@ -98,7 +82,6 @@ class BasicClassificationDatasetReader(DatasetReader):
                 if format == 'csv':
                     keys = ('sep', 'header', 'names')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
-                    print(file)
                     df = pd.read_csv(file, **options)
                 elif format == 'json':
                     keys = ('orient', 'lines')
@@ -109,21 +92,22 @@ class BasicClassificationDatasetReader(DatasetReader):
 
                 x = kwargs.get("x", "text")
                 y = kwargs.get('y', 'labels')
-
-                for _, row in tqdm(df.iterrows()):
-                    try:
-                        if isinstance(x, list):
-                            x_text = [row[x_] for x_ in x]
-                        else:
-                            x_text = row[x]
-                        if class_sep is None:
-                            y_label = label_type(row[y])
-                        else:
-                            y_label = row_list_process(row, y)
-                        data[data_type].append((x_text, y_label))
-                    except Exception as e:
-                        print(f'Error processing {row}: {e}')
-                        raise e
+                if isinstance(x, list):
+                    if class_sep is None:
+                        # each sample is a tuple ("text", "label")
+                        data[data_type] = [([row[x_] for x_ in x], str(row[y]))
+                                           for _, row in df.iterrows()]
+                    else:
+                        # each sample is a tuple ("text", ["label", "label", ...])
+                        data[data_type] = [([row[x_] for x_ in x], str(row[y]).split(class_sep))
+                                           for _, row in df.iterrows()]
+                else:
+                    if class_sep is None:
+                        # each sample is a tuple ("text", "label")
+                        data[data_type] = [(row[x], str(row[y])) for _, row in df.iterrows()]
+                    else:
+                        # each sample is a tuple ("text", ["label", "label", ...])
+                        data[data_type] = [(row[x], str(row[y]).split(class_sep)) for _, row in df.iterrows()]
             else:
                 log.warning("Cannot find {} file".format(file))
 
