@@ -59,19 +59,17 @@ class TorchTransformersMultiplechoicePreprocessor(Component):
         self.max_seq_length = max_seq_length
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
-            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
-                                           do_lower_case=do_lower_case,
-                                           **kwargs)
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file, do_lower_case=do_lower_case, **kwargs)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
-                                                           do_lower_case=do_lower_case,
-                                                           **kwargs)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case, **kwargs)
 
     def tokenize_mc_examples(self,
                              contexts: List[List[str]],
                              choices: List[List[str]]) -> Dict[str, torch.tensor]:
+
         num_choices = len(contexts[0])
         batch_size = len(contexts)
+
         # tokenize examples in groups of `num_choices`
         examples = []
         for context_list, choice_list in zip(contexts, choices):
@@ -155,8 +153,7 @@ class TorchTransformersPreprocessor(Component):
         if isinstance(texts_a, tuple):
             texts_a = list(texts_a)
         elif isinstance(texts_a, str):
-            raise Exception(
-                f'Received string {texts_a} as an input! Check the iterator output')
+            raise TypeError(f'Received string {texts_a} as an input! Check the iterator output')
         elif texts_a == []:
             return {}
 
@@ -422,11 +419,11 @@ class RelRankingPreprocessor(Component):
                 token_type_ids_batch.append(encoding["token_type_ids"])
             else:
                 token_type_ids_batch.append([0])
-            
+
         input_features = {"input_ids": torch.LongTensor(input_ids_batch),
                           "attention_mask": torch.LongTensor(attention_mask_batch),
                           "token_type_ids": torch.LongTensor(token_type_ids_batch)}
-            
+
         return input_features
 
 
@@ -448,7 +445,7 @@ class TorchTransformersNerPreprocessor(Component):
         provide_subword_tags: output tags for subwords or for words
         subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
             (default="first")
-        return_features: if True, returns answer in features format (default: False)
+        return_features: if True, returns answer in features format
 
     Attributes:
         max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
@@ -548,7 +545,7 @@ class TorchTransformersNerPreprocessor(Component):
             if self.return_features:
                 feature_list = ({'input_ids': torch.Tensor(subword_tok_ids),
                                  'attention_mask': torch.Tensor(attention_mask),
-                                'token_type_ids': torch.Tensor(startofword_markers),
+                                 'token_type_ids': torch.Tensor(startofword_markers),
                                  'labels': torch.Tensor(nonmasked_tags)})
                 return feature_list
             else:

@@ -1,4 +1,3 @@
-
 # Copyright 2017 Neural Networks and Deep Learning lab, MIPT
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,7 +13,6 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union
 
 import numpy as np
 
@@ -31,10 +29,12 @@ class Proba2Labels(Component):
     Class implements probability to labels processing using the following ways: \
      choosing one or top_n indices with maximal probability or choosing any number of indices \
       which probabilities to belong with are higher than given confident threshold
+
     Args:
         max_proba: whether to choose label with maximal probability
         confidence_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
         top_n: how many top labels with the highest probabilities to return
+
     Attributes:
         max_proba: whether to choose label with maximal probability
         confidence_threshold: boundary probability value for sample to belong with the class (best use for multi-label)
@@ -74,14 +74,7 @@ class Proba2Labels(Component):
                 if self.is_binary:
                     answer.append([int(el > self.confidence_threshold) for el in data])
                 else:
-                    answer_ = []
-                    for d in data:
-                        try:
-                            answer_.append(list(np.where(np.array(d) > self.confidence_threshold)[0]))
-                        except Exception as e:
-                            print(f'Exception in element {d} of input list')
-                            raise e
-                    answer.append(answer_)
+                    answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0]) for d in data])
             elif self.max_proba:
                 answer.append([np.argmax(d) for d in data])
             elif self.top_n:
