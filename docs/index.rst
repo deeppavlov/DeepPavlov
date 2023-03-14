@@ -26,8 +26,8 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
    :caption: Models
-   
-   
+
+   Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/SQuAD.ipynb>
    Classification <features/models/classification.ipynb>
    Named Entity Recognition <features/models/NER.ipynb>

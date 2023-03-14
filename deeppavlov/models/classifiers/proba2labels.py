@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union
 
 import numpy as np
 
@@ -56,31 +55,35 @@ class Proba2Labels(Component):
         self.is_binary = is_binary
 
     def __call__(self,
-                 data: Union[np.ndarray,
-                             List[List[float]],
-                             List[List[int]]],
                  *args,
-                 **kwargs) -> Union[List[List[int]], List[int]]:
+                 **kwargs):
         """
         Process probabilities to labels
-
         Args:
-            data: list of vectors with probability distribution
-
+            Every argument is a list of vectors with probability distribution
         Returns:
-            list of labels (only label classification) or list of lists of labels (multi-label classification)
+            list of labels (only label classification) or list of lists of labels (multi-label classification),
+            or list of the following lists (in multitask setting) for every argument
         """
-        if self.confidence_threshold:
-            if self.is_binary:
-                return [int(el > self.confidence_threshold) for el in data]
+        answer = []
+        log.debug(f'input {args}')
+        for data in args:
+            if all([k is None for k in data]):
+                answer.append([])
+            elif self.confidence_threshold:
+                if self.is_binary:
+                    answer.append([int(el > self.confidence_threshold) for el in data])
+                else:
+                    answer.append([list(np.where(np.array(d) > self.confidence_threshold)[0]) for d in data])
+            elif self.max_proba:
+                answer.append([np.argmax(d) for d in data])
+            elif self.top_n:
+                answer.append([np.argsort(d)[::-1][:self.top_n] for d in data])
             else:
-                return [list(np.where(np.array(d) > self.confidence_threshold)[0])
-                        for d in data]
-        elif self.max_proba:
-            return [np.argmax(d) for d in data]
-        elif self.top_n:
-            return [np.argsort(d)[::-1][:self.top_n] for d in data]
-        else:
-            raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
-                              "float `confidence_threshold` for multi-label classification or"
-                              "integer `top_n` for choosing several labels with the highest probabilities")
+                raise ConfigError("Proba2Labels requires one of three arguments: bool `max_proba` or "
+                                  "float `confidence_threshold` for multi-label classification or"
+                                  "integer `top_n` for choosing several labels with the highest probabilities")
+        if len(args) == 1:  # only one argument
+            answer = answer[0]
+        log.debug(f'output {answer}')
+        return answer

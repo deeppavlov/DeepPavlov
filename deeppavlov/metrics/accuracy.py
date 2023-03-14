@@ -61,8 +61,11 @@ def multitask_accuracy(*args) -> float:
     """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
-    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
-    return accuracy(y_true, y_predicted)
+    answers = []
+    for true, pred in zip(y_true_by_tasks, y_predicted_by_tasks):
+        answers.append(accuracy(true, pred))
+    final_answer = sum(answers)/len(answers)
+    return final_answer
 
 
 @register_metric('multitask_sequence_accuracy')
