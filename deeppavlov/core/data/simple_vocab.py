@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import Counter, defaultdict, Iterable
+from collections import Counter, defaultdict
 from itertools import chain
 from logging import getLogger
-from typing import Optional, Tuple, List
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
