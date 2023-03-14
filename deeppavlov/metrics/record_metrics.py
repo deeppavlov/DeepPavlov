@@ -26,7 +26,8 @@ def record_f1_score(record_examples: List[RecordNestedExample]):
         example_f1s = []
         for answer in example.answers:
             example_f1s.append(exact_match_score(example.prediction, answer))
-        f1_scores.append(max(example_f1s))
+        if example_f1s:
+            f1_scores.append(max(example_f1s))
     return np.mean(f1_scores)
 
 
@@ -47,8 +48,9 @@ def record_em_score(record_examples: List[RecordNestedExample]):
         example_ems = []
         for answer in example.answers:
             example_ems.append(string_f1_score(example.prediction, answer))
-        em_scores.append(max(example_ems))
-    return np.mean(em_scores)
+        if example_ems:
+            em_scores.append(max(example_ems))
+    return np.mean(em_scores) if em_scores else -1
 
 
 def normalize_answer(s):
