@@ -29,6 +29,7 @@ RUN git clone https://github.com/deepmipt/DeepPavlov.git && \
     git pull && \
     git checkout 7518a97d5202f5c5821b309539358552d59224a3 && \
     pip install -e . && \
+    pip install tqdm==4.65.0 && \
     python -c 'import deeppavlov.models'
 
 WORKDIR /src
