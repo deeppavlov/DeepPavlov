@@ -13,7 +13,7 @@
         "out": ["f_entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]
       }
     ],
-    "out": ["entity_substr", "probas", "tags", "entity_offsets", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]
+    "out": ["entity_substr", "tags", "entity_offsets", "entity_ids", "entity_conf", "entity_pages"]
   },
   "metadata": {
     "variables": {

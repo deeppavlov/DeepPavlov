@@ -1,3 +1,17 @@
+# Copyright 2017 Neural Networks and Deep Learning lab, MIPT
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import itertools
 import pickle
 from collections import Counter
@@ -9,13 +23,16 @@ Sparse = sp.sparse.csr_matrix
 
 
 class WordSearcher:
-    def __init__(self, words_dict_filename: str, ngrams_matrix_filename: str, lang: str = "@en"):
+    def __init__(self, words_dict_filename: str, ngrams_matrix_filename: str, lang: str = "@en", thresh: int = 1000):
         self.words_dict_filename = words_dict_filename
         self.ngrams_matrix_filename = ngrams_matrix_filename
         if lang == "@en":
             self.letters = "abcdefghijklmnopqrstuvwxyz"
         elif lang == "@ru":
             self.letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
+        else:
+            raise ValueError(f'Unexpected lang value: "{lang}"')
+        self.thresh = thresh
         self.load()
         self.make_ngrams_dicts()
 
@@ -63,11 +80,10 @@ class WordSearcher:
         scores = query_matrix * self.count_matrix
         scores = np.squeeze(scores.toarray() + 0.0001)
 
-        thresh = 1000
-        if thresh >= len(scores):
-            o = np.argpartition(-scores, len(scores) - 1)[0:thresh]
+        if self.thresh >= len(scores):
+            o = np.argpartition(-scores, len(scores) - 1)[0:self.thresh]
         else:
-            o = np.argpartition(-scores, thresh)[0:thresh]
+            o = np.argpartition(-scores, self.thresh)[0:self.thresh]
         o_sort = o[np.argsort(-scores[o])]
         o_sort = o_sort.tolist()
 

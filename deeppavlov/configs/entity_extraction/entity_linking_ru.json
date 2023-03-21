@@ -54,7 +54,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_files_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/el_files_rus.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/entity_linking_rus"
       },
       {
