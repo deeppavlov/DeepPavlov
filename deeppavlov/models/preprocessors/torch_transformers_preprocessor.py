@@ -433,7 +433,7 @@ class PathRankingPreprocessor(Component):
                     rels = [rels]
                 rels_str = ""
                 if len(rels) == 1:
-                    if self.add_special_tokens:
+                    if self.additional_special_tokens:
                         rels_str = f"<one_rel> {rels[0]} </one_rel>"
                     else:
                         rels_str = rels[0]

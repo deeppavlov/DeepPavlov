@@ -34,7 +34,7 @@
         "lang": "en"
       }
     ],
-    "out": ["entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"]
+    "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"]
   },
   "metadata": {
     "variables": {

@@ -33,87 +33,10 @@ from deeppavlov.core.common.file import read_json
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
+from deeppavlov.models.kbqa.ru_adj_to_noun import RuAdjToNoun
 from deeppavlov.models.kbqa.utils import preprocess_template_queries
 
 log = getLogger(__name__)
-
-
-@register('ru_adj_to_noun')
-class RuAdjToNoun:
-    """
-        Class for converting an adjective in Russian to the corresponding noun, for example:
-        "московский" -> "Москва", "африканский" -> "Африка"
-    """
-
-    def __init__(self, freq_dict_filename: str, candidate_nouns: int = 10, **kwargs):
-        """
-
-        Args:
-            freq_dict_filename: file with the dictionary of Russian words with the corresponding frequencies
-            candidate_nouns: how many candidate nouns to leave after search
-            **kwargs:
-        """
-        self.candidate_nouns = candidate_nouns
-        alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя-"
-        self.alphabet_length = len(alphabet)
-        self.max_word_length = 24
-        self.letter_nums = {letter: num for num, letter in enumerate(alphabet)}
-        with open(str(expand_path(freq_dict_filename)), 'r') as fl:
-            lines = fl.readlines()
-        pos_freq_dict = defaultdict(list)
-        for line in lines:
-            line_split = line.strip('\n').split('\t')
-            if re.match("[\d]+\.[\d]+", line_split[2]):
-                pos_freq_dict[line_split[1]].append((line_split[0], float(line_split[2])))
-        self.nouns_with_freq = pos_freq_dict["s.PROP"]
-        self.adj_set = set([word for word, freq in pos_freq_dict["a"]])
-        self.nouns = [noun[0] for noun in self.nouns_with_freq]
-        self.matrix = self.make_sparse_matrix(self.nouns).transpose()
-        self.nlp = spacy.load("ru_core_news_sm")
-
-    def search(self, word: str):
-        word = self.nlp(word)[0].lemma_
-        if word in self.adj_set:
-            q_matrix = self.make_sparse_matrix([word])
-            scores = q_matrix * self.matrix
-            scores = np.squeeze(scores.toarray() + 0.0001)
-            indices = np.argsort(-scores)[:self.candidate_nouns]
-            scores = list(scores[indices])
-            candidates = [self.nouns_with_freq[indices[i]] + (scores[i],) for i in range(len(indices))]
-            candidates = [cand for cand in candidates if cand[0][:3].lower() == word[:3].lower()]
-            candidates = sorted(candidates, key=lambda x: (x[2], x[1]), reverse=True)
-            log.debug(f"AdjToNoun, found nouns: {candidates}")
-            if candidates and candidates[0][1] > 4.5 and candidates[0][2] > 2.8:
-                return candidates[0][0]
-        return ""
-
-    def make_sparse_matrix(self, words: List[str]):
-        indptr = []
-        indices = []
-        data = []
-
-        total_length = 0
-
-        for n, word in enumerate(words):
-            indptr.append(total_length)
-            for cnt, letter in enumerate(word.lower()):
-                col = self.alphabet_length * cnt + self.letter_nums[letter]
-                indices.append(col)
-                init_value = 1.0 - cnt * 0.05
-                if init_value < 0:
-                    init_value = 0
-                data.append(init_value)
-            total_length += len(word)
-
-        indptr.append(total_length)
-
-        data = np.array(data)
-        indptr = np.array(indptr)
-        indices = np.array(indices)
-
-        matrix = csr_matrix((data, indices, indptr), shape=(len(words), self.max_word_length * self.alphabet_length))
-
-        return matrix
 
 
 @register('slovnet_syntax_parser')
@@ -125,27 +48,28 @@ class SlovnetSyntaxParser(Component, Serializable):
         super().__init__(save_path=None, load_path=load_path)
         self.navec_filename = expand_path(navec_filename)
         self.syntax_parser_filename = expand_path(syntax_parser_filename)
-        self.tree_patterns_filename = expand_path(tree_patterns_filename)
+        self.tree_patterns = read_json(expand_path(tree_patterns_filename))
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.lang = f"@{lang}"
-        if self.lang == "@ru":
+        self.lang = lang
+        if self.lang == "ru":
             self.pronouns = {"q_pronouns": {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как",
                                             "когда", "где", "чем", "сколько"},
                              "how_many": {"сколько"}}
             self.first_tokens = {"первый", "первая", "первое"}
             self.nlp = spacy.load("ru_core_news_sm")
-        elif self.lang == "@en":
+        elif self.lang == "en":
             self.pronouns = {"q_pronouns": {"what", "who", "how", "when", "where", "which"},
                              "how_many": {"how many"}}
             self.first_tokens = {"first"}
             self.nlp = spacy.load("en_core_web_sm")
+        else:
+            raise ValueError(f'Unexpected lang "{lang}" value. Component supports only en or ru')
         self.load()
 
     def load(self) -> None:
         navec = Navec.load(self.navec_filename)
         self.syntax = Syntax.load(self.syntax_parser_filename)
         self.syntax.navec(navec)
-        self.tree_patterns = read_json(self.tree_patterns_filename)
 
     def save(self) -> None:
         pass
@@ -195,8 +119,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                     if found and i > 0:
                         token_tags = [self.nlp(tokens[j])[0].pos_ for j in range(i, i + 3)]
                         lemm_tokens = [self.nlp(tok)[0].lemma_ for tok in tokens[i:i + 3]]
-                        if token_tags == ["ADJF", "ADJF", "NOUN"] \
-                                and not any([tok in self.first_tokens for tok in lemm_tokens]):
+                        if token_tags == ["ADJF", "ADJF", "NOUN"] and not set(lemm_tokens) & self.first_tokens:
                             long_substr = " ".join(tokens[i:i + 3])
                             replace_dict[tokens[i + 2]] = (long_substr, "adj")
                             sentence = sentence.replace(long_substr, tokens[i + 2])
@@ -282,8 +205,8 @@ class SlovnetSyntaxParser(Component, Serializable):
         for i in range(len(ids)):
             for j in range(len(ids)):
                 if i < j and head_ids[j] == str(i + 1) and head_ids[i] == str(j + 1):
-                    return i + 1, j + 1
-        return -1, -1
+                    return i + 1
+        return -1
 
     def correct_markup(self, words, head_ids, rels, root_n):
         if len(words) > 3:
@@ -364,7 +287,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                 head_ids[-1] = root_n
 
             head_ids, markup_elem = self.correct_cycle(ids, head_ids, rels, markup_elem)
-            i, j = self.find_cycle(ids, head_ids)
+            i = self.find_cycle(ids, head_ids)
             if i == 1 and root_n > -1:
                 head_ids[i - 1] = root_n
             for elem_id, word, head_id, rel in zip(ids, words, head_ids, rels):
@@ -396,8 +319,8 @@ class TreeToSparql(Component):
             adj_to_noun: component deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun
             **kwargs:
         """
-        self.lang = f"@{lang}"
-        if self.lang == "@ru":
+        self.lang = lang
+        if self.lang == "ru":
             self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
                                "где", "чем", "сколько"}
             self.how_many = "сколько"
@@ -409,7 +332,7 @@ class TreeToSparql(Component):
             self.ranking_tokens = {"самый"}
             self.date_tokens = {"год", "месяц"}
             self.nlp = spacy.load("ru_core_news_sm")
-        elif self.lang == "@en":
+        elif self.lang == "en":
             self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
             self.how_many = "how many"
             self.change_root_tokens = ""
@@ -599,7 +522,7 @@ class TreeToSparql(Component):
             Tuple[str, list]:
         ranking_tokens = self.find_ranking_tokens(root, appos_token_nums, clause_token_nums)
         question_tokens = []
-        if self.lang == "@ru":
+        if self.lang == "ru":
             for node in tree.descendants:
                 if node.ord not in appos_token_nums + clause_token_nums:
                     if ranking_tokens and (node.ord in ranking_tokens or node.form.lower() in self.q_pronouns):
@@ -705,12 +628,12 @@ class TreeToSparql(Component):
         desc_text = " ".join([elem[0] for elem in node_desc])
         for symb in ".,:;)":
             desc_text = desc_text.replace(f" {symb}", symb)
-        if self.lang == "@ru":
+        if self.lang == "ru":
             for pattern in [r"в ([\d]{3,4}) году", r"с ([\d]{3,4}) по ([\d]{3,4})"]:
                 fnd = re.findall(pattern, desc_text)
                 if fnd:
                     return fnd
-        elif self.lang == "@en":
+        elif self.lang == "en":
             fnd = re.findall(r"in ([\d]{3,4})", desc_text)
             return fnd
         return []
