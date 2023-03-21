@@ -652,7 +652,7 @@ class TreeToSparql(Component):
                 appos_token_nums = self.find_appos_tokens(elem, tok_and_ord, appos_token_nums)
         return appos_token_nums
 
-    def find_clause_tokens(self, node: Node, tok_and_ord: List[Tuple[Node, int]], clause_node: Node,
+    def find_clause_tokens(self, node: Node, tok_and_ord: Dict[int, Node], clause_node: Node,
                            clause_token_nums: List[int]) -> List[int]:
         for elem in node.children:
             if elem != clause_node and elem.deprel == "acl":
@@ -690,11 +690,11 @@ class TreeToSparql(Component):
                 return ranking_tokens
         return ranking_tokens
 
+    @staticmethod
     def choose_grounded_entity(self, grounded_entities: List[str], entities_dict: Dict[str, str]):
         tags = [entities_dict.get(entity.lower(), "") for entity in grounded_entities]
         if len(grounded_entities) > 1:
             if not all([tags[i] == tags[0] for i in range(1, len(tags))]):
-                found = False
                 for f_tag in ["WORK_OF_ART", "FAC", "PERSON", "GPE"]:
                     for entity, tag in zip(grounded_entities, tags):
                         if tag == f_tag:
