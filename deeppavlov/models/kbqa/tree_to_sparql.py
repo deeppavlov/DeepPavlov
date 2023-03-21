@@ -511,8 +511,8 @@ class TreeToSparql(Component):
             tree = Conllu(filehandle=StringIO(syntax_tree)).read_tree()
             root = self.find_root(tree)
             tree_desc = tree.descendants
-        except:
-            log.info(f"error in parsing syntax tree")
+        except ValueError as e:
+            log.warning(f"error in parsing syntax tree, {e}")
         if root:
             unknown_node, unknown_branch = self.find_branch_with_unknown(root)
             log.debug(f"syntax tree info, root: {root.form} unk_node: {unknown_node} unk_branch: {unknown_branch}")
