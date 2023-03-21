@@ -24,13 +24,7 @@ Currently, we provide five built-in models for KBQA in DeepPavlov library:
 
 * :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` - for answering complex questions over Wikidata in English,
 
-* :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian,
-
-* :config:`kbqa_lcquad <kbqa/kbqa_lcquad.json>` - the model for LC-QuAD dataset,
-
-* :config:`kbqa_lcquad2 <kbqa/kbqa_lcquad2.json>` - the model for several types of questions from LC-QuAD2.0 dataset,
-
-* :config:`kbqa_rubq <kbqa/kbqa_rubq.json>` - the model for RuBQ dataset.
+* :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian.
 
 These configs use local Wikidata dump in hdt format (3.7 Gb on disk).
 
@@ -40,12 +34,6 @@ These configs use local Wikidata dump in hdt format (3.7 Gb on disk).
 | :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>`      |    3.5    |    4.3    |
 +--------------------------------------------------+-----------+-----------+
 | :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>`      |    6.9    |    6.5    |
-+--------------------------------------------------+-----------+-----------+
-| :config:`kbqa_lcquad <kbqa/kbqa_lcquad.json>`    |    5.0    |    9.4    |
-+--------------------------------------------------+-----------+-----------+
-| :config:`kbqa_lcquad2 <kbqa/kbqa_lcquad2.json>`  |    4.2    |    7.9    |
-+--------------------------------------------------+-----------+-----------+
-| :config:`kbqa_rubq <kbqa/kbqa_rubq.json>`        |    3.9    |    9.4    |
 +--------------------------------------------------+-----------+-----------+
 
 The Knowledge Base Question Answering model uses Wikidata to answer complex questions. Here are some of the most popular types of questions supported by the model:
@@ -249,7 +237,7 @@ To use Entity Linking service in KBQA, in the :config:`kbqa_cq_en <kbqa/kbqa_cq_
         "class_name": "api_requester",
         "id": "entity_linker",
         "url": "entity_linking_url",
-        "out": ["entity_substr", "entity_ids", "entity_conf", "entity_pages", "entity_labels"],
+        "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
         "param_names": ["entity_substr", "tags", "probas", "sentences"]
      }
     

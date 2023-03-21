@@ -34,7 +34,6 @@ class WikiParser:
     def __init__(self, wiki_filename: str,
                  file_format: str = "hdt",
                  prefixes: Dict[str, Union[str, Dict[str, str]]] = None,
-                 used_rels_filename: str = None,
                  rel_q2name_filename: str = None,
                  max_comb_num: int = 1e6,
                  lang: str = "@en", **kwargs) -> None:
@@ -76,12 +75,14 @@ class WikiParser:
         if used_rels_filename:
             self.used_rels = set(read_json(str(expand_path(used_rels_filename))))
             self.used_rels = {rel.split("/")[-1] for rel in self.used_rels}
-        self.rel_q2name = {}
+        self.rel_q2name = dict()
         if rel_q2name_filename:
             if rel_q2name_filename.endswith("json"):
                 self.rel_q2name = read_json(str(expand_path(rel_q2name_filename)))
             elif rel_q2name_filename.endswith("pickle"):
                 self.rel_q2name = load_pickle(str(expand_path(rel_q2name_filename)))
+            else:
+                raise ValueError("Unsupported file format")
 
         self.max_comb_num = max_comb_num
         self.lang = lang
@@ -105,7 +106,7 @@ class WikiParser:
                     answers, found_rels, found_combs = \
                         self.execute(what_return, rels_from_query, query_seq, filter_info, order_info,
                                      query_answer_types, rel_types)
-                except:
+                except ValueError:
                     log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append([answers, found_rels, found_combs])
             elif parser_info == "find_rels":
@@ -119,7 +120,7 @@ class WikiParser:
                 rels = []
                 try:
                     rels = self.find_rels_2hop(*query)
-                except:
+                except ValueError:
                     log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output += rels
             elif parser_info == "find_object":
@@ -340,11 +341,9 @@ class WikiParser:
 
         return answers, found_rels, found_combs
 
+    @staticmethod
     def define_is_boolean(self, query_hdt_seq):
-        is_boolean = False
-        if len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]]):
-            is_boolean = True
-        return is_boolean
+        return len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]])
 
     def merge_combs(self, comb1, comb2):
         new_comb = {}
@@ -396,9 +395,7 @@ class WikiParser:
 
         return combs, triplets
 
-    def find_label(self, entity: str, question: str = None) -> str:
-        if question is None:
-            question = ""
+    def find_label(self, entity: str, question: str = "") -> str:
         entity = str(entity).replace('"', '')
         if self.file_format == "hdt":
             if entity.startswith("Q") or entity.startswith("P"):

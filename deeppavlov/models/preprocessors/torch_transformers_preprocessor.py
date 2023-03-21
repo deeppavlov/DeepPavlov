@@ -414,15 +414,12 @@ class PathRankingPreprocessor(Component):
                  additional_special_tokens: List[str] = None,
                  do_lower_case: bool = True,
                  max_seq_length: int = 67,
-                 num_neg_samples: int = 499,
                  **kwargs) -> None:
         self.max_seq_length = max_seq_length
-        self.num_neg_samples = num_neg_samples
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
         self.additional_special_tokens = additional_special_tokens
         if self.additional_special_tokens:
-            special_tokens_dict = {'additional_special_tokens': add_special_tokens}
-            self.tokenizer.add_special_tokens(special_tokens_dict)
+            self.tokenizer.add_special_tokens({'additional_special_tokens': add_special_tokens})
 
     def __call__(self, questions_batch: List[str], rels_batch: List[List[List[str]]]):
         lengths, proc_rels_batch = [], []
