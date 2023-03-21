@@ -19,11 +19,9 @@ from io import StringIO
 from logging import getLogger
 from typing import Any, List, Tuple, Dict, Union
 
-import numpy as np
 import spacy
 from navec import Navec
 from razdel import tokenize
-from scipy.sparse import csr_matrix
 from slovnet import Syntax
 from udapi.block.read.conllu import Conllu
 from udapi.core.node import Node
@@ -353,7 +351,7 @@ class TreeToSparql(Component):
         self.adj_to_noun = adj_to_noun
 
     def __call__(self, questions_batch: List[str], substr_batch: List[List[str]], tags_batch: List[List[str]],
-                 offsets_batch: List[List[int]], positions_batch: List[List[List[int]]],
+                 offsets_batch: List[List[List[int]]], positions_batch: List[List[List[int]]],
                  probas_batch: List[List[float]]) -> Tuple[
         List[Union[str, Any]], List[Union[List[str], List[Union[str, Any]]]], List[Union[List[str], Any]], List[
             Union[List[Union[str, Any]], Any]], List[Union[List[Union[float, Any]], Any]], List[List[int]], List[

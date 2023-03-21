@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pathlib import Path
 from logging import getLogger
+from pathlib import Path
 from typing import List, Optional, Dict, Tuple, Union, Any
 
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import numpy as np
 from torch import Tensor
+from transformers import AutoConfig, AutoModel, AutoTokenizer
 
 from deeppavlov.core.commands.utils import expand_path
-from transformers import AutoConfig, AutoModel, AutoTokenizer
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel

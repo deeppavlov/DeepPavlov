@@ -72,9 +72,6 @@ class WikiParser:
         else:
             raise ValueError("Unsupported file format")
         self.used_rels = set()
-        if used_rels_filename:
-            self.used_rels = set(read_json(str(expand_path(used_rels_filename))))
-            self.used_rels = {rel.split("/")[-1] for rel in self.used_rels}
         self.rel_q2name = dict()
         if rel_q2name_filename:
             if rel_q2name_filename.endswith("json"):
@@ -207,7 +204,8 @@ class WikiParser:
                 filter_info: List[Tuple[str]] = None,
                 order_info: namedtuple = None,
                 answer_types: List[str] = None,
-                rel_types: List[str] = None) -> List[List[str]]:
+                rel_types: List[str] = None) -> tuple[
+        list[list[str]] | list[Any], list[list[Any]] | list[Any], list[Any]]:
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -334,7 +332,7 @@ class WikiParser:
                 answers = [["Yes" if len(triplets) > 0 else "No"]]
             found_rels = [[elem[key] for key in rels_from_query if key in elem] for elem in combs]
             ans_rels_combs = [(answer, rel, comb) for answer, rel, comb in zip(answers, found_rels, combs)
-                                if any([entity for entity in answer])]
+                              if any([entity for entity in answer])]
             answers = [elem[0] for elem in ans_rels_combs]
             found_rels = [elem[1] for elem in ans_rels_combs]
             found_combs = [elem[2] for elem in ans_rels_combs]
@@ -355,7 +353,8 @@ class WikiParser:
                 new_comb[key] = comb2[key]
         return new_comb
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> List[Dict[str, str]]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> tuple[
+        list[dict] | list[Any], list[Any] | list[list[str]] | Any]:
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         if self.file_format == "hdt":
@@ -431,11 +430,11 @@ class WikiParser:
                     entity = entity.replace(token, '')
                 entity = self.format_date(entity, question).replace('$', '')
                 return entity
-            
+
             elif re.findall(r"[\d]{3,4}-[\d]{2}-[\d]{2}", entity):
                 entity = self.format_date(entity, question).replace('$', '')
                 return entity
-            
+
             elif entity in ["Yes", "No"]:
                 return entity
 
