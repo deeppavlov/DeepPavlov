@@ -52,8 +52,7 @@ class NerChunker(Component):
         self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
         self.lowercase = lowercase
 
-    def __call__(self, docs_batch: List[str],
-                 template_type_batch: List[str] = None) -> Tuple[List[List[str]], List[List[int]], List[List[Union[
+    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]], List[List[Union[
         List[Union[Tuple[int, int], Tuple[Union[int, Any], Union[int, Any]]]], List[
             Tuple[Union[int, Any], Union[int, Any]]], List[Tuple[int, int]]]]], List[List[Union[List[Any], List[str]]]],
                                                                  List[List[str]]]:
@@ -67,12 +66,8 @@ class NerChunker(Component):
             batch of lists of numbers of documents which correspond to chunks
         """
         text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list = [], [], [], []
-        template_type_batch_list = []
         text_batch, nums_batch, sentences_offsets_batch, sentences_batch = [], [], [], []
-        cur_template_type_batch = []
-        if template_type_batch is None:
-            template_type_batch = ["" for _ in docs_batch]
-        for n, (doc, template_type) in enumerate(zip(docs_batch, template_type_batch)):
+        for n, doc in enumerate(docs_batch):
             if self.lowercase:
                 doc = doc.lower()
             start = 0
@@ -105,7 +100,6 @@ class NerChunker(Component):
                             sentences_offsets_batch.append(sentences_offsets_list)
                             sentences_batch.append(sentences_list)
                             nums_batch.append(n)
-                            cur_template_type_batch.append(template_type)
 
                         if sentence_len < self.max_seq_len:
                             text = f"{sentence} "
@@ -137,7 +131,6 @@ class NerChunker(Component):
                                         sentences_offsets_batch.append(sentences_offsets_list)
                                         sentences_batch.append(sentences_list)
                                         nums_batch.append(n)
-                                        cur_template_type_batch.append(template_type)
 
                                     text = f"{chunk} "
                                     cur_len = chunk_len
@@ -151,13 +144,11 @@ class NerChunker(Component):
                 if text:
                     text_batch.append(text)
                     nums_batch.append(n)
-                    cur_template_type_batch.append(template_type)
                     sentences_offsets_batch.append(sentences_offsets_list)
                     sentences_batch.append(sentences_list)
             else:
                 text_batch.append("а")
                 nums_batch.append(n)
-                cur_template_type_batch.append(template_type)
                 sentences_offsets_batch.append([(0, len(doc))])
                 sentences_batch.append([doc])
 
@@ -165,13 +156,11 @@ class NerChunker(Component):
         for jj in range(num_batches):
             text_batch_list.append(text_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             nums_batch_list.append(nums_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
-            template_type_batch_list.append(cur_template_type_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             sentences_offsets_batch_list.append(
                 sentences_offsets_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
             sentences_batch_list.append(sentences_batch[jj * self.batch_size:(jj + 1) * self.batch_size])
 
-        return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list, \
-               template_type_batch_list
+        return text_batch_list, nums_batch_list, sentences_offsets_batch_list, sentences_batch_list
 
     def sanitize(self, text):
         text_len = len(text)
@@ -205,7 +194,8 @@ class NerChunkModel(Component):
         Args:
             ner: config for entity detection
             ner_parser: component deeppavlov.models.entity_extraction.entity_detection_parser
-            ner2: config of additional entity detection model
+            ner2: config of additional entity detection model (ensemble of ner and ner2 models gives better
+                entity detection quality than single ner model)
             ner_parser2: component deeppavlov.models.entity_extraction.entity_detection_parser
             **kwargs:
         """
@@ -217,8 +207,7 @@ class NerChunkModel(Component):
     def __call__(self, text_batch_list: List[List[str]],
                  nums_batch_list: List[List[int]],
                  sentences_offsets_batch_list: List[List[List[Tuple[int, int]]]],
-                 sentences_batch_list: List[List[List[str]]],
-                 template_type_batch_list: List[List[str]]
+                 sentences_batch_list: List[List[List[str]]]
                  ):
         """
         Args:
@@ -235,17 +224,17 @@ class NerChunkModel(Component):
         """
         entity_substr_batch_list, entity_offsets_batch_list, entity_positions_batch_list, tags_batch_list, \
         entity_probas_batch_list, text_len_batch_list, text_tokens_len_batch_list = [], [], [], [], [], [], []
-        for text_batch, sentences_offsets_batch, sentences_batch, template_type_batch in \
-                zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list, template_type_batch_list):
+        for text_batch, sentences_offsets_batch, sentences_batch in \
+                zip(text_batch_list, sentences_offsets_batch_list, sentences_batch_list):
             text_batch = [text.replace("\xad", " ") for text in text_batch]
 
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch, probas_batch = self.ner(text_batch)
             entity_substr_batch, entity_positions_batch, entity_probas_batch = \
-                self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch, template_type_batch)
+                self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch)
             if self.ner2:
                 ner_tokens_batch2, ner_tokens_offsets_batch2, ner_probas_batch2, probas_batch2 = self.ner2(text_batch)
                 entity_substr_batch2, entity_positions_batch2, entity_probas_batch2 = \
-                    self.ner_parser2(ner_tokens_batch2, ner_probas_batch2, probas_batch2, template_type_batch)
+                    self.ner_parser2(ner_tokens_batch2, ner_probas_batch2, probas_batch2)
                 entity_substr_batch, entity_positions_batch, entity_probas_batch = \
                     self.merge_annotations(entity_substr_batch, entity_positions_batch, entity_probas_batch,
                                            entity_substr_batch2, entity_positions_batch2, entity_probas_batch2)

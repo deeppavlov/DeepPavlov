@@ -8,7 +8,7 @@
         "max_seq_len" : 300,
         "vocab_file": "{TRANSFORMER}",
         "in": ["x"],
-        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"]
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
       },
       {
         "thres_proba": 0.05,
@@ -22,7 +22,7 @@
         "class_name": "ner_chunk_model",
         "ner": {"config_path": "{CONFIGS_PATH}/ner/ner_rus_bert_probas.json"},
         "ner_parser": "#edp",
-        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"],
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       }
     ],

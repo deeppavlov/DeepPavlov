@@ -68,20 +68,6 @@ def entity_type_split(entities_batch: List[List[str]], tags_batch: List[List[str
     return f_entities_batch, f_tags_batch, f_types_batch
 
 
-@register('rule_based_query_prediction')
-def rule_based_query_prediction(questions: List[str], template_types: List[str]) -> List[str]:
-    pred_template_types = []
-    for question, template_type in zip(questions, template_types):
-        if "how many" in question.lower() or any([question.lower().startswith(start) for start in
-                                                  ["count ", "give me a count", "give me the count",
-                                                   "give me the total number", "what is the total number"]]):
-            pred_template_type = f"{template_type}_count"
-        else:
-            pred_template_type = template_type
-        pred_template_types.append(pred_template_type)
-    return pred_template_types
-
-
 @register('entity_detection_parser')
 class EntityDetectionParser(Component):
     """This class parses probabilities of tokens to be a token from the entity substring."""
@@ -131,14 +117,13 @@ class EntityDetectionParser(Component):
             self.ignored_tags = []
 
     def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]],
-                 tokens_probas_batch: np.ndarray, template_type_batch: List[str]) -> \
+                 tokens_probas_batch: np.ndarray) -> \
             Tuple[List[dict], List[dict], List[dict]]:
         """
         Args:
             question_tokens_batch: tokenized questions
             tokens_info_batch: list of tags of question tokens
             tokens_probas_probas: list of probabilities of question tokens
-            template_type_batch: template types of questions
         Returns:
             Batch of dicts where keys are tags and values are substrings corresponding to tags
             Batch of substrings which correspond to entity types
@@ -147,15 +132,13 @@ class EntityDetectionParser(Component):
         entities_batch = []
         positions_batch = []
         probas_batch = []
-        for tokens, tags, probas, template_type in \
-                zip(question_tokens_batch, tokens_info_batch, tokens_probas_batch, template_type_batch):
+        for tokens, tags, probas in \
+                zip(question_tokens_batch, tokens_info_batch, tokens_probas_batch):
             if self.make_tags_from_probas:
                 tags, _ = self.tags_from_probas(tokens, probas)
             tags = self.correct_quotes(tokens, tags, probas)
-            if template_type:
-                tags = self.correct_template_tags(tags, probas, template_type)
             tags = self.correct_tags(tokens, tags)
-            entities, positions, entities_probas = self.entities_from_tags(tokens, tags, probas, template_type)
+            entities, positions, entities_probas = self.entities_from_tags(tokens, tags, probas)
             entities_batch.append(entities)
             positions_batch.append(positions)
             probas_batch.append(entities_probas)
@@ -207,25 +190,6 @@ class EntityDetectionParser(Component):
                 tags[i] = f"B-{tag}"
                 tags[i + 1] = f"I-{tag}"
                 tags[i + 2] = f"I-{tag}"
-        return tags
-
-    def correct_template_tags(self, tags: List[str], probas: List[List[float]], template_type: str) -> List[str]:
-        if any([template_type.startswith(pattern) for pattern in {"simple", "2_hop"}]):
-            for i in range(len(tags) - 1):
-                if tags[i] in {"B-E", "I-E"} and tags[i + 1] == "B-E":
-                    tags[i + 1] = "I-E"
-        elif template_type == "simple_boolean":
-            for i in range(len(tags) - 2):
-                if tags[i] in {"B-E", "I-E"} and tags[i + 1] == "B-E" \
-                        and any([tags[j] == "B-E" for j in range(i + 2, len(tags))]):
-                    tags[i + 1] = "I-E"
-        elif template_type == "double":
-            for i in range(len(tags)):
-                if probas[i][1] < 0.7 and probas[i][2] < 0.7:
-                    tags[i] = "O"
-            for i in range(len(tags) - 1):
-                if tags[i] == "O" and tags[i + 1] == "I-E":
-                    tags[i + 1] = "B-E"
         return tags
 
     def correct_quotes(self, tokens: List[str], tags: List[str], probas: np.array) -> List[str]:
@@ -280,8 +244,8 @@ class EntityDetectionParser(Component):
         self.ent_pos_dict[c_tag] = []
         self.ent_probas_dict[c_tag] = []
 
-    def entities_from_tags(self, tokens: List[str], tags: List[str], tag_probas: List[List[float]],
-                           template_type: str) -> Tuple[dict, dict, dict]:
+    def entities_from_tags(self, tokens: List[str], tags: List[str],
+                                 tag_probas: List[List[float]]) -> Tuple[dict, dict, dict]:
         """
         This method makes lists of substrings corresponding to entities and entity types
         and a list of indices of tokens which correspond to entities
@@ -289,7 +253,6 @@ class EntityDetectionParser(Component):
             tokens: list of tokens of the text
             tags: list of tags for tokens
             tag_probas: list of probabilities of tags
-            template_type: template type of question
         Returns:
             list of entity substrings (or a dict of tags (keys) and entity substrings (values))
             list of substrings for entity types
@@ -326,9 +289,6 @@ class EntityDetectionParser(Component):
 
         for tag in self.ents_pos_probas_dict:
             ents_pos_proba = self.ents_pos_probas_dict[tag]
-            if template_type == "2_hop" and len(ents_pos_proba) > 1:
-                ents_pos_proba = sorted(ents_pos_proba, key=lambda x: len(x[0]), reverse=True)
-                self.ents_pos_probas_dict[tag] = [ents_pos_proba[0]]
 
         entities_dict = {tag: [ent[0] for ent in ents] for tag, ents in self.ents_pos_probas_dict.items()}
         entities_positions_dict = {tag: [ent[1] for ent in ents] for tag, ents in self.ents_pos_probas_dict.items()}
