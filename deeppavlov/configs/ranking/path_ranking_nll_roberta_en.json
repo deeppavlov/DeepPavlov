@@ -37,7 +37,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/path_ranking_nll_roberta_lcquad2.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_roberta_lcquad2.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

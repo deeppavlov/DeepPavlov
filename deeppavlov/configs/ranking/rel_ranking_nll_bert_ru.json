@@ -39,7 +39,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/rel_ranking_nll_bert_ru.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_bert_ru.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

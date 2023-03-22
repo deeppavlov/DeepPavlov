@@ -176,15 +176,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/lcquad2.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/datasets/lcquad2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/lcquad"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/entity_type_detection_distilbert_lcquad2.0.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_type_detection_distilbert_lcquad2.0.tar.gz",
         "subdir": "{MODELS_PATH}/entity_type_detection_distilbert_lcquad2.0"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/queries_and_rels_lcquad2.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/queries_and_rels_lcquad2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {

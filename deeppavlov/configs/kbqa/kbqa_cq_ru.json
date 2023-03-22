@@ -215,11 +215,11 @@
         "subdir": "{DOWNLOADS_PATH}/rubq"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner_ontonotes_torch_distilbert_mult.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_torch_distilbert_mult.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/ner_ontonotes_torch_distilbert_mult"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/entity_detection_rubq.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_detection_rubq.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/entity_detection_rubq"
       },
       {

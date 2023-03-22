@@ -17,7 +17,7 @@
         "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
         "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_eng",
-        "entities_database_filename": "el_eng.db",
+        "entities_database_filename": "el_eng_v2.db",
         "entity_ranker": "#entity_descr_ranking",
         "rank_in_runtime": true,
         "num_entities_for_bert_ranking": 20,
@@ -45,16 +45,12 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_db_eng.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/el_db_eng_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/entity_linking/el_ranker_eng.tar.gz",
         "subdir": "{MODELS_PATH}/entity_linking_eng"
-      },
-      {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_lite.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }

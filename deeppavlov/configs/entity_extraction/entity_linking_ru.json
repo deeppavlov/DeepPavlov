@@ -17,7 +17,7 @@
         "in": ["entity_substr", "tags", "probas", "sentences", "entity_offsets", "sentences_offsets"],
         "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
         "load_path": "{DOWNLOADS_PATH}/entity_linking_rus",
-        "entities_database_filename": "el_db_rus.db",
+        "entities_database_filename": "el_rus_v2.db",
         "words_dict_filename": "{DOWNLOADS_PATH}/entity_linking_rus/words_dict.pickle",
         "ngrams_matrix_filename": "{DOWNLOADS_PATH}/entity_linking_rus/ngrams_matrix.npz",
         "entity_ranker": "#entity_descr_ranking",
@@ -25,7 +25,7 @@
         "num_entities_for_bert_ranking": 30,
         "use_gpu": false,
         "include_mention": false,
-        "num_entities_to_return": 7,
+        "num_entities_to_return": 3,
         "lemmatize": true,
         "use_descriptions": true,
         "use_connections": true,
@@ -54,7 +54,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/el_files_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/el_files_rus_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/entity_linking_rus"
       },
       {
