@@ -28,7 +28,6 @@
       {
         "class_name": "ner_chunker",
         "batch_size": 16,
-        "max_chunk_len" : 180,
         "max_seq_len" : 300,
         "vocab_file": "distilbert-base-multilingual-cased",
         "in": ["x_punct"],
