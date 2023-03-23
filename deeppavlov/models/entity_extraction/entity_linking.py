@@ -54,6 +54,7 @@ class EntityLinker(Component, Serializable):
             max_paragraph_len: int = 150,
             lang: str = "ru",
             use_descriptions: bool = True,
+            alias_coef: float = 1.1,
             use_tags: bool = False,
             lemmatize: bool = False,
             fuzzy_match: bool = False,
@@ -80,6 +81,8 @@ class EntityLinker(Component, Serializable):
             max_paragraph_len: maximal length of context paragraphs
             lang: russian or english
             use_description: whether to perform entity ranking by context and description
+            alias_coef: coefficient which is multiplied by the substring matching confidence if the substring is the
+                title of the entity
             use_tags: whether to filter candidate entities by tags
             lemmatize: whether to lemmatize tokens
             fuzzy_match: whether to match substrings from the text and entity labels by Levenshtein distance
@@ -109,6 +112,7 @@ class EntityLinker(Component, Serializable):
         elif self.lang == "@ru":
             self.stopwords = set(stopwords.words("russian"))
             self.nlp = spacy.load("ru_core_news_sm")
+        self.alias_coef = alias_coef
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
         self.sort_low_conf = sort_low_conf
@@ -502,7 +506,7 @@ class EntityLinker(Component, Serializable):
             substr_score = max(substr_score, new_substr_score)
 
         if entity_title.lower() == entity_label.lower() and substr_score == 1.0:
-            substr_score = substr_score * 1.1
+            substr_score = substr_score * self.alias_coef
         return substr_score
 
     def rank_by_description(
@@ -653,7 +657,7 @@ class EntityLinker(Component, Serializable):
 
             if self.num_entities_to_return == 1 and top_entities:
                 entity_ids_list.append(top_entities[0])
-                conf_list.append(top_conf[0])
+                conf_list.append([round(cnf, 2) for cnf in top_conf[0]])
             elif self.num_entities_to_return == "max":
                 if top_conf:
                     max_conf = top_conf[0][0]
@@ -663,7 +667,7 @@ class EntityLinker(Component, Serializable):
                         if (conf[0] >= max_conf * 0.9 and max_rank_conf <= 1.0) \
                                 or (max_rank_conf == 1.0 and conf[2] == 1.0):
                             entity_ids.append(entity_id)
-                            confs.append(conf)
+                            confs.append([round(cnf, 2) for cnf in conf])
                     entity_ids_list.append(entity_ids)
                     conf_list.append(confs)
                 else:
@@ -671,7 +675,7 @@ class EntityLinker(Component, Serializable):
                     conf_list.append([])
             else:
                 entity_ids_list.append(top_entities[: self.num_entities_to_return])
-                conf_list.append(top_conf[: self.num_entities_to_return])
+                conf_list.append([[round(cnf, 2) for cnf in conf] for conf in top_conf[: self.num_entities_to_return]])
             log.debug(f"{entity_substr} --- top entities {entity_ids_list[-1]} --- top_conf {conf_list[-1]}")
         return entity_ids_list, conf_list
 

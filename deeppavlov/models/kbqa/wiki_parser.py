@@ -204,8 +204,7 @@ class WikiParser:
                 filter_info: List[Tuple[str]] = None,
                 order_info: namedtuple = None,
                 answer_types: List[str] = None,
-                rel_types: List[str] = None) -> tuple[
-        list[list[str]] | list[Any], list[list[Any]] | list[Any], list[Any]]:
+                rel_types: List[str] = None):
         """
             Let us consider an example of the question "What is the deepest lake in Russia?"
             with the corresponding SPARQL query            
@@ -340,7 +339,7 @@ class WikiParser:
         return answers, found_rels, found_combs
 
     @staticmethod
-    def define_is_boolean(self, query_hdt_seq):
+    def define_is_boolean(query_hdt_seq):
         return len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]])
 
     def merge_combs(self, comb1, comb2):
@@ -353,8 +352,7 @@ class WikiParser:
                 new_comb[key] = comb2[key]
         return new_comb
 
-    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type) -> tuple[
-        list[dict] | list[Any], list[Any] | list[list[str]] | Any]:
+    def search(self, query: List[str], unknown_elem_positions: List[Tuple[int, str]], rel_type):
         query = list(map(lambda elem: "" if elem.startswith('?') else elem, query))
         subj, rel, obj = query
         if self.file_format == "hdt":

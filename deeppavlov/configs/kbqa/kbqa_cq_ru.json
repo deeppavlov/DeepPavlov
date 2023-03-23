@@ -31,7 +31,7 @@
         "max_seq_len" : 300,
         "vocab_file": "distilbert-base-multilingual-cased",
         "in": ["x_punct"],
-        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"]
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
       },
       {
         "thres_proba": 0.05,
@@ -75,7 +75,7 @@
           }
         },
         "ner_parser2": "#edp2",
-        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences", "chunk_template_types"],
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       },
       {
@@ -212,6 +212,10 @@
       {
         "url": "http://files.deeppavlov.ai/datasets/rubq2.0.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/rubq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/el_files_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/entity_linking_rus"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_torch_distilbert_mult.tar.gz",

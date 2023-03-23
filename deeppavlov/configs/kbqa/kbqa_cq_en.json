@@ -32,8 +32,6 @@
       {
         "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_en.json",
         "overwrite": {
-            "chainer.in": ["x", "template_type"],
-            "chainer.pipe.0.in": ["x", "template_type"],
             "chainer.pipe.1.make_tags_from_probas": true,
             "chainer.pipe.2.ner": {
               "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert.json",
@@ -63,15 +61,6 @@
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
       {
-        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_en.json",
-        "overwrite": {
-            "chainer.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.in": ["entity_substr", "entity_tags", "sentences"],
-            "chainer.pipe.1.entities_database_filename": "el_db_lcquad2.db"
-        },
-        "id": "entity_linker"
-      },
-      {
         "class_name": "entity_linker",
         "load_path": "{DOWNLOADS_PATH}/entity_linking_eng",
         "entities_database_filename": "el_db_lcquad2.db",
@@ -80,6 +69,7 @@
         "use_descriptions": false,
         "use_connections": false,
         "use_tags": true,
+        "alias_coef": 1.0,
         "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_full.hdt",
         "prefixes": {"entity": ["http://we"],
                      "rels": {"direct": "http://wpd",

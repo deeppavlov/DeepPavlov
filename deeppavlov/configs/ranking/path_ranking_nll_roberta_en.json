@@ -1,7 +1,6 @@
 {
   "chainer": {
     "in": ["question", "rels"],
-    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "path_ranking_preprocessor",
@@ -15,7 +14,6 @@
       {
         "class_name": "torch_transformers_nll_ranker",
         "in": ["bert_features"],
-        "in_y": ["y"],
         "out": ["model_output"],
         "return_probas": false,
         "save_path": "{MODEL_PATH}/model",

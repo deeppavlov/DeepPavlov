@@ -689,7 +689,7 @@ class TreeToSparql(Component):
         return ranking_tokens
 
     @staticmethod
-    def choose_grounded_entity(self, grounded_entities: List[str], entities_dict: Dict[str, str]):
+    def choose_grounded_entity(grounded_entities: List[str], entities_dict: Dict[str, str]):
         tags = [entities_dict.get(entity.lower(), "") for entity in grounded_entities]
         if len(grounded_entities) > 1:
             if not all([tags[i] == tags[0] for i in range(1, len(tags))]):
