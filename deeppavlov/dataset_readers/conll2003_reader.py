@@ -20,7 +20,8 @@ class Conll2003DatasetReader(DatasetReader):
              provide_doc_ids: bool = False,
              iob: bool = False,
              iobes: bool = False,
-             docstart_token: str = None):
+             docstart_token: str = None,
+            *args, **kwargs):
         self.provide_pos = provide_pos
         self.provide_chunk = provide_chunk
         self.provide_doc_ids = provide_doc_ids

@@ -52,12 +52,12 @@ class SquadDatasetReader(DatasetReader):
     url_multi_squad = 'http://files.deeppavlov.ai/datasets/multiparagraph_squad.tar.gz'
     url_squad2 = 'http://files.deeppavlov.ai/datasets/squad-v2.0.tar.gz'
 
-    def read(self, dir_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs) \
+    def read(self, data_path: str, dataset: Optional[str] = 'SQuAD', url: Optional[str] = None, *args, **kwargs) \
             -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
-            dir_path: path to save data
+            data_path: path to save data
             dataset: default dataset names: ``'SQuAD'``, ``'SberSQuAD'`` or ``'MultiSQuAD'``
             url: link to archive with dataset, use url argument if non-default dataset is used
 
@@ -80,19 +80,19 @@ class SquadDatasetReader(DatasetReader):
         else:
             raise RuntimeError(f'Dataset {dataset} is unknown')
 
-        dir_path = Path(dir_path)
+        data_path = Path(data_path)
         if dataset == "SQuAD2.0":
             required_files = [f'{dt}-v2.0.json' for dt in ['train', 'dev']]
         else:
             required_files = [f'{dt}-v1.1.json' for dt in ['train', 'dev']]
-        dir_path.mkdir(parents=True, exist_ok=True)
+        data_path.mkdir(parents=True, exist_ok=True)
 
-        if not all((dir_path / f).exists() for f in required_files):
-            download_decompress(self.url, dir_path)
+        if not all((data_path / f).exists() for f in required_files):
+            download_decompress(self.url, data_path)
 
         dataset = {}
         for f in required_files:
-            with dir_path.joinpath(f).open('r', encoding='utf8') as fp:
+            with data_path.joinpath(f).open('r', encoding='utf8') as fp:
                 data = json.load(fp)
             if f in {'dev-v1.1.json', 'dev-v2.0.json'}:
                 dataset['valid'] = data
@@ -118,12 +118,12 @@ class MultiSquadDatasetReader(DatasetReader):
     url_multi_squad_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_retr_enwiki20161221.tar.gz'
     url_multi_squad_ru_retr = 'http://files.deeppavlov.ai/datasets/multi_squad_ru_retr.tar.gz'
 
-    def read(self, dir_path: str, dataset: Optional[str] = 'MultiSQuADRetr', url: Optional[str] = None, *args,
+    def read(self, data_path: str, dataset: Optional[str] = 'MultiSQuADRetr', url: Optional[str] = None, *args,
              **kwargs) -> Dict[str, Dict[str, Any]]:
         """
 
         Args:
-            dir_path: path to save data
+            data_path: path to save data
             dataset: default dataset names: ``'MultiSQuADRetr'``, ``'MultiSQuADRuRetr'``
             url: link to archive with dataset, use url argument if non-default dataset is used
 
@@ -142,19 +142,19 @@ class MultiSquadDatasetReader(DatasetReader):
         else:
             raise RuntimeError(f'Dataset {dataset} is unknown')
 
-        dir_path = Path(dir_path)
+        data_path = Path(data_path)
         required_files = [f'{dt}.jsonl' for dt in ['train', 'dev']]
-        if not dir_path.exists():
-            dir_path.mkdir(parents=True)
+        if not data_path.exists():
+            data_path.mkdir(parents=True)
 
-        if not all((dir_path / f).exists() for f in required_files):
-            download_decompress(self.url, dir_path)
+        if not all((data_path / f).exists() for f in required_files):
+            download_decompress(self.url, data_path)
 
         dataset = {}
         for f in required_files:
             if 'dev' in f:
-                dataset['valid'] = dir_path.joinpath(f)
+                dataset['valid'] = data_path.joinpath(f)
             else:
-                dataset['train'] = dir_path.joinpath(f)
+                dataset['train'] = data_path.joinpath(f)
 
         return dataset

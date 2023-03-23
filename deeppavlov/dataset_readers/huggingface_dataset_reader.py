@@ -32,7 +32,6 @@ class HuggingFaceDatasetReader(DatasetReader):
 
     @overrides
     def read(self,
-             data_path: str,
              path: str,
              name: Optional[str] = None,
              train: Optional[str] = None,  # for lidirus with no train
@@ -42,7 +41,6 @@ class HuggingFaceDatasetReader(DatasetReader):
         """Wraps datasets.load_dataset method
 
         Args:
-            data_path: DeepPavlov's data_path argument, is not used, but passed by trainer
             path: datasets.load_dataset path argument (e.g., `glue`)
             name: datasets.load_dataset name argument (e.g., `mrpc`)
             train: split name to use as training data.
