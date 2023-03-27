@@ -20,7 +20,6 @@ import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
-
 @register_metric('accuracy')
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """
@@ -61,8 +60,11 @@ def multitask_accuracy(*args) -> float:
     """
     n = len(args)
     y_true_by_tasks, y_predicted_by_tasks = args[:n // 2], args[n // 2:]
-    y_true, y_predicted = list(zip(*y_true_by_tasks)), list(zip(*y_predicted_by_tasks))
-    return accuracy(y_true, y_predicted)
+    answers = []
+    for true, pred in zip(y_true_by_tasks, y_predicted_by_tasks):
+        answers.append(accuracy(true, pred))
+    final_answer = sum(answers)/len(answers)
+    return final_answer
 
 
 @register_metric('multitask_sequence_accuracy')
@@ -185,3 +187,16 @@ def kbqa_accuracy(y_true, y_predicted):
             total_correct += 1
 
     return total_correct / len(y_true) if len(y_true) else 0
+
+
+@register_metric('accuracy_oos')
+def accuracy_oos(y_true, y_pred, exclude_oos: bool = False) -> float:
+    if exclude_oos:
+        y_true = np.array(y_true)
+        y_pred = np.array(y_pred)
+        
+        ind_mask = np.where(y_true == 'oos')
+
+        y_true = np.delete(y_true, ind_mask, 0)
+        y_pred = np.delete(y_pred, ind_mask, 0)
+    return accuracy(y_true, y_pred)

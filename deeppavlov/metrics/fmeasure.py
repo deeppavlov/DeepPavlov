@@ -21,6 +21,7 @@ import numpy as np
 from sklearn.metrics import f1_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
+from sklearn.metrics import precision_recall_fscore_support
 
 log = getLogger(__name__)
 
@@ -194,7 +195,11 @@ def round_f1(y_true, y_predicted):
     try:
         predictions = [np.round(x) for x in y_predicted]
     except TypeError:
-        predictions = y_predicted
+        if set(y_true) | set(y_predicted) in ({"True"}, {"False"}, {"False", "True"}):
+            y_true = [y == "True" for y in y_true]
+            predictions = [y == "True" for y in y_predicted]
+        else:
+            raise RuntimeError(f"Unexpectible type for {y_true} and {predictions}")
 
     return f1_score(y_true, predictions)
 
@@ -413,3 +418,10 @@ def roc_auc__roc_auc__ner_f1(true_onehot1, pred_probas1, true_onehot2, pred_prob
     roc_auc2 = roc_auc_score(true_onehot2, pred_probas2)
     ner_f1_3 = ner_f1(ner_true3, ner_pred3) / 100
     return (roc_auc1 + roc_auc2 + ner_f1_3) / 3
+
+@register_metric('oos_scores')
+def oos_scores(y_true, y_pred):
+    y_true_binary = (np.array(y_true) == "oos")
+    y_pred_binary = (np.array(y_pred) == "oos")
+    scores = precision_recall_fscore_support(y_true_binary, y_pred_binary, average='binary')
+    return dict(zip(["precision", "recall", "fbeta_score"], scores[:3]))
