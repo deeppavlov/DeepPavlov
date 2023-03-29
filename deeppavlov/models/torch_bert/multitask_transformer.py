@@ -484,28 +484,24 @@ class MultiTaskTransformer(TorchModel):
 
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
+
     def _make_qa_input(self, task_features, labels=None):
        
         _input={}
         element_list = ["input_ids", "attention_mask", "token_type_ids",
                        "start_positions", "end_positions"]
-        if labels is None:
-            for value in element_list:
-                if value in task_features:
-                    if value in ['start_positions', 'end_positions']:
-                        y = np.array([x[0] for x in task_features[value]])
-                        _input[value] = torch.from_numpy(y).to(self.device)
-                    else:
-                        x=[k[0] for k in task_features[value]]
-                        _input[value] = torch.cat(x, dim=0).to(self.device_)
-            return _input
-        
-        y_st = [x[0] for x in task_features['start_positions']]
-        y_end = [x[0] for x in task_features['end_positions']]
-        b_y_st = torch.from_numpy(np.array(y_st)).to(self.device)
-        b_y_end = torch.from_numpy(np.array(y_end)).to(self.device)
-        
-        
+        if labels is not None:
+        element_list.append('labels')
+        for value in element_list:
+            if value in task_features:
+                if value in ['start_positions', 'end_positions']:
+                    y = np.array([x[0] for x in task_features[value]])
+                    _input[value] = torch.from_numpy(y).to(self.device)
+                else:
+                    x=[k[0] for k in task_features[value]]
+                    _input[value] = torch.cat(x, dim=0).to(self.device_)
+        return _input
+
     def _make_input(self, task_features, task_id, labels=None):
         batch_input_size = None
         if len(task_features) == 1 and isinstance(task_features, list):
