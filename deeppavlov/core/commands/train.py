@@ -18,12 +18,13 @@ from typing import Dict, Union, Optional, Iterable
 
 from deeppavlov.core.commands.utils import expand_path, import_packages, parse_config
 from deeppavlov.core.common.errors import ConfigError
-from deeppavlov.core.common.params import from_params
+from deeppavlov.core.common.params import resolve
 from deeppavlov.core.common.registry import get_model
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
+from deeppavlov.utils.pip_wrapper import install_from_config
 
 log = getLogger(__name__)
 
@@ -49,20 +50,19 @@ def read_data_by_config(config: dict):
         raise ConfigError("No dataset reader is provided in the JSON config.")
 
     reader = get_model(reader_config.pop('class_name'))()
-    data_path = reader_config.pop('data_path', '')
+    data_path = reader_config.get('data_path')
     if isinstance(data_path, list):
-        data_path = [expand_path(x) for x in data_path]
-    else:
-        data_path = expand_path(data_path)
-
-    return reader.read(data_path, **reader_config)
+        reader_config['data_path'] = [expand_path(path) for path in data_path]
+    elif data_path is not None:
+        reader_config['data_path'] = expand_path(data_path)
+    return reader.read(**reader_config)
 
 
 def get_iterator_from_config(config: dict, data: dict):
     """Create iterator (from config) for specified data."""
-    iterator_config = config['dataset_iterator']
-    iterator: Union[DataLearningIterator, DataFittingIterator] = from_params(iterator_config,
-                                                                             data=data)
+    iterator_config = {k: resolve(v) for k, v in config['dataset_iterator'].items()}
+    iterator: Union[DataLearningIterator, DataFittingIterator] = get_model(iterator_config.pop('class_name'))(
+        **iterator_config, data=data)
     return iterator
 
 
@@ -70,12 +70,15 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
                                      iterator: Union[DataLearningIterator, DataFittingIterator] = None, *,
                                      to_train: bool = True,
                                      evaluation_targets: Optional[Iterable[str]] = None,
+                                     install: bool = False,
                                      download: bool = False,
                                      start_epoch_num: Optional[int] = None,
                                      recursive: bool = False) -> Dict[str, Dict[str, float]]:
     """Make training and evaluation of the model described in corresponding configuration file."""
     config = parse_config(config)
 
+    if install:
+        install_from_config(config)
     if download:
         deep_download(config)
 

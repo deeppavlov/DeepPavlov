@@ -27,7 +27,7 @@ log = getLogger(__name__)
 _refs = {}
 
 
-def _resolve(val):
+def resolve(val):
     if isinstance(val, str) and val.startswith('#'):
         component_id, *attributes = val[1:].split('.')
         try:
@@ -44,7 +44,7 @@ def _resolve(val):
 
 def _init_param(param, mode):
     if isinstance(param, str):
-        param = _resolve(param)
+        param = resolve(param)
     elif isinstance(param, (list, tuple)):
         param = [_init_param(p, mode) for p in param]
     elif isinstance(param, dict):
@@ -55,18 +55,15 @@ def _init_param(param, mode):
     return param
 
 
-def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwargs) -> Union[Component, FunctionType]:
+def from_params(params: Dict, mode: str = 'infer', **kwargs) -> Union[Component, FunctionType]:
     """Builds and returns the Component from corresponding dictionary of parameters."""
     # what is passed in json:
-    config_params = {k: _resolve(v) for k, v in params.items()}
+    config_params = {k: resolve(v) for k, v in params.items()}
 
     # get component by reference (if any)
     if 'ref' in config_params:
         try:
-            component = _refs[config_params['ref']]
-            if serialized is not None:
-                component.deserialize(serialized)
-            return component
+            return _refs[config_params['ref']]
         except KeyError:
             e = ConfigError('Component with id "{id}" was referenced but not initialized'
                             .format(id=config_params['ref']))
@@ -78,7 +75,7 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         refs = _refs.copy()
         _refs.clear()
         config = parse_config(expand_path(config_params['config_path']), config_params.get('overwrite'))
-        model = build_model(config, serialized=serialized)
+        model = build_model(config)
         _refs.clear()
         _refs.update(refs)
         try:
@@ -97,7 +94,6 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
     if inspect.isclass(obj):
         # find the submodels params recursively
         config_params = {k: _init_param(v, mode) for k, v in config_params.items()}
-
         try:
             spec = inspect.getfullargspec(obj)
             if 'mode' in spec.args + spec.kwonlyargs or spec.varkw is not None:
@@ -111,9 +107,6 @@ def from_params(params: Dict, mode: str = 'infer', serialized: Any = None, **kwa
         except Exception:
             log.exception("Exception in {}".format(obj))
             raise
-
-        if serialized is not None:
-            component.deserialize(serialized)
     else:
         component = obj
 

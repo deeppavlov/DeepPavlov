@@ -130,5 +130,5 @@ class CosineSimilarityClassifier(Estimator, Serializable):
 
     def load(self) -> None:
         """Load classifier parameters"""
-        logger.info("Loading faq_model from {}".format(self.load_path))
+        logger.debug("Loading faq_model from {}".format(self.load_path))
         self.x_train_features, self.y_train = load_pickle(self.load_path)

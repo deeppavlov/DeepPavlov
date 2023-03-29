@@ -48,8 +48,7 @@ class StreamSpacyTokenizer(Component):
 
     Args:
         disable: spacy pipeline elements to disable, serves a purpose of performing; if nothing
-        stopwords: a list of stopwords that should be ignored during tokenizing/lemmatizing
-         and ngrams creation
+        filter_stopwords: whether to ignore stopwords during tokenizing/lemmatizing and ngrams creation
         batch_size: a batch size for spaCy buffering
         ngram_range: size of ngrams to create; only unigrams are returned by default
         lemmas: whether to perform lemmatizing or not
@@ -86,8 +85,7 @@ class StreamSpacyTokenizer(Component):
         if ngram_range is None:
             ngram_range = [1, 1]
         self.model = _try_load_spacy_model(spacy_model, disable=disable)
-        self.filter_stopwords = filter_stopwords
-        self.stopwords = spacy.lang.en.stop_words.STOP_WORDS if self.filter_stopwords else []
+        self.stopwords = self.model.Defaults.stop_words if filter_stopwords else set()
         self.batch_size = batch_size
         self.ngram_range = tuple(ngram_range)  # cast JSON array to tuple
         self.lemmas = lemmas

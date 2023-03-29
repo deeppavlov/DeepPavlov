@@ -164,7 +164,7 @@ class QueryGeneratorBase(Component, Serializable):
         try:
             el_output = self.entity_linker([entities], [tags], [[question]], [None], [None])
         except json.decoder.JSONDecodeError:
-            log.info("not received output from entity linking")
+            log.warning("not received output from entity linking")
         if el_output:
             if self.use_el_api_requester:
                 el_output = el_output[0]
@@ -262,7 +262,7 @@ class QueryGeneratorBase(Component, Serializable):
             try:
                 ex_rels = self.wiki_parser(parser_info_list, queries_list)
             except json.decoder.JSONDecodeError:
-                log.info("find_top_rels, not received output from wiki parser")
+                log.warning("find_top_rels, not received output from wiki parser")
             if self.use_wp_api_requester and ex_rels:
                 ex_rels = [rel[0] for rel in ex_rels]
             ex_rels = list(set(ex_rels))

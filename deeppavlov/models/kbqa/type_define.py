@@ -15,7 +15,6 @@
 import pickle
 from typing import List
 
-import pymorphy2
 import spacy
 from nltk.corpus import stopwords
 
@@ -43,7 +42,6 @@ class AnswerTypesExtractor:
         self.types_filename = str(expand_path(types_filename))
         self.types_sets_filename = str(expand_path(types_sets_filename))
         self.num_types_to_return = num_types_to_return
-        self.morph = pymorphy2.MorphAnalyzer()
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
             self.nlp = spacy.load("en_core_web_sm")
@@ -85,14 +83,15 @@ class AnswerTypesExtractor:
                             break
                         elif token.head.text == type_noun and token.dep_ == "prep":
                             if len(list(token.children)) == 1 \
-                                    and not any([list(token.children)[0] in entity_substr.lower()
+                                    and not any([[tok.text for tok in token.children][0] in entity_substr.lower()
                                                  for entity_substr in entity_substr_list]):
-                                types_substr += [token.text, list(token.children)[0]]
+                                types_substr += [token.text, [tok.text for tok in token.children][0]]
                 elif any([word in question for word in self.pronouns]):
                     for token in doc:
                         if token.dep_ == "nsubj" and not any([token.text in entity_substr.lower()
                                                               for entity_substr in entity_substr_list]):
                             types_substr.append(token.text)
+
                 types_substr = [(token, token_pos_dict[token]) for token in types_substr]
                 types_substr = sorted(types_substr, key=lambda x: x[1])
                 types_substr = " ".join([elem[0] for elem in types_substr])
@@ -101,7 +100,7 @@ class AnswerTypesExtractor:
             types_substr_tokens = types_substr.split()
             types_substr_tokens = [tok for tok in types_substr_tokens if tok not in self.stopwords]
             if self.lang == "@ru":
-                types_substr_tokens = [self.morph.parse(tok)[0].normal_form for tok in types_substr_tokens]
+                types_substr_tokens = [self.nlp(tok)[0].lemma_ for tok in types_substr_tokens]
             types_substr_tokens = set(types_substr_tokens)
             types_scores = []
             for entity in self.types_dict:

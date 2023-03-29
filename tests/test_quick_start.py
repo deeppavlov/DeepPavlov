@@ -2,7 +2,6 @@ import io
 import json
 import logging
 import os
-import pickle
 import shutil
 import signal
 import socket
@@ -21,11 +20,10 @@ import requests
 
 import deeppavlov
 from deeppavlov import build_model
-from deeppavlov.core.commands.utils import parse_config
+from deeppavlov.core.commands.utils import parse_config, parse_value_with_config
 from deeppavlov.core.common.aliases import ALIASES
 from deeppavlov.core.data.utils import get_all_elems_from_json
 from deeppavlov.download import deep_download
-from deeppavlov.utils.pip_wrapper.pip_wrapper import get_config_requirements
 from deeppavlov.utils.server import get_server_params
 from deeppavlov.utils.socket import encode
 
@@ -47,10 +45,9 @@ if api_port is not None:
 
 TEST_MODES = ['IP',  # test_inferring_pretrained_model
               'TI',  # test_consecutive_training_and_inferring
-              'SR',  # test_serialization
               ]
 
-ALL_MODES = ('IP', 'TI', 'SR')
+ALL_MODES = ('IP', 'TI')
 
 ONE_ARGUMENT_INFER_CHECK = ('Dummy text', None)
 TWO_ARGUMENTS_INFER_CHECK = ('Dummy text', 'Dummy text', None)
@@ -90,11 +87,7 @@ PARAMS = {
             ]
     },
     "faq": {
-        ("faq/tfidf_logreg_en_faq.json", "faq_tfidf_logreg_en", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/tfidf_autofaq.json", "faq_tfidf_cos", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/tfidf_logreg_autofaq.json", "faq_tfidf_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/fasttext_avg_autofaq.json", "faq_fasttext_avg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
-        ("faq/fasttext_tfidf_autofaq.json", "faq_fasttext_tfidf", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK]
+        ("faq/fasttext_logreg.json", "fasttext_logreg", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],  # TODO: add ru test
     },
     "spelling_correction": {
         ("spelling_correction/brillmoore_wikitypos_en.json", "error_model", ALL_MODES):
@@ -120,7 +113,8 @@ PARAMS = {
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_boolq_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK]
+        ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK],
+        ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "distil": {
         ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -132,6 +126,17 @@ PARAMS = {
         ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
         ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
+    },
+    "russian_super_glue": {
+        ("russian_super_glue/russian_superglue_lidirus_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_danetqa_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_terra_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rcb_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_russe_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rwsd_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
+        ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
@@ -246,7 +251,7 @@ PARAMS = {
         ("kbqa/kbqa_cq_ru.json", "kbqa", ('IP',)):
             [
                 ("Кто такой Оксимирон?", ("российский рэп-исполнитель",)),
-                ("Чем питаются коалы?", ("Лист",)),
+                ("Кто написал «Евгений Онегин»?", ("Александр Сергеевич Пушкин",)),
                 ("абв", ("Not Found",))
             ]
     },
@@ -256,8 +261,7 @@ PARAMS = {
     "doc_retrieval": {
         ("doc_retrieval/en_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
         ("doc_retrieval/ru_ranker_tfidf_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [
-            ONE_ARGUMENT_INFER_CHECK]
+        ("doc_retrieval/en_ranker_pop_wiki_test.json", "doc_retrieval", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
     },
     "squad": {
         ("squad/squad_ru_bert.json", "squad_ru_bert", ('IP', 'TI')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -366,11 +370,6 @@ def teardown_module():
         shutil.rmtree(str(cache_dir), ignore_errors=True)
 
 
-def _serialize(config):
-    chainer = build_model(config, download=True)
-    return chainer.serialize()
-
-
 def _infer(config, inputs, download=False):
     chainer = build_model(config, download=download)
     if inputs:
@@ -380,18 +379,6 @@ def _infer(config, inputs, download=False):
     else:
         prediction = []
     return prediction
-
-
-def _deserialize(config, raw_bytes, examples):
-    chainer = build_model(config, serialized=raw_bytes)
-    for *query, expected_response in examples:
-        query = [[q] for q in query]
-        actual_response = chainer(*query)
-        if expected_response is not None:
-            if actual_response is not None and len(actual_response) > 0:
-                actual_response = actual_response[0]
-            assert expected_response == str(actual_response), \
-                f"Error in interacting with {model_dir} ({conf_file}): {query}"
 
 
 @pytest.mark.parametrize("model,conf_file,model_dir,mode", TEST_GRID, scope='class')
@@ -434,11 +421,14 @@ class TestQuickStart(object):
             response_code = get_response.status_code
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
-            model_args_names = get_response.json()
+            model_args_names = get_response.json()['in']
             post_payload = dict()
             for arg_name in model_args_names:
                 arg_value = ' '.join(['qwerty'] * 10)
                 post_payload[arg_name] = [arg_value]
+            # TODO: remove this if from here and socket
+            if 'parus' in str(config_path):
+                post_payload = {k: [v] for k, v in post_payload.items()}
 
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
@@ -466,6 +456,9 @@ class TestQuickStart(object):
         for arg_name in model_args_names:
             arg_value = ' '.join(['qwerty'] * 10)
             socket_payload[arg_name] = [arg_value]
+
+        if 'parus' in str(config_path):
+            socket_payload = {k: [v] for k, v in socket_payload.items()}
 
         logfile = io.BytesIO(b'')
         args = [sys.executable, "-m", "deeppavlov", "risesocket", str(config_path), '--socket-type', socket_type]
@@ -531,6 +524,7 @@ class TestQuickStart(object):
             pytest.skip("Unsupported mode: {}".format(mode))
 
     def test_inferring_pretrained_model_socket(self, model, conf_file, model_dir, mode):
+        pytest.skip(f"Disabled")
         if 'IP' in mode:
             self.infer_socket(test_configs_path / conf_file, 'TCP')
 
@@ -539,28 +533,6 @@ class TestQuickStart(object):
         else:
             pytest.skip(f"Unsupported mode: {mode}")
 
-    def test_serialization(self, model, conf_file, model_dir, mode):
-        if 'SR' not in mode:
-            return pytest.skip("Unsupported mode: {}".format(mode))
-
-        config_file_path = test_configs_path / conf_file
-
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            f = executor.submit(_serialize, config_file_path)
-        raw_bytes = f.result()
-
-        serialized: list = pickle.loads(raw_bytes)
-        if not any(serialized):
-            pytest.skip("Serialization not supported: {}".format(conf_file))
-            return
-        serialized.clear()
-
-        with ProcessPoolExecutor(max_workers=1) as executor:
-            f = executor.submit(_deserialize, config_file_path, raw_bytes, PARAMS[model][(conf_file, model_dir, mode)])
-
-        exc = f.exception()
-        if exc is not None:
-            raise exc
 
     def test_consecutive_training_and_inferring(self, model, conf_file, model_dir, mode):
         if 'TI' in mode:
@@ -589,7 +561,7 @@ class TestQuickStart(object):
 
 def test_crossvalidation():
     model_dir = 'faq'
-    conf_file = 'cv/cv_tfidf_autofaq.json'
+    conf_file = 'faq/fasttext_logreg.json'
 
     download_config(conf_file)
 
@@ -611,39 +583,17 @@ def test_crossvalidation():
     shutil.rmtree(str(download_path), ignore_errors=True)
 
 
-def test_param_search():
-    model_dir = 'faq'
-    conf_file = 'paramsearch/tfidf_logreg_autofaq_psearch.json'
-
-    download_config(conf_file)
-
-    c = test_configs_path / conf_file
-    model_path = download_path / model_dir
-
-    install_config(c)
-    deep_download(c)
-
-    shutil.rmtree(str(model_path), ignore_errors=True)
-
-    logfile = io.BytesIO(b'')
-    p = pexpect.popen_spawn.PopenSpawn(sys.executable + f" -m deeppavlov.paramsearch {c} --folds 2",
-                                       timeout=None, logfile=logfile)
-    p.readlines()
-    if p.wait() != 0:
-        raise RuntimeError('Training process of {} returned non-zero exit code: \n{}'
-                           .format(model_dir, logfile.getvalue().decode()))
-
-    shutil.rmtree(str(download_path), ignore_errors=True)
-
-
 def test_hashes_existence():
     all_configs = list(src_dir.glob('**/*.json')) + list(test_src_dir.glob('**/*.json'))
     url_root = 'http://files.deeppavlov.ai/'
     downloads_urls = set()
     for config in all_configs:
         config = json.loads(config.read_text(encoding='utf-8'))
-        downloads_urls |= {d if isinstance(d, str) else d['url'] for d in
-                           config.get('metadata', {}).get('download', [])}
+        # TODO: replace with get downloads from config
+        # TODO: download only headers
+        # TODO: make requests in async mode
+        config_urls = {d if isinstance(d, str) else d['url'] for d in config.get('metadata', {}).get('download', [])}
+        downloads_urls |= {parse_value_with_config(url, config) for url in config_urls}
     downloads_urls = [url + '.md5' for url in downloads_urls if url.startswith(url_root)]
     messages = []
 

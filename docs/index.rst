@@ -9,7 +9,8 @@ Welcome to DeepPavlov's documentation!
    QuickStart <intro/quick_start>
    General concepts <intro/overview>
    Configuration file <intro/configuration>
-   Models/Skills overview <features/overview>
+   Python pipelines <intro/python.ipynb>
+   Models overview <features/overview>
 
 
 .. toctree::
@@ -25,28 +26,22 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
    :caption: Models
-   
-   BERT-based models <features/models/bert>
-   Context Question Answering <features/models/squad>
-   Classification <features/models/classifiers>
+
+   Multitask BERT <features/models/multitask_bert>
+   Context Question Answering <features/models/SQuAD.ipynb>
+   Classification <features/models/classification.ipynb>
    Few-shot Classification <features/models/few_shot_classification>
+   Named Entity Recognition <features/models/NER.ipynb>
    Entity Extraction <features/models/entity_extraction>
-   Named Entity Recognition <features/models/ner>
+   BERT-based models <features/models/bert>
    Neural Ranking <features/models/neural_ranking>
    Spelling Correction <features/models/spelling_correction>
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
    Relation Extraction <features/models/re>
-
-
-.. toctree::
-   :glob:
-   :maxdepth: 1
-   :caption: Skills
-   
-   Open-Domain Question Answering <features/skills/odqa>
-   Frequently Asked Questions Answering <features/skills/faq>
+   SuperGLUE Submission <features/models/superglue>
+   Open-Domain Question Answering <features/models/odqa>
 
 
 .. toctree::

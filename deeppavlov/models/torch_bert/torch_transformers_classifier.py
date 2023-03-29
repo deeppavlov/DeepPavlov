@@ -204,7 +204,7 @@ class TorchTransformersClassifierModel(TorchModel):
             self.load_path = fname
 
         if self.pretrained_bert:
-            log.info(f"From pretrained {self.pretrained_bert}.")
+            log.debug(f"From pretrained {self.pretrained_bert}.")
             config = AutoConfig.from_pretrained(self.pretrained_bert,
                                                 classifier_dropout=self.binary_head_dropout,
                                                 output_attentions=False,

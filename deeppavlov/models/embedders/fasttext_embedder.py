@@ -50,7 +50,7 @@ class FasttextEmbedder(Embedder):
         """
         Load fastText binary model from self.load_path
         """
-        log.info(f"[loading fastText embeddings from `{self.load_path}`]")
+        log.debug(f"[loading fastText embeddings from `{self.load_path}`]")
         self.model = fasttext.load_model(str(self.load_path))
         self.dim = self.model.get_dimension()
 

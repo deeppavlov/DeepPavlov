@@ -14,7 +14,3 @@ deeppavlov.models.tokenizers
 .. autoclass:: deeppavlov.models.tokenizers.spacy_tokenizer.StreamSpacyTokenizer
 
     .. automethod:: __call__
-
-.. autoclass:: deeppavlov.models.tokenizers.ru_tokenizer.RussianTokenizer
-
-    .. automethod:: __call__

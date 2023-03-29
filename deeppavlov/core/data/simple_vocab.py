@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import Counter, defaultdict, Iterable
+from collections import Counter, defaultdict
 from itertools import chain
 from logging import getLogger
-from typing import Optional, Tuple, List
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
@@ -89,7 +89,10 @@ class SimpleVocabulary(Estimator):
 
     def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
-            looked_up_batch = [self(sample, is_top=False) for sample in batch]
+            if all([k is None for k in batch]):
+                return batch
+            else:
+                looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):
@@ -105,14 +108,11 @@ class SimpleVocabulary(Estimator):
                 cnt = self.freqs[token]
                 f.write('{}\t{:d}\n'.format(token, cnt))
 
-    def serialize(self) -> List[Tuple[str, int]]:
-        return [(token, self.freqs[token]) for token in self._i2t]
-
     def load(self):
         self.reset()
         if self.load_path:
             if self.load_path.is_file():
-                log.info("[loading vocabulary from {}]".format(self.load_path))
+                log.debug("[loading vocabulary from {}]".format(self.load_path))
                 tokens, counts = [], []
                 for ln in self.load_path.open('r', encoding='utf8'):
                     token, cnt = self.load_line(ln)
@@ -124,12 +124,6 @@ class SimpleVocabulary(Estimator):
                     self.__class__.__name__))
         else:
             raise ConfigError("`load_path` for {} is not provided!".format(self))
-
-    def deserialize(self, data: List[Tuple[str, int]]) -> None:
-        self.reset()
-        if data:
-            tokens, counts = zip(*data)
-            self._add_tokens_with_freqs(tokens, counts)
 
     def load_line(self, ln):
         if self.freq_drop_load:

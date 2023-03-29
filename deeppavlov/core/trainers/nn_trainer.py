@@ -20,12 +20,15 @@ from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Iterable
 
+from tqdm import tqdm
+
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.common.log_events import get_tb_writer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_learning_iterator import DataLearningIterator
 from deeppavlov.core.trainers.fit_trainer import FitTrainer
 from deeppavlov.core.trainers.utils import parse_metrics, NumpyArrayEncoder
-from deeppavlov.core.common.log_events import get_tb_writer
+
 log = getLogger(__name__)
 report_log = getLogger('train_report')
 
@@ -273,7 +276,7 @@ class NNTrainer(FitTrainer):
         while True:
             impatient = False
             self._send_event(event_name='before_train')
-            for x, y_true in iterator.gen_batches(self.batch_size, data_type='train'):
+            for x, y_true in tqdm(iterator.gen_batches(self.batch_size, data_type='train')):
                 self.last_result = self._chainer.train_on_batch(x, y_true)
                 if self.last_result is None:
                     self.last_result = {}

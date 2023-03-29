@@ -40,8 +40,8 @@ def read_requirements():
 def readme():
     with open(os.path.join(__location__, 'README.md'), encoding='utf8') as f:
         text = f.read()
-    text = re.sub(r']\((?!https?://)', r'](https://github.com/deepmipt/DeepPavlov/blob/master/', text)
-    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deepmipt/DeepPavlov/master/', text)
+    text = re.sub(r']\((?!https?://)', r'](https://github.com/deeppavlov/DeepPavlov/blob/master/', text)
+    text = re.sub(r'\ssrc="(?!https?://)', r' src="https://raw.githubusercontent.com/deeppavlov/DeepPavlov/master/', text)
     return text
 
 
@@ -56,8 +56,8 @@ if __name__ == '__main__':
         author=__author__,
         author_email=__email__,
         license=__license__,
-        url='https://github.com/deepmipt/DeepPavlov',
-        download_url=f'https://github.com/deepmipt/DeepPavlov/archive/{__version__}.tar.gz',
+        url='https://github.com/deeppavlov/DeepPavlov',
+        download_url=f'https://github.com/deeppavlov/DeepPavlov/archive/{__version__}.tar.gz',
         keywords=__keywords__,
         include_package_data=True,
         extras_require={
@@ -68,11 +68,15 @@ if __name__ == '__main__':
                 'pexpect'
             ],
             'docs': [
-                'sphinx==3.5.4',
+                'sphinx==3.5.4;python_version<"3.10"',
+                'sphinx==4.5.0;python_version>="3.10"',
                 'sphinx_rtd_theme==0.5.2',
                 'nbsphinx==0.8.4',
                 'ipykernel==5.5.4',
-                'jinja2<=3.0.3'
+                'jinja2<=3.0.3',
+                'sphinx-copybutton==0.5.0',
+                'pandoc==2.2',
+                'ipython_genutils==0.2.0'
             ],
             's3': [
                 'boto3'

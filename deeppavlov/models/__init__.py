@@ -20,7 +20,7 @@ from deeppavlov.core.common.prints import RedirectedPrints
 
 if not os.environ.get('DP_SKIP_NLTK_DOWNLOAD'):
     with RedirectedPrints():
-        nltk.download('punkt')
-        nltk.download('stopwords')
-        nltk.download('perluniprops')
-        nltk.download('nonbreaking_prefixes')
+        nltk.download('punkt', quiet=True)
+        nltk.download('stopwords', quiet=True)
+        nltk.download('perluniprops', quiet=True)
+        nltk.download('nonbreaking_prefixes', quiet=True)

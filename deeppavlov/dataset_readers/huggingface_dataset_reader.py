@@ -18,7 +18,7 @@ from collections import Counter
 from math import floor
 from typing import Dict, Optional, List, Union
 
-from datasets import load_dataset, Dataset, Features, ClassLabel
+from datasets import load_dataset, Dataset, Features, ClassLabel, concatenate_datasets
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
@@ -32,17 +32,15 @@ class HuggingFaceDatasetReader(DatasetReader):
 
     @overrides
     def read(self,
-             data_path: str,
              path: str,
              name: Optional[str] = None,
-             train: str = 'train',
+             train: Optional[str] = None,  # for lidirus with no train
              valid: Optional[str] = None,
              test: Optional[str] = None,
              **kwargs) -> Dict[str, Dataset]:
         """Wraps datasets.load_dataset method
 
         Args:
-            data_path: DeepPavlov's data_path argument, is not used, but passed by trainer
             path: datasets.load_dataset path argument (e.g., `glue`)
             name: datasets.load_dataset name argument (e.g., `mrpc`)
             train: split name to use as training data.
@@ -70,17 +68,25 @@ class HuggingFaceDatasetReader(DatasetReader):
         elif isinstance(downsample_ratio, list) and len(downsample_ratio) != len(split_mapping):
             raise ValueError("The number of downsample ratios must be the same as the number of splits")
 
+        if path == "russian_super_glue" and "_mixed" in name:
+            name = name.replace("_mixed", "")
+
         dataset = load_dataset(path=path, name=name, split=list(split_mapping.values()), **kwargs)
-        if path == "super_glue" and name == "copa":
-            dataset = [dataset_split.map(preprocess_copa, batched=True) for dataset_split in dataset]
+
+        if (path == "super_glue" and name == "copa") or (path == "russian_super_glue" and name == "parus"):
+            lang = "en" if name == "copa" else "ru"
+            dataset = [
+                dataset_split.map(preprocess_copa, batched=True, fn_kwargs={"lang": lang}) for dataset_split in dataset
+            ]
         elif path == "super_glue" and name == "boolq":
+            # danetqa doesn't require the same preprocessing
             dataset = load_dataset(path=path,
                                    name=name,
                                    split=interleave_splits(splits=list(split_mapping.values()),
                                                            percentage=percentage),
                                    **kwargs)
             dataset = [dataset_split.map(preprocess_boolq, batched=True) for dataset_split in dataset]
-        elif path == "super_glue" and name == "record":
+        elif (path == "super_glue" and name == "record") or (path == "russian_super_glue" and name == "rucos"):
             label_column = "label"
             dataset = [
                 binary_downsample(
@@ -99,6 +105,55 @@ class HuggingFaceDatasetReader(DatasetReader):
                 for dataset_split, ratio
                 in zip(dataset, downsample_ratio)
             ]
+        elif (path == "super_glue" and name == "multirc") or (path == "russian_super_glue" and name == "muserc"):
+            dataset = [
+                dataset_split.map(
+                    preprocess_multirc, batched=True, remove_columns=["paragraph", "question"]
+                ) for dataset_split in dataset
+            ]
+        elif (path == "super_glue" and name == "wsc") or (path == "russian_super_glue" and name == "rwsd"):
+            dataset = [
+                dataset_split.map(
+                    preprocess_wsc,
+                    batched=True,
+                    remove_columns=["span1_index", "span2_index", "span1_text", "span2_text"],
+                ) for dataset_split in dataset
+            ]
+        elif path == "russian_super_glue" and name == "terra_mixed" and "train" in list(split_mapping.values()):
+            tmp_dataset = []
+            for d, split in zip(dataset, split_mapping.values()):
+                if split == "train":
+                    to_mix = load_dataset("super_glue", "rte", split="train")
+                    combined_train = concatenate_datasets([to_mix, d])
+                    tmp_dataset.append(combined_train)
+                else:
+                    tmp_dataset.append(d)
+            dataset = tmp_dataset
+
+        elif path == "russian_super_glue" and name == "rcb_mixed" and "train" in list(split_mapping.values()):
+            tmp_dataset = []
+            for d, split in zip(dataset, split_mapping.values()):
+                if split == "train":
+                    to_mix = load_dataset("super_glue", "cb", split="train")
+                    combined_train = concatenate_datasets([to_mix, d.remove_columns(["verb", "negation"])])
+                    tmp_dataset.append(combined_train)
+                else:
+                    tmp_dataset.append(d.remove_columns(["verb", "negation"]))
+            dataset = tmp_dataset
+        elif path == "russian_super_glue" and name == "danetqa_mixed" and "train" in list(split_mapping.values()):
+            tmp_dataset = []
+            for d, split in zip(dataset, split_mapping.values()):
+                if split == "train":
+                    to_mix = load_dataset(
+                        "super_glue", "boolq", split="train"
+                    ).map(
+                        preprocess_boolq, batched=True
+                    ).cast(d.features)
+                    combined_train = concatenate_datasets([to_mix, d])
+                    tmp_dataset.append(combined_train)
+                else:
+                    tmp_dataset.append(d)
+            dataset = tmp_dataset
         return dict(zip(split_mapping.keys(), dataset))
 
 
@@ -120,19 +175,28 @@ def interleave_splits(splits: List[str], percentage: int = 50) -> List[str]:
     return mixed_splits
 
 
-def preprocess_copa(examples: Dataset) -> Dict[str, List[List[str]]]:
+def preprocess_copa(examples: Dataset, *, lang: str = "en") -> Dict[str, List[List[str]]]:
     """COPA preprocessing to be applied by the map function.
     Args:
         examples: an instance of Dataset class
+        lang: task language. Either `en` or `ru`.
     Returns:
         Dict[str, List[List[str]]]: processed features represented as nested
         list with number of elements corresponding to the number of choices
         (2 in this case)
     """
-    question_dict = {
-        "cause": "What was the cause of this?",
-        "effect": "What happened as a result?",
-    }
+    if lang == "en":
+        question_dict = {
+            "cause": "What was the cause of this?",
+            "effect": "What happened as a result?",
+        }
+    elif lang == "ru":
+        question_dict = {
+            "cause": "Что было причиной этого?",
+            "effect": "Что случилось в результате?",
+        }
+    else:
+        raise ValueError(f"Incorrect `lang` value '{lang}'. Should be either 'en' or 'ru'.")
 
     num_choices = 2
 
@@ -172,15 +236,14 @@ def preprocess_boolq(examples: Dataset) -> Dict[str, List[str]]:
     return {"passage": passages}
 
 
-def preprocess_record(examples: Dataset) -> Dict[str,
-                                                 Union[List[str],
-                                                       List[int]]]:
+def preprocess_record(examples: Dataset, *, clean_entities: bool = True) -> Dict[str, Union[List[str], List[int]]]:
     """ReCoRD preprocessing to be applied by the map function. This transforms the original
     nested structure of the dataset into a flat one. New indices are generated to allow for
     the restoration of the original structure. The resulting dataset amounts to a binary
     classification problem.
     Args:
         examples: an instance of Dataset class
+        clean_entities: a boolean flag indicating whether to clean-up given entities
     Returns:
         Dict[str, Union[List[str], List[int]]]: flattened features of the dataset
     """
@@ -210,6 +273,21 @@ def preprocess_record(examples: Dataset) -> Dict[str,
     entities: List[List[str]] = examples["entities"]
     indices: List[Dict[str, int]] = examples["idx"]
 
+    if clean_entities:
+        tmp_entities = []
+        for list_of_entities in entities:
+            tmp_entities.append(
+                list(set([entity.strip("\n ,.!") for entity in list_of_entities]))
+            )
+        entities = tmp_entities
+
+        tmp_answers = []
+        for list_of_answers in answers:
+            tmp_answers.append(
+                list(set([answer.strip("\n ,.!") for answer in list_of_answers]))
+            )
+        answers = tmp_answers
+
     # new indices for flat examples
     merged_indices: List[str] = []
     # queries with placeholders filled
@@ -229,8 +307,9 @@ def preprocess_record(examples: Dataset) -> Dict[str,
         num_candidates: int = len(list_of_entities)
 
         candidate_queries: List[str] = [fill_placeholder(query, entity) for entity in list_of_entities]
-        cur_labels: List[int] = [int(entity in list_of_answers) if list_of_answers else -1 for entity in
-                                 list_of_entities]
+        cur_labels: List[int] = [
+            int(entity in list_of_answers) if list_of_answers else -1 for entity in list_of_entities
+        ]
         cur_passages: List[str] = [passage] * num_candidates
 
         # keep track of the indices to be able to use target metrics
@@ -238,11 +317,12 @@ def preprocess_record(examples: Dataset) -> Dict[str,
         query_index: int = index["query"]
         example_indices: List[str] = [f"{passage_index}-{query_index}-{num_candidates}"] * num_candidates
 
-        merged_indices.extend(example_indices)
-        filled_queries.extend(candidate_queries)
-        extended_passages.extend(cur_passages)
-        flat_entities.extend(list_of_entities)
-        labels.extend(cur_labels)
+        if sum(cur_labels) != 0:
+            merged_indices.extend(example_indices)
+            filled_queries.extend(candidate_queries)
+            extended_passages.extend(cur_passages)
+            flat_entities.extend(list_of_entities)
+            labels.extend(cur_labels)
 
     return {"idx": merged_indices,
             "query": filled_queries,
@@ -325,7 +405,7 @@ def binary_downsample(dataset: Dataset,
     # `test` split shouldn't be downsampled
     if dataset_labels == [-1]:
         return dataset
-    elif dataset_labels == [0, 1]:
+    elif set(dataset_labels) == {0, 1}:
         # positive examples are denoted with `1`
         num_positive: int = sum(dataset[label_column])
         num_total: int = len(dataset)
@@ -341,7 +421,7 @@ def binary_downsample(dataset: Dataset,
         return shuffled_dataset
     # the same logic is not applicable to cases with != 2 classes
     else:
-        raise ValueError("Only binary classification labels are supported (i.e. [0, 1])")
+        raise ValueError(f"Only binary classification labels are supported (i.e. [0, 1]), but {dataset_labels} were given")
 
 
 def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
@@ -355,3 +435,41 @@ def add_num_examples(dataset: Dataset) -> Dict[str, List[int]]:
     """
     num_examples = len(dataset[next(iter(dataset))])
     return {"num_examples": [num_examples] * num_examples}
+
+
+def preprocess_multirc(examples: Dataset, *, clean_paragraphs: bool = True) -> Dict[str, List[str]]:
+    """Compose strings in form of paragraphs and the folllowing questions.
+
+    Args:
+        examples: A given dataset.
+        clean_paragraphs: Whether replace spaces and digits with a single space.
+
+    Returns:
+        Dict[str, List[str]]: Composed strings.
+
+    """
+    paragraphs: List[str] = examples["paragraph"]
+    questions: List[str] = examples["question"]
+
+    if clean_paragraphs:
+        paragraphs = [re.sub(r"\s+", " ", re.sub(r"\(\d{1,2}\)", "", paragraph).strip()) for paragraph in paragraphs]
+
+    contexts = [f"{paragraph} {question}" for paragraph, question in zip(paragraphs, questions)]
+
+    return {"context": contexts}
+
+
+def preprocess_wsc(dataset: Dataset) -> Dict[str, List[str]]:
+    """Forms proper sentences from spans1 that are always entities and spans2 that describe these entities.
+
+    Args:
+        dataset: A given dataset.
+
+    Returns:
+        Dict[str, List[str]]: Answers that form proper sentences from capitalized spans1 and spans2.
+
+    """
+    spans1: List[str] = dataset["span1_text"]
+    spans2: List[str] = dataset["span2_text"]
+    answers = [f"{s2.capitalize()} {s1}" for s1, s2 in zip(spans1, spans2)]
+    return {"answer": answers}

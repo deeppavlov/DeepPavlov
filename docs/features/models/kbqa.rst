@@ -192,8 +192,8 @@ Advanced: Using Wiki Parser As Standalone Service For KBQA
 ------------------------------------------------------------------------------
 Default configuration for KBQA was designed to use all of the supporting models together as a part of the KBQA pipeline. However, there might be a case when you want to work with some of these models in addition to KBQA.
 
-For example, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.    
-    
+For example, you might want to use Wiki Parser component to directly run SPARQL queries against your copy of Wikidata. To support these usecase, starting with this release you can also deploy supporting models as standalone components.
+
 Config :config:`wiki_parser <kbqa/wiki_parser.json>` can be used as service with the following command:
 
 .. code:: bash

@@ -19,6 +19,8 @@ from itertools import islice
 from logging import getLogger
 from typing import Tuple, Dict, Union, Optional, Iterable, Any, Collection
 
+from tqdm import tqdm
+
 from deeppavlov.core.commands.infer import build_model
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.params import from_params
@@ -61,7 +63,7 @@ class FitTrainer:
                  max_test_batches: int = -1,
                  **kwargs) -> None:
         if kwargs:
-            log.info(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
+            log.warning(f'{self.__class__.__name__} got additional init parameters {list(kwargs)} that will be ignored:')
         self.chainer_config = chainer_config
         self._chainer = Chainer(chainer_config['in'], chainer_config['out'], chainer_config.get('in_y'))
         self.batch_size = batch_size
@@ -90,7 +92,7 @@ class FitTrainer:
                     targets = [targets]
 
                 if self.batch_size > 0 and callable(getattr(component, 'partial_fit', None)):
-                    for i, (x, y) in enumerate(iterator.gen_batches(self.batch_size, shuffle=False)):
+                    for i, (x, y) in tqdm(enumerate(iterator.gen_batches(self.batch_size, shuffle=False))):
                         preprocessed = self._chainer.compute(x, y, targets=targets)
                         # noinspection PyUnresolvedReferences
                         component.partial_fit(*preprocessed)
@@ -160,14 +162,13 @@ class FitTrainer:
 
         data = islice(data, self.max_test_batches)
 
-        for x, y_true in data:
+        for x, y_true in tqdm(data):
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
             if len(expected_outputs) == 1:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
                 out += list(val)
-
         if examples == 0:
             log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
@@ -175,7 +176,15 @@ class FitTrainer:
         # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
         metrics_values = []
         for metric in metrics:
-            value = metric.fn(*[outputs[i] for i in metric.inputs])
+            calculate_metric = True
+            for i in metric.inputs:
+                outputs[i] = [k for k in outputs[i] if k is not None]
+                if len(outputs[i]) == 0:
+                    log.info(f'Metric {metric.alias} is not calculated due to absense of true and predicted samples')
+                    calculate_metric = False
+                    value = -1
+            if calculate_metric:
+                value = metric.fn(*[outputs[i] for i in metric.inputs])
             metrics_values.append((metric.alias, value))
 
         report = {

@@ -117,15 +117,18 @@ BERT for Named Entity Recognition (Sequence Tagging)
 ----------------------------------------------------
 
 Pre-trained BERT model can be used for sequence tagging. Examples of BERT application to sequence tagging
-can be found :doc:`here </features/models/ner>`. The module used for tagging
+can be found :doc:`here </features/models/NER>`. The module used for tagging
 is :class:`~deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger`.
 The tags are obtained by applying a dense layer to the representation of
 the first subtoken of each word. There is also an optional CRF layer on the top.
 You can choose among different Transformers architectures by modifying the TRANSFORMER variable in the corresponding configuration files.
 The possible choices are DistilBert, Albert, Camembert, XLMRoberta, Bart, Roberta, Bert, XLNet, Flaubert, XLM.
 
+..
+    TODO: fix Zero-Shot NER reference
+
 Multilingual BERT model allows to perform zero-shot transfer across languages. To use our 19 tags NER for over a
-hundred languages see :ref:`ner_multi_bert`.
+hundred languages see ner_multi_bert.
 
 
 BERT for Context Question Answering (SQuAD)
@@ -134,7 +137,7 @@ Context Question Answering on `SQuAD <https://rajpurkar.github.io/SQuAD-explorer
 of looking for an answer on a question in a given context. This task could be formalized as predicting answer start
 and end position in a given context. :class:`~deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad` on PyTorch uses two linear
 transformations to predict probability that current subtoken is start/end position of an answer. For details check
-:doc:`Context Question Answering documentation page </features/models/squad>`.
+:doc:`Context Question Answering documentation page </features/models/SQuAD>`.
 
 Using custom BERT in DeepPavlov
 -------------------------------

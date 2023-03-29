@@ -233,7 +233,7 @@ class ErrorModel(Estimator):
         """
         if self.load_path:
             if self.load_path.is_file():
-                logger.info("loading error_model from `{}`".format(self.load_path))
+                logger.debug("loading error_model from `{}`".format(self.load_path))
                 with open(self.load_path, 'r', newline='', encoding='utf8') as tsv_file:
                     reader = csv.reader(tsv_file, delimiter='\t')
                     for w, s, p in reader:
@@ -242,4 +242,4 @@ class ErrorModel(Estimator):
                 raise ConfigError("Provided `load_path` for {} doesn't exist!".format(
                     self.__class__.__name__))
         else:
-            logger.info('No load_path provided, initializing error model from scratch')
+            logger.warning('No load_path provided, initializing error model from scratch')

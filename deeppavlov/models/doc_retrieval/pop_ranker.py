@@ -57,11 +57,11 @@ class PopRanker(Component):
     def __init__(self, pop_dict_path: str, load_path: str, top_n: int = 3, active: bool = True,
                  **kwargs) -> None:
         pop_dict_path = expand_path(pop_dict_path)
-        logger.info(f"Reading popularity dictionary from {pop_dict_path}")
+        logger.debug(f"Reading popularity dictionary from {pop_dict_path}")
         self.pop_dict = read_json(pop_dict_path)
         self.mean_pop = np.mean(list(self.pop_dict.values()))
         load_path = expand_path(load_path)
-        logger.info(f"Loading popularity ranker from {load_path}")
+        logger.debug(f"Loading popularity ranker from {load_path}")
         self.clf = joblib.load(load_path)
         self.top_n = top_n
         self.active = active
