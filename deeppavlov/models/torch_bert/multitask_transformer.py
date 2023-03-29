@@ -29,6 +29,7 @@ from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.torch_transformers_sequence_tagger import token_from_subtoken, \
     token_labels_to_subtoken_labels
+from deeppavlov.models.torch.bert.torch.transformers_squad import softmax_mask
 
 log = getLogger(__name__)
 
@@ -608,13 +609,62 @@ class MultiTaskTransformer(TorchModel):
                         if not self.return_probas:
                             pred = (pred > self.binary_threshold).int()
                     pred = pred.cpu().numpy()
-                elif self.task_types[task_id] in ['question_answering']:
-                    pred = logits[:, 0]
-                    if self.task_types[task_id] == 'binary_head':
-                        pred = torch.sigmoid(logits).squeeze(1)
-                        if not self.return_probas:
-                            pred = (pred > self.binary_threshold).int()
-                    pred = pred.cpu().numpy()                    
+                elif self.task_types[task_id] == 'question_answering':
+                    #Code as in torch_transformers_squad
+                    start_logits, end_logits = logits
+                    batch_size, seq_len = len(_input['input_ids']), len(_input['input_ids'][0])
+                    mask = torch.cat([torch.ones(batch_size, 1, dtype=torch.int32),
+                                      torch.zeros(batch_size, seq_len - 1, dtype=torch.int32)], dim=-1).to(self.device)
+                    logit_mask = _input['token_type_ids'] + mask
+
+                    start_logits, end_logits = softmax_mask(start_logits, logit_mask), softmax_mask(end_logits, logit_mask)
+                    start_probs = torch.nn.functional.softmax(start_logits, dim=-1)
+                    end_probs = torch.nn.functional.softmax(end_logits, dim=-1)
+
+                    scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+
+                    outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
+                                        end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
+
+                    outer_logits = torch.exp(start_logits.view(*start_logits.size(), 1) + end_logits.view(
+                    end_logits.size()[0], 1, end_logits.size()[1]))
+
+                    context_max_len = torch.max(torch.sum(_input['token_type_ids'], dim=1)).to(torch.int64)
+
+                    max_ans_length = torch.min(torch.tensor(20).to(self.device), context_max_len).to(torch.int64).item()
+
+                    outer = torch.triu(outer, diagonal=0) - torch.triu(outer, diagonal=outer.size()[1] - max_ans_length)
+                    outer_logits = torch.triu(outer_logits, diagonal=0) - torch.triu(
+                    outer_logits, diagonal=outer_logits.size()[1] - max_ans_length)
+
+                    start_pred = torch.argmax(torch.max(outer, dim=2)[0], dim=1)
+                    end_pred = torch.argmax(torch.max(outer, dim=1)[0], dim=1)
+                    logits = torch.max(torch.max(outer_logits, dim=2)[0], dim=1)[0]
+
+                    start_pred = start_pred.detach().cpu().numpy()
+                    end_pred = end_pred.detach().cpu().numpy()
+                    logits = logits.detach().cpu().numpy().tolist()
+                    scores = scores.detach().cpu().numpy().tolist()
+
+                    for j, (start_pred_elem, end_pred_elem, logits_elem, scores_elem) in \
+                            enumerate(zip(start_pred, end_pred, logits, scores)):
+                        ind = indices[i * self.batch_size + j]
+                        if ind in predictions:
+                            predictions[ind] += [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
+                        else:
+                            predictions[ind] = [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
+
+                    start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch = [], [], [], [], []
+                    for ind in sorted(predictions.keys()):
+                        prediction = predictions[ind]
+                        max_ind = np.argmax([pred[2] for pred in prediction])
+                        start_pred_batch.append(prediction[max_ind][0])
+                        end_pred_batch.append(prediction[max_ind][1])
+                        logits_batch.append(prediction[max_ind][2])
+                        scores_batch.append(prediction[max_ind][3])
+                        ind_batch.append(max_ind)
+                    self.validation_predictions[task_id] = (start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch)
+
                 else:
                     if self.multilabel[task_id]:
                         probs = torch.sigmoid(logits)
