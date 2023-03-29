@@ -141,7 +141,7 @@ class BertForMultiTask(nn.Module):
                     outputs = self.bert(input_ids=input_ids.long(),
                                         attention_mask=attention_mask.long())
                     self.model_takes_token_type_ids=False
-                else:                    
+                else:
                     raise e
         if name in ['sequence_labeling', 'question_answering']:
             return outputs.last_hidden_state
@@ -344,7 +344,7 @@ class MultiTaskTransformer(TorchModel):
                 #To make sure that the same logits are never cached for QA and other tasks
                 #as they have different structure
             self.types_to_cache.append(type_to_cache)
-        
+
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -487,7 +487,7 @@ class MultiTaskTransformer(TorchModel):
             self.model = torch.nn.DataParallel(self.model)
 
     def _make_qa_input(self, task_features, labels=None):
-       
+
         _input={}
         element_list = ["input_ids", "attention_mask", "token_type_ids",
                        "start_positions", "end_positions"]
@@ -513,7 +513,7 @@ class MultiTaskTransformer(TorchModel):
         _input = {}
         if self.task_types[task_id] == 'question_answering':
             return self._make_qa_input(task_features, labels=None)
-        element_list = ["input_ids", "attention_mask", "token_type_ids"] 
+        element_list = ["input_ids", "attention_mask", "token_type_ids"]
         for elem in element_list:
             if elem in task_features:
                 _input[elem] = task_features[elem]
@@ -645,10 +645,10 @@ class MultiTaskTransformer(TorchModel):
                     end_pred = end_pred.detach().cpu().numpy()
                     logits = logits.detach().cpu().numpy().tolist()
                     scores = scores.detach().cpu().numpy().tolist()
-
+                    print((start_pred, end_pred, logits, scores))
                     for j, (start_pred_elem, end_pred_elem, logits_elem, scores_elem) in \
                             enumerate(zip(start_pred, end_pred, logits, scores)):
-                        ind = indices[i * self.batch_size + j]
+                        ind = indices[2*j]
                         if ind in predictions:
                             predictions[ind] += [(start_pred_elem, end_pred_elem, logits_elem, scores_elem)]
                         else:
