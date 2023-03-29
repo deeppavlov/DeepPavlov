@@ -142,16 +142,13 @@ class BertForMultiTask(nn.Module):
                     self.model_takes_token_type_ids=False
                 else:                    
                     raise e
-        if name == 'sequence_labeling':
+        if name in ['sequence_labeling', 'question_answering']:
             return outputs.last_hidden_state
-        elif self.new_model == 2:
-            return outputs.last_hidden_state[:, task_id]
-        elif self.new_model:
-            return torch.cat([outputs.last_hidden_state[:, 0], outputs.last_hidden_state[:, task_id + 1]], axis=1)
         else:
             return outputs.last_hidden_state[:, 0]
 
-    def predict_on_top(self, task_id, last_hidden_state, labels=None):
+    def predict_on_top(self, task_id, last_hidden_state, labels=None,
+                       start_positions=None, end_positions=None):
         name = self.task_types[task_id]
         if name == 'sequence_labeling':
             #  last hidden state is all token tensor
@@ -168,6 +165,32 @@ class BertForMultiTask(nn.Module):
                 return loss, logits
             else:
                 return logits
+        elif name == 'question_answering':
+            logits = self.bert.final_classifier(last_hidden_state)
+            start_logits, end_logits = logits.split(1, dim=-1)
+            start_logits = start_logits.squeeze(-1).contiguous()
+            end_logits = end_logits.squeeze(-1).contiguous()
+            total_loss = None
+            assert start_positions is not None and end_positions is not None:
+            # If we are on multi-GPU, split add a dimension
+            if len(start_positions.size()) > 1:
+                start_positions = start_positions.squeeze(-1)
+            if len(end_positions.size()) > 1:
+                end_positions = end_positions.squeeze(-1)
+        # sometimes the start/end positions are outside our model inputs, we ignore these terms
+            ignored_index = start_logits.size(1)
+            start_positions = start_positions.clamp(0, ignored_index)
+            end_positions = end_positions.clamp(0, ignored_index)
+
+            loss_fct = CrossEntropyLoss(ignore_index=ignored_index)
+            start_loss = loss_fct(start_logits, start_positions)
+            end_loss = loss_fct(end_logits, end_positions)
+            loss = (start_loss + end_loss) / 2
+            if labels is not None:
+                return loss, (start_logits, end_logits)
+            else:
+                return (start_logits, end_logits)
+
         elif name in ['classification', 'regression', 'multiple_choice']:
             #  last hidden state is a first token tensor
             if self.new_model:  # or True:
@@ -302,6 +325,11 @@ class MultiTaskTransformer(TorchModel):
         self.multilabel = []
         self.weights = []
         self.types_to_cache = []
+        qa_types_to_cache=[]
+        nonqa_types_to_cache = [tasks[task].get('type_to_cache', -1)
+                                for task in tasks
+                                if tasks[task]['type'] != 'question_answering']
+        nonqa_types_to_cache=[k for k in nonqa_types_to_cache if k != -1]
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task].get('options', 1))
@@ -309,7 +337,13 @@ class MultiTaskTransformer(TorchModel):
             self.task_types.append(tasks[task]['type'])
             self.multilabel.append(tasks[task].get('multilabel', False))
             self.one_hot_labels.append(tasks[task].get('one_hot_labels', False))
-            self.types_to_cache.append(tasks[task].get('type_to_cache', -1))
+            type_to_cache = (tasks[task].get('type_to_cache', -1))
+            if self.task_types[-1]=='question_answering' and type_to_cache in nonqa_types_to_cache:
+                type_to_cache = type_to_cache + sum(nonqa_types_to_cache)
+                #To make sure that the same logits are never cached for QA and other tasks
+                #as they have different structure
+            self.types_to_cache.append(type_to_cache)
+        
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(
                 f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -555,6 +589,13 @@ class MultiTaskTransformer(TorchModel):
                         if not self.return_probas:
                             pred = (pred > self.binary_threshold).int()
                     pred = pred.cpu().numpy()
+                elif self.task_types[task_id] in ['question_answering']:
+                    pred = logits[:, 0]
+                    if self.task_types[task_id] == 'binary_head':
+                        pred = torch.sigmoid(logits).squeeze(1)
+                        if not self.return_probas:
+                            pred = (pred > self.binary_threshold).int()
+                    pred = pred.cpu().numpy()                    
                 else:
                     if self.multilabel[task_id]:
                         probs = torch.sigmoid(logits)
