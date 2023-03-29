@@ -494,6 +494,8 @@ class MultiTaskTransformer(TorchModel):
             labels = None
         _input = {}
         element_list = ["input_ids", "attention_mask", "token_type_ids"]
+        if self.task_types[task_id] == 'question_answering':
+            element_list = element_list + ['start_positions', 'end_positions']
         for elem in element_list:
             if elem in task_features:
                 _input[elem] = task_features[elem]
