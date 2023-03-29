@@ -32,13 +32,11 @@ class Proba2Labels(Component):
     def __init__(self,
                  confidence_threshold: float = 0.0,
                  pooling: str = 'max',
-                 multilabel: bool = False,
                  is_binary: bool = False,
                  **kwargs) -> None:
 
         self.confidence_threshold = confidence_threshold
         self.pooling = pooling
-        self.multilabel = multilabel
         self.is_binary = is_binary
 
 
@@ -46,42 +44,36 @@ class Proba2Labels(Component):
                  simmilarity_scores: Union[np.ndarray, List[List[float]], List[List[int]]],
                  x: List[str],
                  x_populated: List[str],
-                 y_support: List[str],
-                 *args,
-                 **kwargs):
+                 x_support: List[str],
+                 y_support: List[str]):
         y_pred = []
 
         simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
         x_populated = np.array(x_populated)
+        x_support = np.array(x_support)
         y_support = np.array(y_support)
 
         unique_labels = np.unique(y_support)
 
         for example in x: 
-            example_mask = np.where(x_populated == example)
+            example_mask = np.where(np.logical_xor(x_populated == example, x_support == example))
             example_simmilarity_scores = simmilarity_scores[example_mask]
             example_y_support = y_support[example_mask]
 
             probability_by_label = []
             for label in unique_labels:
-                ind_mask = np.where(example_y_support == label)
+                label_mask = np.where(example_y_support == label)
+                label_simmilarity_scores = example_simmilarity_scores[label_mask]
                 if self.pooling == 'avg':
-                    label_probability = np.mean(example_simmilarity_scores[ind_mask])
+                    label_probability = np.mean(label_simmilarity_scores)
                 elif self.pooling == 'max':
-                    label_probability = np.max(example_simmilarity_scores[ind_mask])
+                    label_probability = np.max(label_simmilarity_scores)
                 probability_by_label.append(label_probability)
+            
             probability_by_label = np.array(probability_by_label)
-
-
-
-            if self.multilabel:
-                threshold_mask = np.where(probability_by_label >= self.confidence_threshold)
-                threshold_y_support = unique_labels[threshold_mask]
-                prediction = ["oos"] if threshold_y_support.size == 0 else threshold_y_support
-            else:
-                max_probability = max(probability_by_label)
-                max_probability_label = unique_labels[np.argmax(probability_by_label)]
-                prediction = "oos" if max_probability < self.confidence_threshold else max_probability_label
+            max_probability = max(probability_by_label)
+            max_probability_label = unique_labels[np.argmax(probability_by_label)]
+            prediction = "oos" if max_probability < self.confidence_threshold else max_probability_label
             
             y_pred.append(prediction)
     

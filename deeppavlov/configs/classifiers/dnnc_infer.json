@@ -50,7 +50,7 @@
             {
                 "class_name": "dnnc_proba2labels",
                 "is_binary": "{BINARY_CLASSIFICATION}",
-                "in": ["simmilarity_scores", "x", "x_populated", "y_support"],
+                "in": ["simmilarity_scores", "x", "x_populated", "x_support", "y_support"],
                 "out": ["y_pred"],
                 "multilabel": false,
                 "confidence_threshold": 0.0,
@@ -81,13 +81,13 @@
             "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads/clinc150",
             "SUPPORT_DATA_PATH": "{ROOT_PATH}/preprocessed_datasets",
-            "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli",
+            "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli_mrpc_1_10",
             "BINARY_CLASSIFICATION": true,
             "BASE_MODEL": "roberta-base"
         },
         "download": [
             {
-                "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli.tar.gz",
+                "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_mrpc_1_10.tar.gz",
                 "subdir": "{MODEL_PATH}"
             },
             {
