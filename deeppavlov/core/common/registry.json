@@ -5,6 +5,8 @@
   "basic_classification_iterator": "deeppavlov.dataset_iterators.basic_classification_iterator:BasicClassificationDatasetIterator",
   "basic_classification_reader": "deeppavlov.dataset_readers.basic_classification_reader:BasicClassificationDatasetReader",
   "boolqa_reader": "deeppavlov.dataset_readers.boolqa_reader:BoolqaReader",
+  "bpr": "deeppavlov.models.doc_retrieval.bpr:BPR",
+  "concat_lists": "deeppavlov.models.doc_retrieval.bpr:concat_lists",
   "conll2003_reader": "deeppavlov.dataset_readers.conll2003_reader:Conll2003DatasetReader",
   "cos_sim_classifier": "deeppavlov.models.classifiers.cos_sim_classifier:CosineSimilarityClassifier",
   "data_fitting_iterator": "deeppavlov.core.data.data_fitting_iterator:DataFittingIterator",

@@ -2,58 +2,39 @@
   "dataset_reader": {
     "class_name": "odqa_reader",
     "data_path": "{DOWNLOADS_PATH}/odqa/ruwiki",
-    "save_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db",
+    "save_path": "{DOWNLOADS_PATH}/odqa/ruwiki_par_page_compr.db",
     "dataset_format": "wiki"
   },
   "dataset_iterator": {
     "class_name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/ruwiki_par_page_compr.db"
   },
   "chainer": {
-    "in": [
-      "docs"
-    ],
-    "in_y": [
-      "doc_ids",
-      "doc_nums"
-    ],
-    "out": [
-      "tfidf_doc_ids"
-    ],
+    "in": ["docs"],
+    "in_y": ["doc_ids", "doc_nums"],
+    "out": ["tfidf_doc_ids"],
     "pipe": [
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "fit_on": [
-          "docs",
-          "doc_ids",
-          "doc_nums"
-        ],
-        "save_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix.npz",
+        "fit_on": ["docs", "doc_ids", "doc_nums"],
+        "save_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix_compr.npz",
+        "load_path": "{MODELS_PATH}/odqa/ruwiki_tfidf_matrix_compr.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "spacy_model": "ru_core_news_sm",
           "lemmas": true,
           "lowercase": true,
           "filter_stopwords": true,
-          "ngram_range": [
-            1,
-            2
-          ]
+          "ngram_range": [1, 3]
         }
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 1,
-        "in": [
-          "docs"
-        ],
-        "out": [
-          "tfidf_doc_ids",
-          "tfidf_doc_scores"
-        ],
+        "top_n": 100,
+        "in": ["docs"],
+        "out": ["tfidf_doc_ids", "tfidf_doc_scores"],
         "vectorizer": "#vectorizer"
       }
     ]
@@ -71,12 +52,12 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/ruwiki.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "url": "http://files.deeppavlov.ai/tmp/ruwiki_par_page_compr.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/ru_odqa.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/tmp/ruwiki_tfidf_matrix_compr.tar.gz",
+        "subdir": "{MODELS_PATH}/odqa"
       }
     ]
   }
