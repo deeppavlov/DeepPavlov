@@ -1,4 +1,5 @@
-from typing import Any, List, Optional, Tuple
+from typing import Any, List, Tuple
+
 import faiss
 import numpy as np
 import torch
@@ -48,14 +49,14 @@ class FaissBinaryIndex:
 @register('bpr')
 class BPR(Component, Serializable):
     def __init__(self, pretrained_model: str,
-                load_path: str,
-                bpr_index: str,
-                query_encoder_file: str,
-                max_query_length: int = 256,
-                top_n: int = 100,
-                device: str = "gpu",
-                *args, **kwargs
-                ):
+                 load_path: str,
+                 bpr_index: str,
+                 query_encoder_file: str,
+                 max_query_length: int = 256,
+                 top_n: int = 100,
+                 device: str = "gpu",
+                 *args, **kwargs
+                 ):
         super().__init__(save_path=None, load_path=load_path)
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
         self.bpr_index = bpr_index
@@ -66,21 +67,21 @@ class BPR(Component, Serializable):
         self.q_encoder = BertModel.from_pretrained(pretrained_model).to(self.device)
         self.load()
         self.index = FaissBinaryIndex(self.base_index)
-    
+
     def load(self):
         checkpoint = torch.load(str(self.load_path / self.query_encoder_file), map_location=self.device)
         self.q_encoder.load_state_dict(checkpoint["model_state_dict"], strict=False)
         self.base_index = faiss.read_index_binary(str(self.load_path / self.bpr_index))
-        
+
     def save(self) -> None:
         pass
-    
+
     def encode_queries(self, queries, batch_size: int = 256) -> np.ndarray:
         embeddings = []
         with torch.no_grad():
             for start in trange(0, len(queries), batch_size):
                 model_inputs = self.tokenizer.batch_encode_plus(
-                    queries[start : start + batch_size],
+                    queries[start: start + batch_size],
                     return_tensors="pt",
                     max_length=self.max_query_length,
                     padding="max_length",

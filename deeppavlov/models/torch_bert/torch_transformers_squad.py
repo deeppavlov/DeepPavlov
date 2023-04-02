@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
@@ -184,7 +183,7 @@ class TorchTransformersSquad(TorchModel):
         return accepted_keys
 
     def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
-            List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
+        List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
         """get predictions using features as input
 
         Args:
