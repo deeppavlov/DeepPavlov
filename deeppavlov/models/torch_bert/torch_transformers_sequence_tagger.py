@@ -315,6 +315,8 @@ class TorchTransformersSequenceTagger(TorchModel):
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         super().save()
         if self.use_crf:
+            if fname is None:
+                fname = self.save_path
             weights_path_crf = Path(f"{fname}_crf").resolve()
             weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
             torch.save({"model_state_dict": self.crf.cpu().state_dict()}, weights_path_crf)
