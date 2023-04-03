@@ -42,25 +42,17 @@ class SlovnetSyntaxParser(Component, Serializable):
     """Class for syntax parsing using Slovnet library"""
 
     def __init__(self, load_path: str, navec_filename: str, syntax_parser_filename: str, tree_patterns_filename: str,
-                 lang: str = "ru", **kwargs):
+                 **kwargs):
         super().__init__(save_path=None, load_path=load_path)
         self.navec_filename = expand_path(navec_filename)
         self.syntax_parser_filename = expand_path(syntax_parser_filename)
         self.tree_patterns = read_json(expand_path(tree_patterns_filename))
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        if lang == "ru":
-            self.pronouns = {"q_pronouns": {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как",
-                                            "когда", "где", "чем", "сколько"},
-                             "how_many": {"сколько"}}
-            self.first_tokens = {"первый", "первая", "первое"}
-            self.nlp = spacy.load("ru_core_news_sm")
-        elif lang == "en":
-            self.pronouns = {"q_pronouns": {"what", "who", "how", "when", "where", "which"},
-                             "how_many": {"how many"}}
-            self.first_tokens = {"first"}
-            self.nlp = spacy.load("en_core_web_sm")
-        else:
-            raise ValueError(f'Unexpected lang "{lang}" value. Component supports only en or ru')
+        self.pronouns = {"q_pronouns": {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как",
+                                        "когда", "где", "чем", "сколько"},
+                         "how_many": {"сколько"}}
+        self.first_tokens = {"первый", "первая", "первое"}
+        self.nlp = spacy.load("ru_core_news_sm")
         self.load()
 
     def load(self) -> None:
@@ -307,41 +299,27 @@ class TreeToSparql(Component):
     """
 
     def __init__(self, sparql_queries_filename: str, syntax_parser: Component, kb_prefixes: Dict[str, str],
-                 lang: str = "ru", adj_to_noun: RuAdjToNoun = None, **kwargs):
+                 adj_to_noun: RuAdjToNoun = None, **kwargs):
         """
 
         Args:
             sparql_queries_filename: file with sparql query templates
-            lang: english or russian
+            syntax_parser: component for syntactic parsing of the input question
+            kb_prefixes: prefixes for entities, relations and types in the knowledge base
             adj_to_noun: component deeppavlov.models.kbqa.tree_to_sparql:RuAdjToNoun
             **kwargs:
         """
-        self.lang = lang
-        if self.lang == "ru":
-            self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
-                               "где", "чем", "сколько"}
-            self.how_many = "сколько"
-            self.change_root_tokens = {"каким был", "какой была"}
-            self.first_tokens = {"первый", "первая", "первое"}
-            self.last_tokens = {"последний"}
-            self.begin_tokens = {"начинать", "начать"}
-            self.end_tokens = {"завершить", "завершать", "закончить"}
-            self.ranking_tokens = {"самый"}
-            self.date_tokens = {"год", "месяц"}
-            self.nlp = spacy.load("ru_core_news_sm")
-        elif self.lang == "en":
-            self.q_pronouns = {"what", "who", "how", "when", "where", "which"}
-            self.how_many = "how many"
-            self.change_root_tokens = ""
-            self.first_tokens = {"first"}
-            self.last_tokens = {"last"}
-            self.begin_tokens = set()
-            self.end_tokens = set()
-            self.ranking_tokens = set()
-            self.date_tokens = {"year", "month"}
-            self.nlp = spacy.load("en_core_web_sm")
-        else:
-            raise ValueError(f"unsupported language {lang}")
+        self.q_pronouns = {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как", "когда",
+                           "где", "чем", "сколько"}
+        self.how_many = "сколько"
+        self.change_root_tokens = {"каким был", "какой была"}
+        self.first_tokens = {"первый", "первая", "первое"}
+        self.last_tokens = {"последний"}
+        self.begin_tokens = {"начинать", "начать"}
+        self.end_tokens = {"завершить", "завершать", "закончить"}
+        self.ranking_tokens = {"самый"}
+        self.date_tokens = {"год", "месяц"}
+        self.nlp = spacy.load("ru_core_news_sm")
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.sparql_queries_filename = expand_path(sparql_queries_filename)
         template_queries = read_json(self.sparql_queries_filename)
@@ -519,15 +497,12 @@ class TreeToSparql(Component):
             Tuple[str, list]:
         ranking_tokens = self.find_ranking_tokens(root, appos_token_nums, clause_token_nums)
         question_tokens = []
-        if self.lang == "ru":
-            for node in tree.descendants:
-                if node.ord not in appos_token_nums + clause_token_nums:
-                    if ranking_tokens and (node.ord in ranking_tokens or node.form.lower() in self.q_pronouns):
-                        question_tokens.append(self.nlp(node.form)[0].lemma_)
-                    else:
-                        question_tokens.append(node.form)
-        else:
-            question_tokens = [node.form for node in tree.descendants]
+        for node in tree.descendants:
+            if node.ord not in appos_token_nums + clause_token_nums:
+                if ranking_tokens and (node.ord in ranking_tokens or node.form.lower() in self.q_pronouns):
+                    question_tokens.append(self.nlp(node.form)[0].lemma_)
+                else:
+                    question_tokens.append(node.form)
         question = " ".join(question_tokens)
         log.debug(f"sanitized question: {question}")
         return question, ranking_tokens
@@ -625,14 +600,10 @@ class TreeToSparql(Component):
         desc_text = " ".join([elem[0] for elem in node_desc])
         for symb in ".,:;)":
             desc_text = desc_text.replace(f" {symb}", symb)
-        if self.lang == "ru":
-            for pattern in [r"в ([\d]{3,4}) году", r"с ([\d]{3,4}) по ([\d]{3,4})"]:
-                fnd = re.findall(pattern, desc_text)
-                if fnd:
-                    return fnd
-        elif self.lang == "en":
-            fnd = re.findall(r"in ([\d]{3,4})", desc_text)
-            return fnd
+        for pattern in [r"в ([\d]{3,4}) году", r"с ([\d]{3,4}) по ([\d]{3,4})"]:
+            fnd = re.findall(pattern, desc_text)
+            if fnd:
+                return fnd
         return []
 
     def find_appos_tokens(self, node: Node, tok_and_ord: List[Tuple[Node, int]],
