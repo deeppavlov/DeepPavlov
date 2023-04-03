@@ -79,7 +79,7 @@ class WikiParser:
             elif rel_q2name_filename.endswith("pickle"):
                 self.rel_q2name = load_pickle(str(expand_path(rel_q2name_filename)))
             else:
-                raise ValueError("Unsupported file format")
+                raise ValueError(f"Unsupported file format: {rel_q2name_filename}")
 
         self.max_comb_num = max_comb_num
         self.lang = lang

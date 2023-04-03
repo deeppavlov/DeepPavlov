@@ -66,7 +66,7 @@ class RuAdjToNoun:
         if word in self.adj_set:
             q_matrix = self.make_sparse_matrix([word])
             scores = q_matrix * self.matrix
-            scores = np.squeeze(scores.toarray() + 0.0001)
+            scores = np.squeeze(scores.toarray())
             indices = np.argsort(-scores)[:self.candidate_nouns]
             scores = list(scores[indices])
             candidates = [self.nouns_with_freq[indices[i]] + (scores[i],) for i in range(len(indices))]

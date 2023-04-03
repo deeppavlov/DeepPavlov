@@ -48,14 +48,13 @@ class SlovnetSyntaxParser(Component, Serializable):
         self.syntax_parser_filename = expand_path(syntax_parser_filename)
         self.tree_patterns = read_json(expand_path(tree_patterns_filename))
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.lang = lang
-        if self.lang == "ru":
+        if lang == "ru":
             self.pronouns = {"q_pronouns": {"какой", "какая", "какое", "каком", "каким", "какую", "кто", "что", "как",
                                             "когда", "где", "чем", "сколько"},
                              "how_many": {"сколько"}}
             self.first_tokens = {"первый", "первая", "первое"}
             self.nlp = spacy.load("ru_core_news_sm")
-        elif self.lang == "en":
+        elif lang == "en":
             self.pronouns = {"q_pronouns": {"what", "who", "how", "when", "where", "which"},
                              "how_many": {"how many"}}
             self.first_tokens = {"first"}
@@ -116,8 +115,8 @@ class SlovnetSyntaxParser(Component, Serializable):
                             found = False
                     if found and i > 0:
                         token_tags = [self.nlp(tokens[j])[0].pos_ for j in range(i, i + 3)]
-                        lemm_tokens = [self.nlp(tok)[0].lemma_ for tok in tokens[i:i + 3]]
-                        if token_tags == ["ADJF", "ADJF", "NOUN"] and not set(lemm_tokens) & self.first_tokens:
+                        lemm_tokens = {self.nlp(tok)[0].lemma_ for tok in tokens[i:i + 3]}
+                        if token_tags == ["ADJF", "ADJF", "NOUN"] and not lemm_tokens & self.first_tokens:
                             long_substr = " ".join(tokens[i:i + 3])
                             replace_dict[tokens[i + 2]] = (long_substr, "adj")
                             sentence = sentence.replace(long_substr, tokens[i + 2])

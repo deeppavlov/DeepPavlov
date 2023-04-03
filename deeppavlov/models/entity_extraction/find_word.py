@@ -15,8 +15,10 @@
 import itertools
 import pickle
 from collections import Counter
+
 import numpy as np
 import scipy as sp
+
 from deeppavlov.core.commands.utils import expand_path
 
 Sparse = sp.sparse.csr_matrix
@@ -78,7 +80,7 @@ class WordSearcher:
         )
 
         scores = query_matrix * self.count_matrix
-        scores = np.squeeze(scores.toarray() + 0.0001)
+        scores = np.squeeze(scores.toarray())
 
         if self.thresh >= len(scores):
             o = np.argpartition(-scores, len(scores) - 1)[0:self.thresh]
