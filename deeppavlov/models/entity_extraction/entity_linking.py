@@ -100,8 +100,6 @@ class EntityLinker(Component, Serializable):
         self.num_entities_for_conn_ranking = num_entities_for_conn_ranking
         self.entity_ranker = entity_ranker
         self.entities_database_filename = entities_database_filename
-        self.words_dict_filename = words_dict_filename
-        self.ngrams_matrix_filename = ngrams_matrix_filename
         self.num_entities_to_return = num_entities_to_return
         self.max_text_len = max_text_len
         self.max_paragraph_len = max_paragraph_len
@@ -119,7 +117,6 @@ class EntityLinker(Component, Serializable):
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
-        self.not_found_str = "not in wiki"
         self.related_tags = {
             "loc": ["gpe", "country", "city", "us_state", "river"],
             "gpe": ["loc", "country", "city", "us_state"],
@@ -130,8 +127,8 @@ class EntityLinker(Component, Serializable):
             "business": ["org"]
         }
         self.word_searcher = None
-        if self.words_dict_filename:
-            self.word_searcher = WordSearcher(self.words_dict_filename, self.ngrams_matrix_filename, self.lang)
+        if words_dict_filename:
+            self.word_searcher = WordSearcher(words_dict_filename, ngrams_matrix_filename, self.lang)
         self.kb_filename = kb_filename
         self.prefixes = prefixes
         self.load()

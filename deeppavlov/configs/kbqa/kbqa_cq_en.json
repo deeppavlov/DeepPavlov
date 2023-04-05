@@ -70,7 +70,6 @@
         "use_connections": false,
         "use_tags": true,
         "alias_coef": 1.0,
-        "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_full.hdt",
         "prefixes": {"entity": ["http://we"],
                      "rels": {"direct": "http://wpd",
                               "no_type": "http://wp",

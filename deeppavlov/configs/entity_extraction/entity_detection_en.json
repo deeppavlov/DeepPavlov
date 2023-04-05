@@ -14,7 +14,6 @@
         "thres_proba": 0.6,
         "o_tag": "O",
         "tags_file": "{NER_PATH}/tag.dict",
-        "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
         "id": "edp"
       },

@@ -139,6 +139,10 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
+  "torch_transformers_nll_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "torch_transformers_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"

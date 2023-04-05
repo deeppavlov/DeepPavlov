@@ -16,7 +16,7 @@ import re
 from collections import defaultdict
 from logging import getLogger
 from string import punctuation
-from typing import List, Tuple, Union, Dict, Any
+from typing import List, Tuple, Union, Any
 
 import numpy as np
 from nltk.corpus import stopwords
@@ -111,10 +111,9 @@ class EntityDetectionParser(Component):
             self.stopwords = set(stopwords.words("english"))
         elif lang == "ru":
             self.stopwords = set(stopwords.words("russian"))
-        if ignored_tags:
-            self.ignored_tags = ignored_tags
         else:
-            self.ignored_tags = []
+            raise ValueError(f'Unsupported lang value: "{lang}". Only "en" and "ru" are allowed.')
+        self.ignored_tags = ignored_tags or []
 
     def __call__(self, question_tokens_batch: List[List[str]], tokens_info_batch: List[List[List[float]]],
                  tokens_probas_batch: np.ndarray) -> \

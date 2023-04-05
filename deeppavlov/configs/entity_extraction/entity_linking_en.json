@@ -26,7 +26,6 @@
         "num_entities_to_return": 3,
         "lemmatize": true,
         "use_descriptions": true,
-        "wikidata_file": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
         "use_connections": true,
         "use_tags": true,
         "full_paragraph": true,

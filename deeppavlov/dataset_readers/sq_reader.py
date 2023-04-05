@@ -18,6 +18,7 @@ from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common.file import load_pickle
 
 
 @register('sq_reader')
@@ -26,11 +27,12 @@ class SQReader(DatasetReader):
 
     def read(self, data_path: str, valid_size: int = None):
         if str(data_path).endswith(".pickle"):
-            with open(data_path, 'rb') as f:
-                dataset = pickle.load(f)
+            dataset = load_pickle(data_path)
         elif str(data_path).endswith(".json"):
             with open(data_path, 'r') as f:
                 dataset = json.load(f)
+        else:
+            raise TypeError(f'Unsupported file type: {data_path}')
         if valid_size:
             dataset["valid"] = dataset["valid"][:valid_size]
 

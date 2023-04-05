@@ -16,7 +16,7 @@
 import itertools
 import re
 from logging import getLogger
-from typing import List, Iterable
+from typing import List
 
 import numpy as np
 
