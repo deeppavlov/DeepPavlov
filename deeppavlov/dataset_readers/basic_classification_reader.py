@@ -17,7 +17,6 @@ from logging import getLogger
 from pathlib import Path
 
 import pandas as pd
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -32,7 +31,6 @@ class BasicClassificationDatasetReader(DatasetReader):
     Class provides reading dataset in .csv format
     """
 
-    @overrides
     def read(self, data_path: str, url: str = None,
              format: str = "csv", class_sep: str = None,
              *args, **kwargs) -> dict:

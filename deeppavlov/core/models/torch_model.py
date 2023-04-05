@@ -224,7 +224,6 @@ class TorchModel(NNModel):
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 
-    @overrides
     def process_event(self, event_name: str, data: dict) -> None:
         """Process event. After epoch, increase `self.epochs_done`. After validation, decrease learning rate in
             `self.learning_rate_drop_div` times (not lower than `self.min_learning_rate`)

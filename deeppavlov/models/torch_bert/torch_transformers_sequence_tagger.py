@@ -270,7 +270,6 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         return pred, probas
 
-    @overrides
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname

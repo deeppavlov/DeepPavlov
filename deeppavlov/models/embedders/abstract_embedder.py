@@ -56,7 +56,6 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         self.model = None
         self.load()
 
-    @overrides
     def save(self) -> None:
         """
         Class does not save loaded model again as it is not trained during usage
