@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import List, Union, Iterator
 
 import numpy as np
-from overrides import overrides
 
 from deeppavlov.core.data.utils import zero_pad
 from deeppavlov.core.models.component import Component
@@ -62,7 +61,6 @@ class Embedder(Component, Serializable, metaclass=ABCMeta):
         """
         raise NotImplementedError
 
-    @overrides
     def __call__(self, batch: List[List[str]], mean: bool = None) -> List[Union[list, np.ndarray]]:
         """
         Embed sentences from batch

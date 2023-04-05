@@ -4,7 +4,6 @@ import random
 from typing import Dict, List, Tuple
 from pathlib import Path
 from logging import getLogger
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -16,7 +15,6 @@ logger = getLogger(__name__)
 class RuREDDatasetReader(DatasetReader):
     """ Class to read the datasets in RuRED format"""
 
-    @overrides
     def read(self, data_path: str, rel2id: Dict = None) -> Dict[str, List[Tuple]]:
         """
         This class processes the RuRED relation extraction dataset

@@ -18,7 +18,6 @@ from typing import List, Union, Dict, Optional, Tuple
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForTokenClassification, AutoConfig
 
 from deeppavlov.core.commands.utils import expand_path
@@ -310,7 +309,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                 else:
                     log.warning(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
-    @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         super().save()
         if self.use_crf:

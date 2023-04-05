@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.nn_model import NNModel
@@ -130,7 +129,6 @@ class TorchModel(NNModel):
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
-    @overrides
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Load model from `fname` (if `fname` is not given, use `self.load_path`) to `self.model` along with
             the optimizer `self.optimizer`, optionally `self.lr_scheduler`.
@@ -187,7 +185,6 @@ class TorchModel(NNModel):
             log.debug(f"Init from scratch. Load path {self.load_path} is not provided.")
             self.init_from_opt(model_func)
 
-    @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Save torch model to `fname` (if `fname` is not given, use `self.save_path`). Checkpoint includes
             `model_state_dict`, `optimizer_state_dict`, and `epochs_done` (number of training epochs).
