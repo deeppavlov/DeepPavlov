@@ -73,7 +73,6 @@
   "slovnet_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/slovnet.txt",
     "{DEEPPAVLOV_PATH}/requirements/razdel.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "spelling_error_model": [
@@ -169,7 +168,6 @@
   "tree_to_sparql": [
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt",
     "{DEEPPAVLOV_PATH}/requirements/razdel.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "typos_custom_reader": [
