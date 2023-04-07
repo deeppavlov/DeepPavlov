@@ -14,11 +14,12 @@
 
 
 import itertools
-from typing import List, Iterable
+from typing import List
 
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
+
 
 @register_metric('accuracy')
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
@@ -194,7 +195,7 @@ def accuracy_oos(y_true, y_pred, exclude_oos: bool = False) -> float:
     if exclude_oos:
         y_true = np.array(y_true)
         y_pred = np.array(y_pred)
-        
+
         ind_mask = np.where(y_true == 'oos')
 
         y_true = np.delete(y_true, ind_mask, 0)

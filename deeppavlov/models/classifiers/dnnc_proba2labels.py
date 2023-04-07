@@ -22,9 +22,11 @@ from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
+
 def preprocess_scores(scores, is_binary, class_id: int = 1):
     scores = np.array(scores)
     return scores if is_binary else scores[:, class_id]
+
 
 @register('dnnc_proba2labels')
 class Proba2Labels(Component):
@@ -38,7 +40,6 @@ class Proba2Labels(Component):
         self.confidence_threshold = confidence_threshold
         self.pooling = pooling
         self.is_binary = is_binary
-
 
     def __call__(self,
                  simmilarity_scores: Union[np.ndarray, List[List[float]], List[List[int]]],
@@ -55,7 +56,7 @@ class Proba2Labels(Component):
 
         unique_labels = np.unique(y_support)
 
-        for example in x: 
+        for example in x:
             example_mask = np.where(np.logical_xor(x_populated == example, x_support == example))
             example_simmilarity_scores = simmilarity_scores[example_mask]
             example_y_support = y_support[example_mask]
@@ -69,12 +70,12 @@ class Proba2Labels(Component):
                 elif self.pooling == 'max':
                     label_probability = np.max(label_simmilarity_scores)
                 probability_by_label.append(label_probability)
-            
+
             probability_by_label = np.array(probability_by_label)
             max_probability = max(probability_by_label)
             max_probability_label = unique_labels[np.argmax(probability_by_label)]
             prediction = "oos" if max_probability < self.confidence_threshold else max_probability_label
-            
+
             y_pred.append(prediction)
-    
+
         return y_pred

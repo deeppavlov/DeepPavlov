@@ -19,9 +19,9 @@ from logging import getLogger
 
 import numpy as np
 from sklearn.metrics import f1_score
+from sklearn.metrics import precision_recall_fscore_support
 
 from deeppavlov.core.common.metrics_registry import register_metric
-from sklearn.metrics import precision_recall_fscore_support
 
 log = getLogger(__name__)
 
@@ -418,6 +418,7 @@ def roc_auc__roc_auc__ner_f1(true_onehot1, pred_probas1, true_onehot2, pred_prob
     roc_auc2 = roc_auc_score(true_onehot2, pred_probas2)
     ner_f1_3 = ner_f1(ner_true3, ner_pred3) / 100
     return (roc_auc1 + roc_auc2 + ner_f1_3) / 3
+
 
 @register_metric('oos_scores')
 def oos_scores(y_true, y_pred):
