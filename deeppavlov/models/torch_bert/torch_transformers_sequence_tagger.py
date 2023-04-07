@@ -313,7 +313,7 @@ class TorchTransformersSequenceTagger(TorchModel):
 
     @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
-        super().save()
+        super().save(fname)
         if self.use_crf:
             if fname is None:
                 fname = self.save_path
