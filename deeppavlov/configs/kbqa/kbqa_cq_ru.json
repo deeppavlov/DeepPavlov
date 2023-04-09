@@ -133,7 +133,6 @@
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "adj_to_noun": "#adj2noun",
         "syntax_parser": "#slovnet_parser",
-        "lang": "ru",
         "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
         "in": ["x_punct", "entity_substr", "tags", "entity_offsets", "entity_positions", "probas"],
         "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "entities_to_link", "s_types_substr"]
@@ -148,9 +147,7 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_nll_bert_ru.json",
-                   "overwrite": {"chainer.pipe.1.return_probas": true}
-        },
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_nll_bert_ru.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "nll_rel_ranking": true,
@@ -169,8 +166,7 @@
         "rel_ranker": "#rel_r_inf",
         "wiki_parser": "#wiki_p",
         "load_path": "{DOWNLOADS_PATH}/wikidata",
-        "rank_rels_filename_1": "rels_0.txt",
-        "rank_rels_filename_2": "rels_1.txt",
+        "rels_in_ranking_queries_fname": "rels_in_ranking_queries.json",
         "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "entities_to_leave": 9,
         "rels_to_leave": 10,
@@ -224,7 +220,7 @@
         "subdir": "{DOWNLOADS_PATH}/entity_detection_rubq"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {

@@ -20,7 +20,7 @@ The question answerer:
 Built-In Models
 ------------------
 
-Currently, we provide five built-in models for KBQA in DeepPavlov library:
+Currently, we provide two built-in models for KBQA in DeepPavlov library:
 
 * :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` - for answering complex questions over Wikidata in English,
 

@@ -375,7 +375,7 @@ class TreeToSparql(Component):
                 tok_and_ord = {node.ord: node for node in tree.descendants}
                 appos_token_nums = sorted(self.find_appos_tokens(root, tok_and_ord, []))
                 appos_tokens = [elem.form for elem in tree_desc if elem.ord in appos_token_nums]
-                clause_token_nums = sorted(self.find_clause_tokens(root, tok_and_ord, clause_node, []))
+                clause_token_nums = sorted(self.find_clause_tokens(root, tok_and_ord, clause_node))
                 clause_tokens = [elem.form for elem in tree_desc if elem.ord in clause_token_nums]
                 log.debug(f"appos tokens: {appos_tokens}")
                 log.debug(f"clause_tokens: {clause_tokens}")
@@ -620,8 +620,8 @@ class TreeToSparql(Component):
                 appos_token_nums = self.find_appos_tokens(elem, tok_and_ord, appos_token_nums)
         return appos_token_nums
 
-    def find_clause_tokens(self, node: Node, tok_and_ord: Dict[int, Node], clause_node: Node,
-                           clause_token_nums: List[int]) -> List[int]:
+    def find_clause_tokens(self, node: Node, tok_and_ord: Dict[int, Node], clause_node: Node) -> List[int]:
+        clause_token_nums = []
         for elem in node.children:
             if elem != clause_node and elem.deprel == "acl":
                 clause_token_nums.append(elem.ord)

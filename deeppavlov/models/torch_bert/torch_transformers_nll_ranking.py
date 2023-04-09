@@ -39,14 +39,10 @@ class TorchTransformersNLLRanker(TorchModel):
         pretrained_bert: pretrained transformer checkpoint path or key title (e.g. "bert-base-uncased")
         encoder_save_path: path to save the encoder checkpoint
         linear_save_path: path to save linear layer checkpoint
-        bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        criterion: name of loss function
         optimizer: optimizer name from `torch.optim`
         optimizer_parameters: dictionary with optimizer's parameters,
                               e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        attention_probs_keep_prob: keep_prob for Bert self-attention layers
-        hidden_keep_prob: keep_prob for Bert hidden layers
         clip_norm: clip gradients by norm
     """
 
@@ -56,23 +52,16 @@ class TorchTransformersNLLRanker(TorchModel):
             pretrained_bert: str = None,
             encoder_save_path: str = None,
             linear_save_path: str = None,
-            bert_config_file: Optional[str] = None,
-            criterion: str = "CrossEntropyLoss",
             optimizer: str = "AdamW",
             optimizer_parameters: Dict = None,
             return_probas: bool = False,
-            attention_probs_keep_prob: Optional[float] = None,
-            hidden_keep_prob: Optional[float] = None,
             clip_norm: Optional[float] = None,
             **kwargs
     ):
         self.pretrained_bert = pretrained_bert
         self.encoder_save_path = encoder_save_path
         self.linear_save_path = linear_save_path
-        self.bert_config_file = bert_config_file
         self.return_probas = return_probas
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
         if optimizer_parameters is None:
             optimizer_parameters = {"lr": 1e-5, "weight_decay": 0.01, "eps": 1e-6}
@@ -80,9 +69,7 @@ class TorchTransformersNLLRanker(TorchModel):
         super().__init__(
             model_name=model_name,
             optimizer=optimizer,
-            criterion=criterion,
             optimizer_parameters=optimizer_parameters,
-            return_probas=return_probas,
             **kwargs)
 
     def train_on_batch(self, input_features: Dict[str, Any], positive_idx: List[int]) -> float:
@@ -160,7 +147,6 @@ class NLLRanking(nn.Module):
         encoder_save_path: path to save the encoder checkpoint
         linear_save_path: path to save linear layer checkpoint
         bert_tokenizer_config_file: path to configuration file of transformer tokenizer
-        bert_config_file: path to transformer configuration file, or None, if `pretrained_bert` is a string name
         device: cpu or gpu
     """
 
@@ -170,14 +156,12 @@ class NLLRanking(nn.Module):
             encoder_save_path: str = None,
             linear_save_path: str = None,
             bert_tokenizer_config_file: str = None,
-            bert_config_file: str = None,
             device: str = "gpu"
     ):
         super().__init__()
         self.pretrained_bert = pretrained_bert
         self.encoder_save_path = encoder_save_path
         self.linear_save_path = linear_save_path
-        self.bert_config_file = bert_config_file
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
 
         # initialize parameters that would be filled later
@@ -230,10 +214,6 @@ class NLLRanking(nn.Module):
             )
             self.encoder = AutoModel.from_pretrained(self.pretrained_bert, config=self.config)
             self.fc = nn.Linear(self.config.hidden_size, 1)
-
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-            self.encoder = AutoModel.from_config(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 

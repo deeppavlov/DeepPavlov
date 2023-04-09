@@ -27,7 +27,7 @@ class AnswerTypesExtractor:
     """Class which defines answer types for the question"""
 
     def __init__(self, lang: str, types_filename: str, types_sets_filename: str,
-                 num_types_to_return: int = 15, use_type_substr: bool = False, **kwargs):
+                 num_types_to_return: int = 15, **kwargs):
         """
 
         Args:
@@ -42,7 +42,6 @@ class AnswerTypesExtractor:
         self.types_filename = str(expand_path(types_filename))
         self.types_sets_filename = str(expand_path(types_sets_filename))
         self.num_types_to_return = num_types_to_return
-        self.use_type_substr = use_type_substr
         if self.lang == "@en":
             self.stopwords = set(stopwords.words("english"))
             self.nlp = spacy.load("en_core_web_sm")
@@ -58,7 +57,6 @@ class AnswerTypesExtractor:
 
     def __call__(self, questions_batch: List[str], entity_substr_batch: List[List[str]],
                  tags_batch: List[List[str]], types_substr_batch: List[List[str]] = None):
-        types_sets_batch = []
         if types_substr_batch is None:
             types_substr_batch = []
             for question, entity_substr_list in zip(questions_batch, entity_substr_batch):
@@ -96,32 +94,7 @@ class AnswerTypesExtractor:
                 types_substr = sorted(types_substr, key=lambda x: x[1])
                 types_substr = " ".join([elem[0] for elem in types_substr])
                 types_substr_batch.append(types_substr)
-        if self.use_type_substr:
-            for types_substr in types_substr_batch:
-                types_substr_tokens = types_substr.split()
-                types_substr_tokens = [tok for tok in types_substr_tokens if tok not in self.stopwords]
-                if self.lang == "@ru":
-                    types_substr_tokens = [self.nlp(tok)[0].lemma_ for tok in types_substr_tokens]
-                types_substr_tokens = set(types_substr_tokens)
-                types_scores = []
-                for entity in self.types_dict:
-                    labels, cnt = self.types_dict[entity]
-                    cur_cnts = []
-                    for label in labels:
-                        label_tokens = label.lower().split()
-                        if len(types_substr_tokens) == 1 and len(label_tokens) == 2 and \
-                                list(types_substr_tokens)[0] == label_tokens[0]:
-                            cur_cnts.append(0.3)
-                        else:
-                            inters = types_substr_tokens.intersection(set(label_tokens))
-                            cur_cnts.append(len(inters) / max(len(types_substr_tokens), len(label_tokens)))
-
-                    types_scores.append([entity, max(cur_cnts), cnt])
-                types_scores = sorted(types_scores, key=lambda x: (x[1], x[2]), reverse=True)
-                cur_types = [elem[0] for elem in types_scores if elem[1] > 0][:self.num_types_to_return]
-                types_sets_batch.append(cur_types)
-        else:
-            types_sets_batch = [set() for _ in questions_batch]
+        types_sets_batch = [set() for _ in questions_batch]
         for n, (question, types_sets) in enumerate(zip(questions_batch, types_sets_batch)):
             question = question.lower()
             if not types_sets:

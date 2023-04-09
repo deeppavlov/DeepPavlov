@@ -45,7 +45,8 @@ class QueryGenerator(QueryGeneratorBase):
                  rels_to_leave: int = 7,
                  max_comb_num: int = 10000,
                  gold_query_info: Dict[str, str] = None,
-                 return_all_possible_answers: bool = False, *args, **kwargs) -> None:
+                 map_query_str_to_kb: List[Tuple[str, str]] = None,
+                 return_answers: bool = True, *args, **kwargs) -> None:
         """
 
         Args:
@@ -56,7 +57,8 @@ class QueryGenerator(QueryGeneratorBase):
             rels_to_leave: how many relations to leave after relation ranking
             max_comb_num: the maximum number of combinations of candidate entities and relations
             gold_query_info: dict of variable names used for formatting output sparql queries
-            return_all_possible_answers: whether to return all found answers
+            map_query_str_to_kb: mapping of knowledge base prefixes to full https
+            return_answers: whether to return answers or candidate relations and answers for further ranking
             **kwargs:
         """
         self.wiki_parser = wiki_parser
@@ -66,7 +68,8 @@ class QueryGenerator(QueryGeneratorBase):
         self.rels_to_leave = rels_to_leave
         self.max_comb_num = max_comb_num
         self.gold_query_info = gold_query_info
-        self.return_all_possible_answers = return_all_possible_answers
+        self.map_query_str_to_kb = map_query_str_to_kb
+        self.return_answers = return_answers
         self.replace_tokens = [("wdt:p", "wdt:P"), ("pq:p", "pq:P")]
         super().__init__(wiki_parser=self.wiki_parser, rel_ranker=self.rel_ranker,
                          entities_to_leave=self.entities_to_leave, rels_to_leave=self.rels_to_leave,
@@ -119,7 +122,6 @@ class QueryGenerator(QueryGeneratorBase):
         question_tokens = nltk.word_tokenize(question)
         rels_scores_dict = {}
         for query_info in queries_info:
-            parsed_query_info = {}
             query = query_info["query_template"].lower()
             for old_tok, new_tok in self.replace_tokens:
                 query = query.replace(old_tok, new_tok)
@@ -204,25 +206,23 @@ class QueryGenerator(QueryGeneratorBase):
 
             all_combs_list = list(itertools.product(entity_combs, type_combs, rel_combs))
             all_combs_list = sorted(all_combs_list, key=lambda x: (sum([elem[-1] for elem in x]), x[0][-1]))
-
-            parsed_query_info["query_triplets"] = query_triplets
-            parsed_query_info["query_sequence"] = query_sequence
-            parsed_query_info["rels_from_query"] = rels_from_query
-            parsed_query_info["answer_ent"] = answer_ent
-            parsed_query_info["filter_info"] = filter_info
-            parsed_query_info["order_info"] = order_info
-            parsed_query_info["rel_types"] = rel_types
-            parsed_query_info["unk_rels"] = unk_rels
-            parsed_query_info["return_if_found"] = return_if_found
-            parsed_query_info["selected_entity_ids"] = selected_entity_ids
-            parsed_query_info["selected_type_ids"] = selected_type_ids
-            parsed_query_info["rels"] = rels
-            parsed_query_info["entities_rel_conn"] = entities_rel_conn
-            parsed_query_info["entity_combs"] = entity_combs
-            parsed_query_info["type_combs"] = type_combs
-            parsed_query_info["rel_combs"] = rel_combs
-            parsed_query_info["all_combs_list"] = all_combs_list
-            parsed_queries_info.append(parsed_query_info)
+            parsed_queries_info.append({"query_triplets": query_triplets,
+                                        "query_sequence": query_sequence,
+                                        "rels_from_query": rels_from_query,
+                                        "answer_ent": answer_ent,
+                                        "filter_info": filter_info,
+                                        "order_info": order_info,
+                                        "rel_types": rel_types,
+                                        "unk_rels": unk_rels,
+                                        "return_if_found": return_if_found,
+                                        "selected_entity_ids": selected_entity_ids,
+                                        "selected_type_ids": selected_type_ids,
+                                        "rels": rels,
+                                        "entities_rel_conn": entities_rel_conn,
+                                        "entity_combs": entity_combs,
+                                        "type_combs": type_combs,
+                                        "rel_combs": rel_combs,
+                                        "all_combs_list": all_combs_list})
         return parsed_queries_info, rels_scores_dict
 
     def check_valid_query(self, entities_rel_conn, query_hdt_seq):
@@ -367,7 +367,7 @@ class QueryGenerator(QueryGeneratorBase):
 
 
 @register('query_formatter')
-class QueryFormatter:
+class QueryFormatter(Component):
     def __init__(self, query_info: Dict[str, str], replace_prefixes: Dict[str, str] = None, **kwargs):
         self.query_info = query_info
         self.replace_prefixes = replace_prefixes

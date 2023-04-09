@@ -64,8 +64,7 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ru_adj_to_noun": [
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "russian_words_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"

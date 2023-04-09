@@ -43,8 +43,7 @@ class QueryGeneratorBase(Component, Serializable):
                  load_path: str,
                  sparql_queries_filename: str,
                  entity_linker: EntityLinker,
-                 rank_rels_filename_1: str = None,
-                 rank_rels_filename_2: str = None,
+                 rels_in_ranking_queries_fname: str = None,
                  wiki_parser=None,
                  entities_to_leave: int = 5,
                  rels_to_leave: int = 7,
@@ -52,10 +51,7 @@ class QueryGeneratorBase(Component, Serializable):
                  use_wp_api_requester: bool = False,
                  use_el_api_requester: bool = False,
                  use_alt_templates: bool = True,
-                 use_add_templates: bool = False,
-                 return_answers: bool = True,
                  delete_rel_prefix: bool = True,
-                 map_query_str_to_kb: List[Tuple[str, str]] = None,
                  kb_prefixes: Dict[str, str] = None, *args, **kwargs) -> None:
         """
 
@@ -64,8 +60,7 @@ class QueryGeneratorBase(Component, Serializable):
             entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             load_path: path to folder with wikidata files
-            rank_rels_filename_1: file with list of rels for first rels in questions with ranking 
-            rank_rels_filename_2: file with list of rels for second rels in questions with ranking
+            rels_in_ranking_queries_fname: file with list of rels in queries for questions with ranking 
             sparql_queries_filename: file with sparql query templates
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             entities_to_leave: how many entities to leave after entity linking
@@ -82,35 +77,23 @@ class QueryGeneratorBase(Component, Serializable):
         self.entity_linker = entity_linker
         self.wiki_parser = wiki_parser
         self.rel_ranker = rel_ranker
-        self.rank_rels_filename_1 = rank_rels_filename_1
-        self.rank_rels_filename_2 = rank_rels_filename_2
-        self.rank_list_0 = []
-        self.rank_list_1 = []
+        self.rels_in_ranking_queries_fname = rels_in_ranking_queries_fname
+        self.rels_in_ranking_queries = {}
         self.entities_to_leave = entities_to_leave
         self.rels_to_leave = rels_to_leave
         self.syntax_structure_known = syntax_structure_known
         self.use_wp_api_requester = use_wp_api_requester
         self.use_el_api_requester = use_el_api_requester
         self.use_alt_templates = use_alt_templates
-        self.use_add_templates = use_add_templates
         self.sparql_queries_filename = sparql_queries_filename
-        self.return_answers = return_answers
         self.delete_rel_prefix = delete_rel_prefix
-        self.map_query_str_to_kb = map_query_str_to_kb
         self.kb_prefixes = kb_prefixes
 
         self.load()
 
     def load(self) -> None:
-        if self.rank_rels_filename_1 is not None:
-            with open(self.load_path / self.rank_rels_filename_1, 'r') as fl1:
-                lines = fl1.readlines()
-                self.rank_list_0 = [line.split('\t')[0] for line in lines]
-
-        if self.rank_rels_filename_2 is not None:
-            with open(self.load_path / self.rank_rels_filename_2, 'r') as fl2:
-                lines = fl2.readlines()
-                self.rank_list_1 = [line.split('\t')[0] for line in lines]
+        if self.rels_in_ranking_queries_fname is not None:
+            self.rels_in_ranking_queries = read_json(self.load_path / self.rels_in_ranking_queries_fname)
 
         template_queries = read_json(str(expand_path(self.sparql_queries_filename)))
         self.template_queries = preprocess_template_queries(template_queries, self.kb_prefixes)
@@ -183,7 +166,7 @@ class QueryGeneratorBase(Component, Serializable):
             el_output = self.entity_linker([entities], [tags], [probas], [[question]], [None], [None],
                                            [entities_to_link])
         except json.decoder.JSONDecodeError:
-            log.info("not received output from entity linking")
+            log.warning("not received output from entity linking")
         if el_output:
             if self.use_el_api_requester:
                 el_output = el_output[0]
@@ -285,9 +268,9 @@ class QueryGeneratorBase(Component, Serializable):
             if self.delete_rel_prefix:
                 ex_rels = [rel.split('/')[-1] for rel in ex_rels]
         elif source in {"rank_list_1", "rel_list_1"}:
-            ex_rels = self.rank_list_0
+            ex_rels = self.rels_in_ranking_queries.get("one_rel_in_query", [])
         elif source in {"rank_list_2", "rel_list_2"}:
-            ex_rels = self.rank_list_1
+            ex_rels = self.rels_in_ranking_queries.get("two_rels_in_query", [])
 
         ex_rels = [rel for rel in ex_rels if not any([rel.endswith(t_rel) for t_rel in self.kb_prefixes["type_rels"]])]
         rels_with_scores = self.rel_ranker.rank_rels(question, ex_rels)

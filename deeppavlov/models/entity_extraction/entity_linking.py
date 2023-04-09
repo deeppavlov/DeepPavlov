@@ -57,10 +57,8 @@ class EntityLinker(Component, Serializable):
             alias_coef: float = 1.1,
             use_tags: bool = False,
             lemmatize: bool = False,
-            fuzzy_match: bool = False,
             full_paragraph: bool = False,
             use_connections: bool = False,
-            sort_low_conf: bool = False,
             kb_filename: str = None,
             prefixes: Dict[str, Any] = None,
             **kwargs,
@@ -85,17 +83,14 @@ class EntityLinker(Component, Serializable):
                 title of the entity
             use_tags: whether to filter candidate entities by tags
             lemmatize: whether to lemmatize tokens
-            fuzzy_match: whether to match substrings from the text and entity labels by Levenshtein distance
             full_paragraph: whether to use full paragraph for entity context
             use_connections: whether to rank entities by connections in the knowledge graph
-            sort_low_conf: whether to filter out entities with low confidence
             kb_filename: filename with the knowledge base in HDT format
             prefixes: entity and title prefixes
             **kwargs:
         """
         super().__init__(save_path=None, load_path=load_path)
         self.lemmatize = lemmatize
-        self.fuzzy_match = fuzzy_match
         self.num_entities_for_bert_ranking = num_entities_for_bert_ranking
         self.num_entities_for_conn_ranking = num_entities_for_conn_ranking
         self.entity_ranker = entity_ranker
@@ -113,7 +108,6 @@ class EntityLinker(Component, Serializable):
         self.alias_coef = alias_coef
         self.use_descriptions = use_descriptions
         self.use_connections = use_connections
-        self.sort_low_conf = sort_low_conf
         self.use_tags = use_tags
         self.full_paragraph = full_paragraph
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
@@ -280,7 +274,7 @@ class EntityLinker(Component, Serializable):
                             cand_ent_init = self.find_exact_match(corr_words[0], tags + corr_tags,
                                                                   use_tags=use_tags_flag)
 
-                    if (not cand_ent_init or self.fuzzy_match) and len(substr_split) > 1:
+                    if not cand_ent_init and len(substr_split) > 1:
                         cand_ent_init = self.find_fuzzy_match(substr_split, tags)
 
                     all_low_conf = self.define_all_low_conf(cand_ent_init, 0.85)
@@ -643,9 +637,6 @@ class EntityLinker(Component, Serializable):
 
             top_entities = [elem[0] for elem in high_conf_entities] + top_entities
             top_conf = [elem[1:] for elem in high_conf_entities] + top_conf
-
-            if self.sort_low_conf:
-                top_entities, top_conf = self.sort_out_low_conf(entity_substr, top_entities, top_conf)
 
             if not top_entities:
                 entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)

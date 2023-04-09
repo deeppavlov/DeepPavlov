@@ -152,7 +152,7 @@ class WikiParser:
                 filled_triplets = []
                 try:
                     filled_triplets = self.fill_triplets(*query)
-                except:
+                except ValueError:
                     log.warning("Wrong arguments are passed to wiki_parser")
                 wiki_parser_output.append(filled_triplets)
             elif parser_info == "find_triplets":
@@ -342,6 +342,7 @@ class WikiParser:
     def define_is_boolean(query_hdt_seq):
         return len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]])
 
+    @staticmethod
     def merge_combs(self, comb1, comb2):
         new_comb = {}
         for key in comb1:

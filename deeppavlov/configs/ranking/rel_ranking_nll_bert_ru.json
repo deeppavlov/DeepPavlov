@@ -14,7 +14,7 @@
         "class_name": "torch_transformers_nll_ranker",
         "in": ["bert_features"],
         "out": ["model_output"],
-        "return_probas": false,
+        "return_probas": true,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "encoder_save_path": "{MODEL_PATH}/encoder",

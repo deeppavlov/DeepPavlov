@@ -129,9 +129,7 @@
       },
       {
         "class_name": "rel_ranking_infer",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
-                   "overwrite": {"chainer.pipe.1.return_probas": true}
-        },
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
         "nll_path_ranking": true,
@@ -173,7 +171,7 @@
         "subdir": "{MODELS_PATH}/entity_type_detection_distilbert_lcquad2.0"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/downloads/queries_and_rels_lcquad2.tar.gz",
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/queries_and_rels_lcquad2_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
