@@ -57,11 +57,11 @@ class QueryGeneratorBase(Component, Serializable):
 
         Args:
             template_matcher: component deeppavlov.models.kbqa.template_matcher
-            entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
             rel_ranker: component deeppavlov.models.kbqa.rel_ranking_infer
             load_path: path to folder with wikidata files
-            rels_in_ranking_queries_fname: file with list of rels in queries for questions with ranking 
             sparql_queries_filename: file with sparql query templates
+            entity_linker: component deeppavlov.models.entity_extraction.entity_linking for linking of entities
+            rels_in_ranking_queries_fname: file with list of rels in queries for questions with ranking
             wiki_parser: component deeppavlov.models.kbqa.wiki_parser
             entities_to_leave: how many entities to leave after entity linking
             rels_to_leave: how many relations to leave after relation ranking
@@ -71,6 +71,8 @@ class QueryGeneratorBase(Component, Serializable):
             use_el_api_requester: whether deeppavlov.models.api_requester.api_requester component will be used for
                 Entity Linking
             use_alt_templates: whether to use alternative templates if no answer was found for default query template
+            delete_rel_prefix: whether to delete prefix in relations
+            kb_prefixes: prefixes for entities, relations and types in the knowledge base
         """
         super().__init__(save_path=None, load_path=load_path)
         self.template_matcher = template_matcher
@@ -109,9 +111,8 @@ class QueryGeneratorBase(Component, Serializable):
                                entity_tags: List[str],
                                probas: List[float],
                                entities_to_link: List[int],
-                               answer_types: Set[str]) -> Tuple[Union[Union[List[List[Union[str, float]]],
-                                                                            List[Any]], Any],
-                                                                Union[str, Any], Union[List[Any], Any]]:
+                               answer_types: Set[str]) -> tuple[
+        tuple[list[Any] | None, list[Any]] | list[list[str | float]] | list[Any], str | Any]:
         candidate_outputs = []
         self.template_nums = [template_types]
 
@@ -160,7 +161,7 @@ class QueryGeneratorBase(Component, Serializable):
         return candidate_outputs, template_answer
 
     def get_entity_ids(self, entities: List[str], tags: List[str], probas: List[float], question: str,
-                             entities_to_link: List[str] = None) -> List[List[str]]:
+                       entities_to_link: List[int] = None) -> List[List[str]]:
         entity_ids, el_output = [], []
         try:
             el_output = self.entity_linker([entities], [tags], [probas], [[question]], [None], [None],
@@ -183,10 +184,9 @@ class QueryGeneratorBase(Component, Serializable):
     def sparql_template_parser(self, question: str,
                                entity_ids: List[List[str]],
                                type_ids: List[List[str]],
-                               answer_types: List[str],
+                               answer_types: Set[str],
                                rels_from_template: Optional[List[Tuple[str]]] = None,
-                               rel_dirs_from_template: Optional[List[str]] = None) -> Tuple[Union[None, List[Any]],
-                                                                                            List[Any]]:
+                               rel_dirs_from_template: Optional[List[str]] = None) -> list[Any] | Any:
         candidate_outputs = []
         if isinstance(self.template_nums, str):
             self.template_nums = [self.template_nums]
@@ -239,7 +239,8 @@ class QueryGeneratorBase(Component, Serializable):
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
         return candidate_outputs
 
-    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> List[Tuple[str, Any]]:
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> tuple[
+        list[tuple[str, Any]], dict, set[tuple[Any, Any]]]:
         ex_rels, entity_rel_conn = [], set()
         direction, source, rel_type, n_hop = triplet_info
         if source == "wiki":

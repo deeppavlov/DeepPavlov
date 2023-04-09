@@ -16,9 +16,11 @@ import re
 from collections import defaultdict
 from logging import getLogger
 from typing import List
+
 import numpy as np
 import spacy
 from scipy.sparse import csr_matrix
+
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 
@@ -33,7 +35,7 @@ class RuAdjToNoun:
     """
 
     def __init__(self, freq_dict_filename: str, candidate_nouns: int = 10, freq_thres: float = 4.5,
-                       score_thres: float = 2.8, **kwargs):
+                 score_thres: float = 2.8, **kwargs):
         """
 
         Args:

@@ -23,6 +23,7 @@ import nltk
 import numpy as np
 
 from deeppavlov.core.common.registry import register
+from deeppavlov.core.models.component import Component
 from deeppavlov.models.kbqa.query_generator_base import QueryGeneratorBase
 from deeppavlov.models.kbqa.rel_ranking_infer import RelRankerInfer
 from deeppavlov.models.kbqa.utils import extract_year, extract_number, make_combs, fill_query, find_query_features, \

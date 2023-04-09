@@ -14,14 +14,14 @@
 
 import datetime
 import re
+from collections import namedtuple
 from logging import getLogger
 from typing import List, Tuple, Dict, Any, Union
-from collections import namedtuple
 
 from hdt import HDTDocument
 
-from deeppavlov.core.common.file import load_pickle, read_json
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.file import load_pickle, read_json
 from deeppavlov.core.common.registry import register
 
 log = getLogger(__name__)

@@ -108,27 +108,29 @@ class RelRankerInfer(Component, Serializable):
                     template_answers_batch):
             answers_with_scores = []
             l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_triplets, \
-                l_confs = self.preprocess_ranking_input(question, raw_answers)
+            l_confs = self.preprocess_ranking_input(question, raw_answers)
 
             n_batches = len(l_questions) // self.batch_size + int(len(l_questions) % self.batch_size > 0)
             for i in range(n_batches):
                 if self.rank:
                     if self.nll_path_ranking:
                         probas = self.ranker([l_questions[0]],
-                                             [l_rels_labels[self.batch_size*i:self.batch_size*(i+1)]])
+                                             [l_rels_labels[self.batch_size * i:self.batch_size * (i + 1)]])
                         probas = probas[0]
                     else:
-                        probas = self.ranker(l_questions[self.batch_size*i:self.batch_size*(i+1)],
-                                             l_rels_labels[self.batch_size*i:self.batch_size*(i+1)])
+                        probas = self.ranker(l_questions[self.batch_size * i:self.batch_size * (i + 1)],
+                                             l_rels_labels[self.batch_size * i:self.batch_size * (i + 1)])
                         probas = [proba[0] for proba in probas]
                 else:
-                    probas = [rel_conf for rel_conf, entity_conf in l_confs[self.batch_size*i:self.batch_size*(i+1)]]
-                for j in range(self.batch_size*i, self.batch_size*(i+1)):
-                    if j < len(l_cur_answers) and (probas[j - self.batch_size*i] > self.rel_thres or \
-                            (len(l_rels[j]) > 1 and not set(l_rels[j]).intersection(self.type_rels))):
+                    probas = [rel_conf for rel_conf, entity_conf in
+                              l_confs[self.batch_size * i:self.batch_size * (i + 1)]]
+                for j in range(self.batch_size * i, self.batch_size * (i + 1)):
+                    if j < len(l_cur_answers) and (probas[j - self.batch_size * i] > self.rel_thres or
+                                                   (len(l_rels[j]) > 1 and not set(l_rels[j]).intersection(
+                                                       self.type_rels))):
                         answers_with_scores.append((l_cur_answers[j], l_sparql_queries[j], l_triplets[j],
                                                     l_entities[j], l_types[j], l_rels_labels[j], l_rels[j],
-                                                    round(probas[j - self.batch_size*i], 3),
+                                                    round(probas[j - self.batch_size * i], 3),
                                                     round(l_confs[j][0], 3), l_confs[j][1]))
             answers_with_scores = sorted(answers_with_scores, key=lambda x: x[-1] * x[-3], reverse=True)
             if template_type == "simple_boolean" and not answers_with_scores:
@@ -169,7 +171,7 @@ class RelRankerInfer(Component, Serializable):
                         answer = sentence_answer(question, answer, entities, template_answer)
                     except ValueError as e:
                         log.warning(f"Error in sentence answer, {e}")
-                
+
                 res_answers_list.append(answer)
                 res_answer_ids_list.append(answer_ids)
                 if "several_confidences" in self.return_elements:
@@ -219,7 +221,7 @@ class RelRankerInfer(Component, Serializable):
 
     def preprocess_ranking_input(self, question, answers):
         l_questions, l_rels, l_rels_labels, l_cur_answers = [], [], [], []
-        l_entities, l_types, l_sparql_queries, l_triplets, l_confs = [], [], [], [], []    
+        l_entities, l_types, l_sparql_queries, l_triplets, l_confs = [], [], [], [], []
         for ans_and_rels in answers:
             answer, sparql_query, confidence = "", "", []
             entities, types, rels, rels_labels, triplets = [], [], [], [], []
@@ -249,7 +251,7 @@ class RelRankerInfer(Component, Serializable):
                 l_triplets.append(triplets)
                 l_confs.append(confidence)
         return l_questions, l_rels, l_rels_labels, l_cur_answers, l_entities, l_types, l_sparql_queries, l_triplets, \
-            l_confs
+               l_confs
 
     def rank_rels(self, question: str, candidate_rels: List[str]) -> List[Tuple[str, Any]]:
         rels_with_scores = []
