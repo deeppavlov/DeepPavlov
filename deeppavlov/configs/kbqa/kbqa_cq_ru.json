@@ -120,7 +120,7 @@
         "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
         "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
         "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
-        "tree_patterns_filename": "{DOWNLOADS_PATH}/wikidata_rus/tree_patterns.json",
+        "tree_patterns_filename": "{MODELS_PATH}/slovnet_syntax_parser/tree_patterns.json",
         "id": "slovnet_parser"
       },
       {
@@ -213,11 +213,11 @@
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_torch_distilbert_mult.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/ner_ontonotes_torch_distilbert_mult"
+        "subdir": "{MODELS_PATH}/ner_ontonotes_torch_distilbert_mult"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/models/entity_detection_rubq.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/entity_detection_rubq"
+        "subdir": "{MODELS_PATH}/entity_detection_rubq"
       },
       {
         "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus_v2.tar.gz",
@@ -228,7 +228,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/slovnet_syntax_parser.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/slovnet_syntax_parser.tar.gz",
         "subdir": "{MODELS_PATH}/slovnet_syntax_parser"
       },
       {

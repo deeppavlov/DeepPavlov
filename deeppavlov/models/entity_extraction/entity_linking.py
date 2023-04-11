@@ -517,21 +517,22 @@ class EntityLinker(Component, Serializable):
         entity_ids_list = []
         conf_list = []
         contexts = []
-        for entity_start_offset, entity_end_offset in entity_offsets_list:
-            sentence = ""
-            rel_start_offset = 0
-            rel_end_offset = 0
-            found_sentence_num = 0
-            for num, (sent, (sent_start_offset, sent_end_offset)) in enumerate(
-                    zip(sentences_list, sentences_offsets_list)
-            ):
-                if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
-                    sentence = sent
-                    found_sentence_num = num
-                    rel_start_offset = entity_start_offset - sent_start_offset
-                    rel_end_offset = entity_end_offset - sent_start_offset
-                    break
-            context = ""
+        for entity_offset in entity_offsets_list:
+            context, sentence = "", ""
+            if len(entity_offset) == 2:
+                entity_start_offset, entity_end_offset = entity_offset
+                rel_start_offset = 0
+                rel_end_offset = 0
+                found_sentence_num = 0
+                for num, (sent, (sent_start_offset, sent_end_offset)) in enumerate(
+                        zip(sentences_list, sentences_offsets_list)
+                ):
+                    if entity_start_offset >= sent_start_offset and entity_end_offset <= sent_end_offset:
+                        sentence = sent
+                        found_sentence_num = num
+                        rel_start_offset = entity_start_offset - sent_start_offset
+                        rel_end_offset = entity_end_offset - sent_start_offset
+                        break
             if sentence:
                 start_of_sentence = 0
                 end_of_sentence = len(sentence)
@@ -591,7 +592,7 @@ class EntityLinker(Component, Serializable):
                 elif scores_dict and 0 < max_conn_score == scores_dict.get(entity, 0):
                     score = 1.0
                     num_rels = 200
-                entities_with_scores.append((entity, substr_score, num_rels, score))
+                entities_with_scores.append((entity, substr_score, num_rels, float(score)))
 
             if tag == "t":
                 entities_with_scores = sorted(entities_with_scores, key=lambda x: (x[1], x[2], x[3]), reverse=True)

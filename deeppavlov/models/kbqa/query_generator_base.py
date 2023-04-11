@@ -111,8 +111,7 @@ class QueryGeneratorBase(Component, Serializable):
                                entity_tags: List[str],
                                probas: List[float],
                                entities_to_link: List[int],
-                               answer_types: Set[str]) -> tuple[
-        tuple[list[Any] | None, list[Any]] | list[list[str | float]] | list[Any], str | Any]:
+                               answer_types: Set[str]) -> Tuple[Union[List[Dict[str, Any]], list], str]:
         candidate_outputs = []
         self.template_nums = [template_types]
 
@@ -186,7 +185,7 @@ class QueryGeneratorBase(Component, Serializable):
                                type_ids: List[List[str]],
                                answer_types: Set[str],
                                rels_from_template: Optional[List[Tuple[str]]] = None,
-                               rel_dirs_from_template: Optional[List[str]] = None) -> list[Any] | Any:
+                               rel_dirs_from_template: Optional[List[str]] = None) -> Union[List[Dict[str, Any]], list]:
         candidate_outputs = []
         if isinstance(self.template_nums, str):
             self.template_nums = [self.template_nums]
@@ -239,8 +238,8 @@ class QueryGeneratorBase(Component, Serializable):
         log.debug("candidate_rels_and_answers:\n" + '\n'.join([str(output) for output in candidate_outputs[:5]]))
         return candidate_outputs
 
-    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> tuple[
-        list[tuple[str, Any]], dict, set[tuple[Any, Any]]]:
+    def find_top_rels(self, question: str, entity_ids: List[List[str]], triplet_info: Tuple) -> \
+            Tuple[List[Tuple[str, float]], Dict[str, float], Set[Tuple[str, str]]]:
         ex_rels, entity_rel_conn = [], set()
         direction, source, rel_type, n_hop = triplet_info
         if source == "wiki":

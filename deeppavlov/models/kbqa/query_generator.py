@@ -251,8 +251,7 @@ class QueryGenerator(QueryGeneratorBase):
                      entity_ids: List[List[str]],
                      type_ids: List[List[str]],
                      answer_types: Set[str],
-                     rels_from_template: Optional[List[Tuple[str]]] = None) -> Union[
-        List[Dict[str, Union[Union[Tuple[Any, ...], List[Any]], Any]]], List[Dict[str, Any]]]:
+                     rels_from_template: Optional[List[Tuple[str]]] = None) -> Union[List[Dict[str, Any]], list]:
         parsed_queries_info, rels_scores_dict = self.parse_queries_info(question, queries_info, entity_ids, type_ids,
                                                                         rels_from_template)
         queries_list, parser_info_list, entity_conf_list = [], [], []

@@ -187,7 +187,7 @@ PARAMS = {
                  [(0, 6), (17, 23), (31, 63), (72, 90)],
                  [(0, 91)],
                  ([['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
-                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
+                   ['Q190778', 'Q119158', 'Q27495502'], ['Q1697', 'Q4303932', 'Q24565285']],
                   [[[1.1, 200, 1.0], [1.0, 20, 0.0], [1.0, 18, 0.0]],
                    [[1.1, 200, 1.0], [1.0, 58, 1.0], [1.0, 29, 0.96]],
                    [[1.1, 200, 1.0], [0.67, 56, 0.96], [0.67, 3, 0.95]],
@@ -258,20 +258,20 @@ PARAMS = {
         ("kbqa/kbqa_cq_en.json", "kbqa", ('IP',)):
             [
                 ("What is the currency of Sweden?",
-                 ("Swedish krona", "Q122922", "SELECT ?answer WHERE { wd:Q34 wdt:P38 ?answer. }")),
+                 ("Swedish krona", ["Q122922"], ["SELECT ?answer WHERE { wd:Q34 wdt:P38 ?answer. }"])),
                 ("Where was Napoleon Bonaparte born?",
-                 ("Ajaccio", "Q40104", "SELECT ?answer WHERE { wd:Q517 wdt:P19 ?answer. }")),
+                 ("Ajaccio", ["Q40104"], ["SELECT ?answer WHERE { wd:Q517 wdt:P19 ?answer. }"])),
                 ("When did the Korean War end?",
-                 ("27 July 1953", "+1953-07-27^^T", "SELECT ?answer WHERE { wd:Q8663 wdt:P582 ?answer. }")),
+                 ("27 July 1953", ["+1953-07-27^^T"], ["SELECT ?answer WHERE { wd:Q8663 wdt:P582 ?answer. }"])),
                 ("   ", ("Not Found", [], []))
             ],            
         ("kbqa/kbqa_cq_ru.json", "kbqa", ('IP',)):
             [
                 ("Кто такой Оксимирон?",
-                 ("российский рэп-исполнитель", 'российский рэп-исполнитель"@ru',
-                  "SELECT ?answer WHERE { wd:Q4046107 wdt:P0 ?answer. }")),
+                 ("российский рэп-исполнитель", ['российский рэп-исполнитель"@ru'],
+                  ["SELECT ?answer WHERE { wd:Q4046107 wdt:P0 ?answer. }"])),
                 ("Кто написал «Евгений Онегин»?",
-                 ("Александр Сергеевич Пушкин", "Q7200", "SELECT ?answer WHERE { wd:Q50948 wdt:P50 ?answer. }")),
+                 ("Александр Сергеевич Пушкин", ["Q7200"], ["SELECT ?answer WHERE { wd:Q50948 wdt:P50 ?answer. }"])),
                 ("абв", ("Not Found", [], []))
             ]
     },
