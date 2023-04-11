@@ -26,8 +26,8 @@ Welcome to DeepPavlov's documentation!
    :glob:
    :maxdepth: 1
    :caption: Models
-   
-   
+
+   Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/SQuAD.ipynb>
    Classification <features/models/classification.ipynb>
    Named Entity Recognition <features/models/NER.ipynb>
@@ -41,7 +41,6 @@ Welcome to DeepPavlov's documentation!
    Relation Extraction <features/models/re>
    SuperGLUE Submission <features/models/superglue>
    Open-Domain Question Answering <features/models/odqa>
-   Frequently Asked Questions Answering <features/models/faq>
 
 
 .. toctree::
@@ -51,7 +50,6 @@ Welcome to DeepPavlov's documentation!
 
    REST API <integrations/rest_api>
    Socket API <integrations/socket_api>
-   DeepPavlov Agent RabbitMQ integration <integrations/dp_agent>
    Amazon AWS deployment <integrations/aws_ec2>
    DeepPavlov settings <integrations/settings>
 

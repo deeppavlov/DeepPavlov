@@ -169,7 +169,6 @@ class FitTrainer:
                 y_predicted = [y_predicted]
             for out, val in zip(outputs.values(), y_predicted):
                 out += list(val)
-
         if examples == 0:
             log.warning('Got empty data iterable for scoring')
             return {'eval_examples_count': 0, 'metrics': None, 'time_spent': str(datetime.timedelta(seconds=0))}
@@ -177,7 +176,15 @@ class FitTrainer:
         # metrics_values = [(m.name, m.fn(*[outputs[i] for i in m.inputs])) for m in metrics]
         metrics_values = []
         for metric in metrics:
-            value = metric.fn(*[outputs[i] for i in metric.inputs])
+            calculate_metric = True
+            for i in metric.inputs:
+                outputs[i] = [k for k in outputs[i] if k is not None]
+                if len(outputs[i]) == 0:
+                    log.info(f'Metric {metric.alias} is not calculated due to absense of true and predicted samples')
+                    calculate_metric = False
+                    value = -1
+            if calculate_metric:
+                value = metric.fn(*[outputs[i] for i in metric.inputs])
             metrics_values.append((metric.alias, value))
 
         report = {

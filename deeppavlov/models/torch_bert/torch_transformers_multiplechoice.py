@@ -18,7 +18,6 @@ from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForMultipleChoice, AutoConfig
 
 from deeppavlov.core.common.errors import ConfigError

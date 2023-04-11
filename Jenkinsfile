@@ -18,6 +18,8 @@ node('cuda-module') {
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG up py36 py37
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG ps | grep Exit | grep -v 'Exit 0' && exit 1
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG up py38 py39
+                    docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG ps | grep Exit | grep -v 'Exit 0' && exit 1
+                    docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG up py310
                     docker-compose -f utils/Docker/docker-compose.yml -p $BUILD_TAG ps | grep Exit | grep -v 'Exit 0' && exit 1 || exit 0
                 """
                 currentBuild.result = 'SUCCESS'

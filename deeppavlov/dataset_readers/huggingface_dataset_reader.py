@@ -19,7 +19,6 @@ from math import floor
 from typing import Dict, Optional, List, Union
 
 from datasets import load_dataset, Dataset, Features, ClassLabel, concatenate_datasets
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -30,9 +29,7 @@ class HuggingFaceDatasetReader(DatasetReader):
     """Adds HuggingFace Datasets https://huggingface.co/datasets/ to DeepPavlov
     """
 
-    @overrides
     def read(self,
-             data_path: str,
              path: str,
              name: Optional[str] = None,
              train: Optional[str] = None,  # for lidirus with no train
@@ -42,7 +39,6 @@ class HuggingFaceDatasetReader(DatasetReader):
         """Wraps datasets.load_dataset method
 
         Args:
-            data_path: DeepPavlov's data_path argument, is not used, but passed by trainer
             path: datasets.load_dataset path argument (e.g., `glue`)
             name: datasets.load_dataset name argument (e.g., `mrpc`)
             train: split name to use as training data.

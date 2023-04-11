@@ -18,7 +18,6 @@ from typing import List, Union, Dict, Optional, Tuple
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForTokenClassification, AutoConfig
 
 from deeppavlov.core.commands.utils import expand_path
@@ -248,7 +247,6 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         return pred, probas
 
-    @overrides
     def load(self, fname=None):
         super().load(fname)
         if self.crf is not None:
@@ -262,10 +260,11 @@ class TorchTransformersSequenceTagger(TorchModel):
                 else:
                     log.warning(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
-    @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         super().save(fname, *args, **kwargs)
         if self.crf is not None:
+            if fname is None:
+                fname = self.save_path
             weights_path_crf = Path(f"{fname}_crf").resolve()
             weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
             torch.save({"model_state_dict": self.crf.cpu().state_dict()}, weights_path_crf)

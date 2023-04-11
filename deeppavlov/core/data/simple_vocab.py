@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import Counter, defaultdict, Iterable
+from collections import Counter, defaultdict
 from itertools import chain
 from logging import getLogger
-from typing import Optional, Tuple, List
+from typing import Iterable, Optional, Tuple
 
 import numpy as np
 
@@ -89,7 +89,10 @@ class SimpleVocabulary(Estimator):
 
     def __call__(self, batch, is_top=True, **kwargs):
         if isinstance(batch, Iterable) and not isinstance(batch, str):
-            looked_up_batch = [self(sample, is_top=False) for sample in batch]
+            if all([k is None for k in batch]):
+                return batch
+            else:
+                looked_up_batch = [self(sample, is_top=False) for sample in batch]
         else:
             return self[batch]
         if self._pad_with_zeros and is_top and not is_str_batch(looked_up_batch):

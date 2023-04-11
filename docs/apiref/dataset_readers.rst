@@ -23,3 +23,6 @@ Concrete DatasetReader classes.
 
 .. automodule:: deeppavlov.dataset_readers.ubuntu_v2_reader
    :members:
+
+.. automodule:: deeppavlov.dataset_readers.multitask_reader
+   :members:

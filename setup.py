@@ -68,8 +68,10 @@ if __name__ == '__main__':
                 'pexpect'
             ],
             'docs': [
-                'sphinx==3.5.4',
+                'sphinx==3.5.4;python_version<"3.10"',
+                'sphinx==4.5.0;python_version>="3.10"',
                 'sphinx_rtd_theme==0.5.2',
+                'docutils<0.17,>=0.12',
                 'nbsphinx==0.8.4',
                 'ipykernel==5.5.4',
                 'jinja2<=3.0.3',

@@ -5,7 +5,9 @@
     "name": "{TASK}",
     "train": "train",
     "valid": "validation",
-    "test": "test"
+    "test": "test",
+    "data_url": "http://files.deeppavlov.ai/datasets/russian_super_glue/MuSeRC",
+    "ignore_verifications": true
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",

@@ -18,7 +18,6 @@ from pathlib import Path
 from typing import Optional
 
 import torch
-from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.models.nn_model import NNModel
@@ -91,7 +90,6 @@ class TorchModel(NNModel):
     def is_data_parallel(self) -> bool:
         return isinstance(self.model, torch.nn.DataParallel)
 
-    @overrides
     def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Load model from `fname` (if `fname` is not given, use `self.load_path`) to `self.model` along with
             the optimizer `self.optimizer`.
@@ -141,7 +139,6 @@ class TorchModel(NNModel):
             log.warning(f"Init from scratch. Load path {self.load_path} is not provided.")
         self.model.to(self.device)
 
-    @overrides
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """Save torch model to `fname` (if `fname` is not given, use `self.save_path`). Checkpoint includes
             `model_state_dict`, `optimizer_state_dict`, and `epochs_done` (number of training epochs).
@@ -178,7 +175,6 @@ class TorchModel(NNModel):
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 
-    @overrides
     def process_event(self, event_name: str, data: dict) -> None:
         """Process event. After epoch, increase `self.epochs_done`. After validation, decrease learning rate in
             `self.learning_rate_drop_div` times (not lower than `self.min_learning_rate`)
