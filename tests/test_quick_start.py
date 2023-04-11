@@ -57,6 +57,13 @@ LIST_ARGUMENTS_INFER_CHECK = (['Dummy text', 'Dummy text'], ['Dummy text', 'Dumm
 
 RECORD_ARGUMENTS_INFER_CHECK = ("Index", "Dummy query text", "Dummy passage text", "Dummy entity", 1, None)
 
+MTL_GLUE_INFER_CHECK = [['test phrase'] for _ in range(2)] + [[('test phrase 1', 'test phrase 2')]
+                                                              for _ in range(6)
+MTL_EXAMPLE_INFER_CHECK = [['phrase1'], [('pair 1 phrase 1', 'pair 1 phrase 2'), ('pair 2 phrase 1', 'pair 2 phrase 2')],
+                           ['phrase3'], [('context in pair 1', ['choice 1 in pair 1', 'choice 2 in pair 1']),
+                                         ('context in pair 2', ['choice 1 in pair 2', 'choice 2 in pair 2'])],
+                           ['first second']]
+
 # Mapping from model name to config-model_dir-ispretrained and corresponding queries-response list.
 PARAMS = {
     "relation_extraction": {
@@ -137,6 +144,10 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
+    },
+    "multitask":{
+        ("multitask/multitask_example.json", "multitask", ('IP', )): MTL_EXAMPLE_INFER_CHECK,
+        ("multitask/mt_glue.json", "multitask", ('IP', )): MTL_GLUE_INFER_CHECK # already wrapped in list
     },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
