@@ -20,7 +20,6 @@ from typing import Dict, Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from overrides import overrides
 from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
 from transformers import AutoConfig, AutoModel
 
@@ -140,7 +139,7 @@ class BertForMultiTask(nn.Module):
                     outputs = self.bert(input_ids=input_ids.long(),
                                         attention_mask=attention_mask.long())
                     self.model_takes_token_type_ids=False
-                else:                    
+                else:
                     raise e
         if name == 'sequence_labeling':
             return outputs.last_hidden_state
@@ -251,8 +250,6 @@ class MultiTaskTransformer(TorchModel):
         max_seq_len(int): maximum length of the input token sequence.
         optimizer(str): optimizer name defaults to AdamW,
         optimizer_parameters(dict): optimizer parameters,
-        lr_scheduler(str): name of the lr scheduler,if it is used
-        lr_scheduler_parameters(dict): lr scheduler parameters for the scheduler, if the scheduler is used
         gradient_accumulation_steps(default:1): number of gradient accumulation steps,
         steps_per_epoch(int): number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
         backbone_model(str): name of HuggingFace.Transformers backbone model. Default: 'bert-base-cased'
@@ -273,9 +270,7 @@ class MultiTaskTransformer(TorchModel):
             tasks: Dict[str, Dict],
             max_seq_len: str = 320,
             optimizer: str = "AdamW",
-            optimizer_parameters: dict = {"lr": 2e-5},
-            lr_scheduler: Optional[str] = None,
-            lr_scheduler_parameters: dict = {},
+            optimizer_parameters: dict = None,
             gradient_accumulation_steps: Optional[int] = 1,
             steps_per_epoch: Optional[int] = None,
             backbone_model: str = "bert-base-cased",
@@ -295,17 +290,16 @@ class MultiTaskTransformer(TorchModel):
         self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.task_types = []
-        self.backbone_model = backbone_model
         self.max_seq_len = max_seq_len
         self.tasks_num_classes = []
         self.task_names = []
         self.multilabel = []
-        self.weights = []
+        weights = []
         self.types_to_cache = []
         for task in tasks:
             self.task_names.append(task)
             self.tasks_num_classes.append(tasks[task].get('options', 1))
-            self.weights.append(tasks[task].get('weight', None))
+            weights.append(tasks[task].get('weight', None))
             self.task_types.append(tasks[task]['type'])
             self.multilabel.append(tasks[task].get('multilabel', False))
             self.one_hot_labels.append(tasks[task].get('one_hot_labels', False))
@@ -317,77 +311,44 @@ class MultiTaskTransformer(TorchModel):
         self.train_losses = [[] for _ in self.task_names]
         self.optimizer_name = optimizer
         self.optimizer_parameters = optimizer_parameters
-        self.lr_scheduler_name = lr_scheduler
-        self.lr_scheduler_parameters = lr_scheduler_parameters
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.steps_per_epoch = steps_per_epoch
         self.steps_taken = 0
         self.prev_id = None
         self.printed = False
         self.freeze_embeddings = freeze_embeddings
-        self.dropout = dropout
-        self.new_model = new_model
         self.binary_threshold = binary_threshold
-        self.focal = focal
         self._reset_cache()
         torch.manual_seed(seed)
 
-        super().__init__(
-            optimizer_parameters=self.optimizer_parameters,
-            lr_scheduler=self.lr_scheduler_name,
-            lr_scheduler_parameters=self.lr_scheduler_parameters,
-            **kwargs,
-        )
-
-    def _reset_cache(self):
-        self.preds_cache = {index_: None for index_ in self.types_to_cache if index_ != -1}
-
-    @overrides
-    def init_from_opt(self) -> None:
-        """
-        Initialize from scratch `self.model` with the architecture built
-        in `model_func (MultitaskBert)` method of this class along with
-        `self.optimizer` as `self.optimizer_name` from `torch.optim` and
-        parameters `self.optimizer_parameters`, optionally initialize
-        `self.lr_scheduler` as `self.lr_scheduler_name` from
-        `torch.optim.lr_scheduler` and parameters `self.lr_scheduler_parameters`
-        """
-
-        self.model = BertForMultiTask(
-            backbone_model=self.backbone_model,
+        model = BertForMultiTask(
+            backbone_model=backbone_model,
             tasks_num_classes=self.tasks_num_classes,
-            weights=self.weights,
+            weights=weights,
             multilabel=self.multilabel,
             one_hot_labels=self.one_hot_labels,
             task_types=self.task_types,
-            new_model=self.new_model,
-            focal=self.focal,
-            dropout=self.dropout)
-        self.model = self.model.to(self.device)
+            new_model=new_model,
+            focal=focal,
+            dropout=dropout)
         no_decay = ["bias", "gamma", "beta"]
         base = ["attn"]
 
-        def get_non_decay_params(model): return [
-            p
-            for n, p in model.named_parameters()
-            if not any(nd in n for nd in no_decay)
-               and not any(nd in n for nd in base)
-        ]
+        def get_non_decay_params(model):
+            return [p for n, p in model.named_parameters() if
+                    not any(nd in n for nd in no_decay) and not any(nd in n for nd in base)]
 
-        def get_decay_params(model): return [
-            p
-            for n, p in model.named_parameters()
-            if any(nd in n for nd in no_decay)
-               and not any(nd in n for nd in base)
-        ]
+        def get_decay_params(model):
+            return [p for n, p in model.named_parameters() if
+                    any(nd in n for nd in no_decay) and not any(nd in n for nd in base)]
 
         model_parameters = [
             {
-                "params": get_non_decay_params(self.model),
+                "params": get_decay_params(model),
                 "weight_decay": 0.01,
             },
             {
-                "params": get_decay_params(self.model),
+                "params": get_non_decay_params(model),
                 "weight_decay": 0.0,
             },
         ]
@@ -396,60 +357,18 @@ class MultiTaskTransformer(TorchModel):
             model_parameters, **self.optimizer_parameters
         )
 
-        if self.lr_scheduler_name:
-            self.lr_scheduler = getattr(
-                torch.optim.lr_scheduler, self.lr_scheduler_name
-            )(self.optimizer, **self.lr_scheduler_parameters)
+    def _reset_cache(self):
+        self.preds_cache = {index_: None for index_ in self.types_to_cache if index_ != -1}
 
-    @overrides
     def load(self, fname: Optional[str] = None) -> None:
         """
         Loads weights.
         """
-        if fname is not None:
-            self.load_path = fname
-
-        if self.load_path:
-            log.info(f"Load path {self.load_path} is given.")
-            if isinstance(
-                    self.load_path,
-                    Path) and not self.load_path.parent.is_dir():
-                raise ConfigError("Provided load path is incorrect!")
-
-            weights_path = Path(self.load_path.resolve())
-            weights_path = weights_path.with_suffix(f".pth.tar")
-            if weights_path.exists():
-                log.info(f"Load path {weights_path} exists.")
-                log.info(
-                    f"Initializing `{self.__class__.__name__}` from saved.")
-
-                # firstly, initialize with random weights and previously saved
-                # parameters
-                self.init_from_opt()
-
-                # now load the weights, optimizer from saved
-                log.info(f"Loading weights from {weights_path}.")
-                checkpoint = torch.load(weights_path, map_location=self.device)
-                self.model.load_state_dict(checkpoint["model_state_dict"])
-                self.optimizer.load_state_dict(
-                    checkpoint["optimizer_state_dict"])
-                self.epochs_done = checkpoint.get("epochs_done", 0)
-            else:
-                log.info(
-                    f"Init from scratch. Load path {weights_path} does not exist.")
-                self.init_from_opt()
-        else:
-            log.info(
-                f"Init from scratch. Load path {self.load_path} is not provided.")
-            self.init_from_opt()
+        super().load(fname)
         if self.freeze_embeddings:
             for n, p in self.model.bert.named_parameters():
                 if not ('final_classifier' in n or 'pool' in n):
                     p.requires_grad = False
-            log.info("Bert Embeddings Freezed")
-
-        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
 
     def _make_input(self, task_features, task_id, labels=None):
         batch_input_size = None
@@ -642,8 +561,6 @@ class MultiTaskTransformer(TorchModel):
         if (self.steps_taken + 1) % self.gradient_accumulation_steps == 0 or (
                 self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
             self.optimizer.step()
-            if self.lr_scheduler:
-                self.lr_scheduler.step()  # Update learning rate schedule
             self.optimizer.zero_grad()
         self.train_losses[task_id] = loss.item()
         self.steps_taken += 1
