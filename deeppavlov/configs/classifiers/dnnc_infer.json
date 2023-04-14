@@ -63,9 +63,8 @@
     "batch_size": 1,
     "metrics": [
       {
-        "name": "accuracy_oos",
-        "inputs": ["y_true", "y_pred"],
-        "exclude_oos": true
+        "name": "accuracy_in_domain",
+        "inputs": ["y_true", "y_pred"]
       },
       {
         "name": "oos_scores",

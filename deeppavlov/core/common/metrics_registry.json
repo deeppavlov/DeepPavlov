@@ -1,6 +1,7 @@
 {
   "acc": "deeppavlov.metrics.accuracy:round_accuracy",
-  "accuracy_oos": "deeppavlov.metrics.accuracy:accuracy_oos",
+  "accuracy": "deeppavlov.metrics.accuracy:accuracy",
+  "accuracy_in_domain": "deeppavlov.metrics.accuracy:accuracy_in_domain",
   "average__ner_f1__f1_macro__f1": "deeppavlov.metrics.fmeasure:ner_f1__f1_macro__f1",
   "average__roc_auc__roc_auc__ner_f1": "deeppavlov.metrics.fmeasure:roc_auc__roc_auc__ner_f1",
   "bleu": "deeppavlov.metrics.bleu:bleu",
