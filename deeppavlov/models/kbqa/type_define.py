@@ -82,9 +82,9 @@ class AnswerTypesExtractor:
                             break
                         elif token.head.text == type_noun and token.dep_ == "prep":
                             if len(list(token.children)) == 1 \
-                                    and not any([list(token.children)[0] in entity_substr.lower()
+                                    and not any([list(token.children)[0].text in entity_substr.lower()
                                                  for entity_substr in entity_substr_list]):
-                                types_substr += [token.text, list(token.children)[0]]
+                                types_substr += [token.text, list(token.children)[0].text]
                 elif any([word in question for word in self.pronouns]):
                     for token in doc:
                         if token.dep_ == "nsubj" and not any([token.text in entity_substr.lower()

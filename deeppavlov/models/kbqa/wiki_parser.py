@@ -297,7 +297,7 @@ class WikiParser:
                 for rel_combs in rel_combs_list:
                     new_rel_combs = []
                     for rel_comb in rel_combs:
-                        value_str = rel_comb[sort_elem].split('^^')[0].strip('"')
+                        value_str = rel_comb[sort_elem].split('^^')[0].strip('"+')
                         fnd_date = re.findall(r"[\d]{3,4}-[\d]{1,2}-[\d]{1,2}", value_str)
                         fnd_num = re.findall(r"([\d]+)\.([\d]+)", value_str)
                         if fnd_date:
@@ -343,7 +343,7 @@ class WikiParser:
         return len(query_hdt_seq) == 1 and all([not query_hdt_seq[0][i].startswith("?") for i in [0, 2]])
 
     @staticmethod
-    def merge_combs(self, comb1, comb2):
+    def merge_combs(comb1, comb2):
         new_comb = {}
         for key in comb1:
             if (key in comb2 and comb1[key] == comb2[key]) or key not in comb2:

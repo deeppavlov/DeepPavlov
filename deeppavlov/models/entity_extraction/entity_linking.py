@@ -541,7 +541,7 @@ class EntityLinker(Component, Serializable):
                     end_of_sentence = min(rel_end_offset + self.max_text_len // 2, len(sentence))
                 text_before = sentence[start_of_sentence:rel_start_offset]
                 text_after = sentence[rel_end_offset:end_of_sentence]
-                context = text_before + "[ent]" + text_after
+                context = text_before + "[ENT]" + text_after
                 if self.full_paragraph:
                     cur_sent_len = len(re.findall(self.re_tokenizer, context))
                     first_sentence_num = found_sentence_num
