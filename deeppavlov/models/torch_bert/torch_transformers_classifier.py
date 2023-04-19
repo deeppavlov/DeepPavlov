@@ -68,7 +68,6 @@ class TorchTransformersClassifierModel(TorchModel):
                  bert_config_file: Optional[str] = None,
                  is_binary: Optional[bool] = False,
                  num_special_tokens: int = None,
-                 binary_head_dropout: int = 0.1,
                  **kwargs) -> None:
 
         if not optimizer_parameters:
@@ -89,7 +88,6 @@ class TorchTransformersClassifierModel(TorchModel):
         self.is_binary = is_binary
         self.bert_config = None
         self.num_special_tokens = num_special_tokens
-        self.binary_head_dropout = binary_head_dropout
 
         if self.multilabel and not self.one_hot_labels:
             raise RuntimeError('Use one-hot encoded labels for multilabel classification!')
@@ -206,7 +204,7 @@ class TorchTransformersClassifierModel(TorchModel):
         if self.pretrained_bert:
             log.debug(f"From pretrained {self.pretrained_bert}.")
             config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                classifier_dropout=self.binary_head_dropout,
+                                                # num_labels=self.n_classes,
                                                 output_attentions=False,
                                                 output_hidden_states=False)
 
@@ -215,6 +213,9 @@ class TorchTransformersClassifierModel(TorchModel):
                 self.model = AutoModelForBinaryClassification(self.pretrained_bert, config)
             else:
                 self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
+
+                # TODO need a better solution here and at
+                # deeppavlov.models.torch_bert.torch_bert_ranker.TorchBertRankerModel.load
                 try:
                     hidden_size = self.model.classifier.out_proj.in_features
 
@@ -322,7 +323,7 @@ class BinaryClassificationHead(torch.nn.Module):
         self.config = config
 
         self.dense = torch.nn.Linear(config.hidden_size, config.hidden_size)
-        self.dropout = torch.nn.Dropout(config.classifier_dropout)
+        self.dropout = torch.nn.Dropout(config.hidden_dropout_prob)
         self.out_proj = torch.nn.Linear(config.hidden_size, 1)
 
     def init_weights(self):
