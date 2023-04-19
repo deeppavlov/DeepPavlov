@@ -23,18 +23,22 @@ from deeppavlov.core.models.component import Component
 log = getLogger(__name__)
 
 
-def preprocess_scores(scores, is_binary, class_id: int = 1):
-    scores = np.array(scores)
-    return scores if is_binary else scores[:, class_id]
-
-
 @register('dnnc_proba2labels')
 class Proba2Labels(Component):
+    """
+    Converts pairwise simmilarity scores into class label
+    
+    Args:
+        confidence_threshold: used to determine whether example belongs to one 
+                              of the classes in 'y_support' or not
+        pooling: strategy for averaging similarity scores for each label
+    """
 
     def __init__(self,
                  confidence_threshold: float = 0.0,
                  pooling: str = 'max',
-                 is_binary: bool = False,
+                 is_binary: bool = True,
+                 *args,
                  **kwargs) -> None:
 
         self.confidence_threshold = confidence_threshold
@@ -42,19 +46,22 @@ class Proba2Labels(Component):
         self.is_binary = is_binary
 
     def __call__(self,
-                 simmilarity_scores: Union[np.ndarray, List[List[float]], List[List[int]]],
+                 simmilarity_scores: List[float],
                  x: List[str],
                  x_populated: List[str],
                  x_support: List[str],
-                 y_support: List[str]):
+                 y_support: List[str]) -> List[str]:
         y_pred = []
 
-        simmilarity_scores = preprocess_scores(simmilarity_scores, self.is_binary)
+        simmilarity_scores = np.array(simmilarity_scores)
         x_populated = np.array(x_populated)
         x_support = np.array(x_support)
         y_support = np.array(y_support)
-
         unique_labels = np.unique(y_support)
+
+        # Transform probits vector into a simmilarity score
+        if not self.is_binary:
+            simmilarity_scores = simmilarity_scores[:, 1]        
 
         for example in x:
             example_mask = np.where(np.logical_xor(x_populated == example, x_support == example))
