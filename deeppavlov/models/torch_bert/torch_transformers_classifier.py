@@ -75,7 +75,7 @@ class TorchTransformersClassifierModel(TorchModel):
             optimizer_parameters = {"lr": 1e-3,
                                     "weight_decay": 0.01,
                                     "betas": (0.9, 0.999),
-                                    "eps": 1e-6},
+                                    "eps": 1e-6}
 
         self.return_probas = return_probas
         self.one_hot_labels = one_hot_labels
