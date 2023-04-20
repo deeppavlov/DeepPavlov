@@ -17,7 +17,6 @@
   "entity_detection_parser": "deeppavlov.models.entity_extraction.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.entity_extraction.entity_linking:EntityLinker",
   "faq_reader": "deeppavlov.dataset_readers.faq_reader:FaqDatasetReader",
-  "few_shot_iterator": "deeppavlov.dataset_iterators.few_shot_iterator:FewShotIterator",
   "fasttext": "deeppavlov.models.embedders.fasttext_embedder:FasttextEmbedder",
   "fit_trainer": "deeppavlov.core.trainers.fit_trainer:FitTrainer",
   "hashing_tfidf_vectorizer": "deeppavlov.models.vectorizers.hashing_tfidf_vectorizer:HashingTfIdfVectorizer",
