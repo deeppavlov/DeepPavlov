@@ -4,7 +4,7 @@
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "chu_liu_edmonds_transformer": [
-    "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt",
+    "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt"
   ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
