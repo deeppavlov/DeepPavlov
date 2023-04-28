@@ -14,8 +14,6 @@
 
 from typing import List, Optional, Tuple, Union
 
-import spacy
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
 
@@ -43,15 +41,6 @@ def make_pos_and_tag(tag: str, sep: str = ",",
             if return_mode == "sorted_items":
                 tag = tuple(sorted(tag.items()))
     return pos, tag
-
-
-@register('spacy_lemmatizer')
-class SpacyLemmatizer(Component):
-    def __init__(self, model: str, **kwargs):
-        self.nlp = spacy.load(model)
-
-    def __call__(self, words_batch: List[List[str]]):
-        return [[self.nlp(word)[0].lemma_ for word in words_list] for words_list in words_batch]
 
 
 @register('dependency_output_prettifier')
