@@ -240,8 +240,7 @@ class TorchTransformersSquad(TorchModel):
                 start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
                 end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
                 if self.psg_cls:
-                    logits_rank = outputs.rank_logits
-                    scores = logits_rank.squeeze(1)
+                    scores = outputs.rank_logits.squeeze(1)
                 else:
                     scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]
 
