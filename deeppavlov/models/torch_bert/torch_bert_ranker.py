@@ -18,7 +18,6 @@ from typing import List, Dict, Union, Optional
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForSequenceClassification, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
@@ -155,7 +154,6 @@ class TorchBertRankerModel(TorchModel):
 
         return predictions
 
-    @overrides
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname

@@ -16,7 +16,6 @@ from logging import getLogger
 from typing import List, Union, Optional, Tuple
 
 import numpy as np
-from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
@@ -177,7 +176,6 @@ class TfidfWeightedEmbedder(Component):
         """
         return [" ".join(tokens) for tokens in batch]
 
-    @overrides
     def __call__(self, batch: List[List[str]], tags_batch: Optional[List[List[str]]] = None, mean: bool = None,
                  *args, **kwargs) -> List[Union[list, np.ndarray]]:
         """

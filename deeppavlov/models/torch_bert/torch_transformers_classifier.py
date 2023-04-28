@@ -12,20 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from logging import getLogger
 from pathlib import Path
 from typing import List, Dict, Union, Optional, Tuple
 
 import numpy as np
 import torch
-from overrides import overrides
 from torch.nn import BCEWithLogitsLoss
 from transformers import AutoModelForSequenceClassification, AutoConfig, AutoModel, AutoTokenizer
 from transformers.modeling_outputs import SequenceClassifierOutput
 
-from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.commands.utils import expand_path
+from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 
@@ -196,7 +194,6 @@ class TorchTransformersClassifierModel(TorchModel):
         return isinstance(self.model, torch.nn.DataParallel)
 
     # TODO this method requires massive refactoring
-    @overrides
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname

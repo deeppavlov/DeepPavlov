@@ -19,7 +19,6 @@ from math import floor
 from typing import Dict, Optional, List, Union
 
 from datasets import load_dataset, Dataset, Features, ClassLabel, concatenate_datasets
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
@@ -30,7 +29,6 @@ class HuggingFaceDatasetReader(DatasetReader):
     """Adds HuggingFace Datasets https://huggingface.co/datasets/ to DeepPavlov
     """
 
-    @overrides
     def read(self,
              path: str,
              name: Optional[str] = None,

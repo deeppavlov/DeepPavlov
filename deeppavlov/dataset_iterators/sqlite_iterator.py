@@ -18,8 +18,6 @@ from pathlib import Path
 from random import Random
 from typing import List, Any, Dict, Optional, Union, Generator, Tuple
 
-from overrides import overrides
-
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.data_fitting_iterator import DataFittingIterator
@@ -73,7 +71,6 @@ class SQLiteDataIterator(DataFittingIterator):
         self.shuffle = shuffle
         self.random = Random(seed)
 
-    @overrides
     def get_doc_ids(self) -> List[Any]:
         """Get document ids.
 
@@ -112,7 +109,6 @@ class SQLiteDataIterator(DataFittingIterator):
             "SQLite iterator: The size of the database is {} documents".format(len(doc2idx)))
         return doc2idx
 
-    @overrides
     def get_doc_content(self, doc_id: Any) -> Optional[str]:
         """Get document content by id.
 
@@ -132,7 +128,6 @@ class SQLiteDataIterator(DataFittingIterator):
         cursor.close()
         return result if result is None else result[0]
 
-    @overrides
     def gen_batches(self, batch_size: int, shuffle: bool = None) \
             -> Generator[Tuple[List[str], List[int]], Any, None]:
         """Gen batches of documents.
