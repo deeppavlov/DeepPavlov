@@ -14,9 +14,7 @@
 
 from typing import List, Optional, Tuple, Union
 
-import numpy as np
 import spacy
-from dependency_decoding import chu_liu_edmonds
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -54,32 +52,6 @@ class SpacyLemmatizer(Component):
 
     def __call__(self, words_batch: List[List[str]]):
         return [[self.nlp(word)[0].lemma_ for word in words_list] for words_list in words_batch]
-
-
-@register('chu_liu_edmonds_transformer')
-class ChuLiuEdmonds(Component):
-    """
-    A wrapper for Chu-Liu-Edmonds algorithm for maximum spanning tree
-    """
-
-    def __init__(self, min_edge_prob=1e-6, **kwargs):
-        self.min_edge_prob = min_edge_prob
-
-    def __call__(self, probs: List[np.ndarray]) -> List[List[int]]:
-        """Applies Chu-Liu-Edmonds algorithm to the matrix of head probabilities.
-        probs: a 3D-array of probabilities of shape B*L*(L+1)
-        """
-        answer = []
-        for elem in probs:
-            m, n = elem.shape
-            assert n == m + 1
-            elem = np.log10(np.maximum(self.min_edge_prob, elem)) - np.log10(self.min_edge_prob)
-            elem = np.concatenate([np.zeros_like(elem[:1, :]), elem], axis=0)
-            # it makes impossible to create multiple edges 0->i
-            elem[1:, 0] += np.log10(self.min_edge_prob) * len(elem)
-            chl_data = chu_liu_edmonds(elem.astype("float64"))
-            answer.append(chl_data[0][1:])
-        return answer
 
 
 @register('dependency_output_prettifier')
