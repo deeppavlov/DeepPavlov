@@ -6,7 +6,7 @@
     "data_types": ["train", "dev", "test"]
   },
   "dataset_iterator": {
-    "class_name": "morphotagger_dataset"
+    "class_name": "morphotagger_dataset_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -79,8 +79,7 @@
         "in": ["x_words", "y_pred", "y_lemmas"],
         "out": ["y_prettified"],
         "id": "prettifier",
-        "class_name": "lemmatized_output_prettifier",
-        "end": "\n"
+        "class_name": "lemmatized_output_prettifier"
       }
     ],
     "out": ["y_prettified"]

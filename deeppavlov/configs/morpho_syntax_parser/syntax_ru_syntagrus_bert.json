@@ -7,7 +7,7 @@
     "read_syntax": true
   },
   "dataset_iterator": {
-    "class_name": "morphotagger_dataset"
+    "class_name": "morphotagger_dataset_iterator"
   },
   "chainer": {
     "in": ["x"],
@@ -61,7 +61,6 @@
         "learning_rate_drop_patience": 10,
         "learning_rate_drop_div": 1.5,
         "load_before_drop": true,
-        "clip_norm": null,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
@@ -82,8 +81,7 @@
         "in": ["x_words", "y_predicted_heads", "y_predicted_deps"],
         "out": ["y_prettified"],
         "id": "dependency_output_prettifier",
-        "class_name": "dependency_output_prettifier",
-        "end": "\n"
+        "class_name": "dependency_output_prettifier"
       }
     ],
     "out": ["y_prettified"]

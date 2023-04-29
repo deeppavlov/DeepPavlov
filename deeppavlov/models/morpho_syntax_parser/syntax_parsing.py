@@ -43,24 +43,15 @@ def make_pos_and_tag(tag: str, sep: str = ",",
     return pos, tag
 
 
-@register('dependency_output_prettifier')
-class DependencyOutputPrettifier(Component):
-    """Class which prettifies dependency parser output
-    to 10-column (Universal Dependencies) format.
-    Args:
-        return_string: whether to return a list of strings or a single string
-        begin: a string to append in the beginning
-        end: a string to append in the end
-        sep: separator between word analyses
-    """
+class OutputPrettifier(Component):
+    """Base class for formatting the output of dependency parser and morphotagger"""
 
-    def __init__(self, return_string: bool = True, begin: str = "",
-                 end: str = "", sep: str = "\n", **kwargs) -> None:
+    def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
+                       **kwargs) -> None:
         self.return_string = return_string
         self.begin = begin
         self.end = end
         self.sep = sep
-        self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
 
     def __call__(self, X: List[List[str]], Y: List[List[int]], Z: List[List[str]]) -> List[Union[List[str], str]]:
         """Calls the :meth:`~prettify` function for each input sentence.
@@ -72,6 +63,22 @@ class DependencyOutputPrettifier(Component):
             a list of prettified UD outputs
         """
         return [self.prettify(x, y, z) for x, y, z in zip(X, Y, Z)]
+
+
+@register('dependency_output_prettifier')
+class DependencyOutputPrettifier(OutputPrettifier):
+    """Class which prettifies dependency parser output
+    to 10-column (Universal Dependencies) format.
+    Args:
+        begin: a string to append in the beginning
+        end: a string to append in the end
+        sep: separator between word analyses
+    """
+
+    def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
+                       **kwargs) -> None:
+        super().__init__(return_string, begin, end, sep, **kwargs)
+        self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
 
     def prettify(self, tokens: List[str], heads: List[int], deps: List[str]) -> Union[List[str], str]:
         """Prettifies output of dependency parser.
@@ -91,7 +98,7 @@ class DependencyOutputPrettifier(Component):
 
 
 @register('lemmatized_output_prettifier')
-class LemmatizedOutputPrettifier(Component):
+class LemmatizedOutputPrettifier(OutputPrettifier):
     """Class which prettifies morphological tagger output to 4-column
     or 10-column (Universal Dependencies) format.
     Args:
@@ -102,30 +109,15 @@ class LemmatizedOutputPrettifier(Component):
             (see http://universaldependencies.org/format.html for details)
             Only id, word, lemma, tag and pos columns are predicted in current version,
             other columns are filled by `_` value.
-        return_string: whether to return a list of strings or a single string
         begin: a string to append in the beginning
         end: a string to append in the end
         sep: separator between word analyses
     """
 
-    def __init__(self, return_string: bool = True,
-                 begin: str = "", end: str = "", sep: str = "\n", **kwargs) -> None:
-        self.return_string = return_string
-        self.begin = begin
-        self.end = end
-        self.sep = sep
-        self.format_string = "{0}\t{1}\t{4}\t{2}\t_\t{3}\t_\t_\t_\t_"
-
-    def __call__(self, X: List[List[str]], Y: List[List[str]], Z: List[List[str]]) -> List[Union[List[str], str]]:
-        """Calls the :meth:`~prettify` function for each input sentence.
-        Args:
-            X: a list of input sentences
-            Y: a list of list of tags for sentence words
-            Z: a list of lemmatized sentences
-        Returns:
-            a list of prettified morphological analyses
-        """
-        return [self.prettify(*elem) for elem in zip(X, Y, Z)]
+    def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
+                       **kwargs) -> None:
+        super().__init__(return_string, begin, end, sep, **kwargs)
+        self.format_string = "{}\t{}\t{}\t{}\t_\t{}\t_\t_\t_\t_"
 
     def prettify(self, tokens: List[str], tags: List[str], lemmas: List[str]) -> Union[List[str], str]:
         """Prettifies output of morphological tagger.
@@ -152,7 +144,7 @@ class LemmatizedOutputPrettifier(Component):
         answer = []
         for i, (word, tag, lemma) in enumerate(zip(tokens, tags, lemmas)):
             pos, tag = make_pos_and_tag(tag, sep=",")
-            answer.append(self.format_string.format(i + 1, word, pos, tag, lemma))
+            answer.append(self.format_string.format(i + 1, word, lemma, pos, tag))
         if self.return_string:
             answer = self.begin + self.sep.join(answer) + self.end
         return answer

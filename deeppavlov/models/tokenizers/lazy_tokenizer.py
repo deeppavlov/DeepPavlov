@@ -18,20 +18,14 @@ from nltk import word_tokenize
 from overrides import overrides
 
 from deeppavlov.core.common.registry import register
-from deeppavlov.core.models.component import Component
 
 log = getLogger(__name__)
 
 
 @register('lazy_tokenizer')
-class LazyTokenizer(Component):
+def lazy_tokenizer(batch):
     """Tokenizes if there is something to tokenize."""
 
-    def __init__(self, **kwargs):
-        pass
-
-    @overrides
-    def __call__(self, batch, *args, **kwargs):
-        if len(batch) > 0 and isinstance(batch[0], str):
-            batch = [word_tokenize(utt) for utt in batch]
-        return batch
+    if len(batch) > 0 and isinstance(batch[0], str):
+        batch = [word_tokenize(utt) for utt in batch]
+    return batch

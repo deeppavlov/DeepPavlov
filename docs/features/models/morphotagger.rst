@@ -15,20 +15,14 @@ The model is trained on `Universal Dependencies corpora <https://universaldepend
 Usage examples.
 ===========================
 
-Before using the model make sure that all required packages are installed using the command:
-
-.. code:: bash
-
-    python -m deeppavlov install morpho_ru_syntagrus_pymorphy
-
 Python:
 ---------------------------
 
 .. code:: python
 
-   from deeppavlov import build_model, configs
-   model = build_model(configs.morpho_syntax_parser.morpho_ru_syntagrus_bert, download=True)
-   # model = build_model(configs.morpho_tagger.UD2_0.morpho_ru_syntagrus_pymorphy_lemmatize, download=True)
+   from deeppavlov import build_model
+   model = build_model("morpho_ru_syntagrus_bert", download=True, install=True)
+
    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре о всех уставших в чужом краю."]
    for parse in model(sentences):
        print(parse)

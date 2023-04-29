@@ -151,6 +151,7 @@
   ],
   "torch_transformers_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "multitask_pipeline_preprocessor": [

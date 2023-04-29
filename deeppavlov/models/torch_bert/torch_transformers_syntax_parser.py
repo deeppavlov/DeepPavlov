@@ -240,9 +240,6 @@ class TorchTransformersSyntaxParser(TorchModel):
         state_size: size of dense layers which follow after transformer encoder
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         clip_norm: clip gradients by norm
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
     """
@@ -253,17 +250,9 @@ class TorchTransformersSyntaxParser(TorchModel):
                  state_size: int = 256,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: Optional[dict] = None,
                  clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
-
-        if not optimizer_parameters:
-            optimizer_parameters = {"lr": 1e-3,
-                                    "weight_decay": 0.01,
-                                    "betas": (0.9, 0.999),
-                                    "eps": 1e-6},
 
         self.pretrained_bert = pretrained_bert
         self.n_deps = n_deps
@@ -273,10 +262,7 @@ class TorchTransformersSyntaxParser(TorchModel):
         self.attention_probs_keep_prob = attention_probs_keep_prob
         self.hidden_keep_prob = hidden_keep_prob
         self.clip_norm = clip_norm
-        self.bert_config = None
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         **kwargs)
+        super().__init__(**kwargs)
 
     def train_on_batch(self, input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],

@@ -32,20 +32,14 @@ which makes syntactic parsing an appealing preprocessing step for the semantic-o
 Model usage
 -----------
 
-Before using the model make sure that all required packages are installed using the command:
-
-.. code:: bash
-
-    python -m deeppavlov install syntax_ru_syntagrus_bert
-
 Our model produces the output in `CONLL-U format <http://universaldependencies.org/format.html>`__
 and is trained on Universal Dependency corpora, available on http://universaldependencies.org/format.html .
 The example usage for inference is
 
 .. code:: python
 
-   from deeppavlov import build_model, configs
-   model = build_model(configs.morpho_syntax_parser.syntax_ru_syntagrus_bert, download=True)
+   from deeppavlov import build_model
+   model = build_model("syntax_ru_syntagrus_bert", download=True, install=True)
    sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре."]
    for parse in model(sentences):
        print(parse, end="\n\n")
@@ -95,8 +89,8 @@ looks like
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
-    model = build_model("ru_syntagrus_joint_parsing", download=True)
+    from deeppavlov import build_model
+    model = build_model("ru_syntagrus_joint_parsing", download=True, install=True)
     sentences = ["Я шёл домой по незнакомой улице.", "Девушка пела в церковном хоре."]
     for parse in model(sentences):
        print(parse, end="\n\n")

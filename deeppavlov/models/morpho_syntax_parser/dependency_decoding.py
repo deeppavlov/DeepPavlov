@@ -37,11 +37,13 @@ class ChuLiuEdmonds(Component):
         answer = []
         for elem in probs:
             m, n = elem.shape
-            assert n == m + 1
-            elem = np.log10(np.maximum(self.min_edge_prob, elem)) - np.log10(self.min_edge_prob)
-            elem = np.concatenate([np.zeros_like(elem[:1, :]), elem], axis=0)
-            # it makes impossible to create multiple edges 0->i
-            elem[1:, 0] += np.log10(self.min_edge_prob) * len(elem)
-            heads, _ = chu_liu_edmonds(elem.astype("float64"))
-            answer.append(heads[1:])
+            if n == m + 1:
+                elem = np.log10(np.maximum(self.min_edge_prob, elem)) - np.log10(self.min_edge_prob)
+                elem = np.concatenate([np.zeros_like(elem[:1, :]), elem], axis=0)
+                # it makes impossible to create multiple edges 0->i
+                elem[1:, 0] += np.log10(self.min_edge_prob) * len(elem)
+                heads, _ = chu_liu_edmonds(elem.astype("float64"))
+                answer.append(heads[1:])
+            else:
+                raise ValueError("First and second axis lengths m, n of probs should satisfy the condition n == m + 1")
         return answer
