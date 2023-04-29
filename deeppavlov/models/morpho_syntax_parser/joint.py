@@ -17,7 +17,6 @@ from typing import Union, List
 from deeppavlov.core.common.chainer import Chainer
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
-from deeppavlov.models.morpho_syntax_parser.syntax_parsing import DependencyOutputPrettifier
 
 UD_COLUMN_FEAT_MAPPING = {"id": 0, "word": 1, "lemma": 2, "upos": 3, "feats": 5, "head": 6, "deprel": 7}
 

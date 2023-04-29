@@ -47,11 +47,14 @@ class OutputPrettifier(Component):
     """Base class for formatting the output of dependency parser and morphotagger"""
 
     def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
-                       **kwargs) -> None:
+                 **kwargs) -> None:
         self.return_string = return_string
         self.begin = begin
         self.end = end
         self.sep = sep
+
+    def prettify(self, tokens: List[str], heads: List[int], deps: List[str]) -> Union[List[str], str]:
+        raise NotImplementedError
 
     def __call__(self, X: List[List[str]], Y: List[List[int]], Z: List[List[str]]) -> List[Union[List[str], str]]:
         """Calls the :meth:`~prettify` function for each input sentence.
@@ -76,7 +79,7 @@ class DependencyOutputPrettifier(OutputPrettifier):
     """
 
     def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
-                       **kwargs) -> None:
+                 **kwargs) -> None:
         super().__init__(return_string, begin, end, sep, **kwargs)
         self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
 
@@ -115,7 +118,7 @@ class LemmatizedOutputPrettifier(OutputPrettifier):
     """
 
     def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
-                       **kwargs) -> None:
+                 **kwargs) -> None:
         super().__init__(return_string, begin, end, sep, **kwargs)
         self.format_string = "{}\t{}\t{}\t{}\t_\t{}\t_\t_\t_\t_"
 

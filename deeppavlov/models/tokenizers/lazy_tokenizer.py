@@ -15,7 +15,6 @@
 from logging import getLogger
 
 from nltk import word_tokenize
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 
