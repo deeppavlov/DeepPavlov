@@ -15,7 +15,7 @@
 from typing import List
 
 import numpy as np
-from dependency_decoding import chu_liu_edmonds
+from ufal.chu_liu_edmonds import chu_liu_edmonds
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
@@ -42,6 +42,6 @@ class ChuLiuEdmonds(Component):
             elem = np.concatenate([np.zeros_like(elem[:1, :]), elem], axis=0)
             # it makes impossible to create multiple edges 0->i
             elem[1:, 0] += np.log10(self.min_edge_prob) * len(elem)
-            chl_data = chu_liu_edmonds(elem.astype("float64"))
-            answer.append(chl_data[0][1:])
+            heads, _ = chu_liu_edmonds(elem.astype("float64"))
+            answer.append(heads[1:])
         return answer

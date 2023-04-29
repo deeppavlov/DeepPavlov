@@ -64,7 +64,7 @@
         "clip_norm": null,
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
-        "in": ["x_tokens", "x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
         "in_y": ["y_heads", "y_deps_indexes"],
         "out": ["y_predicted_heads_probs", "y_predicted_deps_indexes"]
       },
@@ -113,7 +113,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "/archive/evseev/.deeppavlov",
+      "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "DeepPavlov/rubert-base-cased",
