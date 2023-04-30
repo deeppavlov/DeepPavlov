@@ -125,10 +125,9 @@ There are several ODQA configs available:
 |                                                                                        | of TF-IDF ranker and reader. Searches for an    |
 |                                                                                        | answer in ``ruwiki20180401`` Wikipedia dump.    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
-|:config:`en_odqa_pop_infer_enwiki20180211 <odqa/en_odqa_pop_infer_enwiki20180211.json>` | Extended config for **English** language.       |
+|:config:`en_odqa_pop_infer_wiki <odqa/en_odqa_pop_infer_wiki.json>`                     | Extended config for **English** language.       |
 |                                                                                        | Consists of TF-IDF Ranker, Popularity Ranker    |
-|                                                                                        | and reader. Searches for an answer in           |
-|                                                                                        | ``enwiki20180211`` Wikipedia dump.              |
+|                                                                                        | and reader.                                     |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 
 Comparison

@@ -270,7 +270,7 @@ PARAMS = {
     "odqa": {
         ("odqa/en_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_pop_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
 }
 

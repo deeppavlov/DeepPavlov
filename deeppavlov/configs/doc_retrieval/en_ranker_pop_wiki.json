@@ -8,56 +8,39 @@
   "dataset_iterator": {
     "class_name": "sqlite_iterator",
     "shuffle": false,
-    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
+    "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_l100.db"
   },
   "chainer": {
-    "in": [
-      "docs"
-    ],
-    "in_y": [
-      "doc_ids",
-      "doc_nums"
-    ],
-    "out": [
-      "pop_doc_ids"
-    ],
+    "in": ["docs"],
+    "in_y": ["doc_ids", "doc_nums"],
+    "out": ["pop_doc_ids"],
     "pipe": [
       {
         "class_name": "hashing_tfidf_vectorizer",
         "id": "vectorizer",
-        "fit_on": [
-          "docs",
-          "doc_ids",
-          "doc_nums"
-        ],
-        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
-        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix.npz",
+        "fit_on": ["docs", "doc_ids", "doc_nums"],
+        "save_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix_par_lite.npz",
+        "load_path": "{MODELS_PATH}/odqa/enwiki_tfidf_matrix_par_lite.npz",
         "tokenizer": {
           "class_name": "stream_spacy_tokenizer",
           "lemmas": true,
-          "ngram_range": [
-            1,
-            2
-          ]
+          "lowercase": true,
+          "filter_stopwords": true,
+          "ngram_range": [1, 3]
         }
       },
       {
         "class_name": "tfidf_ranker",
-        "top_n": 20,
-        "in": [
-          "docs"
-        ],
-        "out": [
-          "tfidf_doc_ids",
-          "tfidf_doc_scores"
-        ],
+        "top_n": 100,
+        "in": ["docs"],
+        "out": ["tfidf_doc_ids", "tfidf_doc_scores"],
         "vectorizer": "#vectorizer"
       },
       {
         "class_name": "pop_ranker",
-        "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
+        "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki_popularities.json",
         "load_path": "{MODELS_PATH}/odqa/logreg_3features_v2.joblib",
-        "top_n": 10,
+        "top_n": 100,
         "in": ["tfidf_doc_ids", "tfidf_doc_scores"],
         "out": ["pop_doc_ids", "pop_doc_scores"]
       }
@@ -76,15 +59,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "url": "http://files.deeppavlov.ai/tmp/enwiki_l100.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/en_odqa.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "url": "http://files.deeppavlov.ai/tmp/enwiki_tfidf_matrix_par_lite.tar.gz",
+        "subdir": "{MODELS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki20180211_popularities.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/enwiki_popularities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {

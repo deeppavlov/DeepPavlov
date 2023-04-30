@@ -11,14 +11,6 @@ from deeppavlov.core.models.component import Component
 from deeppavlov.core.models.serializable import Serializable
 
 
-@register('concat_lists')
-def concat_lists(list_a: List[List[Any]], list_b: List[List[Any]]):
-    list_u = []
-    for element_a, element_b in zip(list_a, list_b):
-        list_u.append(element_a + element_b)
-    return list_u
-
-
 class FaissBinaryIndex:
     def __init__(self, index: faiss.Index):
         self.index = index

@@ -14,6 +14,16 @@
 
 import nltk
 
+from deeppavlov.core.common.registry import register
+
+
+@register('concat_lists')
+def concat_lists(list_a: List[List[Any]], list_b: List[List[Any]]):
+    list_u = []
+    for element_a, element_b in zip(list_a, list_b):
+        list_u.append(element_a + element_b)
+    return list_u
+
 
 def find_answer_sentence(answer_pos: int, context: str) -> str:
     answer_sentence = ""
