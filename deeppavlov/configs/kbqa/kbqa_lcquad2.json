@@ -94,10 +94,11 @@
         "return_answers": false,
         "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
                                 [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
-        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "statement": "http://wps/P", "type": "wd:T", "type_rel": "wdt:P",
+                        "type_rels": ["P31", "P279"]},
         "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "return_all_possible_answers": true,
-        "in": ["x_punct", "x_punct", "template_type", "entity_substr", "type_substr", "entity_tags"],
+        "in": ["x_punct", "x_punct", "template_type", "entity_substr", "type_substr", "entity_tags", "probas"],
         "out": ["cand_answers", "template_answers"]
       },
       {
@@ -105,7 +106,7 @@
         "ranker": {"config_path": "{CONFIGS_PATH}/ranking/path_ranking_nll_roberta_en.json",
                    "overwrite": {
                      "chainer.pipe.1.return_probas": true,
-                     "metadata.variables.TRANSFORMER": "{DOWNLOADS_PATH}/torch_bert_models/bert_base_cased",
+                     "metadata.variables.TRANSFORMER": "bert-base-cased",
                      "metadata.variables.MODEL_PATH": "{MODELS_PATH}/classifiers/path_ranking_nll_bert_lcquad2"
                    }
         },
@@ -116,7 +117,7 @@
         "rank_answers": true,
         "load_path": "{DOWNLOADS_PATH}/wikidata_eng",
         "rel_q2name_filename": "wiki_dict_properties_eng.pickle",
-        "in": ["x_punct", "cand_answers", "entity_substr", "template_answers"],
+        "in": ["x_punct", "template_type", "cand_answers", "entity_substr", "template_answers"],
         "out": ["answers"]
       }
     ],
@@ -143,7 +144,7 @@
         "subdir": "{DOWNLOADS_PATH}/entity_linking_eng"
       },
       {
-        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_bert_lcquad2.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/rel_ranking_bert_lcquad2.tar.gz",
         "subdir": "{MODELS_PATH}/classifiers/rel_ranking_bert_lcquad2"
       },
       {

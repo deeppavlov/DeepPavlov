@@ -261,6 +261,7 @@ class QueryGenerator(QueryGeneratorBase):
             max_comb_nums = max(combs_num_list)
         else:
             max_comb_nums = 0
+
         for comb_num in range(max_comb_nums):
             for parsed_query_info in parsed_queries_info:
                 if comb_num < min(len(parsed_query_info["all_combs_list"]), self.max_comb_num):
