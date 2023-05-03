@@ -20,7 +20,6 @@ from collections import defaultdict
 
 import pandas as pd
 from tqdm import tqdm
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
