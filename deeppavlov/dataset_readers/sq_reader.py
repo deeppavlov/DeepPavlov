@@ -12,18 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import pickle
+from typing import List
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
+from deeppavlov.core.common.file import load_pickle
+from deeppavlov.core.common.file import read_json
 
 
 @register('sq_reader')
-class OntonotesReader(DatasetReader):
-    """Class to read training datasets in OntoNotes format"""
+class SQReader(DatasetReader):
+    """Class to read training datasets"""
 
-    def read(self, data_path: str):
-        with open(data_path, 'rb') as f:
-            dataset = pickle.load(f)
+    def read(self, data_path: str, valid_size: int = None):
+        if str(data_path).endswith(".pickle"):
+            dataset = load_pickle(data_path)
+        elif str(data_path).endswith(".json"):
+            dataset = read_json(data_path)
+        else:
+            raise TypeError(f'Unsupported file type: {data_path}')
+        if valid_size:
+            dataset["valid"] = dataset["valid"][:valid_size]
 
         return dataset

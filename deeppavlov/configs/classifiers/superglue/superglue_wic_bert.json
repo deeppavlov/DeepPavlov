@@ -1,0 +1,83 @@
+{
+  "dataset_reader": {
+    "class_name": "sq_reader",
+    "data_path": "{DOWNLOADS_PATH}/superglue/wic.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": ["texts", "texts2", "tok_indices", "pair_words"],
+    "in_y": ["labels"],
+    "pipe": [
+      {
+        "in": ["texts", "tok_indices", "texts2"],
+        "out": ["input_ids", "attention_mask", "entity_subw_indices"],
+        "class_name": "torch_transformers_entity_spans_preprocessor",
+        "max_seq_length": 512,
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "pad_with_zeros": true,
+        "save_path": "{MODEL_PATH}/tag.dict",
+        "load_path": "{MODEL_PATH}/tag.dict",
+        "fit_on": ["labels"],
+        "in": ["labels"],
+        "out": ["labels_ind"]
+      },
+      {
+        "class_name": "torch_transformers_bilinear_classification",
+        "in": ["input_ids", "attention_mask", "entity_subw_indices", "pair_words"],
+        "in_y": ["labels_ind"],
+        "out": ["labels_pred_ind"],
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "n_tags": "#tag_vocab.len",
+        "pretrained_bert": "{TRANSFORMER}",
+        "learning_rate_drop_patience": 6,
+        "learning_rate_drop_div": 1.5,
+        "return_probas": false
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["labels_pred_ind"],
+        "out": ["labels_pred"]
+      }
+    ],
+    "out": ["labels_pred"]
+  },
+  "train": {
+    "epochs": 50,
+    "batch_size": 10,
+    "metrics": ["f1_macro", "accuracy"],
+    "validation_patience": 30,
+    "val_every_n_batches": 200,
+    "log_every_n_batches": 50,
+    "evaluation_targets": ["valid", "train"],
+    "show_examples": false,
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "TRANSFORMER": "bert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/wic_bilinear_classifier_bert"
+      },
+      "download": [
+        {
+          "url": "http://files.deeppavlov.ai/tmp/wic.tar.gz",
+          "subdir": "{DOWNLOADS_PATH}/superglue"
+        },
+        {
+          "url": "http://files.deeppavlov.ai/tmp/wic_bilinear_classifier_bert.tar.gz",
+          "subdir": "{MODELS_PATH}/classifiers/wic_bilinear_classifier_bert"
+        }
+    ]
+  }
+}
