@@ -52,11 +52,11 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ruwiki_par_page_compr.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/ruwiki_par_page_compr.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/ruwiki_tfidf_matrix_compr.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/ruwiki_tfidf_matrix_compr.tar.gz",
         "subdir": "{MODELS_PATH}/odqa"
       }
     ]

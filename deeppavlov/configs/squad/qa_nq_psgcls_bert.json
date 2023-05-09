@@ -55,7 +55,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/nq_psgcls_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/nq_psgcls_bert.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

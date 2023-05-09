@@ -59,15 +59,15 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/enwiki_l100.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/enwiki_l100.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/enwiki_tfidf_matrix_par_lite.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/enwiki_tfidf_matrix_par_lite.tar.gz",
         "subdir": "{MODELS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/enwiki_popularities.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/enwiki_popularities.tar.gz",
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
