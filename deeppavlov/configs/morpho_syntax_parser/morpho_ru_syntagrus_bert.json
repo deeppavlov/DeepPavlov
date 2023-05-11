@@ -120,7 +120,7 @@
         "subdir": "{DOWNLOADS_PATH}/UD2.3_source/ru_syntagrus"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/morpho_ru_syntagrus_torch_bert.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parsing/morpho_ru_syntagrus_torch_bert.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
