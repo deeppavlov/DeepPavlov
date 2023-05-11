@@ -203,7 +203,7 @@ texinfo_documents = [
 
 autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz',
                         'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf', 'transformers',
-                        'udapi', 'whapi']
+                        'udapi', 'ufal', 'whapi']
 
 extlinks = {
     'config': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),

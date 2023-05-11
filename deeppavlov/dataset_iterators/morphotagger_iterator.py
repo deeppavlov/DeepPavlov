@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Tuple, List, Dict, Any, Iterator, Optional
+from typing import Tuple, List, Dict, Any, Iterator
 
 import numpy as np
 
@@ -49,7 +49,6 @@ class MorphoTaggerDatasetIterator(DataLearningIterator):
                 self.random.shuffle(self.train)
             L = int(len(self.train) * (1.0 - self.validation_split))
             self.train, self.valid = self.train[:L], self.train[L:]
-        return True
 
     def gen_batches(self, batch_size: int, data_type: str = 'train',
                     shuffle: bool = None, return_indexes: bool = False) -> Iterator[tuple]:
