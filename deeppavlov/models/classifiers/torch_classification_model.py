@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-from overrides import overrides
 from typing import List, Union, Optional
 
 import numpy as np
@@ -133,7 +132,6 @@ class TorchTextClassificationModel(TorchModel):
         else:
             return np.argmax(outputs, axis=-1).tolist()
 
-    @overrides
     def process_event(self, event_name: str, data: dict):
         """Process event after epoch
 
