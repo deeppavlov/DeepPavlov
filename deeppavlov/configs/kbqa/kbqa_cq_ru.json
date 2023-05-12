@@ -228,7 +228,7 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/slovnet_syntax_parser.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/slovnet_syntax_parser_v2.tar.gz",
         "subdir": "{MODELS_PATH}/slovnet_syntax_parser"
       },
       {

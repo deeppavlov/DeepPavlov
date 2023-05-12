@@ -108,7 +108,7 @@ class SlovnetSyntaxParser(Component, Serializable):
                     if found and i > 0:
                         token_tags = [self.nlp(tokens[j])[0].pos_ for j in range(i, i + 3)]
                         lemm_tokens = {self.nlp(tok)[0].lemma_ for tok in tokens[i:i + 3]}
-                        if token_tags == ["ADJF", "ADJF", "NOUN"] and not lemm_tokens & self.first_tokens:
+                        if token_tags == ["DET", "DET", "NOUN"] and not lemm_tokens & self.first_tokens:
                             long_substr = " ".join(tokens[i:i + 3])
                             replace_dict[tokens[i + 2]] = (long_substr, "adj")
                             sentence = sentence.replace(long_substr, tokens[i + 2])
