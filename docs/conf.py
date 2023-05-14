@@ -201,7 +201,7 @@ texinfo_documents = [
 
 # -- Extension configuration -------------------------------------------------
 
-autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz',
+autodoc_mock_imports = ['bs4', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz', 'razdel',
                         'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf', 'transformers',
                         'udapi', 'ufal', 'whapi']
 

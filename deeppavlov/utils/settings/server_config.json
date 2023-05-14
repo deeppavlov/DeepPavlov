@@ -9,16 +9,5 @@
     "socket_type": "TCP",
     "unix_socket_file": "/tmp/deeppavlov_socket.s",
     "socket_launch_message": "launching socket server at"
-  },
-  "agent-rabbit": {
-    "service_name": "",
-    "agent_namespace": "deeppavlov_agent",
-    "batch_size": 1,
-    "utterance_lifetime_sec": 120,
-    "rabbit_host": "0.0.0.0",
-    "rabbit_port": 5672,
-    "rabbit_login": "guest",
-    "rabbit_password": "guest",
-    "rabbit_virtualhost": "/"
   }
 }

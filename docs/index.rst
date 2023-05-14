@@ -52,7 +52,6 @@ Welcome to DeepPavlov's documentation!
 
    REST API <integrations/rest_api>
    Socket API <integrations/socket_api>
-   DeepPavlov Agent RabbitMQ integration <integrations/dp_agent>
    Amazon AWS deployment <integrations/aws_ec2>
    DeepPavlov settings <integrations/settings>
 

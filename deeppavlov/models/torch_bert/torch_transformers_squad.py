@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import re
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 import torch
-from overrides import overrides
 from transformers import AutoModelForQuestionAnswering, AutoConfig
 from transformers.data.processors.utils import InputFeatures
 
@@ -264,7 +262,6 @@ class TorchTransformersSquad(TorchModel):
 
         return start_pred_batch, end_pred_batch, logits_batch, scores_batch, ind_batch
 
-    @overrides
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname

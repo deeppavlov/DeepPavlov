@@ -3,7 +3,9 @@
     "class_name": "huggingface_dataset_reader",
     "path": "{COMPETITION}",
     "name": "{TASK}",
-    "test": "test"
+    "test": "test",
+    "data_url": "http://files.deeppavlov.ai/datasets/russian_super_glue/LiDiRus",
+    "ignore_verifications": true
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",

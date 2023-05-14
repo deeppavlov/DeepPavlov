@@ -28,7 +28,7 @@ deeppavlov.models.kbqa
     .. automethod:: __init__
     .. automethod:: __call__
 
-.. autoclass:: deeppavlov.models.kbqa.tree_to_sparql.RuAdjToNoun
+.. autoclass:: deeppavlov.models.kbqa.ru_adj_to_noun.RuAdjToNoun
 
     .. automethod:: __init__
     .. automethod:: __call__
