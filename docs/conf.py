@@ -202,8 +202,8 @@ texinfo_documents = [
 # -- Extension configuration -------------------------------------------------
 
 autodoc_mock_imports = ['bs4', 'faiss', 'fasttext', 'hdt', 'kenlm', 'lxml', 'navec', 'nltk', 'opt_einsum', 'rapidfuzz',
-                        'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf', 'transformers',
-                        'udapi', 'whapi']
+                        'razdel', 'sacremoses', 'slovnet', 'sortedcontainers', 'spacy', 'torch', 'torchcrf',
+                        'transformers', 'udapi', 'whapi']
 
 extlinks = {
     'config': (f'https://github.com/deeppavlov/DeepPavlov/blob/{release}/deeppavlov/configs/%s', None),

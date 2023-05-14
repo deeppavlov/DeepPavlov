@@ -15,7 +15,7 @@ Currently, we support Wikidata as a Knowledge Base (Knowledge Graph). In the fut
 The question answerer:
 
 * validates questions against a preconfigured list of question templates, disambiguates entities using Entity Linking, and answers questions asked in natural language,
-* can be used with Wikidata (English, Russian) and (in the future versions) with custom knowledge graphs.
+* can be used with Wikidata (English, Russian) and DBPedia (Russian).
 
 Built-In Models
 ------------------
@@ -24,7 +24,7 @@ Currently, we provide two built-in models for KBQA in DeepPavlov library:
 
 * :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` - for answering complex questions over Wikidata in English,
 
-* :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian,
+* :config:`kbqa_cq_ru <kbqa/kbqa_cq_ru.json>` - for answering complex questions over Wikidata in Russian.
 
 These configs use local Wikidata dump in hdt format (3.7 Gb on disk).
 
@@ -124,7 +124,7 @@ Here are the models we've trained for complex question answering:
 
 * :config:`entity_detection <ner/ner_ontonotes_bert.json>` - sequence tagging model for detection of entity and entity types substrings in the question,
 
-* :config:`rel_ranking <ranking/rel_ranking_bert_en.json>` - model for ranking of candidate relations and candidate_relation_paths for the question,
+* :config:`rel_ranking <ranking/rel_ranking_roberta_en.json>` - model for ranking of candidate relations and candidate_relation_paths for the question,
 
 How Do I: Train Query Prediction Model
 --------------------------------------
@@ -159,34 +159,21 @@ An example of a template::
 
     {
         "query_template": "SELECT ?obj WHERE { wd:E1 p:R1 ?s . ?s ps:R1 ?obj . ?s ?p ?x filter(contains(?x, N)) }",
-        "property_types": {"?p": "qualifier"},
         "rank_rels": ["wiki", "do_not_rank", "do_not_rank"],
         "rel_types": ["no_type", "statement", "qualifier"],
-        "filter_rels": [false],
-        "rel_dirs": ["forw"],
         "query_sequence": [1, 2, 3],
-        "entities_and_types_num": [1, 0],
-        "entities_and_types_select": "1 0",
-        "syntax_structure": {"gr_ent": 1, "types": 0, "mod_ent": 0, "q_ent": 0, "count": false, "order": false},
         "return_if_found": true,
         "template_num": "0",
         "alternative_templates": []
      }
 
 * ``query_template`` is the template of the SPARQL query,
-* ``property_types`` defines the types of unknown relations in the template,
 * ``rank_rels`` is a list which defines whether to rank relations, in this example **p:R1** relations we extract from Wikidata for **wd:E1** entities and rank with rel_ranker, **ps:R1** and **?p** relations we do not extract and rank,
 * ``rel_types`` - direct, statement or qualifier relations,
-* ``filter_rels`` (only for online version of KBQA) - whether candidate rels will be enumerated in the **filter** expression in the query, for example,
-  **SELECT ?ent WHERE { ?ent wdt:P31 wd:Q4022 . ?ent ?p1 wd:Q90 } filter(?p1 = wdt:P131 || ?p1 = wdt:P17)**,
-* ``rel_dirs`` - **forw** if the relation connects the subject and unknown object, for example, **wd:Q649 wdt:P17 ?p**, **backw** if the relation connects the unknown object and the subject, for example **?p wdt:P17 wd:Q159**,
 * ``query_sequence`` (only for offline version of KBQA) - the sequence in which the triplets will be extracted from Wikidata hdt file,
-* ``entities_and_types_num`` - numbers of entities and types extracted from the question, which this template can contain,
-* ``entities_and_types_select`` - the dictionary where keys are number of entities and types extracted from the question and values are indices of entities and types which should be filled in the template (because we can extract more entities and types than the template contains),
-* ``syntax_structure`` - information about syntactic structure of questions corresponding to this query,
 * ``return_if_found`` - parameter for the cycle which iterates over all possible combinations of entities, relations and types, if **true** - return if the first valid combination is found, if **false** - consider all combinations,
 * ``template_num`` - the number of template,
-* alternative_templates - numbers of alternative templates to use if the answer was not found with the current template.
+* ``alternative_templates`` - numbers of alternative templates to use if the answer was not found with the current template.
 
 Advanced: Using Wiki Parser As Standalone Service For KBQA
 ------------------------------------------------------------------------------
@@ -250,8 +237,8 @@ To use Entity Linking service in KBQA, in the :config:`kbqa_cq_en <kbqa/kbqa_cq_
         "class_name": "api_requester",
         "id": "entity_linker",
         "url": "entity_linking_url",
-        "out": ["entity_ids"],
-        "param_names": ["entity_substr", "template_found"]
+        "out": ["entity_ids", "entity_conf", "entity_pages", "entity_labels"],
+        "param_names": ["entity_substr", "tags", "probas", "sentences"]
      }
     
 To use Wiki Parser service in KBQA, in the :config:`kbqa_cq_en <kbqa/kbqa_cq_en.json>` you should replace :config:`wiki parser component <kbqa/kbqa_cq_en.json#L28>` with API Requester component in the following way::

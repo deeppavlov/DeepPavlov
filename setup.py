@@ -76,7 +76,7 @@ if __name__ == '__main__':
                 'ipykernel==5.5.4',
                 'jinja2<=3.0.3',
                 'sphinx-copybutton==0.5.0',
-                'pandoc==2.2',
+                'pandoc==2.3',
                 'ipython_genutils==0.2.0'
             ],
             's3': [
