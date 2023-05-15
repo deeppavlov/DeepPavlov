@@ -54,6 +54,10 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/bpr_encoder_index_eng.tar.gz",
+        "subdir": "{MODELS_PATH}/bpr/eng"
+      }
     ]
   }
 }
