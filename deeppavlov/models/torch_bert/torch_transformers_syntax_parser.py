@@ -21,7 +21,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from overrides import overrides
 from transformers import AutoConfig, AutoModel
 
 from deeppavlov.core.commands.utils import expand_path
@@ -315,7 +314,6 @@ class TorchTransformersSyntaxParser(TorchModel):
         return isinstance(self.model, torch.nn.DataParallel)
 
     # TODO this method requires massive refactoring
-    @overrides
     def load(self, fname=None):
         if fname is not None:
             self.load_path = fname
