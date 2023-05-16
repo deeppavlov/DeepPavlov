@@ -1,41 +1,49 @@
 {
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
-    "path": "glue",
-    "name": "mrpc",
+    "path": "{COMPETITION}",
+    "name": "{TASK}",
     "train": "train",
     "valid": "validation",
     "test": "test"
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
-    "features": ["sentence1", "sentence2"],
+    "features": ["question", "sentence"],
     "label": "label",
-    "use_label_name": false,
     "seed": 42
   },
   "chainer": {
-    "in": ["sentence1", "sentence2"],
-    "in_y": ["y_ids"],
+    "in": ["question", "sentence"],
+    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 100,
-        "in": ["sentence1", "sentence2"],
+        "max_seq_length": 128,
+        "in": ["question", "sentence"],
         "out": ["bert_features"]
+      },
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
+        "in": ["y"],
+        "out": ["y_ids"]
       },
       {
         "in": ["y_ids"],
         "out": ["y_onehot"],
         "class_name": "one_hotter",
-        "depth": 2,
+        "depth": "#classes_vocab.len",
         "single_vector": true
       },
       {
         "class_name": "torch_transformers_classifier",
-        "n_classes": 2,
+        "n_classes": "#classes_vocab.len",
         "return_probas": true,
         "pretrained_bert": "{BASE_MODEL}",
         "save_path": "{MODEL_PATH}/model",
@@ -55,19 +63,21 @@
         "out": ["y_pred_ids"],
         "class_name": "proba2labels",
         "max_proba": true
+      },
+      {
+        "in": ["y_pred_ids"],
+        "out": ["y_pred_labels"],
+        "ref": "classes_vocab"
       }
     ],
-    "out": ["y_pred_ids"]
+    "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 100,
-    "metrics": [
-      "f1",
-      "accuracy"
-    ],
+    "batch_size": 64,
+    "metrics": ["accuracy"],
     "validation_patience": 10,
-    "val_every_n_epochs": 1,
-    "log_every_n_epochs": 1,
+    "val_every_n_batches": 250,
+    "log_every_n_batches": 250,
     "show_examples": false,
     "evaluation_targets": ["train", "valid"],
     "class_name": "torch_trainer",
@@ -76,11 +86,19 @@
   },
   "metadata": {
     "variables": {
+      "BASE_MODEL": "roberta-large",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_mrpc_torch_cased_bert",
-      "BASE_MODEL": "bert-base-cased"
-    }
+      "COMPETITION": "glue",
+      "TASK": "qnli",
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/tmp/glue/glue_qnli_roberta.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
   }
 }
