@@ -96,7 +96,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/glue/glue_qnli_roberta.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/glue/glue_qnli_roberta.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
