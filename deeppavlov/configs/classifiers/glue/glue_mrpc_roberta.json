@@ -97,7 +97,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/v1/glue/glue_mrpc_roberta.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
