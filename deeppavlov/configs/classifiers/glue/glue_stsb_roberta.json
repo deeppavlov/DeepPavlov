@@ -47,7 +47,7 @@
     "out": ["y_pred"]
   },
   "train": {
-    "batch_size": 128,
+    "batch_size": 64,
     "metrics": [
       "pearson_correlation",
       "spearman_correlation"
