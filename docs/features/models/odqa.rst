@@ -63,10 +63,16 @@ languages in :doc:`DeepPavlov </index/>`.
 Models
 ======
 
-The architecture of **ODQA** model is modular and consists of two models,
-a **ranker** and a **reader**. The **ranker** is based on `DrQA`_ proposed by Facebook Research
-and the **reader** is based on `R-NET`_ proposed by Microsoft Research Asia
-and its `implementation`_ by Wenxuan Zhou.
+English ODQA version consists of the following components:
+
+- TF-IDF ranker (based on `DrQA`_), which defines top-N most relevant paragraphs in TF-IDF index;
+- `Binary Passage Retrieval`_ (BPR) ranker, which defines top-K most relevant in binary index;
+- a database of paragraphs (by default, from Wikipedia) which finds N + K most relevant paragraph text by IDs, defined by TF-IDF and BPR ranker;
+- Reading Comprehension component, which finds answers in paragraphs and defines answer confidences.
+
+Russian ODQA version performs retrieval only with TF-IDF index.
+
+Binary Passage Retrieval is resource-efficient the method of building a dense passage index. The dual encoder (with BERT or other Tranformer as backbone) is trained on question answering dataset (Natural Questions in our case) to maximize dot product of question and passage with answer embeddings and minimize otherwise. The question or passage embeddings are obtained the following way: vector of BERT CLS-token is fed into a dense layer followed by a hash function which turns dense vector into binary one.
 
 Running ODQA
 ============
@@ -118,16 +124,15 @@ There are several ODQA configs available:
 | Config                                                                                 | Description                                     |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`en_odqa_infer_wiki <odqa/en_odqa_infer_wiki.json>`                             | Basic config for **English** language. Consists |
-|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in ``enwiki20180211`` Wikipedia dump.    |
+|                                                                                        | of of Binary Passage Retrieval, TF-IDF          |
+|                                                                                        | retrieval and reader.                           |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`ru_odqa_infer_wiki <odqa/ru_odqa_infer_wiki.json>`                             | Basic config for **Russian** language. Consists |
-|                                                                                        | of TF-IDF ranker and reader. Searches for an    |
-|                                                                                        | answer in ``ruwiki20180401`` Wikipedia dump.    |
+|                                                                                        | of TF-IDF ranker and reader.                    |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 |:config:`en_odqa_pop_infer_wiki <odqa/en_odqa_pop_infer_wiki.json>`                     | Extended config for **English** language.       |
-|                                                                                        | Consists of TF-IDF Ranker, Popularity Ranker    |
-|                                                                                        | and reader.                                     |
+|                                                                                        | Consists of of Binary Passage Retrieval, TF-IDF |
+|                                                                                        | retrieval, popularity ranker and reader.        |
 +----------------------------------------------------------------------------------------+-------------------------------------------------+
 
 Comparison
@@ -135,21 +140,17 @@ Comparison
 
 Scores for **ODQA** models:
 
-+----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+---------------------+---------------------+
-|                                                                                                                                  |      |                      |                |   Ranker@5          |   Ranker@25         |
-|                                                                                                                                  |      |                      |                +----------+----------+-----------+---------+
-| Model                                                                                                                            | Lang |    Dataset           |   WikiDump     |  F1      |   EM     |   F1      |   EM    |
-+----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                                                                               |  En  |                      | enwiki20180211 |  29.03   |  22.75   |  31.38    |  25.96  |
-+----------------------------------------------------------------------------------------------------------------------------------+      +                      +----------------+----------+----------+-----------+---------+
-|`DrQA`_                                                                                                                           |      |                      |                |   \-     |  27.1    |   \-      |   \-    |
-+----------------------------------------------------------------------------------------------------------------------------------+      +                      +                +----------+----------+-----------+---------+
-|`R3`_                                                                                                                             |      |                      | enwiki20161221 |  37.5    |  29.1    |   \-      |   \-    |
-+----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
-|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki.json>`                                                            |  Ru  |  SDSJ Task B (dev)   | ruwiki20180401 | **42.02**|**29.56** |   \-      |   \-    |  
-+----------------------------------------------------------------------------------------------------------------------------------+------+----------------------+----------------+----------+----------+-----------+---------+
++-----------------------------------------------------------------------+------+----------------------+----------------------+------+------+------+
+| Model                                                                 | Lang |       Dataset        | Number of paragraphs |  F1  |  EM  | RAM  |
++-----------------------------------------------------------------------+------+----------------------+----------------------+------+------+------+
+|:config:`DeppPavlov <odqa/en_odqa_infer_wiki.json>`                    |  En  |  Natural Questions   |         200          | 41.7 | 33.8 | 10.4 |
++-----------------------------------------------------------------------+      +                      +----------------------+------+------+------+
+|`DPR`_                                                                 |      |                      |         100          |  -   | 41.5 | 64.6 |
++-----------------------------------------------------------------------+------+----------------------+----------------------+------+------+------+
+|:config:`DeepPavlov with RuBERT reader <odqa/ru_odqa_infer_wiki.json>` |  Ru  |  SDSJ Task B (dev)   |         100          | 58.9 | 42.6 | 13.1 |  
++-----------------------------------------------------------------------+------+----------------------+----------------------+------+------+------+
 
-EM stands for "exact-match accuracy". Metrics are counted for top 5 and top 25 documents returned by retrieval module.
+EM stands for "exact-match accuracy". Metrics are counted for top 100 and top 200 paragraphs, extracted by retrieval module.
 
 References
 ==========
@@ -157,8 +158,7 @@ References
 .. target-notes::
 
 .. _`DrQA`: https://github.com/facebookresearch/DrQA/
-.. _`R-NET`: https://www.microsoft.com/en-us/research/publication/mcr/
-.. _`implementation`: https://github.com/HKUST-KnowComp/R-Net/
-.. _`R3`: https://arxiv.org/abs/1709.00023
+.. _`Binary Passage Retrieval`: https://arxiv.org/abs/2106.00882
+.. _`DPR`: https://arxiv.org/abs/2004.04906
 
 

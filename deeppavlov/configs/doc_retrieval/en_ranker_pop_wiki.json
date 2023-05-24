@@ -68,7 +68,7 @@
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/enwiki_popularities.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ranking/logreg_3features_v2.joblib",
