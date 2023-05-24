@@ -20,7 +20,6 @@ from logging import getLogger
 from typing import Union, List, Tuple
 
 import numpy as np
-from overrides import overrides
 
 from deeppavlov.core.common.errors import ConfigError
 from deeppavlov.core.common.registry import register
@@ -130,7 +129,6 @@ class StrUTF8Encoder(Estimator):
         raise RuntimeError(f'The objects passed to the reverser are not list or tuple of str! '
                            f' But they are {type(batch)}.')
 
-    @overrides
     def load(self) -> None:
         if self.load_path:
             if self.load_path.is_file():
@@ -144,14 +142,12 @@ class StrUTF8Encoder(Estimator):
         else:
             raise ConfigError(f"`load_path` for {self} is not provided!")
 
-    @overrides
     def save(self) -> None:
         log.info(f"[saving vocabulary to {self.save_path}]")
         with self.save_path.open('wt', encoding='utf8') as f:
             for token in self._word_char_ids.keys():
                 f.write('{}\n'.format(token))
 
-    @overrides
     def fit(self, *args) -> None:
         words = chain(*args)
         # filter(None, <>) -- to filter empty words

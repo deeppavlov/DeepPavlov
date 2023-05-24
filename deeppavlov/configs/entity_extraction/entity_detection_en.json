@@ -5,17 +5,15 @@
       {
         "class_name": "ner_chunker",
         "batch_size": 16,
-        "max_chunk_len" : 180,
         "max_seq_len" : 300,
         "vocab_file": "{TRANSFORMER}",
         "in": ["x"],
         "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
       },
       {
-        "thres_proba": 0.05,
+        "thres_proba": 0.6,
         "o_tag": "O",
         "tags_file": "{NER_PATH}/tag.dict",
-        "return_entities_with_tags": true,
         "class_name": "entity_detection_parser",
         "id": "edp"
       },
