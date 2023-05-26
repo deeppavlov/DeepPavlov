@@ -248,12 +248,9 @@ class MultiTaskTransformer(TorchModel):
     Args:
         tasks: Dict of task names along with the labels for each task,
         max_seq_len(int): maximum length of the input token sequence.
-        optimizer(str): optimizer name defaults to AdamW,
-        optimizer_parameters(dict): optimizer parameters,
         gradient_accumulation_steps(default:1): number of gradient accumulation steps,
         steps_per_epoch(int): number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
         backbone_model(str): name of HuggingFace.Transformers backbone model. Default: 'bert-base-cased'
-        clip_norm(float): normalization: value for gradient clipping. Specify only if gradient clipping is used
         one_hot_labels(default: False): set to true if using one hot labels,
         multilabel(default: False): set to true for multilabel classification,
         return_probas(default: False): set true to return prediction probabilities,
@@ -268,13 +265,10 @@ class MultiTaskTransformer(TorchModel):
     def __init__(
             self,
             tasks: Dict[str, Dict],
-            max_seq_len: str = 320,
-            optimizer: str = "AdamW",
-            optimizer_parameters: dict = None,
+            max_seq_len: int = 320,
             gradient_accumulation_steps: Optional[int] = 1,
             steps_per_epoch: Optional[int] = None,
             backbone_model: str = "bert-base-cased",
-            clip_norm: Optional[float] = None,
             focal: bool = False,
             return_probas: bool = False,
             freeze_embeddings: bool = False,
@@ -287,7 +281,6 @@ class MultiTaskTransformer(TorchModel):
     ) -> None:
         self.return_probas = return_probas
         self.one_hot_labels = []
-        self.clip_norm = clip_norm
         self.task_names = list(tasks.keys())
         self.task_types = []
         self.max_seq_len = max_seq_len
@@ -305,12 +298,9 @@ class MultiTaskTransformer(TorchModel):
             self.one_hot_labels.append(tasks[task].get('one_hot_labels', False))
             self.types_to_cache.append(tasks[task].get('type_to_cache', -1))
         if self.return_probas and 'sequence_labeling' in self.task_types:
-            log.warning(
-                f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
+            log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
         self.n_tasks = len(tasks)
         self.train_losses = [[] for _ in self.task_names]
-        self.optimizer_name = optimizer
-        self.optimizer_parameters = optimizer_parameters
         self.gradient_accumulation_steps = gradient_accumulation_steps
         self.steps_per_epoch = steps_per_epoch
         self.steps_taken = 0
@@ -331,36 +321,13 @@ class MultiTaskTransformer(TorchModel):
             new_model=new_model,
             focal=focal,
             dropout=dropout)
-        no_decay = ["bias", "gamma", "beta"]
-        base = ["attn"]
 
-        def get_non_decay_params(model):
-            return [p for n, p in model.named_parameters() if
-                    not any(nd in n for nd in no_decay) and not any(nd in n for nd in base)]
-
-        def get_decay_params(model):
-            return [p for n, p in model.named_parameters() if
-                    any(nd in n for nd in no_decay) and not any(nd in n for nd in base)]
-
-        model_parameters = [
-            {
-                "params": get_decay_params(model),
-                "weight_decay": 0.01,
-            },
-            {
-                "params": get_non_decay_params(model),
-                "weight_decay": 0.0,
-            },
-        ]
-
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            model_parameters, **self.optimizer_parameters
-        )
+        super().__init__(model, **kwargs)
 
     def _reset_cache(self):
         self.preds_cache = {index_: None for index_ in self.types_to_cache if index_ != -1}
 
-    def load(self, fname: Optional[str] = None) -> None:
+    def load(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         """
         Loads weights.
         """
@@ -555,8 +522,7 @@ class MultiTaskTransformer(TorchModel):
         # Clip the norm of the gradients to 1.0.
         # This is to help prevent the "exploding gradients" problem.
         if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(), self.clip_norm)
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
         if (self.steps_taken + 1) % self.gradient_accumulation_steps == 0 or (
                 self.steps_per_epoch is not None and (self.steps_taken + 1) % self.steps_per_epoch == 0):
