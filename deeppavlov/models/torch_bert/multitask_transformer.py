@@ -20,7 +20,6 @@ from typing import Dict, Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from overrides import overrides
 from torch.nn import CrossEntropyLoss, MSELoss, BCEWithLogitsLoss
 from transformers import AutoConfig, AutoModel
 
@@ -342,7 +341,6 @@ class MultiTaskTransformer(TorchModel):
     def _reset_cache(self):
         self.preds_cache = {index_: None for index_ in self.types_to_cache if index_ != -1}
 
-    @overrides
     def init_from_opt(self) -> None:
         """
         Initialize from scratch `self.model` with the architecture built
@@ -401,7 +399,6 @@ class MultiTaskTransformer(TorchModel):
                 torch.optim.lr_scheduler, self.lr_scheduler_name
             )(self.optimizer, **self.lr_scheduler_parameters)
 
-    @overrides
     def load(self, fname: Optional[str] = None) -> None:
         """
         Loads weights.
