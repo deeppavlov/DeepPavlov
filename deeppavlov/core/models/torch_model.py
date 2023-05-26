@@ -69,6 +69,7 @@ class TorchModel(NNModel):
         super().__init__(*args, **kwargs)
         self.model = model
         self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
+        self.model.to(self.device)
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
         if optimizer_parameters is None:
@@ -127,7 +128,7 @@ class TorchModel(NNModel):
                 if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
                     model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
 
-                if torch.cuda.device_count() > 1:
+                if self.is_data_parallel:
                     self.model.module.load_state_dict(model_state)
                 else:
                     self.model.load_state_dict(model_state)
@@ -160,18 +161,15 @@ class TorchModel(NNModel):
         weights_path = Path(fname).with_suffix(f".pth.tar")
         log.info(f"Saving model to {weights_path}.")
         # move the model to `cpu` before saving to provide consistency
-        if torch.cuda.device_count() > 1:
-            torch.save({
-                "model_state_dict": self.model.module.cpu().state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-                "epochs_done": self.epochs_done
-            }, weights_path)
+        if self.is_data_parallel:
+            model_state_dict = self.model.module.cpu().state_dict()
         else:
-            torch.save({
-                "model_state_dict": self.model.cpu().state_dict(),
-                "optimizer_state_dict": self.optimizer.state_dict(),
-                "epochs_done": self.epochs_done
-            }, weights_path)
+            model_state_dict = self.model.cpu().state_dict()
+        torch.save({
+            "model_state_dict": model_state_dict,
+            "optimizer_state_dict": self.optimizer.state_dict(),
+            "epochs_done": self.epochs_done
+        }, weights_path)
         # return it back to device (necessary if it was on `cuda`)
         self.model.to(self.device)
 
