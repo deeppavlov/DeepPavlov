@@ -76,7 +76,7 @@ class BertForMultiTask(nn.Module):
 
     def __init__(self, tasks_num_classes, multilabel, task_types,
                  weights, backbone_model='bert_base_uncased',
-                 dropout=None, new_model=False,focal=False,one_hot_labels=None,
+                 dropout=None, new_model=False,focal=False,
                  max_seq_len=320, model_takes_token_type_ids=True):
 
         super(BertForMultiTask, self).__init__()
@@ -87,7 +87,6 @@ class BertForMultiTask(nn.Module):
         self.weights = weights
         self.multilabel = multilabel
         self.new_model = new_model
-        self.one_hot_labels=one_hot_labels
         self.model_takes_token_type_ids = model_takes_token_type_ids
         if dropout is not None:
             self.dropout = nn.Dropout(dropout)
@@ -194,9 +193,6 @@ class BertForMultiTask(nn.Module):
                             else:
                                 loss_fct = FocalLoss(weight=torch.tensor([self.weights[task_id]]).cuda())
                             loss = loss_fct(logits, labels.view(-1))
-                        elif self.one_hot_labels[task_id]:
-                            loss_fct = SoftCrossEntropyLoss
-                            loss = loss_fct(logits, labels)
                         else:
                             if self.weights[task_id] is None:
                                 loss_fct = CrossEntropyLoss()
@@ -251,7 +247,6 @@ class MultiTaskTransformer(TorchModel):
         gradient_accumulation_steps(default:1): number of gradient accumulation steps,
         steps_per_epoch(int): number of steps taken per epoch. Specify if gradient_accumulation_steps > 1
         backbone_model(str): name of HuggingFace.Transformers backbone model. Default: 'bert-base-cased'
-        one_hot_labels(default: False): set to true if using one hot labels,
         multilabel(default: False): set to true for multilabel classification,
         return_probas(default: False): set true to return prediction probabilities,
         freeze_embeddings(default: False): set true to freeze BERT embeddings
@@ -280,7 +275,6 @@ class MultiTaskTransformer(TorchModel):
             **kwargs,
     ) -> None:
         self.return_probas = return_probas
-        self.one_hot_labels = []
         self.task_names = list(tasks.keys())
         self.task_types = []
         self.max_seq_len = max_seq_len
@@ -295,7 +289,6 @@ class MultiTaskTransformer(TorchModel):
             weights.append(tasks[task].get('weight', None))
             self.task_types.append(tasks[task]['type'])
             self.multilabel.append(tasks[task].get('multilabel', False))
-            self.one_hot_labels.append(tasks[task].get('one_hot_labels', False))
             self.types_to_cache.append(tasks[task].get('type_to_cache', -1))
         if self.return_probas and 'sequence_labeling' in self.task_types:
             log.warning(f'Return_probas for sequence_labeling not supported yet. Returning ids for this task')
@@ -316,7 +309,6 @@ class MultiTaskTransformer(TorchModel):
             tasks_num_classes=self.tasks_num_classes,
             weights=weights,
             multilabel=self.multilabel,
-            one_hot_labels=self.one_hot_labels,
             task_types=self.task_types,
             new_model=new_model,
             focal=focal,
@@ -359,9 +351,7 @@ class MultiTaskTransformer(TorchModel):
                         (-1, _input[elem].size(-1)))
 
         if labels is not None:
-            if self.one_hot_labels[task_id]:
-                _input['labels'] = torch.from_numpy(np.array(list(labels)))
-            elif self.task_types[task_id] in ["regression", "binary_head"]:
+            if self.task_types[task_id] in ["regression", "binary_head"]:
                 _input["labels"] = torch.tensor(
                     np.array(labels, dtype=float), dtype=torch.float32
                 )
