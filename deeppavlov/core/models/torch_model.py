@@ -15,7 +15,7 @@
 from abc import abstractmethod
 from logging import getLogger
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import torch
 
@@ -29,8 +29,8 @@ class TorchModel(NNModel):
     """Class implements torch model's main methods.
 
     Args:
-        model: TODO!!!!!!!!!!!
-        device: `cpu` or `cuda` device to use
+        model: torch.nn.Model-based neural network model
+        device: device to use
         optimizer: name of `torch.optim` optimizer
         optimizer_parameters: dictionary with optimizer parameters
         learning_rate_drop_patience: how many validations with no improvements to wait
@@ -56,7 +56,7 @@ class TorchModel(NNModel):
     """
 
     def __init__(self, model: torch.nn.Module,
-                 device: str = "gpu",
+                 device: Union[torch.device, str] = "cuda",
                  optimizer: str = "AdamW",
                  optimizer_parameters: Optional[dict] = None,
                  learning_rate_drop_patience: Optional[int] = None,
@@ -68,7 +68,7 @@ class TorchModel(NNModel):
 
         super().__init__(*args, **kwargs)
         self.model = model
-        self.device = torch.device("cuda" if torch.cuda.is_available() and device == "gpu" else "cpu")
+        self.device = self._init_device(device)
         self.model.to(self.device)
         if self.device.type == "cuda" and torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
@@ -86,6 +86,17 @@ class TorchModel(NNModel):
         # But in case of `interact/build_model` usage, we need to have model in eval mode.
         self.model.eval()
         log.debug(f"Model was successfully initialized! Model summary:\n {self.model}")
+
+    def _init_device(self, device: Union[torch.device, str]) -> torch.device:
+        if device == "gpu":
+            device = "cuda"
+        if isinstance(device, str):
+            device = torch.device(device)
+        if device.type == "cuda" and not torch.cuda.is_available():
+            log.warning(f"Unable to place component {self.__class__.__name__} on GPU, "
+                        "since no CUDA GPUs are available. Using CPU.")
+            device = torch.device('cpu')
+        return device
 
     @property
     def is_data_parallel(self) -> bool:
@@ -123,10 +134,9 @@ class TorchModel(NNModel):
                 checkpoint = torch.load(weights_path, map_location=self.device)
                 model_state = checkpoint["model_state_dict"]
                 optimizer_state = checkpoint["optimizer_state_dict"]
-                # if data is parallel, should we remove module. from keys as well?!!!!!
                 # load a multi-gpu model on a single device
-                if not self.is_data_parallel and any(["module." in key for key in list(model_state.keys())]):
-                    model_state = {key.replace("module.", ""): val for key, val in model_state.items()}
+                if all([key.startswith("module.") for key in list(model_state.keys())]):
+                    model_state = {key.replace("module.", "", 1): val for key, val in model_state.items()}
 
                 if self.is_data_parallel:
                     self.model.module.load_state_dict(model_state)
