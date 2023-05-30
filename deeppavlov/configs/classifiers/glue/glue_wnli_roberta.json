@@ -1,25 +1,11 @@
 {
-  "metadata": {
-    "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
-      "BASE_MODEL": "roberta-large",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-      "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_wnli/{BASE_MODEL}"
-    },
-    "download": [
-      {
-        "url": "http://files.deeppavlov.ai/0.16/classifiers/glue_wnli_roberta.tar.gz",
-        "subdir": "{MODELS_PATH}"
-      }
-    ]
-  },
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
-    "path": "glue",
-    "name": "wnli",
+    "path": "{COMPETITION}",
+    "name": "{TASK}",
     "train": "train",
-    "valid": "validation"
+    "valid": "validation",
+    "test": "test"
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
@@ -143,5 +129,22 @@
     "class_name": "torch_trainer",
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2
+  },
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "roberta-large",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "COMPETITION": "glue",
+      "TASK": "wnli",
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/0.16/classifiers/glue_wnli_roberta.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
   }
 }

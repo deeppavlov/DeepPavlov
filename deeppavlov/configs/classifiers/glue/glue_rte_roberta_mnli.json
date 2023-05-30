@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
-    "path": "glue",
-    "name": "rte",
+    "path": "{COMPETITION}",
+    "name": "{TASK}",
     "train": "train",
     "valid": "validation",
     "test": "test"
@@ -133,12 +133,14 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_rte/{BASE_MODEL}"
+      "COMPETITION": "glue",
+      "TASK": "rte",
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
     },
     "download": [
       {
         "url": "http://files.deeppavlov.ai/0.16/classifiers/glue_rte.tar.gz",
-        "subdir": "{MODELS_PATH}"
+        "subdir": "{MODEL_PATH}"
       }
     ]
   }
