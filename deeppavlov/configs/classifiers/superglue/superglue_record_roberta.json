@@ -11,41 +11,22 @@
   },
   "dataset_iterator": {
     "class_name": "huggingface_dataset_iterator",
-    "features": [
-      "idx",
-      "query",
-      "passage",
-      "entities",
-      "num_examples"
-    ],
+    "features": ["idx", "query", "passage", "entities", "num_examples"],
     "label": "label",
     "seed": 42,
     "use_label_name": false
   },
   "chainer": {
-    "in": [
-      "idx",
-      "query",
-      "passage",
-      "entities",
-      "num_examples"
-    ],
-    "in_y": [
-      "y"
-    ],
+    "in": ["idx", "query", "passage", "entities", "num_examples"],
+    "in_y": ["y"],
     "pipe": [
       {
         "class_name": "torch_transformers_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 320,
-        "in": [
-          "query",
-          "passage"
-        ],
-        "out": [
-          "bert_features"
-        ]
+        "in": ["query", "passage"],
+        "out": ["bert_features"]
       },
       {
         "class_name": "torch_transformers_classifier",
@@ -62,76 +43,46 @@
         },
         "learning_rate_drop_patience": 3,
         "learning_rate_drop_div": 2.0,
-        "in": [
-          "bert_features"
-        ],
-        "in_y": [
-          "y"
-        ],
-        "out": [
-          "y_pred_probas"
-        ]
+        "in": ["bert_features"],
+        "in_y": ["y"],
+        "out": ["y_pred_probas"]
       },
       {
         "class_name": "proba2labels",
-        "in": [
-          "y_pred_probas"
-        ],
-        "out": [
-          "y_pred_ids"
-        ],
+        "in": ["y_pred_probas"],
+        "out": ["y_pred_ids"],
         "is_binary": "{BINARY_CLASSIFICATION}",
         "max_proba": true
       },
       {
         "class_name": "torch_record_postprocessor",
         "is_binary": "{BINARY_CLASSIFICATION}",
-        "in": [
-          "idx",
-          "y",
-          "y_pred_probas",
-          "entities",
-          "num_examples"
-        ],
-        "out": [
-          "record_examples"
-        ]
+        "in": ["idx", "y", "y_pred_probas", "entities", "num_examples"],
+        "out": ["record_examples"]
       }
     ],
-    "out": [
-      "y_pred_probas"
-    ]
+    "out": ["y_pred_probas"]
   },
   "train": {
     "batch_size": 24,
     "train_metrics": [
       {
         "name": "accuracy",
-        "inputs": [
-          "y",
-          "y_pred_ids"
-        ]
+        "inputs": ["y", "y_pred_ids"]
       }
     ],
     "metrics": [
       {
         "name": "record_em_score",
-        "inputs": [
-          "record_examples"
-        ]
+        "inputs": ["record_examples"]
       },
       {
         "name": "record_f1_score",
-        "inputs": [
-          "record_examples"
-        ]
+        "inputs": ["record_examples"]
       },
       {
         "name": "accuracy",
-        "inputs": [
-          "y",
-          "y_pred_ids"
-        ]
+        "inputs": ["y", "y_pred_ids"]
       }
     ],
     "validation_patience": 10,
@@ -139,9 +90,7 @@
     "log_every_n_epochs": 1,
     "show_examples": false,
     "class_name": "torch_trainer",
-    "evaluation_targets": [
-      "valid"
-    ],
+    "evaluation_targets": ["valid"],
     "tensorboard_log_dir": "{MODEL_PATH}/",
     "pytest_max_batches": 2,
     "pytest_batch_size": 2
