@@ -6,7 +6,8 @@
     "train": "train",
     "valid": "validation",
     "test": "test",
-    "downsample_ratio": [1.8, 1.8],
+    "seed": 42,
+    "downsample_ratio": [1.8, 1.8, 1.8],
     "do_index_correction": false
   },
   "dataset_iterator": {
@@ -104,7 +105,7 @@
       "COMPETITION": "super_glue",
       "TASK": "record",
       "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}",
-      "BINARY_CLASSIFICATION": false,
+      "BINARY_CLASSIFICATION": false
     },
     "download": [
       {
