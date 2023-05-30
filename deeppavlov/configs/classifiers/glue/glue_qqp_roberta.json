@@ -60,7 +60,7 @@
     "out": ["y_pred_ids"]
   },
   "train": {
-    "batch_size": 64,
+    "batch_size": 16,
     "metrics": [
       "f1",
       "accuracy"
