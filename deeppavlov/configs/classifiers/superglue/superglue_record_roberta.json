@@ -6,7 +6,6 @@
     "train": "train",
     "valid": "validation",
     "test": "test",
-    "seed": 42,
     "downsample_ratio": [1.8, 1.8, 1.8],
     "do_index_correction": false
   },
