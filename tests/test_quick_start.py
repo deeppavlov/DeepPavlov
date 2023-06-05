@@ -431,9 +431,8 @@ class TestQuickStart(object):
             model_args_names = get_response.json()['in']
             post_payload = dict(zip(model_args_names, inputs))
             # TODO: remove this if from here and socket
-            if 'parus' in str(config_path):
-                post_payload = {k: [v] for k, v in post_payload.items()}
-
+            if 'docred' in str(config_path) or 'rured' in str(config_path):
+                post_payload = {k: v[0] for k, v in post_payload.items()}
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
