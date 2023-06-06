@@ -138,6 +138,12 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
+    "multitask":{
+        ("multitask/multitask_example.json", "multitask", ALL_MODES): [
+            ('Dummy text',) + (('Dummy text', 'Dummy text'),) * 3 + ('Dummy text',) + (None,)],
+        ("multitask/mt_glue.json", "multitask", ALL_MODES): [
+            ('Dummy text',) * 2 + (('Dummy text', 'Dummy text'),) * 6 + (None,)]
+    },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
             [
@@ -377,7 +383,8 @@ class TestQuickStart(object):
                 raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
-    def infer_api(config_path):
+    def infer_api(config_path, qr_list):
+        *inputs, expected_outputs = zip(*qr_list)
         server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
@@ -400,14 +407,10 @@ class TestQuickStart(object):
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
             model_args_names = get_response.json()['in']
-            post_payload = dict()
-            for arg_name in model_args_names:
-                arg_value = ' '.join(['qwerty'] * 10)
-                post_payload[arg_name] = [arg_value]
+            post_payload = dict(zip(model_args_names, inputs))
             # TODO: remove this if from here and socket
-            if 'parus' in str(config_path):
-                post_payload = {k: [v] for k, v in post_payload.items()}
-
+            if 'docred' in str(config_path) or 'rured' in str(config_path):
+                post_payload = {k: v[0] for k, v in post_payload.items()}
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -497,7 +500,7 @@ class TestQuickStart(object):
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.infer_api(test_configs_path / conf_file)
+            self.infer_api(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 
