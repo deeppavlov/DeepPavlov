@@ -6,6 +6,8 @@
     "train": "train",
     "valid": "validation",
     "test": "test",
+    "data_url": "http://files.deeppavlov.ai/datasets/russian_super_glue/RuCoS",
+    "ignore_verifications": true,
     "downsample_ratio": [1.8, 1.8, 1],
     "do_index_correction": false
   },

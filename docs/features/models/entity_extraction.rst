@@ -49,9 +49,9 @@ Entity Detection model can be used from Python using the following code:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    ed = build_model(configs.entity_extraction.entity_detection_en, download=True)
+    ed = build_model('entity_detection_en', download=True)
     ed(['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'])
 
 Entity Linking is the task of finding knowledge base entity ids for entity mentions in text. Entity Linking in DeepPavlov supports Wikidata and Wikipedia (for :config:`English <entity_extraction/entity_linking_en.json>` and :config:`Russian <entity_extraction/entity_linking_ru.json>`). Entity Linking component performs the following steps:
@@ -101,7 +101,7 @@ Entity Linking model can be used from Python using the following code:
 
 .. code:: python
 
-    from deeppavlov import configs, build_model
+    from deeppavlov import build_model
 
-    entity_extraction = build_model(configs.kbqa.entity_extraction_en, download=True)
+    entity_extraction = build_model('entity_extraction_en', download=True)
     entity_extraction(['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'])

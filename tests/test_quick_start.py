@@ -107,8 +107,8 @@ PARAMS = {
         ("classifiers/rusentiment_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_twitter.json", "classifiers", ALL_MODES): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiment_sst_conv_bert.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/glue/glue_mrpc_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/glue/glue_stsb_cased_bert_torch.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_mrpc_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/glue/glue_stsb_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_mnli_roberta.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/glue/glue_rte_roberta_mnli.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_copa_roberta.json", "classifiers", ('TI',)): [LIST_ARGUMENTS_INFER_CHECK],
@@ -138,6 +138,12 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
     },
+    "multitask":{
+        ("multitask/multitask_example.json", "multitask", ALL_MODES): [
+            ('Dummy text',) + (('Dummy text', 'Dummy text'),) * 3 + ('Dummy text',) + (None,)],
+        ("multitask/mt_glue.json", "multitask", ALL_MODES): [
+            ('Dummy text',) * 2 + (('Dummy text', 'Dummy text'),) * 6 + (None,)]
+    },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
             [
@@ -161,41 +167,6 @@ PARAMS = {
                   ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
                   [0.8359, 0.938, 0.9917, 0.9803]))
             ],
-        ("entity_extraction/entity_linking_en.json", "entity_extraction", ('IP',)):
-            [
-                (['forrest gump', 'robert zemeckis', 'eric roth'],
-                 ['WORK_OF_ART', 'PERSON', 'PERSON'],
-                 ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.'],
-                 [(0, 12), (48, 63), (79, 88)],
-                 [(0, 89)],
-                 ([['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'], ['Q942932', 'Q89320386', 'Q89909683']],
-                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)],
-                   [(1.0, 73, 1.0), (0.5, 52, 0.29)],
-                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
-                  [['Forrest Gump', 'Forrest Gump (novel)', ''],
-                   ['Robert Zemeckis', 'Welcome to Marwen'], ['Eric Roth', '', '']]))
-            ],
-        ("entity_extraction/entity_linking_ru.json", "entity_extraction", ('IP',)):
-            [
-                (['москва', 'россии', 'центрального федерального округа', 'московской области'],
-                 ['CITY', 'COUNTRY', 'LOC', 'LOC'],
-                 ['Москва — столица России, центр Центрального федерального округа и центр Московской области.'],
-                 [(0, 6), (17, 23), (31, 63), (72, 90)],
-                 [(0, 91)],
-                 ([['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
-                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
-                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
-                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
-                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
-                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
-                  [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
-                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
-                    'Российская республика'],
-                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
-                    'Центральный административный округ (Назрань)'],
-                   ['Московская область', 'Московская область (1917—1918)',
-                    'Мостовский (Волгоградская область)']]))
-            ],
         ("entity_extraction/entity_extraction_en.json", "entity_extraction", ('IP',)):
             [
                 ("Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.",
@@ -204,10 +175,12 @@ PARAMS = {
                   [(0, 12), (48, 63), (79, 88)],
                   [['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'],
                    ['Q942932', 'Q89320386', 'Q89909683']],
-                  [[(1.0, 110, 1.0), (1.0, 13, 0.73), (1.0, 8, 0.04)], [(1.0, 73, 1.0), (0.5, 52, 0.29)],
-                   [(1.0, 37, 0.95), (1.0, 2, 0.35), (0.67, 2, 0.35)]],
+                  [[[1.1, 110, 1.0], [1.1, 13, 0.73], [1.1, 8, 0.04]], [[1.1, 73, 1.0], [0.5, 52, 0.29]],
+                   [[1.1, 37, 0.95], [1.1, 2, 0.35], [0.67, 2, 0.35]]],
                   [['Forrest Gump', 'Forrest Gump (novel)', ''], ['Robert Zemeckis', 'Welcome to Marwen'],
-                   ['Eric Roth', '', '']]))
+                   ['Eric Roth', '', '']],
+                  [['Forrest Gump', 'Forrest Gump', 'Forrest Gump'], ['Robert Zemeckis', 'Welcome to Marwen'],
+                   ['Eric Roth', 'Eric Roth', 'Eric W Roth']]))
             ],
         ("entity_extraction/entity_extraction_ru.json", "entity_extraction", ('IP',)):
             [
@@ -215,18 +188,23 @@ PARAMS = {
                  (['москва', 'россии', 'центрального федерального округа', 'московской области'],
                   ['CITY', 'COUNTRY', 'LOC', 'LOC'],
                   [(0, 6), (17, 23), (31, 63), (72, 90)],
-                  [['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'],
-                   ['Q190778', 'Q484215', 'Q21104009'], ['Q1697', 'Q4303932', 'Q24565285']],
-                  [[(1.0, 134, 1.0), (1.0, 20, 0.0), (1.0, 18, 0.0)],
-                   [(1.0, 203, 1.0), (1.0, 58, 1.0), (1.0, 29, 0.93)],
-                   [(1.0, 24, 0.28), (0.67, 11, 0.5), (0.67, 8, 0.4)],
-                   [(0.9, 30, 1.0), (0.9, 6, 0.83), (0.61, 8, 0.03)]],
+                  [['Q649', 'Q1023006', 'Q2380475'], ['Q159', 'Q2184', 'Q139319'], ['Q190778', 'Q4504288', 'Q27557290'],
+                   ['Q1697', 'Q4303932', 'Q24565285']],
+                  [[[1.1, 200, 1.0], [1.0, 20, 0.0], [1.0, 18, 0.0]],
+                   [[1.1, 200, 1.0], [1.0, 58, 1.0], [1.0, 29, 0.85]],
+                   [[1.1, 200, 1.0], [0.67, 3, 0.92], [0.67, 3, 0.89]],
+                   [[0.9, 200, 1.0], [0.9, 6, 0.83], [0.61, 8, 0.03]]],
                   [['Москва', 'Москоу (Канзас)', 'Москоу (Теннесси)'],
                    ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
                     'Российская республика'],
-                   ['Центральный федеральный округ', 'Федеральные округа Российской Федерации',
-                    'Центральный административный округ (Назрань)'],
-                   ['Московская область', 'Московская область (1917—1918)', 'Мостовский (Волгоградская область)']]))
+                   ['Центральный федеральный округ', 'Центральный округ (Краснодар)', ''],
+                   ['Московская область', 'Московская область (1917—1918)',
+                    'Мостовский (Волгоградская область)']],
+                  [['Москва', 'Москоу', 'Москоу'],
+                   ['Россия', 'Российская Советская Федеративная Социалистическая Республика',
+                    'Российская республика'],
+                   ['Центральный федеральный округ', 'Центральный округ (Краснодар)', 'Центральный округ (Братск)'],
+                   ['Московская область', 'Московская область', 'Мостовский']]))
             ]
     },
     "ner": {
@@ -243,16 +221,22 @@ PARAMS = {
     "kbqa": {
         ("kbqa/kbqa_cq_en.json", "kbqa", ('IP',)):
             [
-                ("What is the currency of Sweden?", ("Swedish krona",)),
-                ("Where was Napoleon Bonaparte born?", ("Ajaccio",)),
-                ("When did the Korean War end?", ("27 July 1953",)),
-                ("   ", ("Not Found",))
-            ],
+                ("What is the currency of Sweden?",
+                 ("Swedish krona", ["Q122922"], ["SELECT ?answer WHERE { wd:Q34 wdt:P38 ?answer. }"])),
+                ("Where was Napoleon Bonaparte born?",
+                 ("Ajaccio", ["Q40104"], ["SELECT ?answer WHERE { wd:Q517 wdt:P19 ?answer. }"])),
+                ("When did the Korean War end?",
+                 ("27 July 1953", ["+1953-07-27^^T"], ["SELECT ?answer WHERE { wd:Q8663 wdt:P582 ?answer. }"])),
+                ("   ", ("Not Found", [], []))
+            ],            
         ("kbqa/kbqa_cq_ru.json", "kbqa", ('IP',)):
             [
-                ("Кто такой Оксимирон?", ("российский рэп-исполнитель",)),
-                ("Кто написал «Евгений Онегин»?", ("Александр Сергеевич Пушкин",)),
-                ("абв", ("Not Found",))
+                ("Кто такой Оксимирон?",
+                 ("российский рэп-исполнитель", ['российский рэп-исполнитель"@ru'],
+                  ["SELECT ?answer WHERE { wd:Q4046107 wdt:P0 ?answer. }"])),
+                ("Кто написал «Евгений Онегин»?",
+                 ("Александр Сергеевич Пушкин", ["Q7200"], ["SELECT ?answer WHERE { wd:Q50948 wdt:P50 ?answer. }"])),
+                ("абв", ("Not Found", [], []))
             ]
     },
     "ranking": {
@@ -399,7 +383,8 @@ class TestQuickStart(object):
                 raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
-    def infer_api(config_path):
+    def infer_api(config_path, qr_list):
+        *inputs, expected_outputs = zip(*qr_list)
         server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
@@ -422,14 +407,10 @@ class TestQuickStart(object):
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
             model_args_names = get_response.json()['in']
-            post_payload = dict()
-            for arg_name in model_args_names:
-                arg_value = ' '.join(['qwerty'] * 10)
-                post_payload[arg_name] = [arg_value]
+            post_payload = dict(zip(model_args_names, inputs))
             # TODO: remove this if from here and socket
-            if 'parus' in str(config_path):
-                post_payload = {k: [v] for k, v in post_payload.items()}
-
+            if 'docred' in str(config_path) or 'rured' in str(config_path):
+                post_payload = {k: v[0] for k, v in post_payload.items()}
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -519,7 +500,7 @@ class TestQuickStart(object):
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.infer_api(test_configs_path / conf_file)
+            self.infer_api(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 

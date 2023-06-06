@@ -18,7 +18,6 @@ from typing import Iterator
 import fasttext
 
 import numpy as np
-from overrides import overrides
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.models.embedders.abstract_embedder import Embedder
@@ -54,7 +53,6 @@ class FasttextEmbedder(Embedder):
         self.model = fasttext.load_model(str(self.load_path))
         self.dim = self.model.get_dimension()
 
-    @overrides
     def __iter__(self) -> Iterator[str]:
         """
         Iterate over all words from fastText model vocabulary

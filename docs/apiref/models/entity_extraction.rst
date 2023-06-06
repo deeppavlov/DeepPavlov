@@ -16,4 +16,4 @@ deeppavlov.models.entity_extraction
     .. automethod:: __init__
     .. automethod:: __call__
 
-.. autofunction:: deeppavlov.models.entity_extraction.entity_detection_parser.question_sign_checker
+.. autoclass:: deeppavlov.models.entity_extraction.entity_detection_parser.QuestionSignChecker

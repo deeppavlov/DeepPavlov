@@ -15,8 +15,6 @@ from logging import getLogger
 from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 
-from overrides import overrides
-
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress, mark_done, is_done
@@ -35,7 +33,6 @@ class ImdbReader(DatasetReader):
     for Computational Linguistics (ACL 2011).
     """
 
-    @overrides
     def read(self, data_path: str, url: Optional[str] = None,
              *args, **kwargs) -> Dict[str, List[Tuple[Any, Any]]]:
         """

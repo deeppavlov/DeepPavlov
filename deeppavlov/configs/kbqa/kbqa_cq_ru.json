@@ -1,16 +1,79 @@
 {
+  "dataset_reader": {
+    "class_name": "rubq_reader",
+    "version": "2.0",
+    "question_types": ["all"],
+    "num_samples": 100,
+    "data_path": "{DOWNLOADS_PATH}/rubq/rubq2.0.json"
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
   "chainer": {
     "in": ["x"],
-    "in_y": ["y"],
+    "in_y": ["gold_answer_ids", "gold_answer_labels", "gold_query"],
     "pipe": [
       {
         "class_name": "question_sign_checker",
+        "delete_brackets": true,
         "in": ["x"],
         "out": ["x_punct"]
       },
       {
-        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_detection_ru.json",
+        "class_name": "query_formatter",
+        "query_info": {"unk_var": "?answer", "mid_var": "?ent"},
+        "in": ["gold_query"],
+        "out": ["f_gold_query"]
+      },
+      {
+        "class_name": "ner_chunker",
+        "batch_size": 16,
+        "max_seq_len" : 300,
+        "vocab_file": "distilbert-base-multilingual-cased",
         "in": ["x_punct"],
+        "out": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"]
+      },
+      {
+        "thres_proba": 0.05,
+        "o_tag": "O",
+        "tags_file": "{NER_PATH}/tag.dict",
+        "class_name": "entity_detection_parser",
+        "ignored_tags": ["DATE", "CARDINAL", "ORDINAL", "QUANTITY", "PERCENT", "NORP"],
+        "lang": "ru",
+        "id": "edp"
+      },
+      {
+        "thres_proba": 0.05,
+        "o_tag": "O",
+        "tags_file": "{NER_PATH2}/tag.dict",
+        "class_name": "entity_detection_parser",
+        "ignored_tags": ["T"],
+        "lang": "ru",
+        "id": "edp2"
+      },
+      {
+        "class_name": "ner_chunk_model",
+        "ner": {
+          "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_mult.json",
+          "overwrite": {
+            "chainer.pipe.2.use_crf": false,
+            "metadata.variables.TRANSFORMER": "distilbert-base-multilingual-cased",
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"],
+            "metadata.variables.MODEL_PATH": "{MODELS_PATH}/ner_ontonotes_torch_distilbert_mult"
+          }
+        },
+        "ner_parser": "#edp",
+        "ner2": {
+          "config_path": "{CONFIGS_PATH}/ner/ner_ontonotes_bert_mult.json",
+          "overwrite": {
+            "chainer.pipe.2.use_crf": false,
+            "metadata.variables.TRANSFORMER": "DeepPavlov/distilrubert-small-cased-conversational",
+            "chainer.out": ["x_tokens", "tokens_offsets", "y_pred", "probas"],
+            "metadata.variables.MODEL_PATH": "{MODELS_PATH}/entity_detection_rubq"
+          }
+        },
+        "ner_parser2": "#edp2",
+        "in": ["x_chunk", "chunk_nums", "chunk_sentences_offsets", "chunk_sentences"],
         "out": ["entity_substr", "entity_offsets", "entity_positions", "tags", "sentences_offsets", "sentences", "probas"]
       },
       {
@@ -22,13 +85,34 @@
         "out": ["answer_types", "f_entity_substr", "f_tags"]
       },
       {
-        "config_path": "{CONFIGS_PATH}/entity_extraction/entity_linking_ru.json",
+        "class_name": "entity_linker",
+        "load_path": "{DOWNLOADS_PATH}/entity_linking_rus",
+        "entities_database_filename": "el_db_rus.db",
+        "words_dict_filename": "{DOWNLOADS_PATH}/entity_linking_rus/words_dict.pickle",
+        "ngrams_matrix_filename": "{DOWNLOADS_PATH}/entity_linking_rus/ngrams_matrix.npz",
+        "include_mention": false,
+        "num_entities_to_return": 7,
+        "lemmatize": true,
+        "use_descriptions": false,
+        "use_connections": true,
+        "use_tags": true,
+        "kb_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_full.hdt",
+        "prefixes": {"entity": ["http://we"],
+                     "rels": {"direct": "http://wpd",
+                              "no_type": "http://wp",
+                              "statement": "http://wps",
+                              "qualifier": "http://wpq"
+                              }
+                     },
+        "return_confidences": true,
+        "lang": "ru",
         "id": "entity_linker"
       },
       {
         "class_name": "wiki_parser",
         "id": "wiki_p",
-        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_lite.hdt",
+        "wiki_filename": "{DOWNLOADS_PATH}/wikidata/wikidata_full.hdt",
+        "max_comb_num": 40000,
         "lang": "@ru"
       },
       {
@@ -36,8 +120,8 @@
         "load_path": "{MODELS_PATH}/slovnet_syntax_parser",
         "navec_filename": "{MODELS_PATH}/slovnet_syntax_parser/navec_news_v1_1B_250K_300d_100q.tar",
         "syntax_parser_filename": "{MODELS_PATH}/slovnet_syntax_parser/slovnet_syntax_news_v1.tar",
-        "in": ["x_punct", "entity_offsets"],
-        "out": ["syntax_info"]
+        "tree_patterns_filename": "{MODELS_PATH}/slovnet_syntax_parser/tree_patterns.json",
+        "id": "slovnet_parser"
       },
       {
         "class_name": "ru_adj_to_noun",
@@ -46,11 +130,12 @@
       },
       {
         "class_name": "tree_to_sparql",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "adj_to_noun": "#adj2noun",
-        "lang": "rus",
-        "in": ["syntax_info", "entity_positions"],
-        "out": ["x_sanitized", "query_nums", "entities_dict", "types_dict"]
+        "syntax_parser": "#slovnet_parser",
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
+        "in": ["x_punct", "entity_substr", "tags", "entity_offsets", "entity_positions", "probas"],
+        "out": ["x_sanitized", "query_nums", "s_entity_substr", "s_tags", "s_probas", "entities_to_link", "s_types_substr"]
       },
       {
         "class_name": "template_matcher",
@@ -62,13 +147,16 @@
       {
         "class_name": "rel_ranking_infer",
         "id": "rel_r_inf",
-        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_bert_ru.json"},
+        "ranker": {"config_path": "{CONFIGS_PATH}/ranking/rel_ranking_nll_bert_ru.json"},
         "wiki_parser": "#wiki_p",
         "batch_size": 32,
-        "return_all_possible_answers": true,
-        "return_answer_ids": false,
+        "nll_rel_ranking": true,
+        "return_elements": ["answer_ids", "queries"],
         "load_path": "{DOWNLOADS_PATH}/wikidata_rus",
-        "rel_q2name_filename": "wiki_dict_properties_rus.pickle"
+        "rank": false,
+        "rel_thres": -4.0,
+        "type_rels": ["P31", "P279"],
+        "rel_q2name_filename": "wiki_dict_properties_full_rus.pickle"
       },
       {
         "class_name": "query_generator",
@@ -78,29 +166,61 @@
         "rel_ranker": "#rel_r_inf",
         "wiki_parser": "#wiki_p",
         "load_path": "{DOWNLOADS_PATH}/wikidata",
-        "rank_rels_filename_1": "rels_0.txt",
-        "rank_rels_filename_2": "rels_1.txt",
-        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries.json",
+        "rels_in_ranking_queries_fname": "rels_in_ranking_queries.json",
+        "sparql_queries_filename": "{DOWNLOADS_PATH}/wikidata/sparql_queries_rus.json",
         "entities_to_leave": 9,
         "rels_to_leave": 10,
-        "return_all_possible_answers": false,
+        "max_comb_num": 1000,
+        "map_query_str_to_kb": [["P0", "http://wd"], ["P00", "http://wl"], ["wd:", "http://we/"], ["wdt:", "http://wpd/"],
+                                [" p:", " http://wp/"], ["ps:", "http://wps/"], ["pq:", "http://wpq/"]],
+        "kb_prefixes": {"entity": "wd:E", "rel": "wdt:R", "type": "wd:T", "type_rel": "wdt:P", "type_rels": ["P31", "P279"]},
+        "gold_query_info": {"unk_var": "?answer", "mid_var": "?ent"},
         "syntax_structure_known": true,
-        "in": ["x_punct", "x_sanitized", "query_nums", "f_entity_substr", "f_tags", "answer_types"],
-        "out": ["answers"]
+        "in": ["x_punct", "x_sanitized", "query_nums", "s_entity_substr", "s_types_substr", "s_tags", "s_probas", "answer_types", "entities_to_link"],
+        "out": ["answers", "answer_ids", "query"]
       }
     ],
-    "out": ["answers"]
+    "out": ["answers", "answer_ids", "query"]
+  },
+  "train": {
+    "evaluation_targets": ["test"],
+    "batch_size": 1,
+    "metrics": [
+      {
+        "name": "kbqa_accuracy",
+        "inputs": ["x", "answers", "answer_ids", "query", "gold_answer_labels", "gold_answer_ids", "f_gold_query"]
+      }
+    ],
+    "class_name": "nn_trainer"
   },
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
+      "NER_PATH": "{MODELS_PATH}/ner_ontonotes_torch_distilbert_mult",
+      "NER_PATH2": "{MODELS_PATH}/entity_detection_rubq"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels.tar.gz",
+        "url": "http://files.deeppavlov.ai/datasets/rubq2.0.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/rubq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/downloads/el_files_rus.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/entity_linking_rus"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/ner_ontonotes_torch_distilbert_mult.tar.gz",
+        "subdir": "{MODELS_PATH}/ner_ontonotes_torch_distilbert_mult"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/entity_detection_rubq.tar.gz",
+        "subdir": "{MODELS_PATH}/entity_detection_rubq"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/queries_and_rels_rus_v2.tar.gz",
         "subdir": "{DOWNLOADS_PATH}/wikidata"
       },
       {
@@ -108,8 +228,12 @@
         "subdir": "{DOWNLOADS_PATH}/wikidata_rus"
       },
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/slovnet_syntax_parser.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/syntax_parser/slovnet_syntax_parser_v2.tar.gz",
         "subdir": "{MODELS_PATH}/slovnet_syntax_parser"
+      },
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/wikidata/wikidata_full.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/wikidata"
       }
     ]
   }

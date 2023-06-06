@@ -22,7 +22,6 @@ from typing import Dict, List, Tuple, Union
 
 import numpy as np
 import pandas as pd
-from overrides import overrides
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.registry import register
@@ -35,7 +34,6 @@ logger = getLogger(__name__)
 class DocREDDatasetReader(DatasetReader):
     """ Class to read the datasets in DocRED format"""
 
-    @overrides
     def read(
             self,
             data_path: str,
