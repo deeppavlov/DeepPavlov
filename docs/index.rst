@@ -36,7 +36,6 @@ Welcome to DeepPavlov's documentation!
    BERT-based models <features/models/bert>
    Neural Ranking <features/models/neural_ranking>
    Spelling Correction <features/models/spelling_correction>
-   Syntactic Parser <features/models/syntaxparser>
    TF-IDF Ranking <features/models/tfidf_ranking>
    Popularity Ranking <features/models/popularity_ranking>
    Knowledge Base Question answering <features/models/kbqa>
