@@ -68,38 +68,6 @@ class OutputPrettifier(Component):
         return [self.prettify(x, y, z) for x, y, z in zip(X, Y, Z)]
 
 
-@register('dependency_output_prettifier')
-class DependencyOutputPrettifier(OutputPrettifier):
-    """Class which prettifies dependency parser output
-    to 10-column (Universal Dependencies) format.
-    Args:
-        begin: a string to append in the beginning
-        end: a string to append in the end
-        sep: separator between word analyses
-    """
-
-    def __init__(self, return_string: bool = True, begin: str = "", end: str = "\n", sep: str = "\n",
-                 **kwargs) -> None:
-        super().__init__(return_string, begin, end, sep, **kwargs)
-        self.format_string = "{}\t{}\t_\t_\t_\t_\t{}\t{}\t_\t_"
-
-    def prettify(self, tokens: List[str], heads: List[int], deps: List[str]) -> Union[List[str], str]:
-        """Prettifies output of dependency parser.
-        Args:
-            tokens: tokenized source sentence
-            heads: list of head positions, the output of the parser
-            deps: list of head positions, the output of the parser
-        Returns:
-            the prettified output of the parser
-        """
-        answer = []
-        for i, (word, head, dep) in enumerate(zip(tokens, heads, deps)):
-            answer.append(self.format_string.format(i + 1, word, head, dep))
-        if self.return_string:
-            answer = self.begin + self.sep.join(answer) + self.end
-        return answer
-
-
 @register('lemmatized_output_prettifier')
 class LemmatizedOutputPrettifier(OutputPrettifier):
     """Class which prettifies morphological tagger output to 4-column

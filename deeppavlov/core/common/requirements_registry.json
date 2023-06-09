@@ -3,9 +3,6 @@
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
-  "chu_liu_edmonds_transformer": [
-    "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt"
-  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
@@ -154,11 +151,6 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_sequence_tagger": [
-    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
-    "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
-    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
-  ],
-  "torch_transformers_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"

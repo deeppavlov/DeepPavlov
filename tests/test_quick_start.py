@@ -253,11 +253,7 @@ PARAMS = {
     "morpho_tagger": {
         ("morpho_syntax_parser/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
             [ONE_ARGUMENT_INFER_CHECK]
-    },
-    "syntax_tagger": {
-        ("morpho_syntax_parser/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("morpho_syntax_parser/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
-    },
+    }
 }
 
 MARKS = {"gpu_only": ["squad"], "slow": ["error_model", "squad"]}  # marks defined in pytest.ini
