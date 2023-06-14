@@ -48,7 +48,10 @@ class Proba2Labels(Component):
                  x: List[str],
                  x_populated: List[str],
                  x_support: List[str],
-                 y_support: List[str]) -> List[str]:
+                 y_support: List[str],
+                 *args, 
+                 **kwargs) -> List[str]:
+        
         y_pred = []
 
         simmilarity_scores = np.array(simmilarity_scores)
