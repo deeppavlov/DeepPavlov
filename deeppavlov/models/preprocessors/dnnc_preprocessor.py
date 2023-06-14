@@ -13,11 +13,9 @@
 # limitations under the License.
 
 from logging import getLogger
-from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
-import pandas as pd
 
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.component import Component
