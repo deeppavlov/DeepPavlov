@@ -13,12 +13,10 @@
 # limitations under the License.
 
 import argparse
-from collections import defaultdict
 from logging import getLogger
 from pathlib import Path
 from typing import Optional, Union
 
-import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
