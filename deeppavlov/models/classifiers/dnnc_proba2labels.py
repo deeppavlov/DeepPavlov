@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from logging import getLogger
-from typing import List, Union
+from typing import List
 
 import numpy as np
 
@@ -37,9 +37,7 @@ class Proba2Labels(Component):
     def __init__(self,
                  confidence_threshold: float = 0.0,
                  pooling: str = 'max',
-                 is_binary: bool = True,
-                 *args,
-                 **kwargs) -> None:
+                 is_binary: bool = True) -> None:
 
         self.confidence_threshold = confidence_threshold
         self.pooling = pooling
