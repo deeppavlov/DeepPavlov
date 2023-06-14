@@ -37,8 +37,9 @@ class PairGenerator(Component):
 
     def __call__(self,
                  texts_batch: List[str],
-                 support_dataset: List[List[str]]
-                 ) -> Tuple[List[str], List[str], List[str], List[str]]:
+                 support_dataset: List[List[str]],
+                 *args,
+                 **kwargs) -> Tuple[List[str], List[str], List[str], List[str]]:
         hypotesis_batch = []
         premise_batch = []
         hypotesis_labels_batch = []
