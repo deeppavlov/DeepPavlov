@@ -34,11 +34,11 @@ class PairGenerator(Component):
         bidirectional: adds pairs in reverse order
     """
 
-    def __init__(self, bidirectional: bool = False, *args, **kwargs) -> None:
+    def __init__(self, bidirectional: bool = False) -> None:
         self.bidirectional = bidirectional
 
-    def __call__(self, 
-                 texts_batch: List[str], 
+    def __call__(self,
+                 texts_batch: List[str],
                  support_dataset: List[List[str]]
                  ) -> Tuple[List[str], List[str], List[str], List[str]]:
         hypotesis_batch = []
