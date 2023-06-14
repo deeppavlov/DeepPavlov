@@ -61,7 +61,7 @@ class Proba2Labels(Component):
 
         # Transform probits vector into a simmilarity score
         if not self.is_binary:
-            simmilarity_scores = simmilarity_scores[:, 1]        
+            simmilarity_scores = simmilarity_scores[:, 1] 
 
         for example in x:
             example_mask = np.where(np.logical_xor(x_populated == example, x_support == example))
