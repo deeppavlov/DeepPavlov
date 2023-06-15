@@ -36,6 +36,13 @@ def softmax_mask(val, mask):
 
 
 class PassageReaderClassifier(torch.nn.Module):
+    """The model with a Transformer encoder and two linear layers: the first for prediction of answer start and end
+    positions, the second defines the probability of the paragraph to contain the answer.
+
+    Args:
+        config: path to Transformer configuration file
+    """
+
     def __init__(self, config):
         super().__init__()
         self.encoder = AutoModel.from_config(config=config)
@@ -78,6 +85,7 @@ class TorchTransformersSquad(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        psg_cls: whether to use a separate linear layer to define if a passage contains the answer to the question
         batch_size: batch size for inference of squad model
     """
 
