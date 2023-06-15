@@ -68,9 +68,9 @@
         "out": ["y_predicted_heads_probs", "y_predicted_deps_indexes"]
       },
       {
-          "class_name": "chu_liu_edmonds_transformer",
-          "in": ["y_predicted_heads_probs"],
-          "out": ["y_predicted_heads"]
+        "class_name": "chu_liu_edmonds_transformer",
+        "in": ["y_predicted_heads_probs"],
+        "out": ["y_predicted_heads"]
       },
       {
         "ref": "dep_vocab",
