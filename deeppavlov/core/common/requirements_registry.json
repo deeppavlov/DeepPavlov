@@ -3,6 +3,11 @@
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
+  "bpr": [
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",

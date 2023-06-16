@@ -4,7 +4,7 @@
     "out": ["answer", "answer_score", "answer_place"],
     "pipe": [
       {
-        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_tfidf_wiki.json",
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_pop_wiki.json",
         "in": ["question_raw"],
         "out": ["tfidf_doc_ids"]
       },
