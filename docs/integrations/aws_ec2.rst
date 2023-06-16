@@ -111,16 +111,16 @@ Deployment process consists of two main stages:
 
 7.  Install ODQA dependencies:
 
-    ``python -m deeppavlov install en_odqa_pop_infer_enwiki20180211``
+    ``python -m deeppavlov install en_odqa_infer_wiki``
 
 8.  Download ODQA models (it will take quite a time):
 
-    ``python -m deeppavlov download en_odqa_pop_infer_enwiki20180211``
+    ``python -m deeppavlov download en_odqa_infer_wiki``
 
 9.  Run ODQA REST API service, where <port> is port you defined in TCP
     inbound rules for your AWS instance:
 
-    ``python -m deeppavlov riseapi en_odqa_pop_infer_enwiki20180211 -p <port>``
+    ``python -m deeppavlov riseapi en_odqa_infer_wiki -p <port>``
 
 3. Accessing your ODQA API
 --------------------------

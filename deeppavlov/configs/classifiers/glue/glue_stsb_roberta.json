@@ -1,8 +1,8 @@
 {
   "dataset_reader": {
     "class_name": "huggingface_dataset_reader",
-    "path": "glue",
-    "name": "stsb",
+    "path": "{COMPETITION}",
+    "name": "{TASK}",
     "train": "train",
     "valid": "validation",
     "test": "test"
@@ -47,7 +47,7 @@
     "out": ["y_pred"]
   },
   "train": {
-    "batch_size": 128,
+    "batch_size": 32,
     "metrics": [
       "pearson_correlation",
       "spearman_correlation"
@@ -63,11 +63,19 @@
   },
   "metadata": {
     "variables": {
+      "BASE_MODEL": "roberta-large",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/classifiers/glue_stsb_torch_cased_bert",
-      "BASE_MODEL": "bert-base-cased"
-    }
+      "COMPETITION": "glue",
+      "TASK": "stsb",
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/v1/glue/glue_stsb_roberta.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
   }
 }

@@ -6,6 +6,11 @@
   "chu_liu_edmonds_transformer": [
     "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt"
   ],
+  "bpr": [
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",

@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import namedtuple
 from logging import getLogger
 from pathlib import Path
 from typing import List, Tuple, Optional, Dict
 
 import numpy as np
 import torch
-from transformers import AutoModelForQuestionAnswering, AutoConfig
+from transformers import AutoModelForQuestionAnswering, AutoConfig, AutoModel
 from transformers.data.processors.utils import InputFeatures
 
 from deeppavlov.core.commands.utils import expand_path
@@ -32,6 +33,31 @@ logger = getLogger(__name__)
 def softmax_mask(val, mask):
     inf = 1e30
     return -inf * (1 - mask.to(torch.float32)) + val
+
+
+class PassageReaderClassifier(torch.nn.Module):
+    """The model with a Transformer encoder and two linear layers: the first for prediction of answer start and end
+    positions, the second defines the probability of the paragraph to contain the answer.
+
+    Args:
+        config: path to Transformer configuration file
+    """
+
+    def __init__(self, config):
+        super().__init__()
+        self.encoder = AutoModel.from_config(config=config)
+        self.qa_outputs = torch.nn.Linear(config.hidden_size, 2)
+        self.qa_classifier = torch.nn.Linear(config.hidden_size, 1)
+
+    def forward(self, input_ids, attention_mask, token_type_ids):
+        out = self.encoder(input_ids=input_ids, token_type_ids=token_type_ids, attention_mask=attention_mask)
+        logits = self.qa_outputs(out[0])
+        start_logits, end_logits = logits.split(1, dim=-1)
+        start_logits = start_logits.squeeze(-1)
+        end_logits = end_logits.squeeze(-1)
+        rank_logits = self.qa_classifier(out[0][:, 0, :])
+        outputs = namedtuple("outputs", "start_logits end_logits rank_logits")
+        return outputs(start_logits=start_logits, end_logits=end_logits, rank_logits=rank_logits)
 
 
 @register('torch_transformers_squad')
@@ -59,6 +85,7 @@ class TorchTransformersSquad(TorchModel):
         load_before_drop: whether to load best model before dropping learning rate or not
         clip_norm: clip gradients by norm
         min_learning_rate: min value of learning rate if learning rate decay is used
+        psg_cls: whether to use a separate linear layer to define if a passage contains the answer to the question
         batch_size: batch size for inference of squad model
     """
 
@@ -74,6 +101,7 @@ class TorchTransformersSquad(TorchModel):
                  load_before_drop: bool = True,
                  clip_norm: Optional[float] = None,
                  min_learning_rate: float = 1e-06,
+                 psg_cls: bool = False,
                  batch_size: int = 10,
                  **kwargs) -> None:
 
@@ -89,6 +117,7 @@ class TorchTransformersSquad(TorchModel):
 
         self.pretrained_bert = pretrained_bert
         self.bert_config_file = bert_config_file
+        self.psg_cls = psg_cls
         self.batch_size = batch_size
 
         super().__init__(optimizer=optimizer,
@@ -161,7 +190,7 @@ class TorchTransformersSquad(TorchModel):
         return accepted_keys
 
     def __call__(self, features_batch: List[List[InputFeatures]]) -> Tuple[
-            List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
+        List[List[int]], List[List[int]], List[List[float]], List[List[float]], List[int]]:
         """get predictions using features as input
 
         Args:
@@ -217,7 +246,10 @@ class TorchTransformersSquad(TorchModel):
 
                 start_probs = torch.nn.functional.softmax(logits_st, dim=-1)
                 end_probs = torch.nn.functional.softmax(logits_end, dim=-1)
-                scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]  # ok
+                if self.psg_cls:
+                    scores = outputs.rank_logits.squeeze(1)
+                else:
+                    scores = torch.tensor(1) - start_probs[:, 0] * end_probs[:, 0]
 
                 outer = torch.matmul(start_probs.view(*start_probs.size(), 1),
                                      end_probs.view(end_probs.size()[0], 1, end_probs.size()[1]))
@@ -271,8 +303,10 @@ class TorchTransformersSquad(TorchModel):
             config = AutoConfig.from_pretrained(self.pretrained_bert,
                                                 output_attentions=False,
                                                 output_hidden_states=False)
-
-            self.model = AutoModelForQuestionAnswering.from_pretrained(self.pretrained_bert, config=config)
+            if self.psg_cls:
+                self.model = PassageReaderClassifier(config=config)
+            else:
+                self.model = AutoModelForQuestionAnswering.from_pretrained(self.pretrained_bert, config=config)
 
         elif self.bert_config_file and Path(self.bert_config_file).is_file():
             self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
@@ -281,7 +315,10 @@ class TorchTransformersSquad(TorchModel):
                 self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
             if self.hidden_keep_prob is not None:
                 self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = AutoModelForQuestionAnswering(config=self.bert_config)
+            if self.psg_cls:
+                self.model = PassageReaderClassifier(config=self.bert_config)
+            else:
+                self.model = AutoModelForQuestionAnswering(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
 

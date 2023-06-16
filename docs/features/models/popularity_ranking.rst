@@ -23,15 +23,15 @@ Before using the model make sure that all required packages are installed runnin
 
 .. code:: bash
 
-    python -m deeppavlov install en_ranker_pop_enwiki20180211.json
+    python -m deeppavlov install en_ranker_pop_wiki
 
 Building the model
 
 .. code:: python
 
-    from deeppavlov import build_model, configs
+    from deeppavlov import build_model
 
-    ranker = build_model(configs.doc_retrieval.en_ranker_pop_enwiki20180211, download=True)
+    ranker = build_model('en_ranker_pop_wiki', download=True)
 
 Inference
 
@@ -53,7 +53,7 @@ Configuration
 =============
 
 Default ranker config is
-:config:`doc_retrieval/en_ranker_pop_enwiki20180211.json <doc_retrieval/en_ranker_pop_enwiki20180211.json>`
+:config:`doc_retrieval/en_ranker_pop_wiki.json <doc_retrieval/en_ranker_pop_wiki.json>`
 
 Running the Ranker
 ==================
@@ -72,7 +72,7 @@ Run the following to interact with the ranker:
 
 .. code:: bash
 
-    python -m deeppavlov interact en_ranker_pop_enwiki20180211 -d
+    python -m deeppavlov interact en_ranker_pop_wiki -d
 
 
 Available Data and Pretrained Models
