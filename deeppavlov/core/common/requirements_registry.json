@@ -3,6 +3,9 @@
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
+  "chu_liu_edmonds_transformer": [
+    "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt"
+  ],
   "bpr": [
     "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
@@ -79,6 +82,10 @@
     "{DEEPPAVLOV_PATH}/requirements/razdel.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
+  "spacy_lemmatizer": [
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
+  ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
@@ -152,6 +159,11 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_sequence_tagger": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
