@@ -78,9 +78,6 @@ class TorchTransformersNLLRanker(TorchModel):
         if self.clip_norm:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
-
         return loss.item()
 
     def __call__(self, input_features: Dict[str, Any]) -> Union[List[int], List[np.ndarray]]:
