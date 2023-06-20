@@ -80,7 +80,7 @@ def get_predictions(model, data_gen, replace_word=None, round_res=False):
         replace_word: Model outputs to be replaced with 1, other outputsare replaced with 0. If None, model outputs are not replaced.
         round_res: If True, model outputs are rounded (used in stsb).
     """
-    
+
     submission = {'index': [], 'prediction': []}
     for idx, (x, _) in enumerate(tqdm(data_gen)):
         prediction = model.compute(x)[0]
@@ -151,7 +151,7 @@ def commonsense_reasoning_prediction(model, data_gen):
         model: The model itself.
         data_gen: Iterator with data to be submitted.
     """
-    
+ 
     submission = []
     output = defaultdict(
         lambda: {
@@ -180,10 +180,10 @@ def multi_sentence_comprehention_prediction(model, data_gen):
         model: The model itself.
         data_gen: Iterator with data to be submitted.
     """
-    
+ 
     output = {}
     submission = []
-    
+ 
     for x, _ in tqdm(data_gen):
         contexts, answers, indices = x[0]
 
