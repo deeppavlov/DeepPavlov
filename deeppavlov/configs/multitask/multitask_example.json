@@ -225,7 +225,7 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "MODELS_PATH": "{ROOT_PATH}/models/multitask/example",
+      "MODELS_PATH": "{ROOT_PATH}/models/multitask_example",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "BACKBONE": "distilbert-base-uncased",
       "MODEL_PATH": "{MODELS_PATH}/{BACKBONE}",
@@ -234,7 +234,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/deeppavlov_data/multitask/multitask_example_v1.tar.gz",
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/multitask/multitask_example.tar.gz",
         "subdir": "{MODELS_PATH}"
       }
     ]
