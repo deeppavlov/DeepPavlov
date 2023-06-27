@@ -49,9 +49,9 @@ class Proba2Labels(Component):
                  x_populated: List[str],
                  x_support: List[str],
                  y_support: List[str],
-                 *args, 
+                 *args,
                  **kwargs) -> List[str]:
-        
+
         y_pred = []
 
         simmilarity_scores = np.array(simmilarity_scores)
@@ -62,7 +62,7 @@ class Proba2Labels(Component):
 
         # Transform probits vector into a simmilarity score
         if not self.is_binary:
-            simmilarity_scores = simmilarity_scores[:, 1] 
+            simmilarity_scores = simmilarity_scores[:, 1]
 
         for example in x:
             example_mask = np.where(np.logical_xor(x_populated == example, x_support == example))
