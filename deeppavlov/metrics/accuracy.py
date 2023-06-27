@@ -188,15 +188,3 @@ def kbqa_accuracy(y_true, y_predicted):
             total_correct += 1
 
     return total_correct / len(y_true) if len(y_true) else 0
-
-
-@register_metric('accuracy_in_domain')
-def accuracy_in_domain(y_true: [list, np.ndarray], y_pred: [list, np.ndarray], oos = 'oos') -> float:
-    y_true = np.array(y_true)
-    y_pred = np.array(y_pred)
-    
-    ind_mask = np.where(y_true == oos)
-
-    y_true = np.delete(y_true, ind_mask, 0)
-    y_pred = np.delete(y_pred, ind_mask, 0)
-    return accuracy(y_true, y_pred)

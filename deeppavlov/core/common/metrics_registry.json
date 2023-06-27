@@ -1,7 +1,6 @@
 {
   "acc": "deeppavlov.metrics.accuracy:round_accuracy",
   "accuracy": "deeppavlov.metrics.accuracy:accuracy",
-  "accuracy_in_domain": "deeppavlov.metrics.accuracy:accuracy_in_domain",
   "average__ner_f1__f1_macro__f1": "deeppavlov.metrics.fmeasure:ner_f1__f1_macro__f1",
   "average__roc_auc__roc_auc__ner_f1": "deeppavlov.metrics.fmeasure:roc_auc__roc_auc__ner_f1",
   "bleu": "deeppavlov.metrics.bleu:bleu",
@@ -20,7 +19,6 @@
   "multitask_token_accuracy": "deeppavlov.metrics.accuracy:multitask_token_accuracy",
   "ner_f1": "deeppavlov.metrics.fmeasure:ner_f1",
   "ner_token_f1": "deeppavlov.metrics.fmeasure:ner_token_f1",
-  "oos_scores": "deeppavlov.metrics.fmeasure:oos_scores",
   "pearson_correlation": "deeppavlov.metrics.correlation:pearson_correlation",
   "per_item_bleu": "deeppavlov.metrics.bleu:per_item_bleu",
   "per_item_dialog_accuracy": "deeppavlov.metrics.accuracy:per_item_dialog_accuracy",
