@@ -142,7 +142,10 @@ class TorchModel(NNModel):
                     self.model.module.load_state_dict(model_state)
                 else:
                     self.model.load_state_dict(model_state)
-                self.optimizer.load_state_dict(optimizer_state)
+                try:  # TODO: remove this try-except after hf models deep update
+                    self.optimizer.load_state_dict(optimizer_state)
+                except ValueError as e:
+                    log.error(f'Failed to load optimizer state due to {repr(e)}')
                 self.epochs_done = checkpoint.get("epochs_done", 0)
             else:
                 log.warning(f"Init from scratch. Load path {weights_path} does not exist.")
