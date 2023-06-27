@@ -33,7 +33,8 @@ log = getLogger(__name__)
 parser = argparse.ArgumentParser()
 
 parser.add_argument('config_path', help='path to a pipeline json config', type=str)
-parser.add_argument('benchmark_name', help='benchmark name to be submitted', choices=['glue', 'superglue', 'russian_superglue'])
+parser.add_argument('benchmark_name', help='benchmark name to be submitted',
+                    choices=['glue', 'superglue', 'russian_superglue'])
 parser.add_argument('-o', '--output-file', default=None, help='path to save output', type=str)
 parser.add_argument('-d', '--download', action='store_true', help='download model components')
 
@@ -77,7 +78,8 @@ def get_predictions(model, data_gen, replace_word=None, round_res=False):
     Args:
         model: The model itself.
         data_gen: Iterator with data to be submitted.
-        replace_word: Model outputs to be replaced with 1, other outputsare replaced with 0. If None, model outputs are not replaced.
+        replace_word: Model outputs to be replaced with 1, other outputs are replaced with 0.
+            If None, model outputs are not replaced.
         round_res: If True, model outputs are rounded (used in stsb).
     """
 
@@ -136,7 +138,7 @@ def submit_glue(config: Union[str, Path, dict], output_path: Optional[Union[str,
     else:
         raise ValueError(f'Unexpected GLUE task name: {task_name}')
 
-    save_path = output_path if output_path is not None else f'{GLUE_TASKS[task_name]}.tsv'
+    save_path = output_path or f'{GLUE_TASKS[task_name]}.tsv'
     save_path = expand_path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
     df = pd.DataFrame(submission)
@@ -151,7 +153,7 @@ def commonsense_reasoning_prediction(model, data_gen):
         model: The model itself.
         data_gen: Iterator with data to be submitted.
     """
- 
+
     submission = []
     output = defaultdict(
         lambda: {
@@ -180,10 +182,9 @@ def multi_sentence_comprehention_prediction(model, data_gen):
         model: The model itself.
         data_gen: Iterator with data to be submitted.
     """
- 
+
     output = {}
-    submission = []
- 
+
     for x, _ in tqdm(data_gen):
         contexts, answers, indices = x[0]
 
