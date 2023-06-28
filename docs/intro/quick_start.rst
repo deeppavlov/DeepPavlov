@@ -157,8 +157,8 @@ or in Python script:
 
         os.environ["CUDA_VISIBLE_DEVICES"]="3"
 
-In case one wants to left the GPU device visible but use CPU, one can set directly in the configuration file in dictionary
-with model parameters `"device": "cpu"`.
+In case you want to keep GPU visible but disable GPU acceleration for specific component, use ``device`` paramenter
+(available for :class:`~deeppavlov.core.models.torch_model.TorchModel` child classes): ``"device": "cpu"``.
 
 
 Pretrained models
