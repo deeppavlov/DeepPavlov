@@ -1,11 +1,11 @@
 {
   "chainer": {
-    "in": ["texts_batch", "support_dataset"],
+    "in": ["texts", "dataset"],
     "in_y": ["y_true"],
     "pipe": [
       {
         "class_name": "dnnc_pair_generator",
-        "in": ["texts_batch", "support_dataset"],
+        "in": ["texts", "dataset"],
         "out": ["x", "x_support", "x_populated", "y_support"],
         "bidirectional": true
       },
@@ -34,9 +34,7 @@
         "is_binary": "{BINARY_CLASSIFICATION}",
         "in": ["simmilarity_scores", "x", "x_populated", "x_support", "y_support"],
         "out": ["y_pred"],
-        "multilabel": false,
-        "confidence_threshold": 0.0,
-        "pooling": "max"
+        "confidence_threshold": 0.0
       }
     ],
     "out": ["y_pred"]
@@ -44,8 +42,6 @@
   "metadata": {
     "variables": {
       "ROOT_PATH": "~/.deeppavlov",
-      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads/clinc150",
-      "SUPPORT_DATA_PATH": "{ROOT_PATH}/preprocessed_datasets",
       "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli_mrpc_1_10",
       "BINARY_CLASSIFICATION": true,
       "BASE_MODEL": "roberta-base"
@@ -54,10 +50,6 @@
       {
         "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_mrpc_1_10.tar.gz",
         "subdir": "{MODEL_PATH}"
-      },
-      {
-        "url": "https://files.deeppavlov.ai/datasets/clinc150.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
       }
     ]
   }

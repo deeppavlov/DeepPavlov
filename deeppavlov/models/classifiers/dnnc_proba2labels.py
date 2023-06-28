@@ -32,12 +32,14 @@ class Proba2Labels(Component):
         confidence_threshold: used to determine whether example belongs to one 
                               of the classes in 'y_support' or not
         pooling: strategy for averaging similarity scores for each label
+        is_binary: determines whether the similarity is a number or a probability vector
     """
 
     def __init__(self,
                  confidence_threshold: float = 0.0,
                  pooling: str = 'max',
-                 is_binary: bool = True) -> None:
+                 is_binary: bool = True,
+                 **kwargs) -> None:
 
         self.confidence_threshold = confidence_threshold
         self.pooling = pooling
@@ -48,9 +50,8 @@ class Proba2Labels(Component):
                  x: List[str],
                  x_populated: List[str],
                  x_support: List[str],
-                 y_support: List[str],
-                 *args,
-                 **kwargs) -> List[str]:
+                 y_support: List[str]
+                ) -> List[str]:
 
         y_pred = []
 

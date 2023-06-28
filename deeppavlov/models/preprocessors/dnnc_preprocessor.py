@@ -32,19 +32,18 @@ class PairGenerator(Component):
         bidirectional: adds pairs in reverse order
     """
 
-    def __init__(self, bidirectional: bool = False) -> None:
+    def __init__(self, bidirectional: bool = False, **kwargs) -> None:
         self.bidirectional = bidirectional
 
     def __call__(self,
-                 texts_batch: List[str],
-                 support_dataset: List[List[str]],
-                 *args,
-                 **kwargs) -> Tuple[List[str], List[str], List[str], List[str]]:
+                 texts: List[str],
+                 dataset: List[List[str]],
+                ) -> Tuple[List[str], List[str], List[str], List[str]]:
         hypotesis_batch = []
         premise_batch = []
         hypotesis_labels_batch = []
-        for [premise, [hypotesis, hypotesis_labels]] in zip(texts_batch * len(support_dataset),
-                                                            np.repeat(support_dataset, len(texts_batch), axis=0)):
+        for [premise, [hypotesis, hypotesis_labels]] in zip(texts * len(dataset),
+                                                            np.repeat(dataset, len(texts), axis=0)):
             premise_batch.append(premise)
             hypotesis_batch.append(hypotesis)
             hypotesis_labels_batch.append(hypotesis_labels)
@@ -53,4 +52,4 @@ class PairGenerator(Component):
                 premise_batch.append(hypotesis)
                 hypotesis_batch.append(premise)
                 hypotesis_labels_batch.append(hypotesis_labels)
-        return texts_batch, hypotesis_batch, premise_batch, hypotesis_labels_batch
+        return texts, hypotesis_batch, premise_batch, hypotesis_labels_batch
