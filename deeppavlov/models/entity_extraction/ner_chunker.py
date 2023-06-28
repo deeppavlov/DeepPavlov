@@ -15,7 +15,7 @@
 import re
 from logging import getLogger
 from string import punctuation
-from typing import List, Tuple
+from typing import List, Tuple, Union, Any
 
 from nltk import sent_tokenize
 from transformers import AutoTokenizer
@@ -31,19 +31,19 @@ log = getLogger(__name__)
 @register('ner_chunker')
 class NerChunker(Component):
     """
-        Class to split documents into chunks of max_chunk_len symbols so that the length will not exceed
+        Class to split documents into chunks of max_seq_len symbols so that the length will not exceed
         maximal sequence length to feed into BERT
     """
 
-    def __init__(self, vocab_file: str, max_seq_len: int = 400, lowercase: bool = False, max_chunk_len: int = 180,
-                 batch_size: int = 2, **kwargs):
+    def __init__(self, vocab_file: str, max_seq_len: int = 400, lowercase: bool = False, batch_size: int = 2, **kwargs):
         """
         Args:
-            max_chunk_len: maximal length of chunks into which the document is split
+            vocab_file: vocab file of pretrained transformer model
+            max_seq_len: maximal length of chunks into which the document is split
+            lowercase: whether to lowercase text
             batch_size: how many chunks are in batch
         """
         self.max_seq_len = max_seq_len
-        self.max_chunk_len = max_chunk_len
         self.batch_size = batch_size
         self.re_tokenizer = re.compile(r"[\w']+|[^\w ]")
         self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
@@ -52,10 +52,12 @@ class NerChunker(Component):
         self.russian_letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюя"
         self.lowercase = lowercase
 
-    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]],
-                                                       List[List[List[Tuple[int, int]]]], List[List[List[str]]]]:
+    def __call__(self, docs_batch: List[str]) -> Tuple[List[List[str]], List[List[int]], List[List[Union[
+        List[Union[Tuple[int, int], Tuple[Union[int, Any], Union[int, Any]]]], List[
+            Tuple[Union[int, Any], Union[int, Any]]], List[Tuple[int, int]]]]], List[List[Union[List[Any], List[str]]]],
+                                                                 List[List[str]]]:
         """
-        This method splits each document in the batch into chunks wuth the maximal length of max_chunk_len
+        This method splits each document in the batch into chunks wuth the maximal length of max_seq_len
  
         Args:
             docs_batch: batch of documents
@@ -185,15 +187,22 @@ class NerChunkModel(Component):
 
     def __init__(self, ner: Chainer,
                  ner_parser: EntityDetectionParser,
+                 ner2: Chainer = None,
+                 ner_parser2: EntityDetectionParser = None,
                  **kwargs) -> None:
         """
         Args:
             ner: config for entity detection
             ner_parser: component deeppavlov.models.entity_extraction.entity_detection_parser
+            ner2: config of additional entity detection model (ensemble of ner and ner2 models gives better
+                entity detection quality than single ner model)
+            ner_parser2: component deeppavlov.models.entity_extraction.entity_detection_parser
             **kwargs:
         """
         self.ner = ner
         self.ner_parser = ner_parser
+        self.ner2 = ner2
+        self.ner_parser2 = ner_parser2
 
     def __call__(self, text_batch_list: List[List[str]],
                  nums_batch_list: List[List[int]],
@@ -222,6 +231,13 @@ class NerChunkModel(Component):
             ner_tokens_batch, ner_tokens_offsets_batch, ner_probas_batch, probas_batch = self.ner(text_batch)
             entity_substr_batch, entity_positions_batch, entity_probas_batch = \
                 self.ner_parser(ner_tokens_batch, ner_probas_batch, probas_batch)
+            if self.ner2:
+                ner_tokens_batch2, ner_tokens_offsets_batch2, ner_probas_batch2, probas_batch2 = self.ner2(text_batch)
+                entity_substr_batch2, entity_positions_batch2, entity_probas_batch2 = \
+                    self.ner_parser2(ner_tokens_batch2, ner_probas_batch2, probas_batch2)
+                entity_substr_batch, entity_positions_batch, entity_probas_batch = \
+                    self.merge_annotations(entity_substr_batch, entity_positions_batch, entity_probas_batch,
+                                           entity_substr_batch2, entity_positions_batch2, entity_probas_batch2)
 
             entity_pos_tags_probas_batch = [[(entity_substr.lower(), entity_substr_positions, tag, entity_proba)
                                              for tag, entity_substr_list in entity_substr_dict.items()
@@ -316,3 +332,56 @@ class NerChunkModel(Component):
 
         return doc_entity_substr_batch, doc_entity_offsets_batch, doc_entity_positions_batch, doc_tags_batch, \
                doc_sentences_offsets_batch, doc_sentences_batch, doc_probas_batch
+
+    def merge_annotations(self, substr_batch, pos_batch, probas_batch, substr_batch2, pos_batch2, probas_batch2):
+        log.debug(f"ner_chunker, substr2: {substr_batch2} --- pos2: {pos_batch2} --- probas2: {probas_batch2} --- "
+                  f"substr: {substr_batch} --- pos: {pos_batch} --- probas: {probas_batch}")
+        for i in range(len(substr_batch)):
+            for key2 in substr_batch2[i]:
+                substr_list2 = substr_batch2[i][key2]
+                pos_list2 = pos_batch2[i][key2]
+                probas_list2 = probas_batch2[i][key2]
+                for substr2, pos2, probas2 in zip(substr_list2, pos_list2, probas_list2):
+                    found = False
+                    for key in substr_batch[i]:
+                        pos_list = pos_batch[i][key]
+                        for pos in pos_list:
+                            if pos[0] <= pos2[0] <= pos[-1] or pos[0] <= pos2[-1] <= pos[-1]:
+                                found = True
+                    if not found:
+                        if key2 not in substr_batch[i]:
+                            substr_batch[i][key2] = []
+                            pos_batch[i][key2] = []
+                            probas_batch[i][key2] = []
+                        substr_batch[i][key2].append(substr2)
+                        pos_batch[i][key2].append(pos2)
+                        probas_batch[i][key2].append(probas2)
+        for i in range(len(substr_batch)):
+            for key2 in substr_batch2[i]:
+                substr_list2 = substr_batch2[i][key2]
+                pos_list2 = pos_batch2[i][key2]
+                probas_list2 = probas_batch2[i][key2]
+                for substr2, pos2, probas2 in zip(substr_list2, pos_list2, probas_list2):
+                    for key in substr_batch[i]:
+                        inds = []
+                        substr_list = substr_batch[i][key]
+                        pos_list = pos_batch[i][key]
+                        probas_list = probas_batch[i][key]
+                        for n, (substr, pos, probas) in enumerate(zip(substr_list, pos_list, probas_list)):
+                            if (pos[0] == pos2[0] and pos[-1] < pos2[-1]) or (pos[0] > pos2[0] and pos[-1] == pos2[-1]):
+                                inds.append(n)
+                            elif key == "EVENT" and ((pos[0] >= pos2[0] and pos[-1] <= pos2[-1])
+                                                     or (len(substr.split()) == 1 and pos2[0] <= pos[0])):
+                                inds.append(n)
+
+                        if (len(inds) > 1 or (len(inds) == 1 and key in {"WORK_OF_ART", "EVENT"})) \
+                                and not (key == "PERSON" and " и " in substr2):
+                            inds = sorted(inds, reverse=True)
+                            for ind in inds:
+                                del substr_batch[i][key][ind]
+                                del pos_batch[i][key][ind]
+                                del probas_batch[i][key][ind]
+                            substr_batch[i][key].append(substr2)
+                            pos_batch[i][key].append(pos2)
+                            probas_batch[i][key].append(probas2)
+        return substr_batch, pos_batch, probas_batch

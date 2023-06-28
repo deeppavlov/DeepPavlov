@@ -1,0 +1,43 @@
+{
+  "chainer": {
+    "in": ["question", "rels"],
+    "pipe": [
+      {
+        "class_name": "path_ranking_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false,
+        "additional_special_tokens": ["<one_rel>", "</one_rel>", "<double>", "</double>", "<first_rel>", "<mid>", "</second_rel>"],
+        "max_seq_length": 96,
+        "in": ["question", "rels"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "torch_transformers_nll_ranker",
+        "in": ["bert_features"],
+        "out": ["model_output"],
+        "return_probas": true,
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "encoder_save_path": "{MODEL_PATH}/encoder",
+        "linear_save_path": "{MODEL_PATH}/linear",
+        "pretrained_bert": "{TRANSFORMER}",
+        "learning_rate_drop_patience": 5,
+        "learning_rate_drop_div": 1.5,
+        "optimizer_parameters": {"lr": 1e-5, "weight_decay": 0.01, "eps": 1e-6}
+      }
+    ],
+    "out": ["model_output"]
+  },
+  "metadata": {
+    "variables": {
+      "TRANSFORMER": "haisongzhang/roberta-tiny-cased",
+      "MODEL_PATH": "~/.deeppavlov/models/classifiers/path_ranking_nll_roberta_lcquad2"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/path_ranking_nll_roberta_lcquad2.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

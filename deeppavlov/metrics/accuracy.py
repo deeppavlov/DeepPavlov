@@ -14,11 +14,15 @@
 
 
 import itertools
+import re
+from logging import getLogger
 from typing import List
 
 import numpy as np
 
 from deeppavlov.core.common.metrics_registry import register_metric
+
+log = getLogger(__name__)
 
 
 @register_metric('accuracy')
@@ -45,6 +49,31 @@ def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> flo
     equalities = [_are_equal(y1, y2) for y1, y2 in zip(y_true, y_predicted)]
     correct = sum(equalities)
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('kbqa_accuracy')
+def kbqa_accuracy(questions_batch, pred_answer_labels_batch, pred_answer_ids_batch, pred_query_batch,
+                  gold_answer_labels_batch, gold_answer_ids_batch, gold_query_batch) -> float:
+    num_samples = len(pred_answer_ids_batch)
+    correct = 0
+    for question, pred_answer_label, pred_answer_ids, pred_query, gold_answer_labels, gold_answer_ids, gold_query in \
+            zip(questions_batch, pred_answer_labels_batch, pred_answer_ids_batch, pred_query_batch,
+                gold_answer_labels_batch, gold_answer_ids_batch, gold_query_batch):
+        found_date = False
+        if pred_answer_ids and gold_answer_ids and re.findall(r"[\d]{3,4}", pred_answer_ids[0]) and \
+                re.findall(r"[\d]{3,4}", pred_answer_ids[0]) == re.findall(r"[\d]{3,4}", gold_answer_ids[0]):
+            found_date = True
+        found_label = False
+        if len(gold_answer_labels) == 1 and len(pred_answer_label) > 1 and pred_answer_label == gold_answer_labels[0]:
+            found_label = True
+        no_answer = False
+        if pred_answer_label == "Not Found" and not gold_answer_ids:
+            no_answer = True
+        if set(pred_answer_ids) == set(gold_answer_ids) or gold_query in pred_query or found_date or found_label \
+                or no_answer:
+            correct += 1
+        log.debug(f"question: {question} -- gold_answer_ids: {gold_answer_ids} -- pred_answer_ids: {pred_answer_ids}")
+    return correct / num_samples if num_samples else 0
 
 
 @register_metric('multitask_accuracy')
@@ -178,13 +207,3 @@ def round_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0
-
-
-@register_metric('kbqa_accuracy')
-def kbqa_accuracy(y_true, y_predicted):
-    total_correct = 0
-    for answer_true, answer_predicted in zip(y_true, y_predicted):
-        if answer_predicted in answer_true:
-            total_correct += 1
-
-    return total_correct / len(y_true) if len(y_true) else 0

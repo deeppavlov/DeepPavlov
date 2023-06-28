@@ -141,15 +141,6 @@ class TorchTransformersSequenceTagger(TorchModel):
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
-        learning_rate_drop_patience: how many validations with no improvements to wait
-        learning_rate_drop_div: the divider of the learning rate after `learning_rate_drop_patience` unsuccessful
-            validations
-        load_before_drop: whether to load best model before dropping learning rate or not
-        clip_norm: clip gradients by norm
-        min_learning_rate: min value of learning rate if learning rate decay is used
         use_crf: whether to use Conditional Ramdom Field to decode tags
     """
 
@@ -159,32 +150,27 @@ class TorchTransformersSequenceTagger(TorchModel):
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 optimizer: str = "AdamW",
-                 optimizer_parameters: dict = {"lr": 1e-3, "weight_decay": 1e-6},
-                 learning_rate_drop_patience: int = 20,
-                 learning_rate_drop_div: float = 2.0,
-                 load_before_drop: bool = True,
-                 clip_norm: Optional[float] = None,
-                 min_learning_rate: float = 1e-07,
                  use_crf: bool = False,
                  **kwargs) -> None:
 
-        self.n_classes = n_tags
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
+        if pretrained_bert:
+            config = AutoConfig.from_pretrained(pretrained_bert, num_labels=n_tags,
+                                                output_attentions=False, output_hidden_states=False)
+            model = AutoModelForTokenClassification.from_pretrained(pretrained_bert, config=config)
+        elif bert_config_file and Path(bert_config_file).is_file():
+            bert_config = AutoConfig.from_json_file(str(expand_path(bert_config_file)))
 
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
-        self.use_crf = use_crf
+            if attention_probs_keep_prob is not None:
+                bert_config.attention_probs_dropout_prob = 1.0 - attention_probs_keep_prob
+            if hidden_keep_prob is not None:
+                bert_config.hidden_dropout_prob = 1.0 - hidden_keep_prob
+            model = AutoModelForTokenClassification(config=bert_config)
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         learning_rate_drop_patience=learning_rate_drop_patience,
-                         learning_rate_drop_div=learning_rate_drop_div,
-                         load_before_drop=load_before_drop,
-                         min_learning_rate=min_learning_rate,
-                         **kwargs)
+        self.crf = CRF(n_tags) if use_crf else None
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
@@ -217,17 +203,9 @@ class TorchTransformersSequenceTagger(TorchModel):
         loss = self.model(input_ids=b_input_ids,
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
-        loss.backward()
-        if self.use_crf:
+        if self.crf is not None:
             self.crf(y, y_masks)
-        # Clip the norm of the gradients to 1.0.
-        # This is to help prevent the "exploding gradients" problem.
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
-
-        self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+        self._make_step(loss)
 
         return {'loss': loss.item()}
 
@@ -258,7 +236,7 @@ class TorchTransformersSequenceTagger(TorchModel):
 
         probas = torch.nn.functional.softmax(logits, dim=-1)
         probas = probas.detach().cpu().numpy()
-        if self.use_crf:
+        if self.crf is not None:
             logits = logits.transpose(1, 0).to(self.device)
             pred = self.crf.decode(logits)
         else:
@@ -270,37 +248,10 @@ class TorchTransformersSequenceTagger(TorchModel):
         return pred, probas
 
     def load(self, fname=None):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert:
-            config = AutoConfig.from_pretrained(self.pretrained_bert, num_labels=self.n_classes,
-                                                output_attentions=False, output_hidden_states=False)
-            self.model = AutoModelForTokenClassification.from_pretrained(self.pretrained_bert, config=config)
-        elif self.bert_config_file and Path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_json_file(str(expand_path(self.bert_config_file)))
-
-            if self.attention_probs_keep_prob is not None:
-                self.bert_config.attention_probs_dropout_prob = 1.0 - self.attention_probs_keep_prob
-            if self.hidden_keep_prob is not None:
-                self.bert_config.hidden_dropout_prob = 1.0 - self.hidden_keep_prob
-            self.model = AutoModelForTokenClassification(config=self.bert_config)
-        else:
-            raise ConfigError("No pre-trained BERT model is given.")
-
-        self.model.to(self.device)
-        if self.use_crf:
-            self.crf = CRF(self.n_classes).to(self.device)
-
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
-
-        if self.load_path:
-            super().load()
-            if self.use_crf:
+        super().load(fname)
+        if self.crf is not None:
+            self.crf = self.crf.to(self.device)
+            if self.load_path:
                 weights_path_crf = Path(f"{self.load_path}_crf").resolve()
                 weights_path_crf = weights_path_crf.with_suffix(".pth.tar")
                 if weights_path_crf.exists():
@@ -310,8 +261,8 @@ class TorchTransformersSequenceTagger(TorchModel):
                     log.warning(f"Init from scratch. Load path {weights_path_crf} does not exist.")
 
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
-        super().save(fname)
-        if self.use_crf:
+        super().save(fname, *args, **kwargs)
+        if self.crf is not None:
             if fname is None:
                 fname = self.save_path
             weights_path_crf = Path(f"{fname}_crf").resolve()

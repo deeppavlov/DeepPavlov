@@ -1,0 +1,63 @@
+{
+  "chainer": {
+    "in": ["question_raw"],
+    "out": ["answer", "answer_score", "answer_place"],
+    "pipe": [
+      {
+        "config_path": "{CONFIGS_PATH}/doc_retrieval/en_ranker_pop_wiki.json",
+        "in": ["question_raw"],
+        "out": ["tfidf_doc_ids"]
+      },
+      {
+        "class_name": "bpr",
+        "load_path": "{MODELS_PATH}/bpr/eng",
+        "query_encoder_file": "query_encoder_en.pth.tar",
+        "bpr_index": "bpr_finetuned_nq_adv.idx",
+        "pretrained_model": "bert-base-uncased",
+        "top_n": 100,
+        "in": ["question_raw"],
+        "out": ["bpr_doc_ids"]
+      },
+      {
+        "class_name": "concat_lists",
+        "in": ["tfidf_doc_ids", "bpr_doc_ids"],
+        "out": ["doc_ids"]
+      },
+      {
+        "class_name": "wiki_sqlite_vocab",
+        "in": ["doc_ids"],
+        "out": ["doc_text"],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_l100.db"
+      },
+      {
+        "class_name": "string_multiplier",
+        "in": ["question_raw", "doc_text"],
+        "out":["questions"]
+      },
+      {
+        "class_name": "logit_ranker",
+        "batch_size": 64,
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/qa_nq_psgcls_bert.json"},
+        "sort_noans": true,
+        "in": ["doc_text", "questions"],
+        "out": ["answer", "answer_score", "answer_place"]
+      }
+    ]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/bpr_encoder_index_eng.tar.gz",
+        "subdir": "{MODELS_PATH}/bpr/eng"
+      }
+    ]
+  }
+}

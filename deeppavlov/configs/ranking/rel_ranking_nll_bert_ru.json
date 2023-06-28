@@ -1,0 +1,45 @@
+{
+  "chainer": {
+    "in": ["question", "rels"],
+    "pipe": [
+      {
+        "class_name": "path_ranking_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false,
+        "max_seq_length": 96,
+        "in": ["question", "rels"],
+        "out": ["bert_features"]
+      },
+      {
+        "class_name": "torch_transformers_nll_ranker",
+        "in": ["bert_features"],
+        "out": ["model_output"],
+        "return_probas": true,
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "encoder_save_path": "{MODEL_PATH}/encoder",
+        "linear_save_path": "{MODEL_PATH}/linear",
+        "pretrained_bert": "{TRANSFORMER}",
+        "learning_rate_drop_patience": 4,
+        "learning_rate_drop_div": 1.5,
+        "optimizer_parameters": {"lr": 1e-5, "weight_decay": 0.01, "eps": 1e-6}
+      }
+    ],
+    "out": ["model_output"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "TRANSFORMER": "DeepPavlov/rubert-base-cased",
+      "MODEL_PATH": "{MODELS_PATH}/classifiers/rel_ranking_nll_bert_ru"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/kbqa/models/rel_ranking_nll_bert_ru.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

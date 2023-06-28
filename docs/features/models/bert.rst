@@ -107,7 +107,6 @@ Two main components of BERT classifier pipeline in DeepPavlov are
 :class:`~deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel`.
 Non-processed texts should be given to ``torch_transformers_preprocessor`` for tokenization on subtokens,
 encoding subtokens with their indices and creating tokens and segment masks.
-In case of using one-hot encoded classes in the pipeline, set ``one_hot_labels`` to ``true``.
 
 ``torch_transformers_classifier`` has a dense layer of number of classes size upon pooled outputs of Transformer encoder,
 it is followed by ``softmax`` activation (``sigmoid`` if ``multilabel`` parameter is set to ``true`` in config).

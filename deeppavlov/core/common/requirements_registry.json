@@ -3,6 +3,14 @@
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
+  "chu_liu_edmonds_transformer": [
+    "{DEEPPAVLOV_PATH}/requirements/dependency_decoding.txt"
+  ],
+  "bpr": [
+    "{DEEPPAVLOV_PATH}/requirements/faiss.txt",
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "entity_linker": [
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
     "{DEEPPAVLOV_PATH}/requirements/rapidfuzz.txt",
@@ -32,6 +40,10 @@
   "nltk_moses_tokenizer": [
     "{DEEPPAVLOV_PATH}/requirements/sacremoses.txt"
   ],
+  "path_ranking_preprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "query_generator": [
     "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
     "{DEEPPAVLOV_PATH}/requirements/hdt.txt",
@@ -60,14 +72,19 @@
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "ru_adj_to_noun": [
-    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt",
-    "{DEEPPAVLOV_PATH}/requirements/udapi.txt"
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "russian_words_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
   ],
   "slovnet_syntax_parser": [
-    "{DEEPPAVLOV_PATH}/requirements/slovnet.txt"
+    "{DEEPPAVLOV_PATH}/requirements/slovnet.txt",
+    "{DEEPPAVLOV_PATH}/requirements/razdel.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
+  ],
+  "spacy_lemmatizer": [
+    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "spelling_error_model": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
@@ -133,11 +150,20 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
+  "torch_transformers_nll_ranker": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "torch_transformers_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
   "torch_transformers_sequence_tagger": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
+  "torch_transformers_syntax_parser": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/torchcrf.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
@@ -161,7 +187,7 @@
   ],
   "tree_to_sparql": [
     "{DEEPPAVLOV_PATH}/requirements/udapi.txt",
-    "{DEEPPAVLOV_PATH}/requirements/en_core_web_sm.txt",
+    "{DEEPPAVLOV_PATH}/requirements/razdel.txt",
     "{DEEPPAVLOV_PATH}/requirements/ru_core_news_sm.txt"
   ],
   "typos_custom_reader": [
