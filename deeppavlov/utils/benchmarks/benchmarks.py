@@ -24,8 +24,7 @@ from tqdm import tqdm
 from deeppavlov import build_model
 from deeppavlov.core.commands.train import read_data_by_config, get_iterator_from_config
 from deeppavlov.core.commands.utils import parse_config, expand_path
-from deeppavlov.core.common.file import find_config, save_jsonl
-from deeppavlov.download import deep_download
+from deeppavlov.core.common.file import save_jsonl
 
 log = getLogger(__name__)
 
@@ -71,6 +70,22 @@ RSG_TASKS = {
 }
 
 
+def split_config(config_path, download):
+    """Gets model, data iterator and a task name from the configuration file.
+    
+    Args:
+        config_path: Path to the model configuration file.
+        download: If True, the model will be downloaded from the DeepPavlov server.
+    """
+
+    config = parse_config(config_path)
+    data = read_data_by_config(config)
+    iterator = get_iterator_from_config(config, data)
+    task_name = config['dataset_reader']['name']
+    data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
+    model = build_model(config, download=download)
+    return model, data_gen, task_name
+
 def get_predictions(model, data_gen, replace_word=None, round_res=False):
     """Gets model predictions and replaces model output with replace_word.
     
@@ -94,21 +109,15 @@ def get_predictions(model, data_gen, replace_word=None, round_res=False):
     return submission
 
 
-def submit_glue(config: Union[str, Path, dict], output_path: Optional[Union[str, Path]] = None) -> None:
+def submit_glue(config_path, output_path, download):
     """Creates submission file for the GLUE tasks.
     Args:
-        config: Configuration of the model.
+        config_path: Path to the model configuration file.
         output_path: Path to output file. If None, file name is selected according corresponding task name.
+        download: If True, the model will be downloaded from the DeepPavlov server.
     """
 
-    config = parse_config(config)
-    data = read_data_by_config(config)
-    iterator = get_iterator_from_config(config, data)
-    task_name = config['dataset_reader']['name']
-
-    data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
-
-    model = build_model(config)
+    model, data_gen, task_name = split_config(config_path, download)
 
     if task_name == 'cola':
         submission = get_predictions(model, data_gen, 'acceptable')
@@ -140,8 +149,8 @@ def submit_glue(config: Union[str, Path, dict], output_path: Optional[Union[str,
     save_path = output_path or f'{GLUE_TASKS[task_name]}.tsv'
     save_path = expand_path(save_path)
     save_path.parent.mkdir(parents=True, exist_ok=True)
-    df = pd.DataFrame(submission)
-    df.to_csv(save_path, sep="\t", index=False)
+    save_array = np.vstack(([list(submission.keys())], np.array(list(submission.values())).transpose()))
+    np.savetxt(save_path, save_array, delimiter='\t', fmt='%s')
     log.info(f'Prediction saved to {save_path}')
 
 
@@ -223,24 +232,16 @@ def multi_sentence_comprehention_prediction(model, data_gen):
     return submission
 
 
-def submit_superglue(config: Union[str, Path, dict], output_path: Optional[Union[str, Path]] = None) -> None:
+def submit_superglue(config_path, output_path, download):
     """Creates submission file for the SuperGLUE tasks.
 
     Args:
-        config: Configuration of the model.
+        config_path: Path to the model configuration file.
         output_path: Path to output file. If None, file name is selected according corresponding task name.
-
+        download: If True, the model will be downloaded from the DeepPavlov server.
     """
 
-    config = parse_config(config)
-    data = read_data_by_config(config)
-    iterator = get_iterator_from_config(config, data)
-    task_name = config['dataset_reader']['name']
-
-    data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
-
-    model = build_model(config)
-
+    model, data_gen, task_name = split_config(config_path, download)
     submission = []
 
     if task_name == 'record':
@@ -273,24 +274,16 @@ def submit_superglue(config: Union[str, Path, dict], output_path: Optional[Union
     log.info(f'Prediction saved to {save_path}')
 
 
-def submit_rsg(config: Union[str, Path, dict], output_path: Optional[Union[str, Path]] = None) -> None:
+def submit_rsg(config_path, output_path, download):
     """Creates submission file for the Russian SuperGLUE tasks.
 
     Args:
-        config: Configuration of the model.
+        config_path: Path to the model configuration file.
         output_path: Path to output file. If None, file name is selected according corresponding task name.
-
+        download: If True, the model will be downloaded from the DeepPavlov server.
     """
 
-    config = parse_config(config)
-    data = read_data_by_config(config)
-    iterator = get_iterator_from_config(config, data)
-    task_name = config['dataset_reader']['name']
-
-    data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
-
-    model = build_model(config)
-
+    model, data_gen, task_name = split_config(config_path, download)
     submission = []
 
     if task_name == 'rucos':
@@ -325,15 +318,12 @@ def submit_rsg(config: Union[str, Path, dict], output_path: Optional[Union[str, 
 
 def main():
     args = parser.parse_args()
-    pipeline_config_path = find_config(args.config_path)
-    if args.download:
-        deep_download(pipeline_config_path)
     if args.benchmark_name == 'glue':
-        submit_glue(pipeline_config_path, args.output_file)
+        submit_glue(args.config_path, args.output_file, args.download)
     elif args.benchmark_name == 'superglue':
-        submit_superglue(pipeline_config_path, args.output_file)
+        submit_superglue(args.config_path, args.output_file, args.download)
     elif args.benchmark_name == 'russian_superglue':
-        submit_rsg(pipeline_config_path, args.output_file)
+        submit_rsg(args.config_path, args.output_file, args.download)
 
 
 if __name__ == '__main__':
