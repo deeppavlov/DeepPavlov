@@ -19,7 +19,6 @@ from pathlib import Path
 from typing import Optional, Union
 
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
 
 from deeppavlov import build_model
@@ -87,7 +86,7 @@ def get_predictions(model, data_gen, replace_word=None, round_res=False):
     for idx, (x, _) in enumerate(tqdm(data_gen)):
         prediction = model.compute(x)[0]
         if replace_word:
-            prediction = 1 if prediction in {replace_word} else 0
+            prediction = 1 if prediction == replace_word else 0
         if round_res:
             prediction = round(prediction, 3)
         submission['index'].append(idx)
@@ -111,26 +110,26 @@ def submit_glue(config: Union[str, Path, dict], output_path: Optional[Union[str,
 
     model = build_model(config)
 
-    if task_name in {'cola'}:
+    if task_name == 'cola':
         submission = get_predictions(model, data_gen, 'acceptable')
 
-    elif task_name in {'mnli'}:
-        if config['dataset_reader']['valid'] in {'validation_matched'}:
+    elif task_name == 'mnli':
+        if config['dataset_reader']['valid'] == 'validation_matched':
             task_name = 'mnli-m'
         else:
             task_name = 'mnli-mm'
         submission = get_predictions(model, data_gen)
 
-    elif task_name in {'mrpc'}:
+    elif task_name == 'mrpc':
         submission = get_predictions(model, data_gen, 'equivalent')
 
-    elif task_name in {'sst2'}:
+    elif task_name == 'sst2':
         submission = get_predictions(model, data_gen, 'positive')
 
-    elif task_name in {'stsb'}:
+    elif task_name == 'stsb':
         submission = get_predictions(model, data_gen, None, True)
 
-    elif task_name in {'wnli'}:
+    elif task_name == 'wnli':
         submission = get_predictions(model, data_gen, 'entailment')
 
     elif task_name in GLUE_TASKS:
@@ -244,16 +243,16 @@ def submit_superglue(config: Union[str, Path, dict], output_path: Optional[Union
 
     submission = []
 
-    if task_name in {'record'}:
+    if task_name == 'record':
         submission = commonsense_reasoning_prediction(model, data_gen)
 
-    elif task_name in {'copa'}:
+    elif task_name == 'copa':
         for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)[0]
             label = int(prediction == 'choice2')
             submission.append({'idx': idx, 'label': label})
 
-    elif task_name in {'multirc'}:
+    elif task_name == 'multirc':
         submission = multi_sentence_comprehention_prediction(model, data_gen)
 
     elif task_name in SUPER_GLUE_TASKS:
@@ -294,16 +293,16 @@ def submit_rsg(config: Union[str, Path, dict], output_path: Optional[Union[str, 
 
     submission = []
 
-    if task_name in {'rucos'}:
+    if task_name == 'rucos':
         submission = commonsense_reasoning_prediction(model, data_gen)
 
-    elif task_name in {'parus'}:
+    elif task_name == 'parus':
         for idx, (x, _) in enumerate(tqdm(data_gen)):
             prediction = model.compute(x)[0]
             label = int(prediction == 'choice2')
             submission.append({'idx': idx, 'label': label})
 
-    elif task_name in {'muserc'}:
+    elif task_name == 'muserc':
         submission = multi_sentence_comprehention_prediction(model, data_gen)
 
     elif task_name in RSG_TASKS:
