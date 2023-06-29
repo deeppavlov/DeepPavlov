@@ -24,7 +24,7 @@ except ModuleNotFoundError:
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 
 
-def merge_makdown(nb: nbf.notebooknode.NotebookNode) -> None:
+def merge_markdown(nb: nbf.notebooknode.NotebookNode) -> None:
     """Merges consequent markdown cells into one."""
     start_idx = None
     slices = []
@@ -50,7 +50,7 @@ def drop_metadata(nb: nbf.notebooknode.NotebookNode) -> None:
 
 
 def update_file(path: Path, update_ckpts: bool) -> None:
-    """Optimizes ipynb files in order to reduce futher git diffs.
+    """Optimizes ipynb files in order to reduce further git diffs.
     Args:
         path: File to update, if this is file. If this is dir - recursively searches and updates .ipynb files in it.
         update_ckpts: If False and path is dir, will skip all found ipynb files from .ipynb_checkpoints.
@@ -65,7 +65,7 @@ def update_file(path: Path, update_ckpts: bool) -> None:
     else:
         logging.info(f"Updating {path}.")
         nb = nbf.read(path, nbf.NO_CONVERT)
-        merge_makdown(nb)
+        merge_markdown(nb)
         drop_metadata(nb)
         with open(path, "w") as fout:
             nbf.write(nb, fout)
