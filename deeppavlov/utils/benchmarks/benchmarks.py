@@ -15,8 +15,6 @@
 import argparse
 from collections import defaultdict
 from logging import getLogger
-from pathlib import Path
-from typing import Optional, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -82,9 +80,12 @@ def split_config(config_path, download):
     data = read_data_by_config(config)
     iterator = get_iterator_from_config(config, data)
     task_name = config['dataset_reader']['name']
+    if task_name == 'mnli':
+        task_name = 'mnli-m' if config['dataset_reader']['valid'] == 'validation_matched' else 'mnli-mm'
     data_gen = iterator.gen_batches(1, data_type='test', shuffle=False)
     model = build_model(config, download=download)
     return model, data_gen, task_name
+
 
 def get_predictions(model, data_gen, replace_word=None, round_res=False):
     """Gets model predictions and replaces model output with replace_word.
@@ -122,11 +123,7 @@ def submit_glue(config_path, output_path, download):
     if task_name == 'cola':
         submission = get_predictions(model, data_gen, 'acceptable')
 
-    elif task_name == 'mnli':
-        if config['dataset_reader']['valid'] == 'validation_matched':
-            task_name = 'mnli-m'
-        else:
-            task_name = 'mnli-mm'
+    elif task_name.startswith('mnli'):
         submission = get_predictions(model, data_gen)
 
     elif task_name == 'mrpc':
@@ -183,7 +180,7 @@ def commonsense_reasoning_prediction(model, data_gen):
     return submission
 
 
-def multi_sentence_comprehention_prediction(model, data_gen):
+def multi_sentence_comprehension_prediction(model, data_gen):
     """Common part for MultiRC and MuSeRC tasks that gets their predictions in needed format.
     
     Args:
@@ -254,7 +251,7 @@ def submit_superglue(config_path, output_path, download):
             submission.append({'idx': idx, 'label': label})
 
     elif task_name == 'multirc':
-        submission = multi_sentence_comprehention_prediction(model, data_gen)
+        submission = multi_sentence_comprehension_prediction(model, data_gen)
 
     elif task_name in SUPER_GLUE_TASKS:
         for idx, (x, _) in enumerate(tqdm(data_gen)):
@@ -296,7 +293,7 @@ def submit_rsg(config_path, output_path, download):
             submission.append({'idx': idx, 'label': label})
 
     elif task_name == 'muserc':
-        submission = multi_sentence_comprehention_prediction(model, data_gen)
+        submission = multi_sentence_comprehension_prediction(model, data_gen)
 
     elif task_name in RSG_TASKS:
         for idx, (x, _) in enumerate(tqdm(data_gen)):
