@@ -16,6 +16,8 @@
   "dirty_comments_preprocessor": "deeppavlov.models.preprocessors.dirty_comments_preprocessor:DirtyCommentsPreprocessor",
   "docred_reader": "deeppavlov.dataset_readers.docred_reader:DocREDDatasetReader",
   "document_chunker": "deeppavlov.models.preprocessors.odqa_preprocessors:DocumentChunker",
+  "dnnc_pair_generator": "deeppavlov.models.preprocessors.dnnc_preprocessor:PairGenerator",
+  "dnnc_proba2labels": "deeppavlov.models.classifiers.dnnc_proba2labels:Proba2Labels",
   "entity_detection_parser": "deeppavlov.models.entity_extraction.entity_detection_parser:EntityDetectionParser",
   "entity_linker": "deeppavlov.models.entity_extraction.entity_linking:EntityLinker",
   "entity_type_split": "deeppavlov.models.entity_extraction.entity_detection_parser:entity_type_split",
