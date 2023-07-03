@@ -121,6 +121,10 @@ PARAMS = {
         ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_wic_bert.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/few_shot_roberta.json", "classifiers", ('IP',)): [
+            ('Dummy text', ['Dummy text Dummy text', 'Dummy class'], ('Dummy class',))
+        ]
     },
     "distil": {
         ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
@@ -143,6 +147,12 @@ PARAMS = {
         ("russian_super_glue/russian_superglue_muserc_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_parus_rubert.json", "russian_super_glue", ('IP',)): [LIST_ARGUMENTS_INFER_CHECK],
         ("russian_super_glue/russian_superglue_rucos_rubert.json", "russian_super_glue", ('IP',)): [RECORD_ARGUMENTS_INFER_CHECK]
+    },
+    "multitask":{
+        ("multitask/multitask_example.json", "multitask", ALL_MODES): [
+            ('Dummy text',) + (('Dummy text', 'Dummy text'),) * 3 + ('Dummy text',) + (None,)],
+        ("multitask/mt_glue.json", "multitask", ALL_MODES): [
+            ('Dummy text',) * 2 + (('Dummy text', 'Dummy text'),) * 6 + (None,)]
     },
     "entity_extraction": {
         ("entity_extraction/entity_detection_en.json", "entity_extraction", ('IP',)):
@@ -254,7 +264,15 @@ PARAMS = {
     "odqa": {
         ("odqa/en_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("odqa/ru_odqa_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("odqa/en_odqa_pop_infer_enwiki20180211.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("odqa/en_odqa_pop_infer_wiki.json", "odqa", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "morpho_tagger": {
+        ("morpho_syntax_parser/morpho_ru_syntagrus_bert.json", "morpho_tagger_bert", ('IP', 'TI')):
+            [ONE_ARGUMENT_INFER_CHECK]
+    },
+    "syntax_tagger": {
+        ("morpho_syntax_parser/syntax_ru_syntagrus_bert.json", "syntax_ru_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("morpho_syntax_parser/ru_syntagrus_joint_parsing.json", "syntax_ru_bert", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
     },
 }
 
@@ -383,7 +401,8 @@ class TestQuickStart(object):
                 raise RuntimeError(f'Unexpected results for {config_path}: {errors}')
 
     @staticmethod
-    def infer_api(config_path):
+    def infer_api(config_path, qr_list):
+        *inputs, expected_outputs = zip(*qr_list)
         server_params = get_server_params(config_path)
 
         url_base = 'http://{}:{}'.format(server_params['host'], api_port or server_params['port'])
@@ -406,14 +425,10 @@ class TestQuickStart(object):
             assert response_code == 200, f"GET /api request returned error code {response_code} with {config_path}"
 
             model_args_names = get_response.json()['in']
-            post_payload = dict()
-            for arg_name in model_args_names:
-                arg_value = ' '.join(['qwerty'] * 10)
-                post_payload[arg_name] = [arg_value]
+            post_payload = dict(zip(model_args_names, inputs))
             # TODO: remove this if from here and socket
-            if 'parus' in str(config_path):
-                post_payload = {k: [v] for k, v in post_payload.items()}
-
+            if 'docred' in str(config_path) or 'rured' in str(config_path):
+                post_payload = {k: v[0] for k, v in post_payload.items()}
             post_response = requests.post(url, json=post_payload, headers=post_headers)
             response_code = post_response.status_code
             assert response_code == 200, f"POST request returned error code {response_code} with {config_path}"
@@ -503,7 +518,7 @@ class TestQuickStart(object):
 
     def test_inferring_pretrained_model_api(self, model, conf_file, model_dir, mode):
         if 'IP' in mode:
-            self.infer_api(test_configs_path / conf_file)
+            self.infer_api(test_configs_path / conf_file, PARAMS[model][(conf_file, model_dir, mode)])
         else:
             pytest.skip("Unsupported mode: {}".format(mode))
 

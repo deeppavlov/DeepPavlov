@@ -1,0 +1,56 @@
+{
+  "chainer": {
+    "in": ["texts", "dataset"],
+    "in_y": ["y_true"],
+    "pipe": [
+      {
+        "class_name": "dnnc_pair_generator",
+        "in": ["texts", "dataset"],
+        "out": ["x", "x_support", "x_populated", "y_support"],
+        "bidirectional": true
+      },
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "in": ["x_populated", "x_support"],
+        "out": ["bert_features"],
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": true,
+        "max_seq_length": 128
+      },
+      {
+        "class_name": "torch_transformers_classifier",
+        "main": true,
+        "in": ["bert_features"],
+        "out": ["simmilarity_scores"],
+        "n_classes": 2,
+        "return_probas": true,
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "is_binary": "{BINARY_CLASSIFICATION}"
+      },
+      {
+        "class_name": "dnnc_proba2labels",
+        "is_binary": "{BINARY_CLASSIFICATION}",
+        "in": ["simmilarity_scores", "x", "x_populated", "x_support", "y_support"],
+        "out": ["y_pred"],
+        "confidence_threshold": 0.0
+      }
+    ],
+    "out": ["y_pred"]
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "MODEL_PATH": "{ROOT_PATH}/models/fewshot/roberta_nli_mrpc_1_10",
+      "BINARY_CLASSIFICATION": true,
+      "BASE_MODEL": "roberta-base"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/v1/classifiers/fewshot/roberta_nli_mrpc_1_10.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

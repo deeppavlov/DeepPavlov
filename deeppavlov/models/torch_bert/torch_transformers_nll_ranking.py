@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from pathlib import Path
-from typing import List, Optional, Dict, Tuple, Union, Any
+from typing import List, Dict, Tuple, Union, Any
 
 import numpy as np
 import torch
@@ -35,42 +35,30 @@ log = getLogger(__name__)
 class TorchTransformersNLLRanker(TorchModel):
     """Class for ranking of relations using the model trained with NLL loss
     Args:
-        model_name: name of the function which initialises and returns the model class
         pretrained_bert: pretrained transformer checkpoint path or key title (e.g. "bert-base-uncased")
         encoder_save_path: path to save the encoder checkpoint
         linear_save_path: path to save linear layer checkpoint
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        clip_norm: clip gradients by norm
     """
 
     def __init__(
             self,
-            model_name: str,
             pretrained_bert: str = None,
             encoder_save_path: str = None,
             linear_save_path: str = None,
-            optimizer: str = "AdamW",
-            optimizer_parameters: Dict = None,
             return_probas: bool = False,
-            clip_norm: Optional[float] = None,
             **kwargs
     ):
-        self.pretrained_bert = pretrained_bert
-        self.encoder_save_path = encoder_save_path
-        self.linear_save_path = linear_save_path
         self.return_probas = return_probas
-        self.clip_norm = clip_norm
-        if optimizer_parameters is None:
-            optimizer_parameters = {"lr": 1e-5, "weight_decay": 0.01, "eps": 1e-6}
 
-        super().__init__(
-            model_name=model_name,
-            optimizer=optimizer,
-            optimizer_parameters=optimizer_parameters,
-            **kwargs)
+        model = NLLRanking(
+            pretrained_bert=pretrained_bert,
+            encoder_save_path=encoder_save_path,
+            linear_save_path=linear_save_path,
+            bert_tokenizer_config_file=pretrained_bert,
+        )
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, input_features: Dict[str, Any], positive_idx: List[int]) -> float:
         _input = {'positive_idx': positive_idx,
@@ -89,9 +77,6 @@ class TorchTransformersNLLRanker(TorchModel):
         # Clip the norm of the gradients to prevent the "exploding gradients" problem
         if self.clip_norm:
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
-
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
 
         return loss.item()
 
@@ -115,29 +100,6 @@ class TorchTransformersNLLRanker(TorchModel):
             pred = pred.cpu()
             pred = pred.numpy()
             return pred
-
-    def in_batch_ranking_model(self, **kwargs) -> nn.Module:
-        return NLLRanking(
-            pretrained_bert=self.pretrained_bert,
-            encoder_save_path=self.encoder_save_path,
-            linear_save_path=self.linear_save_path,
-            bert_tokenizer_config_file=self.pretrained_bert,
-            device=self.device
-        )
-
-    def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
-        if fname is None:
-            fname = self.save_path
-        if not fname.parent.is_dir():
-            raise ConfigError("Provided save path is incorrect!")
-        weights_path = Path(fname).with_suffix(f".pth.tar")
-        log.info(f"Saving model to {weights_path}.")
-        torch.save({
-            "model_state_dict": self.model.cpu().state_dict(),
-            "optimizer_state_dict": self.optimizer.state_dict(),
-            "epochs_done": self.epochs_done
-        }, weights_path)
-        self.model.to(self.device)
 
 
 class NLLRanking(nn.Module):

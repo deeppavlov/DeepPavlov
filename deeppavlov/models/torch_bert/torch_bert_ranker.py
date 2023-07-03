@@ -41,38 +41,59 @@ class TorchBertRankerModel(TorchModel):
         bert_config_file: path to Bert configuration file (not used if pretrained_bert is key title)
         n_classes: number of classes
         return_probas: set True if class probabilities are returned instead of the most probable label
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
     """
 
     def __init__(self, pretrained_bert: str = None,
                  bert_config_file: Optional[str] = None,
                  n_classes: int = 2,
                  return_probas: bool = True,
-                 optimizer: str = "AdamW",
-                 clip_norm: Optional[float] = None,
-                 optimizer_parameters: Optional[dict] = None,
                  **kwargs) -> None:
 
-        if not optimizer_parameters:
-            optimizer_parameters = {"lr": 2e-5,
-                                    "weight_decay": 0.01,
-                                    "betas": (0.9, 0.999),
-                                    "eps": 1e-6}
-
         self.return_probas = return_probas
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
-        self.n_classes = n_classes
-        self.clip_norm = clip_norm
 
-        if self.return_probas and self.n_classes == 1:
+        if self.return_probas and n_classes == 1:
             raise RuntimeError('Set return_probas to False for regression task!')
 
-        super().__init__(optimizer=optimizer,
-                         optimizer_parameters=optimizer_parameters,
-                         **kwargs)
+        if pretrained_bert:
+            log.debug(f"From pretrained {pretrained_bert}.")
+            if Path(expand_path(pretrained_bert)).exists():
+                pretrained_bert = str(expand_path(pretrained_bert))
+            config = AutoConfig.from_pretrained(pretrained_bert,
+                                                # num_labels=self.n_classes,
+                                                output_attentions=False,
+                                                output_hidden_states=False)
+
+            model = AutoModelForSequenceClassification.from_pretrained(pretrained_bert, config=config)
+
+            # TODO: make better exception handling here and at
+            # deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel.load
+            try:
+                hidden_size = model.classifier.out_proj.in_features
+
+                if n_classes != model.num_labels:
+                    model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(n_classes, hidden_size))
+                    model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(n_classes))
+                    model.classifier.out_proj.out_features = n_classes
+                    model.num_labels = n_classes
+
+            except AttributeError:
+                hidden_size = model.classifier.in_features
+
+                if n_classes != model.num_labels:
+                    model.classifier.weight = torch.nn.Parameter(torch.randn(n_classes, hidden_size))
+                    model.classifier.bias = torch.nn.Parameter(torch.randn(n_classes))
+                    model.classifier.out_features = n_classes
+                    model.num_labels = n_classes
+
+
+        elif bert_config_file and expand_path(bert_config_file).is_file():
+            self.bert_config = AutoConfig.from_pretrained(str(expand_path(bert_config_file)))
+            model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
+
+        else:
+            raise ConfigError("No pre-trained BERT model is given.")
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, features_li: List[List[InputFeatures]], y: Union[List[int], List[List[int]]]) -> Dict:
         """Train the model on the given batch.
@@ -97,15 +118,7 @@ class TorchBertRankerModel(TorchModel):
 
         loss, logits = self.model(b_input_ids, token_type_ids=None, attention_mask=b_input_masks,
                                   labels=b_labels, return_dict=False)
-        loss.backward()
-        # Clip the norm of the gradients to 1.0.
-        # This is to help prevent the "exploding gradients" problem.
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-
-        self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+        self._make_step(loss)
 
         return {'loss': loss.item()}
 
@@ -153,56 +166,3 @@ class TorchBertRankerModel(TorchModel):
             predictions = np.hstack([np.expand_dims(el, 1) for el in predictions])
 
         return predictions
-
-    def load(self, fname=None):
-        if fname is not None:
-            self.load_path = fname
-
-        if self.pretrained_bert:
-            log.debug(f"From pretrained {self.pretrained_bert}.")
-            if Path(expand_path(self.pretrained_bert)).exists():
-                self.pretrained_bert = str(expand_path(self.pretrained_bert))
-            config = AutoConfig.from_pretrained(self.pretrained_bert,
-                                                # num_labels=self.n_classes,
-                                                output_attentions=False,
-                                                output_hidden_states=False)
-                            
-
-            self.model = AutoModelForSequenceClassification.from_pretrained(self.pretrained_bert, config=config)
-
-            # TODO: make better exception handling here and at
-            # deeppavlov.models.torch_bert.torch_transformers_classifier.TorchTransformersClassifierModel.load
-            try:
-                hidden_size = self.model.classifier.out_proj.in_features
-
-                if self.n_classes != self.model.num_labels:
-                    self.model.classifier.out_proj.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
-                    self.model.classifier.out_proj.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                    self.model.classifier.out_proj.out_features = self.n_classes
-                    self.model.num_labels = self.n_classes
-
-            except AttributeError:
-                hidden_size = self.model.classifier.in_features
-
-                if self.n_classes != self.model.num_labels:
-                    self.model.classifier.weight = torch.nn.Parameter(torch.randn(self.n_classes, hidden_size))
-                    self.model.classifier.bias = torch.nn.Parameter(torch.randn(self.n_classes))
-                    self.model.classifier.out_features = self.n_classes
-                    self.model.num_labels = self.n_classes
-
-
-        elif self.bert_config_file and expand_path(self.bert_config_file).is_file():
-            self.bert_config = AutoConfig.from_pretrained(str(expand_path(self.bert_config_file)))
-            self.model = AutoModelForSequenceClassification.from_config(config=self.bert_config)
-
-        else:
-            raise ConfigError("No pre-trained BERT model is given.")
-
-        self.model.to(self.device)
-
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
-        super().load()
