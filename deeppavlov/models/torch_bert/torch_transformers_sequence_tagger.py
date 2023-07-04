@@ -217,7 +217,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         loss = self.model(input_ids=b_input_ids,
                           attention_mask=b_input_masks,
                           labels=b_labels).loss
-        loss.backward()
+        loss.sum().backward()
         if self.use_crf:
             self.crf(y, y_masks)
         # Clip the norm of the gradients to 1.0.
@@ -229,7 +229,7 @@ class TorchTransformersSequenceTagger(TorchModel):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
-        return {'loss': loss.item()}
+        return {'loss': loss.sum().item()}
 
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
@@ -287,6 +287,9 @@ class TorchTransformersSequenceTagger(TorchModel):
             self.model = AutoModelForTokenClassification(config=self.bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
+
+        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
+            self.model = torch.nn.DataParallel(self.model)
 
         self.model.to(self.device)
         if self.use_crf:
