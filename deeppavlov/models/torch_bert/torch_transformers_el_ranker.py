@@ -36,59 +36,37 @@ log = getLogger(__name__)
 class TorchTransformersElRanker(TorchModel):
     """Class for ranking of entities by context and description
     Args:
-        model_name: name of the function which initialises and returns the model class
         encoder_save_path: path to save the encoder checkpoint
         bilinear_save_path: path to save bilinear layer checkpoint
         block_size: size of block in bilinear layer
         emb_size: entity embedding size
         pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
-        criterion: name of loss function
-        optimizer: optimizer name from `torch.optim`
-        optimizer_parameters: dictionary with optimizer's parameters,
-                              e.g. {'lr': 0.1, 'weight_decay': 0.001, 'momentum': 0.9}
         return_probas: set this to `True` if you need the probabilities instead of raw answers
-        attention_probs_keep_prob: keep_prob for Bert self-attention layers
-        hidden_keep_prob: keep_prob for Bert hidden layers
-        clip_norm: clip gradients by norm
     """
 
     def __init__(
             self,
-            model_name: str,
             encoder_save_path: str,
             bilinear_save_path: str,
             block_size: int,
             emb_size: int,
             pretrained_bert: str = None,
-            bert_config_file: Optional[str] = None,
-            criterion: str = "CrossEntropyLoss",
-            optimizer: str = "AdamW",
-            optimizer_parameters: Dict = None,
             return_probas: bool = False,
-            attention_probs_keep_prob: Optional[float] = None,
-            hidden_keep_prob: Optional[float] = None,
-            clip_norm: Optional[float] = None,
             **kwargs
     ):
-        self.encoder_save_path = encoder_save_path
-        self.bilinear_save_path = bilinear_save_path
-        self.pretrained_bert = pretrained_bert
-        self.bert_config_file = bert_config_file
         self.return_probas = return_probas
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
-        self.block_size = block_size
-        self.emb_size = emb_size
 
-        super().__init__(
-            model_name=model_name,
-            optimizer=optimizer,
-            criterion=criterion,
-            optimizer_parameters=optimizer_parameters,
-            return_probas=return_probas,
-            **kwargs)
+        model = SiameseBertElModel(
+            pretrained_bert=pretrained_bert,
+            encoder_save_path=encoder_save_path,
+            bilinear_save_path=bilinear_save_path,
+            bert_config_file=pretrained_bert,
+            block_size=block_size,
+            emb_size=emb_size
+        )
+
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, q_features: List[Dict],
                        c_features: List[Dict],
@@ -119,15 +97,7 @@ class TorchTransformersElRanker(TorchModel):
         self.optimizer.zero_grad()  # zero the parameter gradients
 
         loss, softmax_scores = self.model(**_input)
-        loss.backward()
-        self.optimizer.step()
-
-        # Clip the norm of the gradients to prevent the "exploding gradients" problem
-        if self.clip_norm:
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
-
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
+        self._make_step(loss)
 
         return loss.item()
 
@@ -163,17 +133,6 @@ class TorchTransformersElRanker(TorchModel):
                 pred = torch.argmax(softmax_scores, dim=1).cpu().numpy()
 
         return pred
-
-    def siamese_ranking_el_model(self, **kwargs) -> nn.Module:
-        return SiameseBertElModel(
-            pretrained_bert=self.pretrained_bert,
-            encoder_save_path=self.encoder_save_path,
-            bilinear_save_path=self.bilinear_save_path,
-            bert_config_file=self.pretrained_bert,
-            device=self.device,
-            block_size=self.block_size,
-            emb_size=self.emb_size
-        )
 
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         if fname is None:

@@ -30,6 +30,7 @@ Welcome to DeepPavlov's documentation!
    Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/SQuAD.ipynb>
    Classification <features/models/classification.ipynb>
+   Few-shot Classification <features/models/few_shot_classification>
    Named Entity Recognition <features/models/NER.ipynb>
    Entity Extraction <features/models/entity_extraction.ipynb>
    BERT-based models <features/models/bert>

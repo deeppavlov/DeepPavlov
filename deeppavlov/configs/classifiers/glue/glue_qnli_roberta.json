@@ -73,7 +73,7 @@
     "out": ["y_pred_labels"]
   },
   "train": {
-    "batch_size": 64,
+    "batch_size": 16,
     "metrics": ["accuracy"],
     "validation_patience": 10,
     "val_every_n_batches": 250,

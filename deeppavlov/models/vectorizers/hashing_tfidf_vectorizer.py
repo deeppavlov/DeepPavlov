@@ -116,7 +116,7 @@ class HashingTfIdfVectorizer(Estimator):
             idfs = np.log((size - Ns + 0.5) / (Ns + 0.5))
             idfs[idfs < 0] = 0
 
-            tfidf = np.multiply(tfs, idfs)
+            tfidf = np.multiply(tfs, idfs).astype("float32")
 
             indptr = np.array([0, len(hashes_unique)])
             sp_tfidf = Sparse((tfidf, hashes_unique, indptr), shape=(1, self.hash_size)

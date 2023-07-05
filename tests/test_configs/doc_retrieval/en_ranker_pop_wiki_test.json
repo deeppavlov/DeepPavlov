@@ -55,7 +55,7 @@
       },
       {
         "class_name": "pop_ranker",
-        "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki20180211_popularities.json",
+        "pop_dict_path": "{DOWNLOADS_PATH}/odqa/enwiki_popularities.json",
         "load_path": "{MODELS_PATH}/odqa/logreg_3features_v2.joblib",
         "top_n": 10,
         "in": [
@@ -86,8 +86,8 @@
         "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
-        "url": "http://files.deeppavlov.ai/datasets/wikipedia/enwiki20180211_popularities.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}"
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/enwiki_popularities.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/odqa"
       },
       {
         "url": "http://files.deeppavlov.ai/deeppavlov_data/ranking/logreg_3features_v2.joblib",

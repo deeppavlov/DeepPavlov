@@ -60,7 +60,6 @@ class TfidfRanker(Component):
         """
 
         batch_doc_ids, batch_docs_scores = [], []
-
         q_tfidfs = self.vectorizer(questions)
 
         for q_tfidf in q_tfidfs:
@@ -80,7 +79,7 @@ class TfidfRanker(Component):
             o_sort = o[np.argsort(-scores[o])]
 
             doc_scores = scores[o_sort]
-            doc_ids = [self.vectorizer.index2doc[i] for i in o_sort]
+            doc_ids = [self.vectorizer.index2doc.get(i, int(i)) for i in o_sort]
             batch_doc_ids.append(doc_ids)
             batch_docs_scores.append(doc_scores)
 
