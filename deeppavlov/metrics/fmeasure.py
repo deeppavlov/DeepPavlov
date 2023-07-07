@@ -190,6 +190,9 @@ def round_f1(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1_weighted
     """
     try:
         predictions = [np.round(x) for x in y_predicted]
@@ -214,6 +217,9 @@ def round_f1_macro(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1
     """
     try:
         predictions = [np.round(x) for x in y_predicted]
@@ -234,6 +240,9 @@ def round_f1_weighted(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1_macro
     """
     try:
         predictions = [np.round(x) for x in y_predicted]
