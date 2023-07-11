@@ -98,7 +98,7 @@
         "subdir": "{DOWNLOADS_PATH}"
       },
       {
-        "url": "http://files.deeppavlov.ai/tmp/classifiers/insults/insults_xlm_roberta_base.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/classifiers/insults/insults_xlm_roberta_base.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

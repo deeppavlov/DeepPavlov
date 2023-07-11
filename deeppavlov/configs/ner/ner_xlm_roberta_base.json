@@ -95,7 +95,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner/ner_xlm_roberta_base.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_xlm_roberta_base.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

@@ -97,7 +97,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/classifiers/topics/topics_xlm_roberta_base.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/classifiers/topics/topics_xlm_roberta_base.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

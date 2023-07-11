@@ -97,7 +97,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/classifiers/emotions/emotions_xlm_roberta_base.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/classifiers/emotions/emotions_xlm_roberta_base.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
