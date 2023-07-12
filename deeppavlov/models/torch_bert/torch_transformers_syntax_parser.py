@@ -239,7 +239,6 @@ class TorchTransformersSyntaxParser(TorchModel):
         state_size: size of dense layers which follow after transformer encoder
         attention_probs_keep_prob: keep_prob for Bert self-attention layers
         hidden_keep_prob: keep_prob for Bert hidden layers
-        clip_norm: clip gradients by norm
         bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
     """
 
@@ -249,19 +248,13 @@ class TorchTransformersSyntaxParser(TorchModel):
                  state_size: int = 256,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
-                 clip_norm: Optional[float] = None,
                  bert_config_file: Optional[str] = None,
                  **kwargs) -> None:
 
-        self.pretrained_bert = pretrained_bert
-        self.n_deps = n_deps
-        self.encoder_layer_ids = encoder_layer_ids
-        self.state_size = state_size
-        self.bert_config_file = bert_config_file
-        self.attention_probs_keep_prob = attention_probs_keep_prob
-        self.hidden_keep_prob = hidden_keep_prob
-        self.clip_norm = clip_norm
-        super().__init__(**kwargs)
+        model = SyntaxParserNetwork(n_deps, pretrained_bert, encoder_layer_ids,
+                                    bert_config_file, attention_probs_keep_prob, hidden_keep_prob,
+                                    state_size)
+        super().__init__(model, **kwargs)
 
     def train_on_batch(self, input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],
@@ -285,8 +278,6 @@ class TorchTransformersSyntaxParser(TorchModel):
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.clip_norm)
 
         self.optimizer.step()
-        if self.lr_scheduler is not None:
-            self.lr_scheduler.step()
 
         return {'loss': loss.item()}
 
@@ -307,29 +298,3 @@ class TorchTransformersSyntaxParser(TorchModel):
         with torch.no_grad():
             head_probas, dep_ids = self.model(input_ids, input_masks, y_masks)
         return head_probas, dep_ids
-
-    # TODO move to the super class
-    @property
-    def is_data_parallel(self) -> bool:
-        return isinstance(self.model, torch.nn.DataParallel)
-
-    # TODO this method requires massive refactoring
-    def load(self, fname=None):
-        if fname is not None:
-            self.load_path = fname
-
-        self.model = SyntaxParserNetwork(self.n_deps, self.pretrained_bert, self.encoder_layer_ids,
-                                         self.bert_config_file, self.attention_probs_keep_prob, self.hidden_keep_prob,
-                                         self.state_size)
-        # TODO that should probably be parametrized in config
-        if self.device.type == "cuda" and torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
-
-        self.model.to(self.device)
-
-        self.optimizer = getattr(torch.optim, self.optimizer_name)(
-            self.model.parameters(), **self.optimizer_parameters)
-        if self.lr_scheduler_name is not None:
-            self.lr_scheduler = getattr(torch.optim.lr_scheduler, self.lr_scheduler_name)(
-                self.optimizer, **self.lr_scheduler_parameters)
-        super().load()
