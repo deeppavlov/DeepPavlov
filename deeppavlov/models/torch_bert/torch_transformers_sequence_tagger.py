@@ -209,7 +209,7 @@ class TorchTransformersSequenceTagger(TorchModel):
             loss = loss.mean()
         self._make_step(loss)
 
-        return {'loss': loss.sum().item()}
+        return {'loss': loss.item()}
 
     def __call__(self,
                  input_ids: Union[List[List[int]], np.ndarray],
