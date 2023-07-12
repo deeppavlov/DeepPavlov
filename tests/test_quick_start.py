@@ -126,7 +126,7 @@ PARAMS = {
         ("classifiers/insults_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/intents_distilbert_base_multi.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/sentiments_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/topics_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK]
+        ("classifiers/topics_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/few_shot_roberta.json", "classifiers", ('IP',)): [
             ('Dummy text', ['Dummy text Dummy text', 'Dummy class'], ('Dummy class',))
         ]
