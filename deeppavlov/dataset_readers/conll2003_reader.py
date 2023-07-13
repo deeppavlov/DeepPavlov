@@ -49,6 +49,7 @@ class Conll2003DatasetReader(DatasetReader):
                 raise RuntimeError('train.txt not found in "{}"'.format(data_path))
             data_path.mkdir(exist_ok=True, parents=True)
             download_decompress(url, data_path)
+            files = list(data_path.glob('*.txt'))
         dataset = {}
 
         for file_name in files:
