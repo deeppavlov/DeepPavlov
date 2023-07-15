@@ -225,7 +225,7 @@ class Chainer(Component):
 
         for (in_keys, in_params), out_params, component in pipe:
             x = [mem[k] for k in in_params]
-            if isinstance(component, deeppavlov.models.torch_bert.torch_generative_qa.TorchGenerativeQA):
+            if "DialogueGenerator" in str(type(component)) and "target_ids" in mem:
                 x += [mem["target_ids"]]
             if in_keys:
                 res = component.__call__(**dict(zip(in_keys, x)))

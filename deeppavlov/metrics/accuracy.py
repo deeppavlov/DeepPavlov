@@ -22,11 +22,6 @@ from deeppavlov.core.common.metrics_registry import register_metric
 from deeppavlov.models.go_bot.nlg.dto.json_nlg_response import JSONNLGResponse
 
 
-@register_metric('ppl')
-def ppl(ppl_list):
-    return sum(ppl_list) / len(ppl_list)
-
-
 @register_metric('accuracy')
 def accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -> float:
     """

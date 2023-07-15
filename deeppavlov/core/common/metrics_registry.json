@@ -25,7 +25,7 @@
   "per_item_dialog_accuracy": "deeppavlov.metrics.accuracy:per_item_dialog_accuracy",
   "per_item_dialog_bleu": "deeppavlov.metrics.bleu:per_item_dialog_bleu",
   "per_token_accuracy": "deeppavlov.metrics.accuracy:per_token_accuracy",
-  "ppl": "deeppavlov.metrics.accuracy:ppl",
+  "ppl": "deeppavlov.metrics.ppl:ppl",
   "r@1": "deeppavlov.metrics.recall_at_k:r_at_1",
   "r@10": "deeppavlov.metrics.recall_at_k:r_at_10",
   "r@1_insQA": "deeppavlov.models.ranking.metrics:r_at_1_insQA",
