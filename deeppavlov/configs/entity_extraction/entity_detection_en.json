@@ -34,7 +34,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "./data",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs",
       "TRANSFORMER": "bert-base-cased",

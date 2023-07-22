@@ -114,7 +114,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "./data",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/classifiers/sentiment_sst_bert_torch",

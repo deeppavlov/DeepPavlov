@@ -37,7 +37,7 @@
   },
   "metadata": {
     "variables": {
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "./data",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "prajjwal1/bert-small"

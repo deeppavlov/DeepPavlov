@@ -92,7 +92,7 @@
     "variables": {
       "LOWERCASE": false,
       "TRANSFORMER": "bert-base-cased",
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "./data",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "MODEL_PATH": "{MODELS_PATH}/squad_torch_bert/cased/{TRANSFORMER}"
