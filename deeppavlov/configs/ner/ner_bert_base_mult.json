@@ -87,7 +87,7 @@
   },
   "metadata": {
     "variables": {
-      "BASE_MODEL": "xlm-roberta-base",
+      "BASE_MODEL": "bert-base-multilingual-cased",
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
@@ -95,7 +95,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_xlm_roberta_base.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_bert_base_mult.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
