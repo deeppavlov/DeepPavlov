@@ -7,7 +7,7 @@ from deeppavlov.core.common.registry import register
 @register('sentence_delimiter')
 def SentenceDelimiter(x_long):
     seg = pysbd.Segmenter(clean=False)
-    xs = seg.segment(x_long[0])
+    xs = [a for a in seg.segment(x_long[0]) if len(a)>0]
     return tuple(xs)
     
 
