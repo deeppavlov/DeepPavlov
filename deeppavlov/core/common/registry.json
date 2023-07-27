@@ -36,6 +36,7 @@
   "line_reader": "deeppavlov.dataset_readers.line_reader:LineReader",
   "logit_ranker": "deeppavlov.models.doc_retrieval.logit_ranker:LogitRanker",
   "mask": "deeppavlov.models.preprocessors.mask:Mask",
+  "sentence_delimiter": "deeppavlov.models.tokenizers.sentence_delimiter:SentenceDelimiter",
   "morphotagger_dataset_iterator": "deeppavlov.dataset_iterators.morphotagger_iterator:MorphoTaggerDatasetIterator",
   "morphotagger_dataset_reader": "deeppavlov.dataset_readers.morphotagging_dataset_reader:MorphotaggerDatasetReader",
   "multitask_reader":"deeppavlov.dataset_readers.multitask_reader:MultiTaskReader",
