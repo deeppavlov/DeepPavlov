@@ -552,6 +552,7 @@ class TorchTransformersNerPreprocessor(Component):
                 self._ner_bert_tokenize(toks,
                                         ys,
                                         self.tokenizer,
+                                        self.max_seq_length,
                                         self.max_subword_length,
                                         mode=self.mode,
                                         subword_mask_mode=self.subword_mask_mode,
@@ -579,6 +580,7 @@ class TorchTransformersNerPreprocessor(Component):
                        attention_mask, startofword_markers, subword_tags
             else:
                 nonmasked_tags = [[t for t in ts if t != 'X'] for ts in tags]
+                nonmasked_tags = nonmasked_tags[:self.max_seq_length]
                 for swts, swids, swms, ts in zip(subword_tokens,
                                                  subword_tok_ids,
                                                  startofword_markers,
@@ -612,6 +614,7 @@ class TorchTransformersNerPreprocessor(Component):
     def _ner_bert_tokenize(tokens: List[str],
                            tags: List[str],
                            tokenizer: AutoTokenizer,
+                           max_seq_length: int,
                            max_subword_len: int = None,
                            mode: str = None,
                            subword_mask_mode: str = "first",
@@ -639,6 +642,12 @@ class TorchTransformersNerPreprocessor(Component):
                     startofword_markers.extend([token_marker] + [0] * (len(subwords) - 1))
                 tags_subword.extend([tag] + ['X'] * (len(subwords) - 1))
 
+        if len(tokens_subword) >= max_seq_length:
+            tokens_subword = tokens_subword[:max_seq_length - 1]
+        if len(startofword_markers) >= max_seq_length:
+            startofword_markers = startofword_markers[:max_seq_length - 1]
+        if len(tags_subword) >= max_seq_length:
+            tags_subword = tags_subword[:max_seq_length - 1]
         tokens_subword.append('[SEP]')
         startofword_markers.append(0)
         tags_subword.append('X')
