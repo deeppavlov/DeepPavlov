@@ -121,6 +121,12 @@ PARAMS = {
         ("classifiers/superglue/superglue_record_roberta.json", "classifiers", ('TI',)): [RECORD_ARGUMENTS_INFER_CHECK],
         ("classifiers/superglue/superglue_wic_bert.json", "classifiers", ('TI',)): [TWO_ARGUMENTS_INFER_CHECK],
         ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topics_distilbert_base_uncased.json", "classifiers", ('TI',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/emotions_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/insults_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/intents_distilbert_base_multi.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/sentiments_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/topics_xlm_roberta_base.json", "classifiers", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("classifiers/few_shot_roberta.json", "classifiers", ('IP',)): [
             ('Dummy text', ['Dummy text Dummy text', 'Dummy class'], ('Dummy class',))
         ]
@@ -221,7 +227,8 @@ PARAMS = {
         ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_rus_bert.json", "ner_rus_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_collection3_bert.json", "ner_collection3_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK]
+        ("ner/ner_collection3_bert.json", "ner_collection3_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_bert_base_mult.json", "ner_conll2003_bert", ('IP')): [ONE_ARGUMENT_INFER_CHECK]
     },
     "sentence_segmentation": {
         ("sentence_segmentation/sentseg_dailydialog_bert.json", "sentseg_dailydialog_bert", ('IP', 'TI')): [
