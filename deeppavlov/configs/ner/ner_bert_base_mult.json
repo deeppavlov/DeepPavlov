@@ -9,14 +9,9 @@
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x_long"],
+    "in": ["x"],
     "in_y": ["y"],
     "pipe": [
-      {
-        "class_name": "sentence_delimiter",
-        "in": ["x_long"],
-        "out": ["x"]
-      },
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{BASE_MODEL}",
