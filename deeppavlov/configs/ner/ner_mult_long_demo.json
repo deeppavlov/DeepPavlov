@@ -9,20 +9,20 @@
     "class_name": "data_learning_iterator"
   },
   "chainer": {
-    "in": ["x_long"],
+    "in": ["x"],
     "in_y": ["y"],
     "pipe": [
       {
         "class_name": "sentence_delimiter",
-        "in": ["x_long"],
-        "out": ["x"]					           
+        "in": ["x"],
+        "out": ["x_short"] 
       },
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
         "max_seq_length": 128,
-        "in": ["x"],
+        "in": ["x_short"],
         "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
       {
