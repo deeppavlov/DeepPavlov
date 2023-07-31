@@ -15,13 +15,13 @@
       {
         "class_name": "sentence_delimiter",
         "in": ["x_long"],
-        "out": ["x"]
+        "out": ["x"]					           
       },
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "do_lower_case": false,
-        "max_seq_length": 256,
+        "max_seq_length": 128,
         "in": ["x"],
         "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
@@ -70,7 +70,7 @@
     "out": ["x_tokens", "y_pred"]
   },
   "train": {
-    "batch_size": 128,
+    "batch_size": 256,
     "metrics": [
       {
         "name": "ner_f1",
@@ -96,11 +96,11 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/ner_amazon_massive/{BASE_MODEL}"
+      "MODEL_PATH": "{MODELS_PATH}/amazon_onto_combined/{BASE_MODEL}"
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/ner_bert_base_mult.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/ner/ner_bert_base_mult.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
