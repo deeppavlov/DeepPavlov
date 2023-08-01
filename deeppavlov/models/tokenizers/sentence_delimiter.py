@@ -10,5 +10,9 @@ def SentenceDelimiter(x_long):
     xs = [a for a in seg.segment(x_long[0]) if len(a)>0]
     return tuple(xs)
     
-
-
+@register('sentence_concatenator')
+def SentenceConcatenator(x_long):
+    x_short = []
+    for sent in x_long:
+        x_short.extend(sent)
+    return x_short
