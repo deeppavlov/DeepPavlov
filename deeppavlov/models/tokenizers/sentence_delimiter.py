@@ -11,8 +11,14 @@ def SentenceDelimiter(x_long):
     return tuple(xs)
     
 @register('sentence_concatenator')
-def SentenceConcatenator(x_long):
+def SentenceConcatenator(x_long, y_long):
     x_short = []
+    y_short = []
+    
     for sent in x_long:
         x_short.extend(sent)
-    return x_short
+    
+    for sent in y_long:
+        y_short.extend(sent)
+    
+    return [[x_short, y_short]]
