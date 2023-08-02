@@ -105,7 +105,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner/updated_ner/ner_mult_langs_bert_base_mult.tar.gz",
+        "url": "http://files.deeppavlov.ai/tmp/ner/updated_ner/ner_bert_base_mult.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
