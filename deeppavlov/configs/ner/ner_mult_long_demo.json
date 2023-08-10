@@ -20,8 +20,8 @@
       {
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{BASE_MODEL}",
-        "do_lower_case": true,
-        "max_seq_length": 128,
+        "do_lower_case": false,
+        "max_seq_length": 256,
         "in": ["x_short"],
         "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
       },
