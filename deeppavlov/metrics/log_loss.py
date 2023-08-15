@@ -33,5 +33,8 @@ def sk_log_loss(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
 
     Returns:
         Log loss
+
+    Alias:
+        log_loss
     """
     return log_loss(y_true, y_predicted)
