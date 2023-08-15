@@ -92,11 +92,9 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     if iterator is None:
         try:
             data = read_data_by_config(config)
-            # if the value 'val_every_n_epochs' is set in the config and there is no validation data - raise exception
-            if config.get('train', {}).get('val_every_n_epochs', None) and not data.get('valid', []):
+            if config.get('train', {}).get('val_every_n_epochs') and not data.get('valid'):
                 error_message = 'The value "val_every_n_epochs" is set in the config but no validation data is provided'
-                log.exception(error_message)
-                raise Exception(error_message)
+                raise AttributeError(error_message)
         except ConfigError as e:
             to_train = False
             log.warning(f'Skipping training. {e.message}')
