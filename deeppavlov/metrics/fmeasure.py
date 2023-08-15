@@ -40,7 +40,6 @@ def ner_f1(y_true, y_predicted):
     Alias:
         ner_f1
     """
-    print(type(y_true))
     y_true = list(chain(*y_true))
     y_predicted = list(chain(*y_predicted))
     results = precision_recall_f1(y_true,
