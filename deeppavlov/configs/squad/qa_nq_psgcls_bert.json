@@ -1,0 +1,63 @@
+{
+  "chainer": {
+    "in": ["context_raw", "question_raw"],
+    "pipe": [
+      {
+        "class_name": "torch_squad_transformers_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": "{LOWERCASE}",
+        "max_seq_length": 384,
+        "in": ["question_raw", "context_raw"],
+        "out": ["bert_features", "subtokens", "split_context"]
+      },
+      {
+        "class_name": "squad_bert_mapping",
+        "do_lower_case": "{LOWERCASE}",
+        "in": ["split_context", "bert_features", "subtokens"],
+        "out": ["subtok2chars", "char2subtoks"]
+      },
+      {
+        "class_name": "torch_transformers_squad",
+        "pretrained_bert": "{TRANSFORMER}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "torch_seed": 1,
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05,
+          "weight_decay": 0.01,
+          "betas": [0.9, 0.999],
+          "eps": 1e-06
+        },
+        "random_seed": 1,
+        "psg_cls": true,
+        "learning_rate_drop_patience": 2,
+        "learning_rate_drop_div": 2.0,
+        "in": ["bert_features"],
+        "out": ["ans_start_predicted", "ans_end_predicted", "logits", "scores", "inds"]
+      },
+      {
+        "class_name": "squad_bert_ans_postprocessor",
+        "in": ["ans_start_predicted", "ans_end_predicted", "split_context", "subtok2chars", "subtokens", "inds"],
+        "out": ["ans_predicted", "ans_start_predicted", "ans_end_predicted"]
+      }
+    ],
+    "out": ["ans_predicted", "ans_start_predicted", "scores"]
+  },
+  "metadata": {
+    "variables": {
+      "LOWERCASE": true,
+      "TRANSFORMER": "bert-base-uncased",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/passage_reader_classifier_eng"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/nq_psgcls_bert.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

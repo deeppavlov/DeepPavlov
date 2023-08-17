@@ -1,0 +1,102 @@
+{
+  "dataset_reader": {
+    "class_name": "huggingface_dataset_reader",
+    "path": "{COMPETITION}",
+    "name": "{TASK}",
+    "train": "train",
+    "valid": "validation",
+    "test": "test"
+  },
+  "dataset_iterator": {
+    "class_name": "huggingface_dataset_iterator",
+    "features": ["sentence1", "sentence2"],
+    "label": "label",
+    "seed": 42
+  },
+  "chainer": {
+    "in": ["sentence1", "sentence2"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_preprocessor",
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": false,
+        "max_seq_length": 256,
+        "in": ["sentence1", "sentence2"],
+        "out": ["bert_features"]
+      },
+      {
+        "id": "classes_vocab",
+        "class_name": "simple_vocab",
+        "fit_on": ["y"],
+        "save_path": "{MODEL_PATH}/classes.dict",
+        "load_path": "{MODEL_PATH}/classes.dict",
+        "in": ["y"],
+        "out": ["y_ids"]
+      },
+      {
+        "in": ["y_ids"],
+        "out": ["y_onehot"],
+        "class_name": "one_hotter",
+        "depth": "#classes_vocab.len",
+        "single_vector": true
+      },
+      {
+        "class_name": "torch_transformers_classifier",
+        "n_classes": "#classes_vocab.len",
+        "return_probas": true,
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "optimizer": "AdamW",
+        "optimizer_parameters": {"lr": 2e-05},
+        "in": ["bert_features"],
+        "in_y": ["y_ids"],
+        "out": ["y_pred_probas"]
+      },
+      {
+        "in": ["y_pred_probas"],
+        "out": ["y_pred_ids"],
+        "class_name": "proba2labels",
+        "max_proba": true
+      },
+      {
+        "in": ["y_pred_ids"],
+        "out": ["y_pred_labels"],
+        "ref": "classes_vocab"
+      }
+    ],
+    "out": ["y_pred_labels"]
+  },
+  "train": {
+    "batch_size": 16,
+    "metrics": ["accuracy"],
+    "epochs": 10,
+    "validation_patience": 10,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "val_every_n_batches": 1000,
+    "show_examples": false,
+    "evaluation_targets": ["valid"],
+    "class_name": "torch_trainer",
+    "tensorboard_log_dir": "{MODEL_PATH}/",
+    "pytest_max_batches": 2
+  },
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "bert-base-cased",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "COMPETITION": "super_glue",
+      "TASK": "wic",
+      "MODEL_PATH": "{MODELS_PATH}/{COMPETITION}/{TASK}/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/v1/superglue/superglue_wic_bert.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}

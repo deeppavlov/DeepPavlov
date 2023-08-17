@@ -29,7 +29,6 @@
       },
       {
         "class_name": "torch_bert_ranker",
-        "one_hot_labels": false,
         "pretrained_bert": "bert-base-uncased",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
@@ -43,6 +42,7 @@
           ],
           "eps": 1e-6
         },
+        "clip_norm": 1.0,
         "in": [
           "bert_features"
         ],

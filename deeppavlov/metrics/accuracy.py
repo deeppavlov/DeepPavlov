@@ -154,6 +154,9 @@ def sets_accuracy(y_true: [list, np.ndarray], y_predicted: [list, np.ndarray]) -
 
     Returns:
         portion of samples with absolutely coincidental sets of predicted values
+
+    Alias:
+        sets_accuracy
     """
     examples_len = len(y_true)
     correct = sum([set(y1) == set(y2) for y1, y2 in zip(y_true, y_predicted)])

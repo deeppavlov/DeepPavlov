@@ -28,7 +28,7 @@ The trained model can be used for inference with the following code:
 .. code:: python
 
     from deeppavlov import configs, build_model
-    re = build_model(configs.relation_extraction.re_docred, download=False)
+    re_model = build_model(configs.relation_extraction.re_docred, download=False)
 
     sentence_tokens = [["Barack", "Obama", "is", "married", "to", "Michelle", "Obama", ",", "born", "Michelle", "Robinson", "."]]
     entity_pos = [[[(0, 2)], [(5, 7), (9, 11)]]]
