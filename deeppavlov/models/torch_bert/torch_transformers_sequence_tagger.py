@@ -205,8 +205,6 @@ class TorchTransformersSequenceTagger(TorchModel):
                           labels=b_labels).loss
         if self.crf is not None:
             self.crf(y, y_masks)
-        if self.is_data_parallel:
-            loss = loss.mean()
         self._make_step(loss)
 
         return {'loss': loss.item()}
