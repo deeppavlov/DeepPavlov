@@ -510,7 +510,7 @@ class TorchTransformersNerPreprocessor(Component):
                  subword_mask_mode: str = "first",
                  return_features: bool = False,
                  **kwargs):
-        self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self._re_tokenizer = re.compile(r"[\d]+[\d\.,]+[\d]+|[\w'\.:@-]+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
