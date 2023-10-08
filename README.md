@@ -183,7 +183,7 @@ from deeppavlov import evaluate_model
 model = evaluate_model(<config_path>, install=True, download=True)
 ```
 
-DeepPavlov also [allows](http://docs.deeppavlov.ai/en/master/intro/python.html) to build a model from components for
+DeepPavlov also [allows](https://docs.deeppavlov.ai/en/master/intro/python.html) to build a model from components for
 inference using Python.
 
 ## License
