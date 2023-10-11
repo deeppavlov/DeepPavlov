@@ -26,15 +26,19 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 **Models**
 
-[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/NER.html) | [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classifiers.html) |
+[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/NER.html) | [Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classification.html) |
 
-[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/SQuAD.html) | [Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/kbqa.html)
+[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/SQuAD.html) | [Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/KBQA.html)
 
-[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html) 
+[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html) | [TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html)
 
-[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [Entity Linking](http://docs.deeppavlov.ai/en/master/features/models/entity_linking.html)
+[Syntactic Parsing](http://docs.deeppavlov.ai/en/master/features/models/syntax_parser.html) | [Morphological Tagging](http://docs.deeppavlov.ai/en/master/features/models/morpho_tagger.html)
 
-[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/odqa.html) | [Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
+[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html) | [Entity Extraction](http://docs.deeppavlov.ai/en/master/features/models/entity_extraction.html)
+
+[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/ODQA.html) | [Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)
+
+[Relation Extraction](http://docs.deeppavlov.ai/en/master/features/models/relation_extraction.html)
 
 **Embeddings**
 
@@ -179,7 +183,7 @@ from deeppavlov import evaluate_model
 model = evaluate_model(<config_path>, install=True, download=True)
 ```
 
-DeepPavlov also [allows](https://docs.deeppavlov.ai/en/master/features/python.html) to build a model from components for
+DeepPavlov also [allows](https://docs.deeppavlov.ai/en/master/intro/python.html) to build a model from components for
 inference using Python.
 
 ## License
