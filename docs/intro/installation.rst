@@ -53,11 +53,10 @@ Clone the repository and install DeepPavlov with the following commands:
     .. code:: bash
 
         git clone http://github.com/deeppavlov/DeepPavlov.git
-        cd DeepPavlov
-        pip install -e .
+        pip install -e DeepPavlov
 
 Docker Images
--------------
+~~~~~~~~~~~~~
 
 We have built several DeepPavlov based Docker images, which include:
 

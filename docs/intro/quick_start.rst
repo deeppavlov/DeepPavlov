@@ -192,8 +192,8 @@ solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </in
 modes documentation for API details.
 
 
-Text Question Answering
-=======================
+Text Question Answering :doc:`[docs] </features/models/SQuAD>`
+==============================================================
 
 Text Question Answering component answers a question based on a given context (e.g,
 a paragraph of text), where the answer to the question is a segment of the context.
@@ -208,6 +208,19 @@ a paragraph of text), where the answer to the question is a segment of the conte
     +----------+------------------------------------------------------------------------------------+-------------------------------------------+
     | Ru       | :config:`squad_ru_bert <squad/squad_ru_bert.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
     +----------+------------------------------------------------------------------------------------+-------------------------------------------+
+
+
+.. code:: python
+
+    from deeppavlov import build_model
+
+    model = build_model('squad_bert', download=True, install=True)
+    contexts = ['DeepPavlov is a library for NLP and dialog systems.', 'All work and no play makes Jack a dull boy']
+    questions = ['What is DeepPavlov?', 'What makes Jack a dull boy?']
+    model(contexts, questions)
+
+
+Classification
 
 
 Name Entity Recognition
