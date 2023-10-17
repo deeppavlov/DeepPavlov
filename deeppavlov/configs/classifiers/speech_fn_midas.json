@@ -67,7 +67,7 @@
         "ref": "classes_vocab"
       }
     ],
-    "out": ["y_pred_labels"]
+    "out": ["y_pred_labels","y_pred_probas"]
   },
   "train": {
     "epochs": 100,
