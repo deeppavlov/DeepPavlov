@@ -2,7 +2,7 @@
   "dataset_reader": {
     "class_name": "basic_classification_reader",
     "format": "csv",
-    "x": ["current_utterance","prev_utterance"],
+    "x": ["prev_utterance","current_utterance"],
     "y": "joint_labels",
     "data_path": "{DOWNLOADS_PATH}/midas"
   },
@@ -11,7 +11,7 @@
     "seed": 42
   },
   "chainer": {
-    "in": ["current_utterance","prev_utterance"],
+    "in": ["prev_utterance","current_utterance"],
     "in_y": ["y"],
     "pipe": [
       {
