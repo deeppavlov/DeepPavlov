@@ -192,23 +192,11 @@ solutions. See :doc:`riseapi </integrations/rest_api>` and :doc:`risesocket </in
 modes documentation for API details.
 
 
-Text Question Answering :doc:`[docs] </features/models/SQuAD>`
-==============================================================
+Text Question Answering
+=======================
 
 Text Question Answering component answers a question based on a given context (e.g,
 a paragraph of text), where the answer to the question is a segment of the context.
-
-.. table::
-    :widths: auto
-
-    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                  | Demo                                      |
-    +==========+====================================================================================+===========================================+
-    | En       | :config:`squad_bert <squad/squad_bert.json>`                                       | https://demo.deeppavlov.ai/#/en/textqa    |
-    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
-    | Ru       | :config:`squad_ru_bert <squad/squad_ru_bert.json>`                                 | https://demo.deeppavlov.ai/#/ru/textqa    |
-    +----------+------------------------------------------------------------------------------------+-------------------------------------------+
-
 
 .. code:: python
 
@@ -217,11 +205,90 @@ a paragraph of text), where the answer to the question is a segment of the conte
     model = build_model('squad_bert', download=True, install=True)
     contexts = ['DeepPavlov is a library for NLP and dialog systems.', 'All work and no play makes Jack a dull boy']
     questions = ['What is DeepPavlov?', 'What makes Jack a dull boy?']
-    model(contexts, questions)
+    answer, answers_start_idx, score = model(contexts, questions)
+    print(answer)
 
+.. code:: bash
 
-Classification
+    ['a library for NLP and dialog systems', 'All work and no play']
 
+To get list of available models for Text Question Answering see :doc:`documentation </features/models/SQuAD>`.
+
+Open-Domain Question Answering
+==============================
+
+Open Domain Question Answering (ODQA) answers any question based on the document collection covering a wide range of
+topics. The ODQA task combines two challenges of document retrieval (finding the relevant articles) with that of machine
+comprehension of text (identifying the answer span from those articles). This component can be used to answer questions
+based on the company knowledge base.
+
+.. code:: python
+
+    from deeppavlov import build_model
+
+    model = build_model('en_odqa_infer_wiki', download=True, install=True)
+    questions = ["What is the name of Darth Vader's son?", 'Who was the first president of France?']
+    answer, answer_score, answer_place = model(questions)
+    print(answer)
+
+.. code:: bash
+
+    ['Luke Skywalker', 'Louis-Napoleon Bonaparte']
+
+To get list of available models for Open-Domain Question Answering see :doc:`documentation </features/models/odqa>`.
+
+Knowledge Base Question Answering
+=================================
+
+Knowledge Base Question Answering (KBQA) answers any question based on Knowledge Base (Knowledge Graph) -
+a comprehensive repository of information about a given domain or a number of domains that reflects the ways we model
+knowledge about a given subject or subjects, in terms of concepts, entities, properties, and relationships. KBQA models
+validate questions against a preconfigured list of question templates, disambiguate entities using Entity Linking,
+and answer questions asked in natural language.
+
+.. code:: python
+
+    from deeppavlov import build_model
+
+    model = build_model('kbqa_cq_en', download=True, install=True)
+    questions = ['What is the currency of Sweden?', 'When did the Korean War end?']
+    answers, answer_ids, query = model(questions)
+    print(answers)
+
+.. code:: bash
+
+    ['Swedish krona', '27 July 1953']
+
+To get list of available models for Knowledge Base Question Answering see :doc:`documentation </features/models/kbqa>`.
+
+Classification (insult and paraphrase detection, sentiment analysis, topic classification)
+=======================================================================================
+
+Insult detection predicts whether a text (e.g, post or speech in some public discussion) is considered insulting to one
+of the persons it is related to.
+
+Sentiment analysis is a task of classifying the polarity of the the given sequence.
+
+The models trained for the paraphrase detection task identify whether two sentences expressed with different words
+convey the same meaning.
+
+Topic classification refers to the task of classifying an utterance by the topic which belongs to the conversational
+domain.
+
+.. code:: python
+
+    from deeppavlov import build_model
+
+    model = build_model('insults_kaggle_bert', download=True, install=True)
+    phrases = ['You are kind of stupid', 'You are a wonderful person!']
+    labels = model(phrases)
+    print(labels)
+
+.. code:: bash
+
+    ['Insult', 'Not Insult']
+
+To get list of available models for Classification see :doc:`documentation </features/models/classification.ipynb>`.
 
 Name Entity Recognition
 =======================
@@ -230,47 +297,63 @@ Named Entity Recognition (NER) classifies tokens in text into predefined categor
 (tags), such as person names, quantity expressions, percentage expressions, names
 of locations, organizations, as well as expression of time, currency and others.
 
-.. table::
-    :widths: auto
+.. code:: python
 
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Multi    | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/mu/ner       |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | En       | :config:`ner_ontonotes_bert_mult <ner/ner_ontonotes_bert_mult.json>`                           | https://demo.deeppavlov.ai/#/en/ner       |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Ru       | :config:`ner_rus_bert <ner/ner_rus_bert.json>`                                                 | https://demo.deeppavlov.ai/#/ru/ner       |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+    from deeppavlov import build_model
 
+    model = build_model('ner_ontonotes_bert', download=True, install=True)
+    phrases = ['Bob Ross lived in Florida', 'Elon Musk founded Tesla']
+    tokens, tags = model(phrases)
+    print(tokens, tags, sep='\n')
 
-Insult Detection
-================
+.. code:: bash
 
-Insult detection predicts whether a text (e.g, post or speech in some
-public discussion) is considered insulting to one of the persons it is
-related to.
+    [['Bob', 'Ross', 'lived', 'in', 'Florida'], ['Elon', 'Musk', 'founded', 'Tesla']]
+    [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE'], ['B-PERSON', 'I-PERSON', 'O', 'B-ORG']]
 
-.. table::
-    :widths: auto
+To get list of available models for Name Entity Recognition see :doc:`documentation </features/models/NER.ipynb>`.
 
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | En       | :config:`insults_kaggle_bert <classifiers/insults_kaggle_bert.json>`                           | https://demo.deeppavlov.ai/#/en/insult    |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+Entity Extraction
+=================
 
+Entity Detection is the task of identifying entity mentions in text with corresponding entity types.
+Entity Linking is the task of finding knowledge base entity ids for entity mentions in text.
+Entity Extraction configs perform subsequent Entity Detection and Entity Linking of extracted entity mentions.
 
-Paraphrase Detection
-====================
+.. code:: python
 
-Detect if two given texts have the same meaning.
+    from deeppavlov import build_model
 
-.. table::
-    :widths: auto
+    model = build_model('entity_extraction_en', download=True, install=True)
+    phrases = ['Forrest Gump is a comedy-drama film directed by Robert Zemeckis and written by Eric Roth.']
+    entity_substr, tags, entity_offsets, entity_ids, entity_conf, entity_pages, entity_labels = model(phrases)
+    print(entity_substr, tags, entity_ids, entity_labels, sep='\n')
 
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
-    | Language | DeepPavlov config                                                                              | Demo                                      |
-    +==========+================================================================================================+===========================================+
-    | Ru       | :config:`paraphraser_rubert <classifiers/paraphraser_rubert.json>`                             | None                                      |
-    +----------+------------------------------------------------------------------------------------------------+-------------------------------------------+
+.. code:: bash
+
+    [['forrest gump', 'robert zemeckis', 'eric roth']]
+    [['WORK_OF_ART', 'PERSON', 'PERSON']]
+    [[['Q134773', 'Q552213', 'Q12016774'], ['Q187364', 'Q36951156'], ['Q942932', 'Q89320386', 'Q89909683']]]
+    [[['Forrest Gump', 'Forrest Gump', 'Forrest Gump'], ['Robert Zemeckis', 'Welcome to Marwen'], ['Eric Roth', 'Eric Roth', 'Eric W Roth']]]
+
+To get list of available models for Entity Extraction see :doc:`documentation </features/models/entity_extraction>`.
+
+Spelling Correction
+===================
+
+Spelling Correction models detect and correct spelling errors in texts.
+
+.. code:: python
+
+    from deeppavlov import build_model
+
+    model = build_model('brillmoore_wikitypos_en', download=True, install=True)
+    phrases_w_typos = ['I think this is the begining of a beautifull frendship.', "I'll be bak"]
+    correct_phrases = model(phrases_w_typos)
+    print(correct_phrases)
+
+.. code:: bash
+
+    ['i think this is the beginning of a beautiful friendship.', "i'll be back"]
+
+To get list of available models for Spelling Correction see :doc:`documentation </features/models/spelling_correction>`.

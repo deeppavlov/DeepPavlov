@@ -23,7 +23,7 @@ Before using the model make sure that all required packages are installed runnin
 
 .. code:: bash
 
-    python -m deeppavlov install en_ranker_pop_enwiki20180211.json
+    python -m deeppavlov install en_ranker_pop_enwiki20180211
 
 Building the model
 
