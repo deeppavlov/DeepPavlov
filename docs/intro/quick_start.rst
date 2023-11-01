@@ -235,7 +235,7 @@ based on the company knowledge base.
 
     ['Luke Skywalker', 'Louis-Napoleon Bonaparte']
 
-To get list of available models for Open-Domain Question Answering see :doc:`documentation </features/models/odqa>`.
+To get list of available models for Open-Domain Question Answering see :doc:`documentation </features/models/ODQA>`.
 
 Knowledge Base Question Answering
 =================================
@@ -259,10 +259,10 @@ and answer questions asked in natural language.
 
     ['Swedish krona', '27 July 1953']
 
-To get list of available models for Knowledge Base Question Answering see :doc:`documentation </features/models/kbqa>`.
+To get list of available models for Knowledge Base Question Answering see :doc:`documentation </features/models/KBQA>`.
 
 Classification (insult and paraphrase detection, sentiment analysis, topic classification)
-=======================================================================================
+==========================================================================================
 
 Insult detection predicts whether a text (e.g, post or speech in some public discussion) is considered insulting to one
 of the persons it is related to.
@@ -288,7 +288,7 @@ domain.
 
     ['Insult', 'Not Insult']
 
-To get list of available models for Classification see :doc:`documentation </features/models/classification.ipynb>`.
+To get list of available models for Classification see :doc:`documentation </features/models/classification>`.
 
 Name Entity Recognition
 =======================
@@ -311,7 +311,7 @@ of locations, organizations, as well as expression of time, currency and others.
     [['Bob', 'Ross', 'lived', 'in', 'Florida'], ['Elon', 'Musk', 'founded', 'Tesla']]
     [['B-PERSON', 'I-PERSON', 'O', 'O', 'B-GPE'], ['B-PERSON', 'I-PERSON', 'O', 'B-ORG']]
 
-To get list of available models for Name Entity Recognition see :doc:`documentation </features/models/NER.ipynb>`.
+To get list of available models for Name Entity Recognition see :doc:`documentation </features/models/NER>`.
 
 Entity Extraction
 =================
