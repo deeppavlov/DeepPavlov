@@ -510,7 +510,7 @@ class TorchTransformersNerPreprocessor(Component):
                  subword_mask_mode: str = "first",
                  return_features: bool = False,
                  **kwargs):
-        self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+        self._re_tokenizer = re.compile(r"[\d]+[\d\.,]+[\d]+|[\w'\.:@]+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
@@ -536,9 +536,16 @@ class TorchTransformersNerPreprocessor(Component):
             for s in tokens:
                 tokens_list = []
                 tokens_offsets_list = []
-                for elem in re.finditer(self._re_tokenizer, s):
-                    tokens_list.append(elem[0])
-                    tokens_offsets_list.append((elem.start(), elem.end()))
+                matches = tuple(re.finditer(self._re_tokenizer, s))
+                for i, elem in enumerate(matches):
+                    if (i == len(matches) - 1) and (elem[0][-1] == '.'):
+                        tokens_list.append(elem[0][:-1])
+                        tokens_list.append('.')
+                        tokens_offsets_list.append((elem.start(), elem.end() - 1))
+                        tokens_offsets_list.append((elem.end() - 1, elem.end()))
+                    else:
+                        tokens_list.append(elem[0])
+                        tokens_offsets_list.append((elem.start(), elem.end()))
                 tokens_batch.append(tokens_list)
                 tokens_offsets_batch.append(tokens_offsets_list)
             tokens = tokens_batch

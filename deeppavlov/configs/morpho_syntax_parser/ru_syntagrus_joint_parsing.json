@@ -1,0 +1,27 @@
+{
+  "chainer": {
+    "in": ["x_words"],
+    "pipe": [
+      {
+        "id": "main",
+        "class_name": "joint_tagger_parser",
+        "tagger": {
+          "config_path": "{CONFIGS_PATH}/morpho_syntax_parser/morpho_ru_syntagrus_bert.json",
+          "overwrite": {"chainer.pipe.6.return_string": false}
+        },
+        "parser": {
+          "config_path": "{CONFIGS_PATH}/morpho_syntax_parser/syntax_ru_syntagrus_bert.json",
+          "overwrite": {"chainer.pipe.6.return_string": false}
+        },
+        "in": ["x_words"],
+        "out": ["y_parsed"]
+      }
+    ],
+    "out": ["y_parsed"]
+  },
+  "metadata": {
+    "variables": {
+      "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
+    }
+  }
+}

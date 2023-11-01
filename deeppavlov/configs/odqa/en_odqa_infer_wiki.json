@@ -9,31 +9,39 @@
         "out": ["tfidf_doc_ids"]
       },
       {
-        "class_name": "wiki_sqlite_vocab",
-        "in": ["tfidf_doc_ids"],
-        "out": ["tfidf_doc_text"],
-        "join_docs": false,
-        "shuffle": false,
-        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki.db"
+        "class_name": "bpr",
+        "load_path": "{MODELS_PATH}/bpr/eng",
+        "query_encoder_file": "query_encoder_en.pth.tar",
+        "bpr_index": "bpr_finetuned_nq_adv.idx",
+        "pretrained_model": "bert-base-uncased",
+        "top_n": 100,
+        "in": ["question_raw"],
+        "out": ["bpr_doc_ids"]
       },
       {
-        "class_name": "document_chunker",
-        "in": ["tfidf_doc_text"],
-        "out": ["chunks"],
-        "flatten_result": true,
-        "paragraphs": true
+        "class_name": "concat_lists",
+        "in": ["tfidf_doc_ids", "bpr_doc_ids"],
+        "out": ["doc_ids"]
+      },
+      {
+        "class_name": "wiki_sqlite_vocab",
+        "in": ["doc_ids"],
+        "out": ["doc_text"],
+        "join_docs": false,
+        "shuffle": false,
+        "load_path": "{DOWNLOADS_PATH}/odqa/enwiki_l100.db"
       },
       {
         "class_name": "string_multiplier",
-        "in": ["question_raw", "chunks"],
+        "in": ["question_raw", "doc_text"],
         "out":["questions"]
       },
       {
         "class_name": "logit_ranker",
         "batch_size": 64,
-        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/qa_squad2_bert.json"},
+        "squad_model": {"config_path": "{CONFIGS_PATH}/squad/qa_nq_psgcls_bert.json"},
         "sort_noans": true,
-        "in": ["chunks", "questions"],
+        "in": ["doc_text", "questions"],
         "out": ["answer", "answer_score", "answer_place"]
       }
     ]
@@ -46,6 +54,10 @@
       "CONFIGS_PATH": "{DEEPPAVLOV_PATH}/configs"
     },
     "download": [
+      {
+        "url": "http://files.deeppavlov.ai/deeppavlov_data/odqa/bpr_encoder_index_eng.tar.gz",
+        "subdir": "{MODELS_PATH}/bpr/eng"
+      }
     ]
   }
 }

@@ -30,17 +30,20 @@ Welcome to DeepPavlov's documentation!
    Multitask BERT <features/models/multitask_bert>
    Context Question Answering <features/models/SQuAD.ipynb>
    Classification <features/models/classification.ipynb>
+   Few-shot Classification <features/models/few_shot_classification>
    Named Entity Recognition <features/models/NER.ipynb>
-   Entity Extraction <features/models/entity_extraction>
+   Entity Extraction <features/models/entity_extraction.ipynb>
    BERT-based models <features/models/bert>
-   Neural Ranking <features/models/neural_ranking>
-   Spelling Correction <features/models/spelling_correction>
-   TF-IDF Ranking <features/models/tfidf_ranking>
-   Popularity Ranking <features/models/popularity_ranking>
-   Knowledge Base Question answering <features/models/kbqa>
-   Relation Extraction <features/models/re>
+   Morphological Tagging <features/models/morpho_tagger.ipynb>
+   Neural Ranking <features/models/neural_ranking.ipynb>
+   Spelling Correction <features/models/spelling_correction.ipynb>
+   Syntactic Parsing <features/models/syntax_parser.ipynb>
+   TF-IDF Ranking <features/models/tfidf_ranking.ipynb>
+   Popularity Ranking <features/models/popularity_ranking.ipynb>
+   Knowledge Base Question answering <features/models/KBQA.ipynb>
+   Relation Extraction <features/models/relation_extraction.ipynb>
    SuperGLUE Submission <features/models/superglue>
-   Open-Domain Question Answering <features/models/odqa>
+   Open-Domain Question Answering <features/models/ODQA.ipynb>
 
 
 .. toctree::

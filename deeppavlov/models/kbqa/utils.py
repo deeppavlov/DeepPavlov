@@ -123,9 +123,11 @@ def correct_variables(query_triplets: List[str], answer_ent: List[str], query_in
             for j in range(len(triplet_elements)):
                 if triplet_elements[j] not in ent_var and triplet_elements[j].startswith("?"):
                     triplet_elements[j] = query_info["mid_var"]
+                    break
                 if triplet_elements[j].startswith("?") \
                         and triplet_elements[j] not in [query_info["mid_var"], query_info["unk_var"]]:
                     triplet_elements[j] = query_info["unk_var"]
+                    break
             query_triplets[i] = " ".join(triplet_elements)
             query_triplets[i] = query_triplets[i].replace(ent_var, query_info["unk_var"])
     return query_triplets
@@ -174,8 +176,11 @@ def make_sparql_query(query_info: Tuple[List[str], List[str], List[str], Dict[st
     query_triplets = [fill_slots(elem, entities, types, rels, delete_rel_prefix=True) for elem in query_triplets]
     query_triplets = correct_variables(query_triplets, answer_ent, query_info_dict)
     filled_queries = []
-    for triplets_p in list(itertools.permutations(query_triplets)):
-        filled_queries.append(query_from_triplets(triplets_p, answer_ent, query_info_dict))
+    if any(["qualifier" in filter_info_element for filter_info_element in filter_info]):
+        filled_queries.append(query_from_triplets(query_triplets, answer_ent, query_info_dict))
+    else:
+        for triplets_p in list(itertools.permutations(query_triplets)):
+            filled_queries.append(query_from_triplets(triplets_p, answer_ent, query_info_dict))
     return filled_queries
 
 

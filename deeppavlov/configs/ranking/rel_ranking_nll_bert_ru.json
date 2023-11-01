@@ -19,10 +19,10 @@
         "load_path": "{MODEL_PATH}/model",
         "encoder_save_path": "{MODEL_PATH}/encoder",
         "linear_save_path": "{MODEL_PATH}/linear",
-        "model_name": "in_batch_ranking_model",
         "pretrained_bert": "{TRANSFORMER}",
         "learning_rate_drop_patience": 4,
-        "learning_rate_drop_div": 1.5
+        "learning_rate_drop_div": 1.5,
+        "optimizer_parameters": {"lr": 1e-5, "weight_decay": 0.01, "eps": 1e-6}
       }
     ],
     "out": ["model_output"]

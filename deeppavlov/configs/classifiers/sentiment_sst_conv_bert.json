@@ -54,7 +54,6 @@
         "class_name": "torch_transformers_classifier",
         "n_classes": "#classes_vocab.len",
         "return_probas": true,
-        "one_hot_labels": true,
         "pretrained_bert": "{TRANSFORMER}",
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
