@@ -117,3 +117,26 @@ Here are POST request payload examples for some of the library models:
 |                                         | |  "question_raw":["What strained the relationship between Great Britain and its colonies?"]}                                                       |
 +-----------------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------+
 
+REST API Usage Example
+======================
+
+To start server with ``squad_bert`` model run:
+
+.. code:: bash
+
+    python -m deeppavlov riseapi squad_bert -id
+
+To get response from this model on another terminal run:
+
+.. code:: bash
+
+    curl -X POST http://0.0.0.0:5000/model -H 'Content-Type: application/json' -d '{
+        "context_raw": [
+            "All work and no play makes Jack a dull boy.",
+            "I used to be an adventurer like you, then I took an arrow in the knee."
+        ],
+        "question_raw": [
+            "What makes Jack a dull boy?",
+            "Who I used to be?"
+        ]
+    }'
