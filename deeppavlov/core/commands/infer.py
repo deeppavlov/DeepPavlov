@@ -93,7 +93,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
     model = build_model(config)
 
-    print("\nExit repl - type q and press Enter, or press Ctrl-C, or Ctrl-D.")
+    print("\nExit - type q and press Enter, or press Ctrl-C, or Ctrl-D.")
 
     def input_data(prompt: str) -> tuple[str]:
         """Filter and processing input data."""
