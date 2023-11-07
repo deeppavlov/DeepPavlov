@@ -99,10 +99,6 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         """Filter and processing input data."""
         while True:
             data: str = input(f"\033[34m\033[107m{prompt}:\033[0m ")
-            if data == "":
-                continue
-            if data.isspace():
-                continue
             if data.strip() == "q":
                 print("\nExit repl mode.")
                 sys.exit(0)
