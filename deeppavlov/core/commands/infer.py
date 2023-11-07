@@ -119,7 +119,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
         if len(model.out_params) > 1:
             pred = zip(*pred)
 
-        print("==> ", *pred)
+        print(">> ", *pred)
 
 
 def predict_on_stream(
