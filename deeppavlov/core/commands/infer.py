@@ -95,7 +95,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
 
     print("\nExit - type q and press Enter, or press Ctrl-C, or Ctrl-D.")
 
-    def input_data(prompt: str) -> tuple[str]:
+    def input_data(prompt: str):
         """Filter and processing input data."""
         while True:
             data: str = input(f"\033[34m\033[107m{prompt}:\033[0m ")
