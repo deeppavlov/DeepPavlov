@@ -50,17 +50,13 @@ def build_model(
     model = Chainer(model_config["in"], model_config["out"], model_config.get("in_y"))
 
     for component_config in model_config["pipe"]:
-        if load_trained and (
-            "fit_on" in component_config or "in_y" in component_config
-        ):
+        if load_trained and ("fit_on" in component_config or "in_y" in component_config):
             try:
                 component_config["load_path"] = component_config["save_path"]
             except KeyError:
                 log.warning(
                     'No "save_path" parameter for the {} component, so "load_path" will not be renewed'.format(
-                        component_config.get(
-                            "class_name", component_config.get("ref", "UNKNOWN")
-                        )
+                        component_config.get("class_name", component_config.get("ref", "UNKNOWN"))
                     )
                 )
 
@@ -80,7 +76,7 @@ def build_model(
 
 
 def end_repl_mode(function: Callable[..., Any]) -> Callable[..., Any]:
-    """Decorator for processing ctrl-c, ctrl-d pressing."""
+    """Decorator for processing Ctrl-C, Ctrl-D pressing."""
 
     def wrapper(*args: Any, **kwargs: Any):
         try:
@@ -97,7 +93,7 @@ def interact_model(config: Union[str, Path, dict]) -> None:
     """Start interaction with the model described in corresponding configuration file."""
     model = build_model(config)
 
-    print("\nExit repl - type q and press enter, or press ctrl-c, or ctrl-d.")
+    print("\nExit repl - type q and press Enter, or press Ctrl-C, or Ctrl-D.")
 
     def input_data(prompt: str) -> tuple[str]:
         """Filter and processing input data."""
