@@ -82,10 +82,22 @@ def end_repl_mode(function: Callable[..., Any]) -> Callable[..., Any]:
         try:
             return function(*args, **kwargs)
         except (KeyboardInterrupt, EOFError):
-            print("\nExit repl mode.")
+            print("\nExit.")
             sys.exit(0)
 
     return wrapper
+
+
+def preparing_arguments(model):
+    """Prepares arguments."""
+    arguments = []
+    for in_x in model:
+        data: str = input(f"\033[34m\033[107m{in_x}:\033[0m ")
+        if data.strip() == "q":
+            print("\nExit.")
+            sys.exit(0)
+        arguments.append((data,))
+    return arguments
 
 
 @end_repl_mode
@@ -95,21 +107,8 @@ def interact_model(config: Union[str, Path, dict]) -> None:
 
     print("\nExit - type q and press Enter, or press Ctrl-C, or Ctrl-D.")
 
-    def input_data(prompt: str):
-        """Filter and processing input data."""
-        while True:
-            data: str = input(f"\033[34m\033[107m{prompt}:\033[0m ")
-            if data.strip() == "q":
-                print("\nExit repl mode.")
-                sys.exit(0)
-
-            return (data,)
-
     while True:
-        arguments: list[tuple[str]] = []
-        for in_x in model.in_x:
-            data = input_data(in_x)
-            arguments.append(data)
+        arguments = preparing_arguments(model.in_x)
 
         pred = model(*arguments)
         if len(model.out_params) > 1:
