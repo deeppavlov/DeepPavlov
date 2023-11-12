@@ -1,4 +1,5 @@
 # .readthedocs.yml
+version: 2
 
 build:
   os: "ubuntu-20.04"
@@ -7,6 +8,7 @@ build:
 formats: []
 
 python:
-  pip_install: true
-  extra_requirements:
-    - docs
+  install:
+    - method: pip
+      extra_requirements:
+        - docs
