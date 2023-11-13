@@ -1,2 +1,2 @@
 transformers>=4.13.0,<4.25.0;python_version<"3.8"
-transformers==4.30.0;python_version>="3.8"
+transformers==4.30.2;python_version>="3.8"
