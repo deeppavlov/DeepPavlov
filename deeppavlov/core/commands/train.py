@@ -92,6 +92,7 @@ def train_evaluate_model_from_config(config: Union[str, Path, dict],
     if iterator is None:
         try:
             data = read_data_by_config(config)
+            # TODO: check class objects, not strings
             is_mtl = config['dataset_reader']['class_name'] == 'multitask_reader'
             if config.get('train', {}).get('val_every_n_epochs') and not data.get('valid') and not is_mtl:
                 error_message = 'The value "val_every_n_epochs" is set in the config but no validation data is provided'
