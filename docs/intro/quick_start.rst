@@ -132,6 +132,7 @@ Using GPU
 To run or train **PyTorch**-based DeepPavlov models on GPU you should have `CUDA <https://developer.nvidia.com/cuda-toolkit>`__
 installed on your host machine, and install model's package requirements. CUDA version should be compatible with
 DeepPavlov :dp_file:`required PyTorch version <deeppavlov/requirements/pytorch.txt>`.
+GPU with Pascal or newer architecture and 4+ GB VRAM is recommended.
 
 .. warning::
     If you use latest NVIDIA architecture, PyTorch installed from PyPI using DeepPavlov could not support your device
