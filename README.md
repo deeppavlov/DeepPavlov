@@ -60,8 +60,8 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 ## Installation
 
-0. We support `Linux` platform, `Python 3.6`, `3.7`, `3.8`, `3.9` and `3.10`
-    * **`Python 3.5` is not supported!**
+0. DeepPavlov supports `Linux`, `Windows 10+` (through WSL/WSL2), `MacOS` (Big Sur+) platforms, `Python 3.6`, `3.7`, `3.8`, `3.9` and `3.10`.
+    Depending on the model used, you may need from 4 to 16 GB RAM.
 
 1. Create and activate a virtual environment:
     * `Linux`
@@ -99,6 +99,7 @@ By default, DeepPavlov installs models requirements from PyPI. PyTorch from PyPI
 capability. To run supported DeepPavlov models on GPU you should have [CUDA](https://developer.nvidia.com/cuda-toolkit)
 compatible with used GPU and [PyTorch version](deeppavlov/requirements/pytorch.txt) required by DeepPavlov models.
 See [docs](https://docs.deeppavlov.ai/en/master/intro/quick_start.html#using-gpu) for details.
+GPU with Pascal or newer architecture and 4+ GB VRAM is recommended.
 
 ### Command line interface (CLI)
 

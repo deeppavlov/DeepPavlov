@@ -1,7 +1,8 @@
 Installation
 ============
 
-DeepPavlov supports **Linux** platform, **Python 3.6-3.10**.
+DeepPavlov supports **Linux**, **Windows 10+** (through WSL/WSL2), **MacOS** (Big Sur+) platforms, **Python 3.6-3.10**.
+Depending on the model used, you may need from 4 to 16 GB RAM.
 
 Install with pip
 ~~~~~~~~~~~~~~~~
