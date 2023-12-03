@@ -2,7 +2,8 @@ Multi-task BERT in DeepPavlov
 =============================
 
 Multi-task BERT in DeepPavlov is an implementation of BERT training algorithm published in the paper
-`Multi-Task Deep Neural Networks for Natural Language Understanding <https://arxiv.org/abs/1901.11504>`_.
+`Knowledge Transfer Between Tasks and Languages in the Multi-task
+Encoder-agnostic Transformer-based Models <https://www.dialog-21.ru/media/5902/karpovdpluskonovalovv002.pdf>`_.
 
 The idea is to share BERT body between several tasks. This is necessary if a model pipe has several
 components using BERT and the amount of GPU memory is limited. Each task has its own 'head' part attached to the
