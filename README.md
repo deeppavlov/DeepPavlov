@@ -1,5 +1,5 @@
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-![Python 3.6-3.11](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-green.svg)
+![Python 3.6, 3.7, 3.8, 3.9, 3.10](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10-green.svg)
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 <img align="right" height="27%" width="27%" src="docs/_static/deeppavlov_logo.png"/>
 
@@ -60,7 +60,8 @@ Please leave us [your feedback](https://forms.gle/i64fowQmiVhMMC7f9) on how we c
 
 ## Installation
 
-0. We support `Linux` platform, `Python 3.6-3.11`
+0. DeepPavlov supports `Linux`, `Windows 10+` (through WSL/WSL2), `MacOS` (Big Sur+) platforms, `Python 3.6`, `3.7`, `3.8`, `3.9` and `3.10`.
+    Depending on the model used, you may need from 4 to 16 GB RAM.
 
 1. Create and activate a virtual environment:
     * `Linux`
