@@ -72,7 +72,7 @@ if __name__ == '__main__':
                 'sphinx==4.5.0;python_version=="3.10.*"',
                 'sphinx==7.2.*;python_version=="3.11.*"',
                 'sphinx_rtd_theme==0.5.2',
-                'docutils<0.17,>=0.12',
+                'docutils<0.17,>=0.12;python_version<="3.10.*"',
                 'docutils==0.20.1;python_version=="3.11.*"',
                 'nbsphinx==0.8.4',
                 'ipykernel==5.5.4',
