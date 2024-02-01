@@ -1,1 +1,2 @@
-pypi-kenlm==0.1.20220713
+pypi-kenlm==0.1.20220713;python_version<="3.10.*"
+kenlm==0.2.*;python_version=="3.11.*"
