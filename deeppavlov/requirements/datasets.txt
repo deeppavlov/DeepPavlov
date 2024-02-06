@@ -1,1 +1,2 @@
-datasets>=1.16.0,<2.5.0
+datasets>=1.16.0,<2.5.0;python_version<="3.10.*"
+datasets==2.16.*;python_version=="3.11.*"
