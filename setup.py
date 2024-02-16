@@ -69,7 +69,6 @@ if __name__ == '__main__':
             ],
             'docs': [
 
-                'sphinx==3.5.4;python_version<"3.9"',
                 'sphinx==5.0.*;python_version<="3.10"',
                 'sphinx==7.2.*;python_version=="3.11.*"',
                 'sphinx_rtd_theme==0.5.2;python_version<="3.10"',
