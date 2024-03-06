@@ -47,7 +47,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_bert_base.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
