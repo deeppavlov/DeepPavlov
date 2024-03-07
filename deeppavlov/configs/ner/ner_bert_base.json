@@ -1,0 +1,55 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_ner_preprocessor",
+        "vocab_file": "{BASE_MODEL}",
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "save_path": "{MODEL_PATH}/tag.dict",
+        "load_path": "{MODEL_PATH}/tag.dict",
+        "fit_on": ["y"],
+        "in": ["y"],
+        "out": ["y_ind"]
+      },
+      {
+        "class_name": "torch_transformers_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "pretrained_bert": "{BASE_MODEL}",
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in_y": ["y_ind"],
+        "out": ["y_pred_ind", "probas"]
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_pred_ind"],
+        "out": ["y_pred"]
+      }
+    ],
+    "out": ["x_tokens", "y_pred"]
+  },
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "bert-base-multilingual-cased",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "{MODELS_PATH}/ner/{BASE_MODEL}"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_bert_base.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+    ]
+  }
+}
