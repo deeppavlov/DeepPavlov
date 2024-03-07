@@ -217,7 +217,7 @@ PARAMS = {
             ]
     },
     "ner": {
-        ("ner/ner.json", "ner", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_bert_base.json", "ner_bert_base", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_conll2003_bert.json", "ner_conll2003_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert.json", "ner_ontonotes_bert", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
         ("ner/ner_ontonotes_bert_mult.json", "ner_ontonotes_bert_mult", ('IP', 'TI')): [ONE_ARGUMENT_INFER_CHECK],
