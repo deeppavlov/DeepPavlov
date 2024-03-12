@@ -204,5 +204,8 @@
   ],
   "wikitionary_100K_vocab": [
     "{DEEPPAVLOV_PATH}/requirements/lxml.txt"
+  ],
+  "sentence_delimiter": [
+    "{DEEPPAVLOV_PATH}/requirements/pysbd.txt"
   ]
 }
