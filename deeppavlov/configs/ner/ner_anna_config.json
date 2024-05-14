@@ -99,7 +99,13 @@
          "ROOT_PATH": "~/.deeppavlov",
          "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
          "MODELS_PATH": "{ROOT_PATH}/models",
-         "MODEL_PATH": "/home/korzanova/regex_for_pii/demo/ner_model"
-       }
+         "MODEL_PATH": "{MODELS_PATH}/ner_address/{BASE_MODEL}"
+       },
+       "download": [
+        {
+          "url": "http://files.deeppavlov.ai/tmp/deeppavlov_demo/ner/dp_demo_ner.tar.gz",
+          "subdir": "{MODEL_PATH}"
+        }
+       ]
      }
    }
