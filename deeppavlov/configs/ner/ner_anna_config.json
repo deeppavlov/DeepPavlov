@@ -103,7 +103,7 @@
        },
        "download": [
         {
-          "url": "http://files.deeppavlov.ai/tmp/deeppavlov_demo/ner/dp_demo_ner.tar.gz",
+          "url": "http://files.deeppavlov.ai/v1/ner/dp_demo_ner.tar.gz",
           "subdir": "{MODEL_PATH}"
         }
        ]
