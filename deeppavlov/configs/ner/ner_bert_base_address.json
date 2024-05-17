@@ -1,7 +1,7 @@
 {
     "dataset_reader": {
        "class_name": "conll2003_reader",
-       "data_path": "/home/korzanova/regex_for_pii/demo/train_data/",
+       "data_path": "/home/korzanova/DeepPavlov/regex_for_pii/demo/train_data/",
        "provide_pos": false
      },
      "dataset_iterator": {
@@ -11,11 +11,11 @@
        "in": ["x"],
        "in_y": ["y"],
        "pipe": [
-          {
-          "class_name": "sentence_delimiter",
-          "in": ["x"],
-          "out": ["x_short"] 
-          },
+         {
+            "class_name": "sentence_delimiter",
+            "in": ["x"],
+            "out": ["x_short"] 
+         },
          {
            "class_name": "torch_transformers_ner_preprocessor",
            "vocab_file": "{BASE_MODEL}",
@@ -65,10 +65,10 @@
            "out": ["y_pred"]
          },
          {
-          "class_name": "sentence_concatenator",
-          "in": ["x_tokens", "y_pred"],
-          "out": ["output"] 
-          }
+            "class_name": "sentence_concatenator",
+            "in": ["x_tokens", "y_pred"],
+            "out": ["output"] 
+         }
        ],
        "out": ["x_tokens", "y_pred"]
      },
@@ -94,18 +94,18 @@
       "pytest_max_batches": 2
      },
      "metadata": {
-       "variables": {
-         "BASE_MODEL": "bert-base-multilingual-cased",
-         "ROOT_PATH": "~/.deeppavlov",
-         "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-         "MODELS_PATH": "{ROOT_PATH}/models",
-         "MODEL_PATH": "{MODELS_PATH}/ner_address/{BASE_MODEL}"
-       },
-       "download": [
-        {
-          "url": "http://files.deeppavlov.ai/v1/ner/dp_demo_ner.tar.gz",
-          "subdir": "{MODEL_PATH}"
-        }
-       ]
+        "variables": {
+          "BASE_MODEL": "bert-base-multilingual-cased",
+          "ROOT_PATH": "~/.deeppavlov",
+          "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+          "MODELS_PATH": "{ROOT_PATH}/models",
+          "MODEL_PATH": "{MODELS_PATH}/ner_address/{BASE_MODEL}"
+        },
+        "download": [
+         {
+           "url": "http://files.deeppavlov.ai/v1/ner/dp_demo_ner.tar.gz",
+           "subdir": "{MODEL_PATH}"
+         }
+        ]
      }
    }
