@@ -1,7 +1,7 @@
 {
     "dataset_reader": {
        "class_name": "conll2003_reader",
-       "data_path": "/home/korzanova/DeepPavlov/regex_for_pii/demo/train_data/",
+       "data_path": "{ROOT_PATH}/downloads/",
        "provide_pos": false
      },
      "dataset_iterator": {
