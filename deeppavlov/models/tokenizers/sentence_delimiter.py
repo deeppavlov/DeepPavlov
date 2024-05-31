@@ -21,4 +21,4 @@ def SentenceConcatenator(x_long, y_long):
     for sent in y_long:
         y_short.extend(sent)
     
-    return [x_short, y_short]
+    return [[x_short, y_short]]
