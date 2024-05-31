@@ -72,7 +72,7 @@
         "out": ["output"] 
       }
     ],
-    "out": ["x_tokens", "y_pred"]
+    "out": ["output"]
   },
   "train": {
     "batch_size": 256,
