@@ -99,11 +99,11 @@
           "ROOT_PATH": "~/.deeppavlov",
           "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
           "MODELS_PATH": "{ROOT_PATH}/models",
-          "MODEL_PATH": "{MODELS_PATH}/ner_address/{BASE_MODEL}"
+          "MODEL_PATH": "{MODELS_PATH}/ner/{BASE_MODEL}"
         },
         "download": [
          {
-           "url": "http://files.deeppavlov.ai/v1/ner/dp_demo_ner.tar.gz",
+           "url": "http://files.deeppavlov.ai/tmp/dp_demo.tar.gz",
            "subdir": "{MODEL_PATH}"
          }
         ]
