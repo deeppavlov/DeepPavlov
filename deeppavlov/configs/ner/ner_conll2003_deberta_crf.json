@@ -122,7 +122,7 @@
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
       "TRANSFORMER": "microsoft/deberta-v3-base",
-      "MODEL_PATH": "{MODELS_PATH}/deleteme"
+      "MODEL_PATH": "{MODELS_PATH}/ner_conll2003_deberta_crf"
     },
     "download": [
       {
