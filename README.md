@@ -26,22 +26,6 @@ DeepPavlov 1.0 is an open-source NLP framework built on [PyTorch](https://pytorc
 | 👩‍🏫 [*Feedback*](https://forms.gle/i64fowQmiVhMMC7f9)|Please leave us your feedback to make DeepPavlov better|
 
 
-**Embeddings**
-
-[BERT embeddings for the Russian, Polish, Bulgarian, Czech, and informal English](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#bert)
-
-[ELMo embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#elmo)
-
-[FastText embeddings for the Russian language](http://docs.deeppavlov.ai/en/master/features/pretrained_vectors.html#fasttext)
-
-**Auto ML**
-
-[Tuning Models](http://docs.deeppavlov.ai/en/master/features/hypersearch.html)
-
-**Integrations**
-
-[REST API](http://docs.deeppavlov.ai/en/master/integrations/rest_api.html) | [Socket API](http://docs.deeppavlov.ai/en/master/integrations/socket_api.html)
-
 ## Installation
 
 0. DeepPavlov supports `Linux`, `Windows 10+` (through WSL/WSL2), `MacOS` (Big Sur+) platforms, `Python 3.6`, `3.7`, `3.8`, `3.9` and `3.10`.
