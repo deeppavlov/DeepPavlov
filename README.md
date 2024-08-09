@@ -5,7 +5,7 @@
 [![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 [![Static Badge](https://img.shields.io/badge/DeepPavlov%20Community-blue)](https://forum.deeppavlov.ai/)
 
-<img align="right" height="20%" width="20%" src="docs/_static/deeppavlov_logo.png"/>
+<img align="right" height="20%" width="20%" src="https://demo.deeppavlov.ai/static/media/pavlov.26a8077f.svg"/>
 
 DeepPavlov 1.0 is an open-source NLP framework built on [PyTorch](https://pytorch.org/) and [transformers](https://github.com/huggingface/transformers). DeepPavlov 1.0 is created for modular and configuration-driven development of state-of-the-art NLP models and supports a wide range of NLP model applications. DeepPavlov 1.0 is designed for practitioners with limited knowledge of NLP/ML.
 
@@ -24,24 +24,6 @@ DeepPavlov 1.0 is an open-source NLP framework built on [PyTorch](https://pytorc
 | 🌌 [*Docker Hub*](https://hub.docker.com/u/deeppavlov/)|Check out the Docker images for rapid deployment|
 | 👩‍🏫 [*Feedback*](https://forms.gle/i64fowQmiVhMMC7f9)|Please leave us your feedback to make DeepPavlov better|
 
-
-## Models
-
-| Name|Version|Description|
-|--|--|--|
-| **[Named Entity Recognition](http://docs.deeppavlov.ai/en/master/features/models/NER.html)**  |--| ********** |
-| **[Intent/Sentence Classification](http://docs.deeppavlov.ai/en/master/features/models/classification.html)** |--| ********** |
-| **[Question Answering over Text (SQuAD)](http://docs.deeppavlov.ai/en/master/features/models/SQuAD.html)**|--| **********|
-| **[Knowledge Base Question Answering](http://docs.deeppavlov.ai/en/master/features/models/KBQA.html)**|--| **********|
-| **[Sentence Similarity/Ranking](http://docs.deeppavlov.ai/en/master/features/models/neural_ranking.html)**|--| **********|
-| **[TF-IDF Ranking](http://docs.deeppavlov.ai/en/master/features/models/tfidf_ranking.html)**|--| **********|
-| **[Syntactic Parsing](http://docs.deeppavlov.ai/en/master/features/models/syntax_parser.html)**|--| **********|
-| **[Morphological Tagging](http://docs.deeppavlov.ai/en/master/features/models/morpho_tagger.html)**|--| **********|
-| **[Automatic Spelling Correction](http://docs.deeppavlov.ai/en/master/features/models/spelling_correction.html)**|--| **********|
-| **[Entity Extraction](http://docs.deeppavlov.ai/en/master/features/models/entity_extraction.html)**|--| **********|
-| **[Open Domain Questions Answering](http://docs.deeppavlov.ai/en/master/features/models/ODQA.html)**|--| **********|
-| **[Russian SuperGLUE](http://docs.deeppavlov.ai/en/master/features/models/superglue.html)**|--| **********|
-| **[Relation Extraction](http://docs.deeppavlov.ai/en/master/features/models/relation_extraction.html)**|--| **********|
 
 **Embeddings**
 
