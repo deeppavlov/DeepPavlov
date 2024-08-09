@@ -78,7 +78,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner_ontonotes_deberta_crf.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_ontonotes_deberta_crf.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

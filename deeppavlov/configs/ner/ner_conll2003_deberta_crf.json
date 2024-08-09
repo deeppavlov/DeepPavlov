@@ -126,7 +126,7 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/tmp/ner_conll2003_deberta_crf.tar.gz",
+        "url": "http://files.deeppavlov.ai/v1/ner/ner_conll2003_deberta_crf.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]

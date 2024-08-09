@@ -2,7 +2,7 @@
 
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 ![Python 3.6, 3.7, 3.8, 3.9, 3.10, 3.11](https://img.shields.io/badge/python-3.6%20%7C%203.7%20%7C%203.8%20%7C%203.9%20%7C%203.10%20%7C%203.11-green.svg)
-[![PyPi downloads](https://static.pepy.tech/personalized-badge/DeepPavlov?period=total&units=international_system&left_color=grey&right_color=orange&left_text=pip%20downloads)](https://pypi.org/project/DeepPavlov/)
+[![Downloads](https://pepy.tech/badge/deeppavlov)](https://pepy.tech/project/deeppavlov)
 [![Static Badge](https://img.shields.io/badge/DeepPavlov%20Community-blue)](https://forum.deeppavlov.ai/)
 
 <img align="right" height="20%" width="20%" src="docs/_static/deeppavlov_logo.png"/>
