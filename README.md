@@ -1,3 +1,4 @@
+<img align="right" height="20%" width="20%" src="https://demo.deeppavlov.ai/static/media/pavlov.26a8077f.svg"/>
 # DeepPavlov 1.0
 
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
@@ -6,7 +7,6 @@
 [![Static Badge](https://img.shields.io/badge/DeepPavlov%20Community-blue)](https://forum.deeppavlov.ai/)
 [![Static Badge](https://img.shields.io/badge/DeepPavlov%20Demo-blue)](https://demo.deeppavlov.ai/)
 
-<img align="right" height="20%" width="20%" src="https://demo.deeppavlov.ai/static/media/pavlov.26a8077f.svg"/>
 
 DeepPavlov 1.0 is an open-source NLP framework built on [PyTorch](https://pytorch.org/) and [transformers](https://github.com/huggingface/transformers). DeepPavlov 1.0 is created for modular and configuration-driven development of state-of-the-art NLP models and supports a wide range of NLP model applications. DeepPavlov 1.0 is designed for practitioners with limited knowledge of NLP/ML.
 
