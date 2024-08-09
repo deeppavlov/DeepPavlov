@@ -1,4 +1,5 @@
 <img align="right" height="20%" width="20%" src="https://demo.deeppavlov.ai/static/media/pavlov.26a8077f.svg"/>
+
 # DeepPavlov 1.0
 
 [![License Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
