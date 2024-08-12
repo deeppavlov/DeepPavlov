@@ -126,15 +126,15 @@ PARAMS = {
         ]
     },
     "distil": {
-        ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("classifiers/rusentiment_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("classifiers/rusentiment_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP')): [ONE_ARGUMENT_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK],
-        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP')): [TWO_ARGUMENTS_INFER_CHECK]
+        ("classifiers/paraphraser_convers_distilrubert_2L.json", "distil", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/paraphraser_convers_distilrubert_6L.json", "distil", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("classifiers/rusentiment_convers_distilrubert_2L.json", "distil", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("classifiers/rusentiment_convers_distilrubert_6L.json", "distil", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_convers_distilrubert_2L.json", "distil", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_rus_convers_distilrubert_6L.json", "distil", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("ner/ner_case_agnostic_mdistilbert.json", "distil", ('IP',)): [ONE_ARGUMENT_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_2L.json", "distil", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
+        ("squad/squad_ru_convers_distilrubert_6L.json", "distil", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK]
     },
     "russian_super_glue": {
         ("russian_super_glue/russian_superglue_lidirus_rubert.json", "russian_super_glue", ('IP',)): [TWO_ARGUMENTS_INFER_CHECK],
