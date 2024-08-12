@@ -216,7 +216,8 @@ class Chainer(Component):
                 final_pipe.append(((in_keys, in_params), out_params, component))
         final_pipe.reverse()
         if not expected.issubset(param_names):
-            raise RuntimeError(f'{expected} are required to compute {targets} but were not found in memory or inputs')
+            missing_params = [k for k in expected if k not in param_names]
+            raise RuntimeError(f'{missing_params} are required to compute {targets} but were not found in memory or inputs')
         pipe = final_pipe
 
         mem = dict(zip(param_names, args))
@@ -232,8 +233,10 @@ class Chainer(Component):
                 mem[out_params[0]] = res
             else:
                 mem.update(zip(out_params, res))
-
-        res = [mem[k] for k in targets]
+        try:
+            res = [mem[k] for k in targets]
+        except Exception as e:
+            raise Exception(f'In memory {mem.keys()} targets {targets}: {e}')
         if len(res) == 1:
             res = res[0]
         return res
