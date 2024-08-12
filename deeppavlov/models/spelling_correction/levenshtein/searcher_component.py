@@ -23,7 +23,7 @@ from .levenshtein_searcher import LevenshteinSearcher
 logger = getLogger(__name__)
 
 
-@register('spelling_levenshtein')
+@register("spelling_levenshtein")
 class LevenshteinSearcherComponent(Component):
     """Component that finds replacement candidates for tokens at a set Damerau-Levenshtein distance
 
@@ -42,14 +42,24 @@ class LevenshteinSearcherComponent(Component):
 
     _punctuation = frozenset(string.punctuation)
 
-    def __init__(self, words: Iterable[str], max_distance: int = 1, error_probability: float = 1e-4,
-                 vocab_penalty: Optional[float] = None, **kwargs):
-        words = list({word.strip().lower().replace('ё', 'е') for word in words})
+    def __init__(
+        self,
+        words: Iterable[str],
+        max_distance: int = 1,
+        error_probability: float = 1e-4,
+        vocab_penalty: Optional[float] = None,
+        **kwargs
+    ):
+        words = list({word.strip().lower().replace("ё", "е") for word in words})
         alphabet = sorted({letter for word in words for letter in word})
         self.max_distance = max_distance
         self.error_probability = log10(error_probability)
-        self.vocab_penalty = self.error_probability if vocab_penalty is None else log10(vocab_penalty)
-        self.searcher = LevenshteinSearcher(alphabet, words, allow_spaces=True, euristics=2)
+        self.vocab_penalty = (
+            self.error_probability if vocab_penalty is None else log10(vocab_penalty)
+        )
+        self.searcher = LevenshteinSearcher(
+            alphabet, words, allow_spaces=True, heuristics=2
+        )
 
     def _infer_instance(self, tokens: Iterable[str]) -> List[List[Tuple[float, str]]]:
         candidates = []
@@ -57,13 +67,21 @@ class LevenshteinSearcherComponent(Component):
             if word in self._punctuation:
                 candidates.append([(0, word)])
             else:
-                c = {candidate: self.error_probability * distance
-                     for candidate, distance in self.searcher.search(word, d=self.max_distance)}
+                c = {
+                    candidate: self.error_probability * distance
+                    for candidate, distance in self.searcher.search(
+                        word, d=self.max_distance
+                    )
+                }
                 c[word] = c.get(word, self.vocab_penalty)
-                candidates.append([(score, candidate) for candidate, score in c.items()])
+                candidates.append(
+                    [(score, candidate) for candidate, score in c.items()]
+                )
         return candidates
 
-    def __call__(self, batch: Iterable[Iterable[str]], *args, **kwargs) -> List[List[List[Tuple[float, str]]]]:
+    def __call__(
+        self, batch: Iterable[Iterable[str]], *args, **kwargs
+    ) -> List[List[List[Tuple[float, str]]]]:
         """Propose candidates for tokens in sentences
 
         Args:
