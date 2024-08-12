@@ -215,11 +215,11 @@
       }
     ],
     "validation_patience": 3,
+    "val_every_n_epochs": 1,
     "log_every_n_epochs": 1,
     "show_examples": false,
     "evaluation_targets": ["valid"],
     "class_name": "torch_trainer",
-    "pytest_max_batches": 2
   },
   "metadata": {
     "variables": {
