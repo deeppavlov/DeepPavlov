@@ -1,4 +1,13 @@
 {
+  "dataset_reader": {
+    "class_name": "semeval_absa_reader",
+    "data_path": "{DOWNLOADS_PATH}",
+    "dataset_name": "semeval_absa_reader",
+    "provide_pos": false
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
   "chainer": {
     "in": ["x"],
     "in_y": ["y"],
@@ -7,7 +16,12 @@
         "class_name": "torch_transformers_ner_preprocessor",
         "vocab_file": "{BASE_MODEL}",
         "in": ["x"],
-        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
+        "out": ["x_tokens",
+                "x_subword_tokens",
+                "x_subword_tok_ids",
+                "startofword_markers",
+                "attention_mask",
+                "tokens_offsets"]
       },
       {
         "id": "tag_vocab",
@@ -36,6 +50,37 @@
       }
     ],
     "out": ["x_tokens", "y_pred"]
+  },
+   "train": {
+    "epochs": 30,
+    "batch_size": 10,
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": [
+          "y",
+          "y_pred"
+        ]
+      },
+      {
+        "name": "ner_accuracy",
+        "inputs": [
+          "y",
+          "y_pred"
+        ]
+      }
+    ],
+    "validation_patience": 100,
+    "val_every_n_batches": 20,
+    "log_every_n_batches": 20,
+    "show_examples": false,
+    "pytest_max_batches": 2,
+    "pytest_batch_size": 8,
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "torch_trainer"
   },
   "metadata": {
     "variables": {
