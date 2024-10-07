@@ -210,3 +210,14 @@ def round_accuracy(y_true, y_predicted):
     examples_len = len(y_true)
     correct = sum([y1 == y2 for y1, y2 in zip(y_true, predictions)])
     return correct / examples_len if examples_len else 0
+
+
+@register_metric('absa_accuracy')
+def absa_accuracy(y_true, y_predicted):
+    guessed_polarities, total_num_polarities = 0,0
+    for true_item, pred_item in zip(y_true, y_predicted):
+        if true_item != 3 and pred_item == true_item:
+            guessed_polarities += 1
+        if true_item != 3:
+            total_num_polarities += 1
+    return guessed_polarities / total_num_polarities
