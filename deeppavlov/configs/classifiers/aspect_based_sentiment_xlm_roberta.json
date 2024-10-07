@@ -40,16 +40,10 @@
   "metadata": {
     "variables": {
       "BASE_MODEL": "multilingual-absa-xlm-roberta",
-      "ROOT_PATH": "~/.deeppavlov",
+      "ROOT_PATH": "home/vozniuk",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/absa/{BASE_MODEL}"
+      "MODEL_PATH": "{MODELS_PATH}/ABSA/model_files"
     },
-    "download": [
-      {
-        "url": "home/vozniuk/ABSA/model_files/multilingual-absa-xlm-roberta.tar.gz",
-        "subdir": "{MODEL_PATH}"
-      }
-    ]
   }
 }                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
