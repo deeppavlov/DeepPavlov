@@ -47,12 +47,9 @@
     },
     "download": [
       {
-        "url": "http://files.deeppavlov.ai/v1/ner/multilingual-absa-xlm-roberta.tar.gz",
+        "url": "home/vozniuk/ABSA/model_files/multilingual-absa-xlm-roberta.tar.gz",
         "subdir": "{MODEL_PATH}"
       }
     ]
   }
-}
-~                                                                                                                                                                                                                                                                                             
-~                                                                                                                                                                                                                                                                                             
-~                           
+}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
