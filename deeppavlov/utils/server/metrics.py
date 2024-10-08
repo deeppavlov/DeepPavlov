@@ -16,15 +16,15 @@ import time
 from typing import Tuple
 
 from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, generate_latest
-from prometheus_client import Counter, Gauge, Histogram
+from prometheus_client import Counter, Gauge, Histogram,CollectorRegistry
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response
 from starlette.types import ASGIApp
-
-REQUESTS_COUNT = Counter('http_requests_count', 'Number of processed requests', ['endpoint', 'status_code'])
-REQUESTS_LATENCY = Histogram('http_requests_latency_seconds', 'Request latency histogram', ['endpoint'])
-REQUESTS_IN_PROGRESS = Gauge('http_requests_in_progress', 'Number of requests currently being processed', ['endpoint'])
+my_registry = CollectorRegistry()
+REQUESTS_COUNT = Counter('http_requests_count', 'Number of processed requests', ['endpoint', 'status_code'], registry=my_registry)
+REQUESTS_LATENCY = Histogram('http_requests_latency_seconds', 'Request latency histogram', ['endpoint'],registry=my_registry)
+REQUESTS_IN_PROGRESS = Gauge('http_requests_in_progress', 'Number of requests currently being processed', ['endpoint'],registry=my_registry)
 
 
 def metrics(request: Request) -> Response:

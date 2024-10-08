@@ -64,7 +64,7 @@
           "y_ind"
         ],
         "out": [
-          "y_pred_ind",
+          "y_pred_ind"
         ]
       },
       {

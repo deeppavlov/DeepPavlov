@@ -1,4 +1,5 @@
 {
+  "absa_accuracy": "deeppavlov.metrics.accuracy:absa_accuracy",
   "acc": "deeppavlov.metrics.accuracy:round_accuracy",
   "accuracy": "deeppavlov.metrics.accuracy:accuracy",
   "average__ner_f1__f1_macro__f1": "deeppavlov.metrics.fmeasure:ner_f1__f1_macro__f1",
@@ -30,6 +31,8 @@
   "r@2": "deeppavlov.metrics.recall_at_k:r_at_2",
   "r@5": "deeppavlov.metrics.recall_at_k:r_at_5",
   "rank_response": "deeppavlov.models.ranking.metrics:rank_response",
+  "record_em_score": "deeppavlov.metrics.record_metrics:record_em_score",
+  "record_f1_score": "deeppavlov.metrics.record_metrics:record_f1_score",
   "roc_auc": "deeppavlov.metrics.roc_auc_score:roc_auc_score",
   "sets_accuracy": "deeppavlov.metrics.accuracy:sets_accuracy",
   "slots_accuracy": "deeppavlov.metrics.accuracy:slots_accuracy",
@@ -37,7 +40,5 @@
   "squad_v1_em": "deeppavlov.metrics.squad_metrics:squad_v1_exact_match",
   "squad_v1_f1": "deeppavlov.metrics.squad_metrics:squad_v1_f1",
   "squad_v2_em": "deeppavlov.metrics.squad_metrics:squad_v2_exact_match",
-  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1",
-  "record_f1_score": "deeppavlov.metrics.record_metrics:record_f1_score",
-  "record_em_score": "deeppavlov.metrics.record_metrics:record_em_score"
+  "squad_v2_f1": "deeppavlov.metrics.squad_metrics:squad_v2_f1"
 }
