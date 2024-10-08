@@ -53,7 +53,7 @@
         "class_name": "torch_transformers_absa_tagger",
         "n_tags": "#tag_vocab.len",
         "pretrained_bert": "{BASE_MODEL}",
-        "save_path": "{MODEL_PATH}/save_path",
+        "save_path": "{MODEL_PATH}",
         "load_path": "{MODEL_PATH}",
         "in": [
           "x_subword_tok_ids",
@@ -112,7 +112,7 @@
       "ROOT_PATH": "home/vozniuk",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "{MODELS_PATH}/ABSA/model_files"
+      "MODEL_PATH": "{MODELS_PATH}/ABSA/model_files/semeval2015_absa_xlmroberta"
     }
   }
 }
