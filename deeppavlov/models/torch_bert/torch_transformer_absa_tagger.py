@@ -68,10 +68,11 @@ class TorchTransformersABSATagger(TorchModel):
                  **kwargs) -> None:
 
         self.n_tags = 4
+        print(pretrained_bert)
         if pretrained_bert:
             config = AutoConfig.from_pretrained(pretrained_bert, num_labels=self.n_tags,
                                                 output_attentions=False, output_hidden_states=False)
-            model = AutoModelForTokenClassification.from_pretrained(pretrained_bert, config=config)
+            model = AutoModelForTokenClassification.from_pretrained(pretrained_bert, config=config, ignore_mismatched_sizes=True)
         elif bert_config_file and Path(bert_config_file).is_file():
             bert_config = AutoConfig.from_json_file(str(expand_path(bert_config_file)))
 
@@ -88,7 +89,6 @@ class TorchTransformersABSATagger(TorchModel):
     def train_on_batch(self,
                        input_ids: Union[List[List[int]], np.ndarray],
                        input_masks: Union[List[List[int]], np.ndarray],
-                       y_masks: Union[List[List[int]], np.ndarray],
                        y: List[List[int]],
                        *args, **kwargs) -> Dict[str, float]:
         """
@@ -108,8 +108,6 @@ class TorchTransformersABSATagger(TorchModel):
         """
         b_input_ids = torch.from_numpy(input_ids).to(self.device)
         b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        subtoken_labels = [token_labels_to_subtoken_labels(y_el, y_mask, input_mask)
-                           for y_el, y_mask, input_mask in zip(y, y_masks, input_masks)]
         b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
         self.optimizer.zero_grad()
 
@@ -125,9 +123,9 @@ class TorchTransformersABSATagger(TorchModel):
         return {'loss': loss.item()}
 
     def __call__(self,
-                 input_ids: Union[List[List[int]], np.ndarray],
-                 input_masks: Union[List[List[int]], np.ndarray],
-                 y_masks: Union[List[List[int]], np.ndarray]) -> Tuple[List[List[int]], List[np.ndarray]]:
+                 input_ids: Union[List[List[int]], torch.Tensor],
+                 input_masks: Union[List[List[int]], torch.Tensor], 
+                 padded_labels: Union[List[List[int]], np.ndarray]) -> Tuple[List[List[int]], List[np.ndarray]]:
         """ Predicts tag indices for a given subword tokens batch
 
         Args:
@@ -139,22 +137,23 @@ class TorchTransformersABSATagger(TorchModel):
             Label indices or class probabilities for each token (not subtoken)
 
         """
-        b_input_ids = torch.from_numpy(input_ids).to(self.device)
-        b_input_masks = torch.from_numpy(input_masks).to(self.device)
-
+        b_input_ids = input_ids.to(self.device)
+        b_input_masks = input_masks.to(self.device)
         with torch.no_grad():
             # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, attention_mask=b_input_masks)
 
             # Move logits and labels to CPU and to numpy arrays
-            logits = logits[0].detach().cpu(), torch.from_numpy(y_masks)
+            logits = logits[0].detach().cpu()
 
         logits = logits.detach().cpu().numpy()
-        pred = np.argmax(logits, axis=-1)
-        seq_lengths = np.sum(y_masks, axis=1)
-        pred = [p[:l] for l, p in zip(seq_lengths, pred)]
+        predictions = np.argmax(logits, axis=-1)
 
-        return pred
+        pred_unpadded, true_unpadded = [], []
+        for true, pred in zip(padded_labels, predictions):
+            true_unpadded.append([t for t in true if t != -100])
+            pred_unpadded.append([p for p, t in zip(pred, true) if t != -100])
+        return predictions
 
     def load(self, fname=None):
         super().load(fname)
