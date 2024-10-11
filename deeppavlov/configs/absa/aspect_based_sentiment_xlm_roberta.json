@@ -31,7 +31,7 @@
       },
       {
         "class_name": "torch_transformers_absa_tagger",
-        "n_tags": 4,
+        "n_tags": 5,
         "pretrained_bert": "{BASE_MODEL}",
         "save_path": "{MODEL_PATH}",
         "in": [
@@ -53,23 +53,21 @@
     ]
   },
   "train": {
-    "epochs": 10,
+    "epochs": 5,
     "batch_size": 32,
     "metrics": [
       {
         "name": "absa_accuracy",
         "inputs": [
-          "y",
+          "y_labels",
           "y_pred"
         ]
       }
     ],
-    "validation_patience": 100,
+    "validation_patience": 10,
     "val_every_n_batches": 20,
     "log_every_n_batches": 20,
     "show_examples": false,
-    "pytest_max_batches": 2,
-    "pytest_batch_size": 8,
     "evaluation_targets": [
       "valid",
       "test"
@@ -78,7 +76,7 @@
   },
   "metadata": {
     "variables": {
-      "BASE_MODEL": "Davlan/xlm-roberta-base-ner-hrl",
+      "BASE_MODEL": "natriistorm/DeepPavlov-ABSA",
       "ROOT_PATH": "ABSA",
       "DOWNLOADS_PATH": "{ROOT_PATH}",
       "MODELS_PATH": "{ROOT_PATH}",

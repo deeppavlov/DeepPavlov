@@ -18,6 +18,7 @@ from typing import List, Union, Dict, Optional, Tuple
 
 import numpy as np
 import torch
+import torch.nn as nn
 from transformers import AutoModelForTokenClassification, AutoConfig
 
 from deeppavlov.core.commands.utils import expand_path
@@ -48,8 +49,8 @@ def token_labels_to_subtoken_labels(labels, y_mask, input_mask):
 
 @register('torch_transformers_absa_tagger')
 class TorchTransformersABSATagger(TorchModel):
-    """Transformer-based model on PyTorch for text tagging. It predicts a label for every token (not subtoken)
-    in the text. You can use it for sequence labeling tasks, such as morphological tagging or named entity recognition.
+    """Transformer-based model on PyTorch for text tagging. It predicts a polarity label for every token (not subtoken)
+    in the text
 
     Args:
         n_tags: number of distinct tags
@@ -63,12 +64,10 @@ class TorchTransformersABSATagger(TorchModel):
                  pretrained_bert: str,
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
-                 hidden_keep_prob: Optional[float] = None,
-                 use_crf: bool = False,
+                 hidden_keep_prob: Optional[float] = None
                  **kwargs) -> None:
 
-        self.n_tags = 4
-        print(pretrained_bert)
+        self.n_tags = 5
         if pretrained_bert:
             config = AutoConfig.from_pretrained(pretrained_bert, num_labels=self.n_tags,
                                                 output_attentions=False, output_hidden_states=False)
@@ -83,7 +82,6 @@ class TorchTransformersABSATagger(TorchModel):
             model = AutoModelForTokenClassification(config=bert_config)
         else:
             raise ConfigError("No pre-trained BERT model is given.")
-
         super().__init__(model, **kwargs)
 
     def train_on_batch(self,
@@ -106,18 +104,16 @@ class TorchTransformersABSATagger(TorchModel):
         Returns:
             dict with fields 'loss', 'head_learning_rate', and 'bert_learning_rate'
         """
-        b_input_ids = torch.from_numpy(input_ids).to(self.device)
-        b_input_masks = torch.from_numpy(input_masks).to(self.device)
-        b_labels = torch.from_numpy(np.array(subtoken_labels)).to(torch.int64).to(self.device)
+        b_input_ids = input_ids.to(self.device)
+        b_input_masks = input_masks.to(self.device)
+        b_labels = torch.from_numpy(y).to(torch.int64).to(self.device)
+
+    
         self.optimizer.zero_grad()
 
         loss = self.model(input_ids=b_input_ids,
-                          attention_mask=b_input_masks,
-                          labels=b_labels).loss
-        if self.crf is not None:
-            self.crf(y, y_masks)
-        if self.is_data_parallel:
-            loss = loss.mean()
+                          attention_mask=b_input_masks, labels=b_labels).loss
+        loss = loss.mean()
         self._make_step(loss)
 
         return {'loss': loss.item()}
@@ -140,19 +136,11 @@ class TorchTransformersABSATagger(TorchModel):
         b_input_ids = input_ids.to(self.device)
         b_input_masks = input_masks.to(self.device)
         with torch.no_grad():
-            # Forward pass, calculate logit predictions
             logits = self.model(b_input_ids, attention_mask=b_input_masks)
-
-            # Move logits and labels to CPU and to numpy arrays
             logits = logits[0].detach().cpu()
 
         logits = logits.detach().cpu().numpy()
         predictions = np.argmax(logits, axis=-1)
-
-        pred_unpadded, true_unpadded = [], []
-        for true, pred in zip(padded_labels, predictions):
-            true_unpadded.append([t for t in true if t != -100])
-            pred_unpadded.append([p for p, t in zip(pred, true) if t != -100])
         return predictions
 
     def load(self, fname=None):

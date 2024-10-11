@@ -708,17 +708,16 @@ class TorchTransformersAbsaPreprocessor(Component):
             label_ids = []
             for word_idx in word_ids:
                 if word_idx is None:
-                    label_ids.append(-100)
+                    label_ids.append(4)
                 elif word_idx != previous_word_idx:
                     label_ids.append(int(label[word_idx]))
                 else:
-                    label_ids.append(-100)
+                    label_ids.append(4)
                 previous_word_idx = word_idx
             labels.append(label_ids)
         encoding["labels"] = np.array(labels)
         input_ids =  encoding['input_ids']
         attention_mask = encoding['attention_mask']
-                         # 'token_type_ids': torch.Tensor(startofword_markers),
         labels = encoding['labels']
         return input_ids, attention_mask, labels
 
