@@ -68,8 +68,7 @@
       }
     ],
     "out": [
-      "x_tokens",
-      "y_pred"
+      "labels"
     ]
   },
   "train": {
