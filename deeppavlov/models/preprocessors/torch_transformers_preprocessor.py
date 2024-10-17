@@ -685,27 +685,30 @@ class TorchTransformersAbsaPreprocessor(Component):
     def __init__(self,
                  vocab_file: str,
                  do_lower_case: bool = False,
+                 is_split_into_words: bool = True,
                  max_seq_length: int = 512,
                  **kwargs):
         self.max_seq_length = max_seq_length
+        self.is_split_into_words = is_split_into_words
         if Path(vocab_file).is_file():
             vocab_file = str(expand_path(vocab_file))
             self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
                                            do_lower_case=do_lower_case)
         else:
-            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
+                                                           do_lower_case=do_lower_case)
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
                  **kwargs):
         encoding = self.tokenizer(tokens, padding=True, truncation=True,
-                                  return_tensors='pt')
+                                  return_tensors='pt', is_split_into_words=self.is_split_into_words)
         input_ids =  encoding['input_ids']
         attention_mask = encoding['attention_mask']
         return input_ids, attention_mask
 
 @register('torch_transformers_absa_labels_preprocessor')
-class TorchTransformersAbsaPreprocessor(Component):
+class TorchTransformersAbsaLabelsPreprocessor(Component):
     """
     Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
     Creates a mask of subtokens (one for the first subtoken, zero for the others).
@@ -733,6 +736,61 @@ class TorchTransformersAbsaPreprocessor(Component):
     def __init__(self,
                  vocab_file: str,
                  do_lower_case: bool = False,
+                 is_split_into_words: bool = True,
+                 max_seq_length: int = 512,
+                 **kwargs):
+        self.max_seq_length = max_seq_length
+        self.is_split_into_words = is_split_into_words
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file,
+                                            do_lower_case=do_lower_case)
+
+    def __call__(self,
+                 tokens: Union[List[List[str]], List[str]],
+                 tags: List[List[str]] = None,
+                 **kwargs):
+        labels = []
+        encoding = self.tokenizer(tokens,
+                                  padding=True,
+                                  truncation=True,
+                                  is_split_into_words = self.is_split_into_words,
+                                  return_tensors='pt')
+        for i, label in enumerate(tags):
+            word_ids = encoding.word_ids(batch_index=i)
+            previous_word_idx = None
+            label_ids = []
+            for word_idx in word_ids:
+                if word_idx is None:
+                    label_ids.append(-100)
+                elif word_idx != previous_word_idx:
+                    label_ids.append(int(label[word_idx]))
+                else:
+                    label_ids.append(-100)
+                previous_word_idx = word_idx
+            labels.append(label_ids)
+        return np.array(labels)
+
+@register('absa_decoder')
+class TorchTransformersABSADecoder(Component):
+    """Transformer-based model on PyTorch for text tagging. It predicts a polarity label for every token (not subtoken)
+    in the text
+
+    Args:
+        n_tags: number of distinct tags
+        pretrained_bert: pretrained Bert checkpoint path or key title (e.g. "bert-base-uncased")
+        bert_config_file: path to Bert configuration file, or None, if `pretrained_bert` is a string name
+        attention_probs_keep_prob: keep_prob for Bert self-attention layers
+        hidden_keep_prob: keep_prob for Bert hidden layers
+    """
+
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = False,
+                 is_split_into_words: bool = True,
                  max_seq_length: int = 512,
                  **kwargs):
         self.max_seq_length = max_seq_length
@@ -744,30 +802,31 @@ class TorchTransformersAbsaPreprocessor(Component):
             self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
 
     def __call__(self,
-                 tokens: Union[List[List[str]], List[str]],
-                 tags: List[List[str]] = None,
-                 **kwargs):
-        labels = []
-        encoding = self.tokenizer(tokens, padding=True, truncation=True,
-                                  return_tensors='pt')
-        for i, label in enumerate(tags):
-            word_ids = encoding.word_ids(batch_index=i)
-            previous_word_idx = None
-            label_ids = []
-            for word_idx in word_ids:
-                if word_idx is None:
-                    label_ids.append(4)
-                elif word_idx != previous_word_idx:
-                    label_ids.append(int(label[word_idx]))
-                else:
-                    label_ids.append(4)
-                previous_word_idx = word_idx
-            labels.append(label_ids)
-        encoding["labels"] = np.array(labels)
-        input_ids =  encoding['input_ids']
-        attention_mask = encoding['attention_mask']
-        labels = encoding['labels']
-        return input_ids, attention_mask, labels
+                 x_tokens_batch: Union[List[List[int]], torch.Tensor],
+                 y_labels_batch: Union[List[List[int]], torch.Tensor]) -> List[Tuple[str, str]]:
+        """ Predicts tag indices for a given subword tokens batch
+
+        Args:
+            input_ids: indices of the subwords
+            input_masks: mask that determines where to attend and where not to
+            y_masks: mask which determines the first subword units in the the word
+
+        Returns:
+            Label indices or class probabilities for each token (not subtoken)
+
+        """
+        polarities_dict = {0: "NEGATIVE", 1: "CONFLICT", 2: "POSITIVE", 3: "NOT ASPECT"}
+        formatted_texts = []
+        for token_text, labels_text in zip(x_tokens_batch, y_labels_batch):
+            current_text = []
+            for idx, (token, label) in enumerate(zip(token_text, labels_text)):
+                x_decoded = self.tokenizer.decode(token, skip_special_tokens=True)
+                if x_decoded == '':
+                    continue
+                tag = polarities_dict[label]
+                current_text.append((x_decoded, tag))
+            formatted_texts.append(current_text)
+        return formatted_texts
 
 @register('torch_bert_ranker_preprocessor')
 class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):

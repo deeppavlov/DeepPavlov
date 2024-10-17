@@ -23,6 +23,7 @@ from transformers import AutoModelForTokenClassification, AutoConfig
 
 from deeppavlov.core.commands.utils import expand_path
 from deeppavlov.core.common.errors import ConfigError
+from deeppavlov.core.models.component import Component
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.models.torch_model import TorchModel
 from deeppavlov.models.torch_bert.crf import CRF
@@ -67,7 +68,7 @@ class TorchTransformersABSATagger(TorchModel):
                  hidden_keep_prob: Optional[float] = None,
                  **kwargs) -> None:
 
-        self.n_tags = 5
+        self.n_tags = 4
         if pretrained_bert:
             config = AutoConfig.from_pretrained(pretrained_bert, num_labels=self.n_tags,
                                                 output_attentions=False, output_hidden_states=False)
@@ -120,8 +121,7 @@ class TorchTransformersABSATagger(TorchModel):
 
     def __call__(self,
                  input_ids: Union[List[List[int]], torch.Tensor],
-                 input_masks: Union[List[List[int]], torch.Tensor], 
-                 padded_labels: Union[List[List[int]], np.ndarray]) -> Tuple[List[List[int]], List[np.ndarray]]:
+                 input_masks: Union[List[List[int]], torch.Tensor]) -> Tuple[List[List[int]], List[np.ndarray]]:
         """ Predicts tag indices for a given subword tokens batch
 
         Args:
@@ -148,3 +148,4 @@ class TorchTransformersABSATagger(TorchModel):
 
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         super().save(fname, *args, **kwargs)
+
