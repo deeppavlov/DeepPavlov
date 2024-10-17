@@ -64,7 +64,7 @@ class TorchTransformersABSATagger(TorchModel):
                  pretrained_bert: str,
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
-                 hidden_keep_prob: Optional[float] = None
+                 hidden_keep_prob: Optional[float] = None,
                  **kwargs) -> None:
 
         self.n_tags = 5
