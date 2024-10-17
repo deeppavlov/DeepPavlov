@@ -30,7 +30,7 @@ class SemEval2015DatasetReader(DatasetReader):
 
         for file_name in files:
             name = file_name.with_suffix('').name
-            dataset[name] = self.samples(file_name)
+            dataset[name] = self.parse_file(file_name)
         return dataset
 
     def parse_file(self, file_name: Path):
