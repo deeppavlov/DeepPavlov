@@ -697,11 +697,59 @@ class TorchTransformersAbsaPreprocessor(Component):
 
     def __call__(self,
                  tokens: Union[List[List[str]], List[str]],
+                 **kwargs):
+        encoding = self.tokenizer(tokens, padding=True, truncation=True,
+                                  return_tensors='pt')
+        input_ids =  encoding['input_ids']
+        attention_mask = encoding['attention_mask']
+        return input_ids, attention_mask
+
+@register('torch_transformers_absa_labels_preprocessor')
+class TorchTransformersAbsaPreprocessor(Component):
+    """
+    Takes tokens and splits them into bert subtokens, encodes subtokens with their indices.
+    Creates a mask of subtokens (one for the first subtoken, zero for the others).
+
+    If tags are provided, calculates tags for subtokens.
+
+    Args:
+        vocab_file: path to vocabulary
+        do_lower_case: set True if lowercasing is needed
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: replace token to <unk> if it's length is larger than this
+            (defaults to None, which is equal to +infinity)
+        token_masking_prob: probability of masking token while training
+        provide_subword_tags: output tags for subwords or for words
+        subword_mask_mode: subword to select inside word tokens, can be "first" or "last"
+            (default="first")
+        return_features: if True, returns answer in features format
+
+    Attributes:
+        max_seq_length: max sequence length in subtokens, including [SEP] and [CLS] tokens
+        max_subword_length: rmax lenght of a bert subtoken
+        tokenizer: instance of Bert FullTokenizer
+    """
+
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = False,
+                 max_seq_length: int = 512,
+                 **kwargs):
+        self.max_seq_length = max_seq_length
+        if Path(vocab_file).is_file():
+            vocab_file = str(expand_path(vocab_file))
+            self.tokenizer = AutoTokenizer(vocab_file=vocab_file,
+                                           do_lower_case=do_lower_case)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(vocab_file, do_lower_case=do_lower_case)
+
+    def __call__(self,
+                 tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None,
                  **kwargs):
-        tokens_offsets_batch = [[] for _ in tokens]
         labels = []
-        encoding = self.tokenizer(tokens, padding=True, truncation=True, return_tensors='pt', is_split_into_words=True)
+        encoding = self.tokenizer(tokens, padding=True, truncation=True,
+                                  return_tensors='pt')
         for i, label in enumerate(tags):
             word_ids = encoding.word_ids(batch_index=i)
             previous_word_idx = None
@@ -720,7 +768,6 @@ class TorchTransformersAbsaPreprocessor(Component):
         attention_mask = encoding['attention_mask']
         labels = encoding['labels']
         return input_ids, attention_mask, labels
-
 
 @register('torch_bert_ranker_preprocessor')
 class TorchBertRankerPreprocessor(TorchTransformersPreprocessor):
