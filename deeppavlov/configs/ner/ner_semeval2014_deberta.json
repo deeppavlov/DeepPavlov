@@ -1,0 +1,142 @@
+{
+  "dataset_reader": {
+    "class_name": "conll2003_reader",
+    "data_path": "/home/savkin/2024/aspect_based_sentiment/dp_preprocessed_data/semeeval_2014/restaurants",
+    "provide_pos": false
+  },
+  "dataset_iterator": {
+    "class_name": "data_learning_iterator"
+  },
+  "chainer": {
+    "in": [
+      "x"
+    ],
+    "in_y": [
+      "y"
+    ],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_ner_preprocessor",
+        "vocab_file": "{TRANSFORMER}",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "max_subword_length": 15,
+        "token_masking_prob": 0.0,
+        "in": [
+          "x"
+        ],
+        "out": [
+          "x_tokens",
+          "x_subword_tokens",
+          "x_subword_tok_ids",
+          "startofword_markers",
+          "attention_mask",
+          "tokens_offsets"
+        ]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": [
+          "O"
+        ],
+        "pad_with_zeros": true,
+        "save_path": "{MODEL_PATH}/tag.dict",
+        "load_path": "{MODEL_PATH}/tag.dict",
+        "fit_on": [
+          "y"
+        ],
+        "in": [
+          "y"
+        ],
+        "out": [
+          "y_ind"
+        ]
+      },
+      {
+        "class_name": "torch_transformers_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "pretrained_bert": "{TRANSFORMER}",
+        "attention_probs_keep_prob": 0.5,
+        "use_crf": false,
+        "encoder_layer_ids": [
+          -1
+        ],
+        "optimizer": "AdamW",
+        "optimizer_parameters": {
+          "lr": 2e-05,
+          "weight_decay": 1e-06,
+          "betas": [
+            0.9,
+            0.999
+          ],
+          "eps": 1e-06
+        },
+        "clip_norm": 1.0,
+        "min_learning_rate": 1e-07,
+        "learning_rate_drop_patience": 3,
+        "learning_rate_drop_div": 1.5,
+        "load_before_drop": true,
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "in": [
+          "x_subword_tok_ids",
+          "attention_mask",
+          "startofword_markers"
+        ],
+        "in_y": [
+          "y_ind"
+        ],
+        "out": [
+          "y_pred_ind",
+          "probas"
+        ]
+      },
+      {
+        "ref": "tag_vocab",
+        "in": [
+          "y_pred_ind"
+        ],
+        "out": [
+          "y_pred"
+        ]
+      }
+    ],
+    "out": [
+      "x_tokens",
+      "y_pred"
+    ]
+  },
+  "train": {
+    "epochs": 100,
+    "batch_size": 2,
+    "validation_patience": 50,
+    "val_every_n_epochs": 1,
+    "log_every_n_epochs": 1,
+    "show_examples": false,
+    "tensorboard_log_dir": "./logs/semeeval_2014/restaurants/",
+    "metrics": [
+      {
+        "name": "ner_f1",
+        "inputs": [
+          "y",
+          "y_pred"
+        ]
+      }
+    ],
+    "evaluation_targets": [
+      "valid",
+      "test"
+    ],
+    "class_name": "torch_trainer"
+  },
+  "metadata": {
+    "variables": {
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "TRANSFORMER": "microsoft/deberta-v3-base",
+      "MODEL_PATH": "/archive/savkin/models/ner/semeval2014_restaurant_deberta_batch_2"
+    }
+  }
+}
