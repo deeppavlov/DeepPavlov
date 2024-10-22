@@ -99,6 +99,7 @@
   "tfidf_ranker": "deeppavlov.models.doc_retrieval.tfidf_ranker:TfidfRanker",
   "tfidf_weighted": "deeppavlov.models.embedders.tfidf_weighted_embedder:TfidfWeightedEmbedder",
   "top1_elector": "deeppavlov.models.spelling_correction.electors.top1_elector:TopOneElector",
+  "token_classification_reader": "deeppavlov.dataset_readers.token_classification_reader:TokenClassificationReader",
   "torch_bert_ranker": "deeppavlov.models.torch_bert.torch_bert_ranker:TorchBertRankerModel",
   "torch_bert_ranker_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchBertRankerPreprocessor",
   "torch_record_postprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchRecordPostprocessor",
