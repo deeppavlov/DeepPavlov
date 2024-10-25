@@ -1,0 +1,54 @@
+{
+  "chainer": {
+    "in": ["x"],
+    "in_y": ["y"],
+    "pipe": [
+      {
+        "class_name": "torch_transformers_ner_preprocessor",
+        "vocab_file": "{BASE_MODEL}",
+        "do_lower_case": false,
+        "max_seq_length": 512,
+        "in": ["x"],
+        "out": ["x_tokens", "x_subword_tokens", "x_subword_tok_ids", "startofword_markers", "attention_mask", "tokens_offsets"]
+      },
+      {
+        "id": "tag_vocab",
+        "class_name": "simple_vocab",
+        "unk_token": ["O"],
+        "save_path": "{MODEL_PATH}/tag.dict",
+        "load_path": "{MODEL_PATH}/tag.dict",
+        "fit_on": ["y"],
+        "in": ["y"],
+        "out": ["y_ind"]
+      },
+      {
+        "class_name": "torch_transformers_sequence_tagger",
+        "n_tags": "#tag_vocab.len",
+        "pretrained_bert": "{BASE_MODEL}",
+        "attention_probs_keep_prob": 0.5,
+        "use_crf": false,
+        "encoder_layer_ids": [-1],
+        "save_path": "{MODEL_PATH}/model",
+        "load_path": "{MODEL_PATH}/model",
+        "in": ["x_subword_tok_ids", "attention_mask", "startofword_markers"],
+        "in_y": ["y_ind"],
+        "out": ["y_pred_ind", "probas"]
+      },
+      {
+        "ref": "tag_vocab",
+        "in": ["y_pred_ind"],
+        "out": ["y_pred"]
+      }
+    ],
+    "out": ["x_tokens", "y_pred"]
+  },
+  "metadata": {
+    "variables": {
+      "BASE_MODEL": "microsoft/mdeberta-v3-base",
+      "ROOT_PATH": "~/.deeppavlov",
+      "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
+      "MODELS_PATH": "{ROOT_PATH}/models",
+      "MODEL_PATH": "/archive/savkin/models/ner/mdeberta_dp_demo_34_labels"
+    }
+  }
+}
