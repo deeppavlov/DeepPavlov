@@ -48,7 +48,13 @@
       "ROOT_PATH": "~/.deeppavlov",
       "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
       "MODELS_PATH": "{ROOT_PATH}/models",
-      "MODEL_PATH": "/archive/savkin/models/ner/mdeberta_dp_demo_34_labels"
-    }
+      "MODEL_PATH": "{MODELS_PATH}/ner/demo/"
+    },
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/tmp/mdeberta_dp_demo_34_labels.tar.gz",
+        "subdir": "{MODEL_PATH}"
+      }
+     ]
   }
 }
