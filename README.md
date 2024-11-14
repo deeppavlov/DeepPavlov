@@ -166,7 +166,7 @@ DeepPavlov is Apache 2.0 - licensed.
 ```
 @inproceedings{savkin-etal-2024-deeppavlov,
     title = "DeepPavlov 1.0: Your Gateway to Advanced NLP Models Backed by Transformers and Transfer Learning",
-    author = "Savkin Maksim  and Voznyuk Anastasia  and Ignatov Fedor  and Korzanova Anna  and Karpov Dmitry  and Popov Alexander  and Konovalov Vasily"
+    author = "Savkin Maksim and Voznyuk Anastasia and Ignatov Fedor and Korzanova Anna and Karpov Dmitry and Popov Alexander and Konovalov Vasily"
     editor = "Hernandez Farias and Delia Irazu and Hope Tom and Li Manling",
     booktitle = "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
     month = nov,
