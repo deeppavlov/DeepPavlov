@@ -161,3 +161,20 @@ inference using Python.
 ## License
 
 DeepPavlov is Apache 2.0 - licensed.
+
+## Citation
+```
+@inproceedings{savkin-etal-2024-deeppavlov,
+    title = "DeepPavlov 1.0: Your Gateway to Advanced NLP Models Backed by Transformers and Transfer Learning",
+    author = "Savkin Maksim  and Voznyuk Anastasia  and Ignatov Fedor  and Korzanova Anna  and Karpov Dmitry  and Popov Alexander  and Konovalov Vasily"
+    editor = "Hernandez Farias and Delia Irazu and Hope Tom and Li Manling",
+    booktitle = "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.emnlp-demo.47",
+    pages = "465--474",
+    abstract = "We present DeepPavlov 1.0, an open-source framework for using Natural Language Processing (NLP) models by leveraging transfer learning techniques. DeepPavlov 1.0 is created for modular and configuration-driven development of state-of-the-art NLP models and supports a wide range of NLP model applications. DeepPavlov 1.0 is designed for practitioners with limited knowledge of NLP/ML. DeepPavlov is based on PyTorch and supports HuggingFace transformers. DeepPavlov is publicly released under the Apache 2.0 license and provides access to an online demo.",
+}
+```
