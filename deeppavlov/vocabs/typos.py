@@ -62,8 +62,10 @@ class StaticDictionary:
             words = {self._normalize(word) for word in words}
 
             alphabet = {c for w in words for c in w}
-            alphabet.remove('⟬')
-            alphabet.remove('⟭')
+            if '⟬' in alphabet:
+                alphabet.remove('⟬')
+            if '⟭' in alphabet:
+                alphabet.remove('⟭')
 
             save_pickle(alphabet, alphabet_path)
             save_pickle(words, words_path)
