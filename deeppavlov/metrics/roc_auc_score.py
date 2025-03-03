@@ -33,6 +33,9 @@ def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
 
     Returns:
         Area Under the Curve (AUC) from prediction scores
+
+    Alias:
+        roc_auc
     """
     try:
         return sklearn.metrics.roc_auc_score(np.squeeze(np.array(y_true)),

@@ -78,7 +78,7 @@ def s3_download(url: str, destination: str) -> None:
         file_object.download_file(destination, Callback=pbar.update)
 
 
-def simple_download(url: str, destination: Union[Path, str], headers: Optional[dict] = None) -> None:
+def simple_download(url: str, destination: Union[Path, str], headers: Optional[dict] = None, n_tries: int = 3) -> None:
     """Download a file from URL to target location.
 
     Displays a progress bar to the terminal during the download process.
@@ -87,58 +87,66 @@ def simple_download(url: str, destination: Union[Path, str], headers: Optional[d
         url: The source URL.
         destination: Path to the file destination (including file name).
         headers: Headers for file server.
+        n_tries: Number of retries if download fails.
 
     """
-    destination = Path(destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        destination = Path(destination)
+        destination.parent.mkdir(parents=True, exist_ok=True)
 
-    log.info('Downloading from {} to {}'.format(url, destination))
+        log.info('Downloading from {} to {}'.format(url, destination))
 
-    if url.startswith('s3://'):
-        return s3_download(url, str(destination))
+        if url.startswith('s3://'):
+            return s3_download(url, str(destination))
 
-    chunk_size = 32 * 1024
-    temporary = destination.with_suffix(destination.suffix + '.part')
+        chunk_size = 32 * 1024
+        temporary = destination.with_suffix(destination.suffix + '.part')
 
-    r = requests.get(url, stream=True, headers=headers)
-    if r.status_code != 200:
-        raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
-    total_length = int(r.headers.get('content-length', 0))
+        r = requests.get(url, stream=True, headers=headers)
+        if r.status_code != 200:
+            raise RuntimeError(f'Got status code {r.status_code} when trying to download {url}')
+        total_length = int(r.headers.get('content-length', 0))
 
-    if temporary.exists() and temporary.stat().st_size > total_length:
-        temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
+        if temporary.exists() and temporary.stat().st_size > total_length:
+            temporary.write_bytes(b'')  # clearing temporary file when total_length is inconsistent
 
-    with temporary.open('ab') as f:
-        downloaded = f.tell()
-        if downloaded != 0:
-            log.warning(f'Found a partial download {temporary}')
-        with tqdm(initial=downloaded, total=total_length, unit='B', unit_scale=True) as pbar:
-            while True:
-                if downloaded != 0:
-                    log.warning(f'Download stopped abruptly, trying to resume from {downloaded} '
-                                f'to reach {total_length}')
-                    headers['Range'] = f'bytes={downloaded}-'
-                    r = requests.get(url, headers=headers, stream=True)
-                    if 'content-length' not in r.headers or \
-                            total_length - downloaded != int(r.headers['content-length']):
-                        raise RuntimeError('It looks like the server does not support resuming downloads.')
+        with temporary.open('ab') as f:
+            downloaded = f.tell()
+            if downloaded != 0:
+                log.warning(f'Found a partial download {temporary}')
+            with tqdm(initial=downloaded, total=total_length, unit='B', unit_scale=True) as pbar:
+                while True:
+                    if downloaded != 0:
+                        log.warning(f'Download stopped abruptly, trying to resume from {downloaded} '
+                                    f'to reach {total_length}')
+                        headers['Range'] = f'bytes={downloaded}-'
+                        r = requests.get(url, headers=headers, stream=True)
+                        if 'content-length' not in r.headers or \
+                                total_length - downloaded != int(r.headers['content-length']):
+                            raise RuntimeError('It looks like the server does not support resuming downloads.')
 
-                try:
-                    for chunk in r.iter_content(chunk_size=chunk_size):
-                        if chunk:  # filter out keep-alive new chunks
-                            downloaded += len(chunk)
-                            pbar.update(len(chunk))
-                            f.write(chunk)
-                except requests.exceptions.ChunkedEncodingError:
-                    if downloaded == 0:
-                        r = requests.get(url, stream=True, headers=headers)
+                    try:
+                        for chunk in r.iter_content(chunk_size=chunk_size):
+                            if chunk:  # filter out keep-alive new chunks
+                                downloaded += len(chunk)
+                                pbar.update(len(chunk))
+                                f.write(chunk)
+                    except requests.exceptions.ChunkedEncodingError:
+                        if downloaded == 0:
+                            r = requests.get(url, stream=True, headers=headers)
 
-                if downloaded >= total_length:
-                    # Note that total_length is 0 if the server didn't return the content length,
-                    # in this case we perform just one iteration and assume that we are done.
-                    break
+                    if downloaded >= total_length:
+                        # Note that total_length is 0 if the server didn't return the content length,
+                        # in this case we perform just one iteration and assume that we are done.
+                        break
 
-    temporary.rename(destination)
+        temporary.rename(destination)
+    except Exception as e:
+        if n_tries > 0:
+            log.warning(f'Download failed: {e}, retrying')
+            simple_download(url, destination, headers, n_tries - 1)
+        else:
+            raise e
 
 
 def download(dest_file_path: [List[Union[str, Path]]], source_url: str, force_download: bool = True,

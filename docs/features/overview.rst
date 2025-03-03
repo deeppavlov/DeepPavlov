@@ -207,7 +207,7 @@ model. This model outputs empty string in case if there is no answer in context.
 
 
 
-ODQA :doc:`[docs] </features/models/odqa>`
+ODQA :doc:`[docs] </features/models/ODQA>`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 An open domain question answering model. The model accepts free-form questions about the world and outputs an answer
