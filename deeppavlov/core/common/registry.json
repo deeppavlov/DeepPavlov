@@ -114,6 +114,7 @@
   "torch_transformers_multiplechoice": "deeppavlov.models.torch_bert.torch_transformers_multiplechoice:TorchTransformersMultiplechoiceModel",
   "torch_transformers_multiplechoice_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersMultiplechoicePreprocessor",
   "torch_transformers_ner_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersNerPreprocessor",
+  "torch_transformers_ner_postprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersNerPostprocessor",
   "torch_transformers_nll_ranker": "deeppavlov.models.torch_bert.torch_transformers_nll_ranking:TorchTransformersNLLRanker",
   "torch_transformers_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersPreprocessor",
   "torch_transformers_sequence_tagger": "deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger",

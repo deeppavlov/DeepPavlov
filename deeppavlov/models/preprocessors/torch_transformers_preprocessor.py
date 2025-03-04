@@ -510,7 +510,7 @@ class TorchTransformersNerPreprocessor(Component):
                  subword_mask_mode: str = "first",
                  return_features: bool = False,
                  **kwargs):
-        self._re_tokenizer = re.compile(r"[\d]+[\d\.,]+[\d]+|[\w'\.:@]+|[^\w ]")
+        self._re_tokenizer = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?|[\w'\.:@]+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
@@ -650,6 +650,39 @@ class TorchTransformersNerPreprocessor(Component):
         startofword_markers.append(0)
         tags_subword.append('X')
         return tokens_subword, startofword_markers, tags_subword
+
+
+@register('torch_transformers_ner_postprocessor')
+class TorchTransformersNerPostprocessor(Component):
+    """
+    Takes tokens and predicted labels and updates labels for entities matching regex.
+    Args:
+        tokens: list of tokens
+        y_preds: list of predicted tags
+
+    Return:
+        new_tags: list of updated predicted tags
+    """
+    # init may be not required? re_tokenizer not required as we have tokens not sentences coming in?
+    # Need just to check if it matches regex
+    def __init__(self,
+                 **kwargs):
+        self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
+        self.mode = kwargs.get('mode')    
+
+    def __call__(self,
+                 tokens: Union[List[List[str]], List[str]],
+                 tags: List[List[str]] = None):
+        new_tags = []
+        for token, tag in list(zip(tokens[0], tags[0])):
+            matches = tuple(re.finditer(self.phone_pattern, token))
+            if matches:
+        # print(token)
+                new_tags.append("B-PHONE_NUMBER")
+            else:
+                new_tags.append(tag)
+            
+        return [new_tags]
 
 
 @register('torch_bert_ranker_preprocessor')
