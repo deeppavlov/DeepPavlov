@@ -663,8 +663,7 @@ class TorchTransformersNerPostprocessor(Component):
     Return:
         new_tags: list of updated predicted tags
     """
-    # init may be not required? re_tokenizer not required as we have tokens not sentences coming in?
-    # Need just to check if it matches regex
+
     def __init__(self,
                  **kwargs):
         self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
@@ -677,7 +676,6 @@ class TorchTransformersNerPostprocessor(Component):
         for token, tag in list(zip(tokens[0], tags[0])):
             matches = tuple(re.finditer(self.phone_pattern, token))
             if matches:
-        # print(token)
                 new_tags.append("B-PHONE_NUMBER")
             else:
                 new_tags.append(tag)
