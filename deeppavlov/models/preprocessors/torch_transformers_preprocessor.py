@@ -667,6 +667,7 @@ class TorchTransformersNerPostprocessor(Component):
     def __init__(self,
                  **kwargs):
         self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
+        self.email_pattern = re.compile(r"(?:[\w\d_\.]+@[\w\.]*)")
         self.mode = kwargs.get('mode')    
 
     def __call__(self,
@@ -674,9 +675,12 @@ class TorchTransformersNerPostprocessor(Component):
                  tags: List[List[str]] = None):
         new_tags = []
         for token, tag in list(zip(tokens[0], tags[0])):
-            matches = tuple(re.finditer(self.phone_pattern, token))
-            if matches:
+            matches_phone = tuple(re.finditer(self.phone_pattern, token))
+            matches_email = tuple(re.finditer(self.email_pattern, token))
+            if matches_phone:
                 new_tags.append("B-PHONE_NUMBER")
+            elif matches_email:
+                new_tags.append("B-EMAIL_ADDRESS")
             else:
                 new_tags.append(tag)
             
