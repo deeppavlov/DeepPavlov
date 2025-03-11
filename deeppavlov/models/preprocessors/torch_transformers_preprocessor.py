@@ -540,8 +540,10 @@ class TorchTransformersNerPreprocessor(Component):
                 for i, elem in enumerate(matches):
                     if (i == len(matches) - 1) and (elem[0][-1] == '.'):
                         tokens_list.append(elem[0][:-1])
+                        tokens_list = list(filter(None, tokens_list))
                         tokens_list.append('.')
-                        tokens_offsets_list.append((elem.start(), elem.end() - 1))
+                        if elem.start() != elem.end() - 1:
+                            tokens_offsets_list.append((elem.start(), elem.end() - 1))
                         tokens_offsets_list.append((elem.end() - 1, elem.end()))
                     else:
                         tokens_list.append(elem[0])
