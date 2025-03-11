@@ -676,17 +676,19 @@ class TorchTransformersNerPostprocessor(Component):
                  tokens: Union[List[List[str]], List[str]],
                  tags: List[List[str]] = None):
         new_tags = []
-        for token, tag in list(zip(tokens[0], tags[0])):
-            matches_phone = tuple(re.finditer(self.phone_pattern, token))
-            matches_email = tuple(re.finditer(self.email_pattern, token))
-            if matches_phone:
-                new_tags.append("B-PHONE_NUMBER")
-            elif matches_email:
-                new_tags.append("B-EMAIL_ADDRESS")
-            else:
-                new_tags.append(tag)
+        for i, token_tag_pair in enumerate(list(zip(tokens, tags))):
+            new_tags.append([])
+            for token, tag in list(zip(token_tag_pair[0], token_tag_pair[1])):
+                matches_phone = tuple(re.finditer(self.phone_pattern, token))
+                matches_email = tuple(re.finditer(self.email_pattern, token))
+                if matches_phone:
+                    new_tags[i].append("B-PHONE_NUMBER")
+                elif matches_email:
+                    new_tags[i].append("B-EMAIL_ADDRESS")
+                else:
+                    new_tags[i].append(tag)
             
-        return [new_tags]
+        return new_tags
 
 
 @register('torch_bert_ranker_preprocessor')
