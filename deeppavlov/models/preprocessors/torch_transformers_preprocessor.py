@@ -510,7 +510,7 @@ class TorchTransformersNerPreprocessor(Component):
                  subword_mask_mode: str = "first",
                  return_features: bool = False,
                  **kwargs):
-        self._re_tokenizer = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?|[\w'\.:@]+|[^\w ]")
+        self._re_tokenizer = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,5})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?|(?:[\w\d_\.\"!#$%&'*+-\/=?^`{|}~]+@[\w\.]*)|[\d]+[\d\.,]+[\d]+|[\w'\.:@]+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get('mode')
         self.max_seq_length = max_seq_length
@@ -668,8 +668,8 @@ class TorchTransformersNerPostprocessor(Component):
 
     def __init__(self,
                  **kwargs):
-        self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,4})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
-        self.email_pattern = re.compile(r"(?:[\w\d_\.]+@[\w\.]*)")
+        self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,5})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
+        self.email_pattern = re.compile(r"(?:[\w\d_\.\"!#$%&'*+-\/=?^`{|}~]+@[\w\.]*)")
         self.mode = kwargs.get('mode')    
 
     def __call__(self,
