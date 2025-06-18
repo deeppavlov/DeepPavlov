@@ -256,6 +256,29 @@ def round_f1_macro(y_true, y_predicted):
     return f1_score(np.array(y_true), np.array(predictions), average="macro")
 
 
+@register_metric('f1_micro')
+def round_f1_micro(y_true, y_predicted):
+    """
+    Calculates F1 micro measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+
+    Alias:
+        f1_micro
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(np.array(y_true), np.array(predictions), average="micro")
+
+
 @register_metric('f1_weighted')
 def round_f1_weighted(y_true, y_predicted):
     """

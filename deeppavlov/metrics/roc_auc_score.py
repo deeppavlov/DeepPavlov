@@ -42,3 +42,26 @@ def roc_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
                                              np.squeeze(np.array(y_pred)), average="macro")
     except ValueError:
         return 0.
+
+
+@register_metric('pr_auc')
+def pr_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
+                  y_pred: Union[List[List[float]], List[List[int]], np.ndarray]) -> float:
+    """
+    Compute Precision-Recall Area Under the Curve (PR-AUC) from prediction scores.
+
+    Args:
+        y_true: true binary labels
+        y_pred: target scores, can either be probability estimates of the positive class
+
+    Returns:
+        Precision-Recall Area Under the Curve (PR-AUC) from prediction scores
+
+    Alias:
+        pr_auc
+    """
+    try:
+        return sklearn.metrics.average_precision_score(np.squeeze(np.array(y_true)),
+                                             np.squeeze(np.array(y_pred)), average="macro")
+    except ValueError:
+        return 0.
