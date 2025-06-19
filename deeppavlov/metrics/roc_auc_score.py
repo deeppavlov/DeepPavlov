@@ -60,8 +60,17 @@ def pr_auc_score(y_true: Union[List[List[float]], List[List[int]], np.ndarray],
     Alias:
         pr_auc
     """
+    y_true = np.array(y_true).astype(int)
+    y_pred = np.array(y_pred)
+
+    if y_pred.dtype.type is np.str_:
+        y_pred = y_pred.astype(float)
+
     try:
-        return sklearn.metrics.average_precision_score(np.squeeze(np.array(y_true)),
-                                             np.squeeze(np.array(y_pred)), average="macro")
-    except ValueError:
-        return 0.
+        predictions = [np.round(x) for x in y_pred]
+    except TypeError:
+        predictions = y_pred
+    
+    return sklearn.metrics.average_precision_score(np.array(y_true), np.array(predictions), average="micro")
+    # except ValueError:
+    #     return 0.
