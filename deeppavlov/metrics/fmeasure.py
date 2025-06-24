@@ -18,11 +18,101 @@ from itertools import chain
 from logging import getLogger
 
 import numpy as np
-from sklearn.metrics import f1_score
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
 
 from deeppavlov.core.common.metrics_registry import register_metric
 
 log = getLogger(__name__)
+
+@register_metric('token_classification_f1')
+def token_classification_f1(y_true, y_pred):
+    return 0
+    print('TRUE')
+    print(y_true)
+
+    print("PRED")
+    print(y_pred)   
+    """
+    F1 score for token-level binary classification, ignoring -100 labels
+    """
+    # Flatten lists and filter out -100 labels
+    true_flat = []
+    pred_flat = []
+    
+    for true_seq, pred_seq in zip(y_true, y_pred):
+        for true_label, pred_label in zip(true_seq, pred_seq):
+            if true_label != -100:  # Ignore masked tokens
+                true_flat.append(true_label)
+                pred_flat.append(pred_label)
+    
+    if not true_flat:
+        return 0.0
+    
+    return f1_score(true_flat, pred_flat, average='macro')
+
+@register_metric('token_classification_accuracy')
+def token_classification_accuracy(y_true, y_pred):
+    return 0
+    print('TRUE')
+    print(y_true)
+
+    print("PRED")
+    print(y_pred)   
+    """
+    Accuracy for token-level binary classification, ignoring -100 labels
+    """
+    # Flatten lists and filter out -100 labels
+    true_flat = []
+    pred_flat = []
+    
+    for true_seq, pred_seq in zip(y_true, y_pred):
+        for true_label, pred_label in zip(true_seq, pred_seq):
+            if true_label != -100:  # Ignore masked tokens
+                true_flat.append(true_label)
+                pred_flat.append(pred_label)
+    
+    if not true_flat:
+        return 0.0
+    
+    return accuracy_score(true_flat, pred_flat)
+
+@register_metric('hallucination_detection_report')
+def hallucination_detection_report(y_true, y_pred):
+    print('TRUE')
+    print(y_true)
+
+    print("PRED")
+    print(y_pred)    
+    
+    """
+    Detailed classification report for hallucination detection
+    """
+    from sklearn.metrics import classification_report
+    
+    # Flatten lists and filter out -100 labels
+    true_flat = []
+    pred_flat = []
+    
+    for true_seq, pred_seq in zip(y_true, y_pred):
+        for true_label, pred_label in zip(true_seq, pred_seq):
+            if true_label != -100:  # Ignore masked tokens
+                true_flat.append(true_label)
+                pred_flat.append(pred_label)
+    
+    if not true_flat:
+        return "No valid labels found"
+    
+    target_names = ['Supported', 'Hallucination']
+    report = classification_report(true_flat, pred_flat, target_names=target_names)
+    print("\n" + "="*50)
+    print("HALLUCINATION DETECTION REPORT")
+    print("="*50)
+    print(report)
+    print("="*50)
+    
+    # Return F1 for hallucination class
+    f1_scores = f1_score(true_flat, pred_flat, average=None)
+    return f1_scores[1] if len(f1_scores) > 1 else 0.0
 
 
 @register_metric('ner_f1')

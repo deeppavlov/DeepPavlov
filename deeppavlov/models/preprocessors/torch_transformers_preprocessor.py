@@ -474,6 +474,183 @@ class PathRankingPreprocessor(Component):
         return input_features
 
 
+@register('torch_transformers_hallucination_detector_preprocessor')
+class TorchTransformersHallucinationDetectorPreprocessor(Component):
+    """
+    """
+
+    def __init__(self,
+                 tokenizer: str,
+                 do_lower_case: bool = False,
+                 max_seq_length: int = 4096,
+                 max_subword_length: int = None,
+                 return_features: bool = False,
+                 **kwargs):
+        self.mode = kwargs.get('mode')
+        self.max_seq_length = max_seq_length
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, do_lower_case=do_lower_case)
+        self.return_features = return_features
+
+    @classmethod
+    def prepare_tokenized_input(
+        cls,
+        tokenizer: AutoTokenizer,
+        context: str,
+        answer: str,
+        max_length: int = 4096,
+    ) -> tuple[dict[str, torch.Tensor], list[int], torch.Tensor, int]:
+        """Tokenizes the context and answer together, computes the answer start token index,
+        and initializes a labels list (using -100 for context tokens and 0 for answer tokens).
+
+        :param tokenizer: The tokenizer to use.
+        :param context: The context string.
+        :param answer: The answer string.
+        :param max_length: Maximum input sequence length.
+        :return: A tuple containing:
+                 - encoding: A dict of tokenized inputs without offset mapping.
+                 - labels: A list of initial token labels.
+                 - offsets: Offset mappings for each token (as a tensor of shape [seq_length, 2]).
+                 - answer_start_token: The index where answer tokens begin.
+        """
+        encoding = tokenizer(
+            context,
+            answer,
+            truncation="only_first",
+            max_length=max_length,
+            return_offsets_mapping=True,
+            return_tensors="pt",
+            add_special_tokens=True,
+        )
+        offsets = encoding.pop("offset_mapping")[0]  # shape: (seq_length, 2)
+
+        # Simple approach: encode just the context with special tokens
+        # For most tokenizers, the answer starts right after this
+        context_only = tokenizer(context, add_special_tokens=True, return_tensors="pt")
+        # The answer starts after the context sequence (with its special tokens)
+        answer_start_token = context_only["input_ids"].shape[1]
+
+        # Handle any edge cases where this might land on a special token
+        if (
+            answer_start_token < offsets.size(0)
+            and offsets[answer_start_token][0] == offsets[answer_start_token][1]
+        ):
+            # If we landed on a special token, move forward
+            answer_start_token += 1
+
+        # Initialize labels: -100 for tokens before the asnwer, 0 for tokens in the answer.
+        labels = [-100] * encoding["input_ids"].shape[1]
+
+        return encoding, labels, offsets, answer_start_token
+    
+    
+    def _process_single_sample(self,
+                 prompt: str,
+                 answer: str,
+                 labels: List[dict],
+                 **kwargs):
+        encoding, tensor_labels, offsets, answer_start = TorchTransformersHallucinationDetectorPreprocessor.prepare_tokenized_input(
+            self.tokenizer, prompt, answer, self.max_seq_length,
+        )
+        answer_char_offset = offsets[answer_start][0] if answer_start < len(offsets) else None
+        for i in range(answer_start, encoding["input_ids"].shape[1]):
+            token_start, token_end = offsets[i]
+            # Adjust token offsets relative to answer text.
+            token_abs_start = (
+                token_start - answer_char_offset if answer_char_offset is not None else token_start
+            )
+            token_abs_end = (
+                token_end - answer_char_offset if answer_char_offset is not None else token_end
+            )
+
+            # Default label is 0 (supported content).
+            token_label = 0
+            # If token overlaps any annotated hallucination span, mark it as hallucinated (1).
+            for ann in labels:
+                if token_abs_end > ann["start"] and token_abs_start < ann["end"]:
+                    token_label = 1
+                    break
+
+            tensor_labels[i] = token_label
+
+        tensor_labels = torch.tensor(tensor_labels, dtype=torch.long)
+
+        return {
+            "input_ids": encoding["input_ids"].squeeze(0),
+            "attention_mask": encoding["attention_mask"].squeeze(0),
+            "labels": tensor_labels,
+        }
+    
+    def __call__(self,
+                samples: List[Dict[str, str]],
+                **kwargs):
+        """
+        Process batch of (x, y) tuples from reader
+        """
+
+        batch_input_ids = []
+        batch_attention_mask = []
+        batch_labels = []
+        batch_tokens = []  
+        # print(f'TOTAL: {len(samples)}')
+        # print(f'ZERO elem: {len(samples[0])}')
+        # print(f'ZERO elem: {samples[0]}')
+        # print(f'ZERO keys: {samples[0].keys()}')
+        
+        
+        for sample in samples:
+            prompt = sample['prompt']
+            answer = sample['answer']
+            labels = sample['labels']
+            processed_sample = self._process_single_sample(prompt, answer, labels)
+            
+            # Convert tensors to lists for zero_pad compatibility
+            input_ids_list = processed_sample['input_ids'].tolist()
+            attention_mask_list = processed_sample['attention_mask'].tolist()
+            labels_list = processed_sample['labels'].tolist()
+            
+            batch_input_ids.append(input_ids_list)
+            batch_attention_mask.append(attention_mask_list)
+            batch_labels.append(labels_list)
+            
+            # Convert input_ids back to tokens for Mask() - этого может не понадобиться если attention_mask уже корректный
+            tokens = self.tokenizer.convert_ids_to_tokens(input_ids_list)
+            batch_tokens.append(tokens)
+            
+            # Sanity check like in NER
+            assert len(input_ids_list) == len(attention_mask_list) == len(labels_list), \
+                f"length of input_ids({len(input_ids_list)}), attention_mask({len(attention_mask_list)})," \
+                f" and labels({len(labels_list)}) should match for sample {i}"
+
+        pad_token_id = self.tokenizer.pad_token_id if self.tokenizer.pad_token_id is not None else 0
+        
+        padded_input_ids = zero_pad(batch_input_ids, dtype=int, padding=pad_token_id)
+        padded_labels = zero_pad(batch_labels, dtype=int, padding=-100)
+        
+        attention_mask = Mask()(batch_tokens)
+        
+        y_masks = []
+        for labels_seq in padded_labels:
+            mask = [1 if label != -100 else 0 for label in labels_seq]
+            y_masks.append(mask)
+        y_masks = zero_pad(y_masks, dtype=int, padding=0)
+        if self.return_features:
+            return {
+                'input_ids': torch.tensor(padded_input_ids, dtype=torch.long),
+                'attention_mask': torch.tensor(attention_mask, dtype=torch.long),
+                'labels': torch.tensor(padded_labels, dtype=torch.long)
+            }
+        else:
+            return padded_input_ids, attention_mask, y_masks, padded_labels
+        
+            # def train_on_batch(self,
+            #            input_ids: Union[List[List[int]], np.ndarray],
+            #            input_masks: Union[List[List[int]], np.ndarray],
+            #            y_masks: Union[List[List[int]], np.ndarray],
+            #            y: List[List[int]],
+            #            *args, **kwargs) -> Dict[str, float]:
+
+
+
 @register('torch_transformers_ner_preprocessor')
 class TorchTransformersNerPreprocessor(Component):
     """
