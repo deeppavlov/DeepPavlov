@@ -17,6 +17,9 @@ class HallucinationDatasetReader(DatasetReader):
     
     def read(self,
              data_path: str,
+            #  tokenizer: str,
+            #  do_lower_case: bool = False,
+            #  max_seq_length: int = 4096,
              dataset_name: str = None,
              language: str = "en",
              download_url: str = None,
@@ -33,7 +36,6 @@ class HallucinationDatasetReader(DatasetReader):
         Returns:
             Dictionary with train/dev/test splits containing (tokens, bio_labels) tuples
         """
-        
         self.language = language
         self.dataset_name = dataset_name or "ragtruth"
         self.validation_split = validation_split
@@ -69,21 +71,22 @@ class HallucinationDatasetReader(DatasetReader):
             # dataset[split] = split_samples
             #TODO
             #HOTFIX
-            dataset[split] = self._convert_to_xy_tuples(split_samples)[:1000]
+            dataset[split] = self._convert_to_xy_tuples(split_samples)[:]
+            # dataset[split] = self._preprocessing_tokenize(split_samples)[:1000]
+            
             splits_info[split] = len(dataset[split])
             log.info(f"Loaded {len(dataset[split])} samples for {split} split")
         
+    
         dataset = self._handle_validation_split(dataset, splits_info)
         
         return dataset
     
-    def _convert_to_xy_tuples(self, samples: List[Dict[str, Any]]) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
-        """
-        Convert samples to (x, y) tuples format like CoNLL reader
+    def _preprocessing_tokenize(self,samples: List[Dict[str, Any]]):
         
-        x будет содержать входные данные (prompt, answer)
-        y будет содержать метки (labels)
-        """
+        pass
+        
+    def _convert_to_xy_tuples(self, samples: List[Dict[str, Any]]) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
         xy_tuples = []
         
         for sample in samples:

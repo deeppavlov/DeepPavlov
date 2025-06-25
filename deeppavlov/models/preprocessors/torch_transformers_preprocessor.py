@@ -483,7 +483,6 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
                  tokenizer: str,
                  do_lower_case: bool = False,
                  max_seq_length: int = 4096,
-                 max_subword_length: int = None,
                  return_features: bool = False,
                  **kwargs):
         self.mode = kwargs.get('mode')

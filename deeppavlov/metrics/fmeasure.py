@@ -25,13 +25,7 @@ from deeppavlov.core.common.metrics_registry import register_metric
 log = getLogger(__name__)
 
 @register_metric('token_classification_f1')
-def token_classification_f1(y_true, y_pred):
-    return 0
-    print('TRUE')
-    print(y_true)
-
-    print("PRED")
-    print(y_pred)   
+def token_classification_f1(y_true, y_pred): 
     """
     F1 score for token-level binary classification, ignoring -100 labels
     """
@@ -52,12 +46,6 @@ def token_classification_f1(y_true, y_pred):
 
 @register_metric('token_classification_accuracy')
 def token_classification_accuracy(y_true, y_pred):
-    return 0
-    print('TRUE')
-    print(y_true)
-
-    print("PRED")
-    print(y_pred)   
     """
     Accuracy for token-level binary classification, ignoring -100 labels
     """
@@ -78,12 +66,6 @@ def token_classification_accuracy(y_true, y_pred):
 
 @register_metric('hallucination_detection_report')
 def hallucination_detection_report(y_true, y_pred):
-    print('TRUE')
-    print(y_true)
-
-    print("PRED")
-    print(y_pred)    
-    
     """
     Detailed classification report for hallucination detection
     """

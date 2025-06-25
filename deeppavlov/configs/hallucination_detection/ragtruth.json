@@ -77,14 +77,14 @@
             {
                 "name": "token_classification_accuracy",
                 "inputs": [
-                    "y",
+                    "labels",
                     "y_pred"
                 ]
             },
             {
                 "name": "token_classification_f1",
                 "inputs": [
-                    "y",
+                    "labels",
                     "y_pred"
                 ]
             }
