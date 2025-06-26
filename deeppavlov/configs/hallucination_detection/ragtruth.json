@@ -5,7 +5,7 @@
         "language": "en",
         "preprocess_raw": true,
         "save_preprocessed": true,
-        "validation_split": 0.15,
+        "validation_split": 0.05,
         "random_seed": 42,
         "create_validation_from_train": true,
         "debug_format": false
@@ -26,16 +26,12 @@
                 "out": [
                     "input_ids",
                     "attention_mask",
-                    "y_masks",
                     "labels"
                 ]
             },
             {
-                "class_name": "torch_transformers_sequence_tagger",
-                "n_tags": 2,
+                "class_name": "torch_transformers_hallucination_detector",
                 "pretrained_bert": "{TRANSFORMER}",
-                "attention_probs_keep_prob": 0.5,
-                "use_crf": false,
                 "optimizer": "AdamW",
                 "optimizer_parameters": {
                     "lr": 1e-05,
@@ -55,8 +51,7 @@
                 "load_path": "{MODEL_PATH}/model",
                 "in": [
                     "input_ids",
-                    "attention_mask",
-                    "y_masks"
+                    "attention_mask"
                 ],
                 "in_y": ["labels"],
                 "out": [

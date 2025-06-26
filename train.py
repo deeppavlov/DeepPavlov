@@ -5,7 +5,7 @@ config = read_json("deeppavlov/configs/hallucination_detection/ragtruth.json")
 results = train_evaluate_model_from_config(
     config,
     to_train=True,
-    # evaluation_targets=["valid", "train", "test"],
+    evaluation_targets=["valid", "test"],
     download=False,
     install=False
 )

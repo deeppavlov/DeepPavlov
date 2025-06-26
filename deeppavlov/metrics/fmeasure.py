@@ -18,8 +18,7 @@ from itertools import chain
 from logging import getLogger
 
 import numpy as np
-from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score
-
+from sklearn.metrics import f1_score, precision_score, recall_score, accuracy_score, precision_recall_fscore_support
 from deeppavlov.core.common.metrics_registry import register_metric
 
 log = getLogger(__name__)
@@ -38,6 +37,9 @@ def token_classification_f1(y_true, y_pred):
             if true_label != -100:  # Ignore masked tokens
                 true_flat.append(true_label)
                 pred_flat.append(pred_label)
+    
+    print(f'pred sum: {sum(pred_flat)}')
+    print(f'gt sum: {sum(true_flat)}')
     
     if not true_flat:
         return 0.0

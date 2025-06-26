@@ -120,6 +120,7 @@
   "torch_transformers_nll_ranker": "deeppavlov.models.torch_bert.torch_transformers_nll_ranking:TorchTransformersNLLRanker",
   "torch_transformers_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:TorchTransformersPreprocessor",
   "torch_transformers_sequence_tagger": "deeppavlov.models.torch_bert.torch_transformers_sequence_tagger:TorchTransformersSequenceTagger",
+  "torch_transformers_hallucination_detector": "deeppavlov.models.torch_bert.torch_transformers_hallucination:TorchTransformersHallucinationDetector",
   "torch_transformers_squad": "deeppavlov.models.torch_bert.torch_transformers_squad:TorchTransformersSquad",
   "torch_transformers_syntax_parser": "deeppavlov.models.torch_bert.torch_transformers_syntax_parser:TorchTransformersSyntaxParser",
   "transformers_bert_embedder": "deeppavlov.models.embedders.transformers_embedder:TransformersBertEmbedder",

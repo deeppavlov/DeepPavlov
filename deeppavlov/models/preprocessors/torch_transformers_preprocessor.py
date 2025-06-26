@@ -602,7 +602,6 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             labels = sample['labels']
             processed_sample = self._process_single_sample(prompt, answer, labels)
             
-            # Convert tensors to lists for zero_pad compatibility
             input_ids_list = processed_sample['input_ids'].tolist()
             attention_mask_list = processed_sample['attention_mask'].tolist()
             labels_list = processed_sample['labels'].tolist()
@@ -611,7 +610,6 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             batch_attention_mask.append(attention_mask_list)
             batch_labels.append(labels_list)
             
-            # Convert input_ids back to tokens for Mask() - этого может не понадобиться если attention_mask уже корректный
             tokens = self.tokenizer.convert_ids_to_tokens(input_ids_list)
             batch_tokens.append(tokens)
             
@@ -624,22 +622,16 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
         
         padded_input_ids = zero_pad(batch_input_ids, dtype=int, padding=pad_token_id)
         padded_labels = zero_pad(batch_labels, dtype=int, padding=-100)
-        
-        attention_mask = Mask()(batch_tokens)
-        
-        y_masks = []
-        for labels_seq in padded_labels:
-            mask = [1 if label != -100 else 0 for label in labels_seq]
-            y_masks.append(mask)
-        y_masks = zero_pad(y_masks, dtype=int, padding=0)
+        padded_attention_mask = zero_pad(batch_attention_mask, dtype=int, padding=0)
+
         if self.return_features:
             return {
                 'input_ids': torch.tensor(padded_input_ids, dtype=torch.long),
-                'attention_mask': torch.tensor(attention_mask, dtype=torch.long),
+                'attention_mask': torch.tensor(padded_attention_mask, dtype=torch.long),
                 'labels': torch.tensor(padded_labels, dtype=torch.long)
             }
         else:
-            return padded_input_ids, attention_mask, y_masks, padded_labels
+            return padded_input_ids, padded_attention_mask, padded_labels
         
             # def train_on_batch(self,
             #            input_ids: Union[List[List[int]], np.ndarray],
