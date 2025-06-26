@@ -5,7 +5,7 @@
         "language": "en",
         "preprocess_raw": true,
         "save_preprocessed": true,
-        "validation_split": 0.05,
+        "validation_split": 0.10,
         "random_seed": 42,
         "create_validation_from_train": true,
         "debug_format": false
@@ -70,14 +70,21 @@
         "batch_size": 4,
         "metrics": [
             {
-                "name": "token_classification_accuracy",
+                "name": "token_binary_f1",
                 "inputs": [
                     "labels",
                     "y_pred"
                 ]
             },
             {
-                "name": "token_classification_f1",
+                "name": "token_binary_precision",
+                "inputs": [
+                    "labels",
+                    "y_pred"
+                ]
+            },
+            {
+                "name": "token_binary_recall",
                 "inputs": [
                     "labels",
                     "y_pred"
@@ -85,8 +92,8 @@
             }
         ],
         "validation_patience": 50,
-        "val_every_n_batches": 10,
-        "log_every_n_batches": 10,
+        "val_every_n_batches": 50,
+        "log_every_n_batches": 20,
         "show_examples": false,
         "evaluation_targets": [
             "test",

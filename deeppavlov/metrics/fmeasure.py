@@ -23,8 +23,8 @@ from deeppavlov.core.common.metrics_registry import register_metric
 
 log = getLogger(__name__)
 
-@register_metric('token_classification_f1')
-def token_classification_f1(y_true, y_pred): 
+@register_metric('token_binary_f1')
+def token_binary_f1(y_true, y_pred): 
     """
     F1 score for token-level binary classification, ignoring -100 labels
     """
@@ -44,12 +44,12 @@ def token_classification_f1(y_true, y_pred):
     if not true_flat:
         return 0.0
     
-    return f1_score(true_flat, pred_flat, average='macro')
+    return f1_score(true_flat, pred_flat, average='binary', zero_division=0)
 
-@register_metric('token_classification_accuracy')
-def token_classification_accuracy(y_true, y_pred):
+@register_metric('token_binary_precision')
+def token_binary_precision(y_true, y_pred): 
     """
-    Accuracy for token-level binary classification, ignoring -100 labels
+    Precision score for token-level binary classification, ignoring -100 labels
     """
     # Flatten lists and filter out -100 labels
     true_flat = []
@@ -64,7 +64,27 @@ def token_classification_accuracy(y_true, y_pred):
     if not true_flat:
         return 0.0
     
-    return accuracy_score(true_flat, pred_flat)
+    return precision_score(true_flat, pred_flat, average='binary', zero_division=0)
+
+@register_metric('token_binary_recall')
+def token_binary_recall(y_true, y_pred): 
+    """
+    Precision score for token-level binary classification, ignoring -100 labels
+    """
+    # Flatten lists and filter out -100 labels
+    true_flat = []
+    pred_flat = []
+    
+    for true_seq, pred_seq in zip(y_true, y_pred):
+        for true_label, pred_label in zip(true_seq, pred_seq):
+            if true_label != -100:  # Ignore masked tokens
+                true_flat.append(true_label)
+                pred_flat.append(pred_label)
+    
+    if not true_flat:
+        return 0.0
+    
+    return recall_score(true_flat, pred_flat, average='binary', zero_division=0)
 
 @register_metric('hallucination_detection_report')
 def hallucination_detection_report(y_true, y_pred):

@@ -632,13 +632,7 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             }
         else:
             return padded_input_ids, padded_attention_mask, padded_labels
-        
-            # def train_on_batch(self,
-            #            input_ids: Union[List[List[int]], np.ndarray],
-            #            input_masks: Union[List[List[int]], np.ndarray],
-            #            y_masks: Union[List[List[int]], np.ndarray],
-            #            y: List[List[int]],
-            #            *args, **kwargs) -> Dict[str, float]:
+
 
 
 
