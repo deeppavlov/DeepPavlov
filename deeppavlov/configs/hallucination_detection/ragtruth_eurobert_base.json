@@ -32,6 +32,7 @@
             {
                 "class_name": "torch_transformers_hallucination_detector",
                 "pretrained_bert": "{TRANSFORMER}",
+                "trust_remote_code": true,
                 "optimizer": "AdamW",
                 "optimizer_parameters": {
                     "lr": 1e-05,
@@ -66,7 +67,7 @@
         ]
     },
     "train": {
-        "epochs": 6,
+        "epochs": 50,
         "batch_size": 4,
         "metrics": [
             {
@@ -91,9 +92,9 @@
                 ]
             }
         ],
-        "validation_patience": 50,
-        "val_every_n_batches": 50,
-        "log_every_n_batches": 20,
+        "validation_patience": 20,
+        "val_every_n_batches": 200,
+        "log_every_n_batches": 100,
         "show_examples": false,
         "evaluation_targets": [
             "test",
@@ -107,11 +108,8 @@
             "ROOT_PATH": "/root/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "MODEL_PATH": "{MODELS_PATH}/ragtruth_hallucination_detector",
-            "TRANSFORMER": "answerdotai/ModernBERT-base",
-            "LETTUCE": "KRLabsOrg/lettucedect-base-modernbert-en-v1",
-            "ORIGINAL": "answerdotai/ModernBERT-base"
-
+            "TRANSFORMER": "EuroBERT/EuroBERT-210m",
+            "MODEL_PATH": "{MODELS_PATH}/ragtruth_hallucination_detector/{TRANSFORMER}"
         },
         "download": []
     }

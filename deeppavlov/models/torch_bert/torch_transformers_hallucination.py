@@ -38,9 +38,10 @@ class TorchTransformersHallucinationDetector(TorchModel):
                  bert_config_file: Optional[str] = None,
                  attention_probs_keep_prob: Optional[float] = None,
                  hidden_keep_prob: Optional[float] = None,
+                 trust_remote_code: bool = False,
                  **kwargs) -> None:
         if pretrained_bert:
-            model = AutoModelForTokenClassification.from_pretrained(pretrained_bert, num_labels=2)
+            model = AutoModelForTokenClassification.from_pretrained(pretrained_bert, num_labels=2, trust_remote_code=trust_remote_code)
         elif bert_config_file and Path(bert_config_file).is_file():
             bert_config = AutoConfig.from_json_file(str(expand_path(bert_config_file)))
             if attention_probs_keep_prob is not None:
@@ -125,8 +126,3 @@ class TorchTransformersHallucinationDetector(TorchModel):
 
     def save(self, fname: Optional[str] = None, *args, **kwargs) -> None:
         super().save(fname, *args, **kwargs)
-        # TODO: test
-        if fname is None:
-            fname = self.save_path
-        weights_path = Path(f"{fname}").resolve()
-        weights_path = weights_path.with_suffix(".pth.tar")

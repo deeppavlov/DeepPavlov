@@ -38,9 +38,6 @@ def token_binary_f1(y_true, y_pred):
                 true_flat.append(true_label)
                 pred_flat.append(pred_label)
     
-    print(f'pred sum: {sum(pred_flat)}')
-    print(f'gt sum: {sum(true_flat)}')
-    
     if not true_flat:
         return 0.0
     
