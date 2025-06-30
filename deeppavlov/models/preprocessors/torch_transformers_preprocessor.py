@@ -35,7 +35,24 @@ from deeppavlov.models.preprocessors.mask import Mask
 
 log = getLogger(__name__)
 
+# TODO: move somwhere prompts
+from string import Template
+QA_PROMPT = Template("""
+Briefly answer the following question:
+${question}
+Bear in mind that your response should be strictly based on the following ${num_passages} passages:
+${context}
+In case the passages do not contain the necessary information to answer the question, please reply with: "Unable to answer based on given passages."
+output:
+""".strip())
 
+SUMMARY_PROMPT = Template("""
+Summarize the following text:
+${context}
+output:
+""".strip())
+        
+        
 @register('torch_transformers_multiplechoice_preprocessor')
 class TorchTransformersMultiplechoicePreprocessor(Component):
     """Tokenize text on subtokens, encode subtokens with their indices, create tokens and segment masks.
@@ -473,6 +490,7 @@ class PathRankingPreprocessor(Component):
                           "token_type_ids": token_type_ids_batch}
         return input_features
 
+from string import Template
 
 @register('torch_transformers_hallucination_detector_postprocessor')
 class TorchTransformersHallucinationDetectorPostprocessor(Component):
@@ -482,7 +500,7 @@ class TorchTransformersHallucinationDetectorPostprocessor(Component):
                  **kwargs):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
         self.max_seq_length = max_seq_length
-    
+        
     def __call__(self,
                 samples,
                 y_pred,
@@ -493,7 +511,6 @@ class TorchTransformersHallucinationDetectorPostprocessor(Component):
         pred_spans = []
         for sample, probabilities, token_preds, labels in zip(samples, probas, y_pred, batch_labels):
             answer = sample['answer']
-            print(labels)
             _, _, offsets, answer_start_token = TorchTransformersHallucinationDetectorPreprocessor.prepare_tokenized_input(
                 self.tokenizer, sample['prompt'], answer, self.max_seq_length
             )
@@ -564,7 +581,7 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
         self.max_seq_length = max_seq_length
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer, do_lower_case=do_lower_case)
         self.return_features = return_features
-
+        
     @classmethod
     def prepare_tokenized_input(
         cls,
@@ -655,7 +672,17 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             "offsets": offsets,
             "answer_start": answer_start,
         }
-    
+        
+    def format_prompt(self, context: list | str, question=None):
+        if isinstance(context, str):
+            context = [context]
+
+        context_block = "\n".join(f"passage {i + 1}: {p}" for i, p in enumerate(context))
+        if question is None:
+            return SUMMARY_PROMPT.substitute(context=context_block)
+
+        return QA_PROMPT.substitute(question=question, context=context_block, num_passages=len(context))
+
     def __call__(self,
                 samples: List[Dict[str, str]],
                 **kwargs):
@@ -670,9 +697,12 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
         batch_offsets = []
         
         for sample in samples:
+            if 'context' in sample:
+                prompt = self.format_prompt(sample['context'], sample.get('question'))
+                sample['prompt'] = prompt
             prompt = sample['prompt']
             answer = sample['answer']
-            labels = sample['labels']
+            labels = sample.get('labels', [])
             processed_sample = self._process_single_sample(prompt, answer, labels)
             
             input_ids_list = processed_sample['input_ids'].tolist()
