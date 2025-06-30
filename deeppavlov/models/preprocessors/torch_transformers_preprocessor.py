@@ -474,11 +474,86 @@ class PathRankingPreprocessor(Component):
         return input_features
 
 
+@register('torch_transformers_hallucination_detector_postprocessor')
+class TorchTransformersHallucinationDetectorPostprocessor(Component):
+    def __init__(self,
+                 tokenizer: str,
+                 max_seq_length: int,
+                 **kwargs):
+        self.tokenizer = AutoTokenizer.from_pretrained(tokenizer)
+        self.max_seq_length = max_seq_length
+    
+    def __call__(self,
+                samples,
+                y_pred,
+                probas,
+                batch_labels,
+                **kwargs):
+
+        pred_spans = []
+        for sample, probabilities, token_preds, labels in zip(samples, probas, y_pred, batch_labels):
+            answer = sample['answer']
+            print(labels)
+            _, _, offsets, answer_start_token = TorchTransformersHallucinationDetectorPreprocessor.prepare_tokenized_input(
+                self.tokenizer, sample['prompt'], answer, self.max_seq_length
+            )
+            if answer_start_token < len(offsets):
+                answer_char_offset = offsets[answer_start_token][0].item()
+            else:
+                answer_char_offset = 0
+                
+            spans: list[dict] = []
+            current_span: dict | None = None   
+            
+            for i in range(answer_start_token, len(token_preds)):
+                # Skip tokens marked as ignored.
+                if labels[i].item() == -100:
+                    continue
+
+                token_start, token_end = offsets[i].tolist()
+                # Skip special tokens with zero length.
+                if token_start == token_end:
+                    continue
+
+                # Adjust offsets relative to the answer text.
+                rel_start = token_start - answer_char_offset
+                rel_end = token_end - answer_char_offset
+
+                is_hallucination = (
+                    token_preds[i].item() == 1
+                )  # assuming class 1 indicates hallucination.
+                confidence = probabilities[i, 1].item() if is_hallucination else 0.0
+
+                if is_hallucination:
+                    if current_span is None:
+                        current_span = {
+                            "start": rel_start,
+                            "end": rel_end,
+                            "confidence": confidence,
+                        }
+                    else:
+                        # Extend the current span.
+                        current_span["end"] = rel_end
+                        current_span["confidence"] = max(current_span["confidence"], confidence)
+                else:
+                    # If we were building a hallucination span, finalize it.
+                    if current_span is not None:
+                        # Extract the hallucinated text from the answer.
+                        span_text = answer[current_span["start"] : current_span["end"]]
+                        current_span["text"] = span_text
+                        spans.append(current_span)
+                        current_span = None
+
+            if current_span is not None:
+                span_text = answer[max(0, current_span["start"]): min(len(answer), current_span["end"])]
+                current_span["text"] = span_text
+                spans.append(current_span)
+            pred_spans.append(spans)
+
+        return pred_spans
+
 @register('torch_transformers_hallucination_detector_preprocessor')
 class TorchTransformersHallucinationDetectorPreprocessor(Component):
-    """
-    """
-
     def __init__(self,
                  tokenizer: str,
                  do_lower_case: bool = False,
@@ -577,6 +652,8 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             "input_ids": encoding["input_ids"].squeeze(0),
             "attention_mask": encoding["attention_mask"].squeeze(0),
             "labels": tensor_labels,
+            "offsets": offsets,
+            "answer_start": answer_start,
         }
     
     def __call__(self,
@@ -590,11 +667,7 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
         batch_attention_mask = []
         batch_labels = []
         batch_tokens = []  
-        # print(f'TOTAL: {len(samples)}')
-        # print(f'ZERO elem: {len(samples[0])}')
-        # print(f'ZERO elem: {samples[0]}')
-        # print(f'ZERO keys: {samples[0].keys()}')
-        
+        batch_offsets = []
         
         for sample in samples:
             prompt = sample['prompt']
@@ -613,7 +686,6 @@ class TorchTransformersHallucinationDetectorPreprocessor(Component):
             tokens = self.tokenizer.convert_ids_to_tokens(input_ids_list)
             batch_tokens.append(tokens)
             
-            # Sanity check like in NER
             assert len(input_ids_list) == len(attention_mask_list) == len(labels_list), \
                 f"length of input_ids({len(input_ids_list)}), attention_mask({len(attention_mask_list)})," \
                 f" and labels({len(labels_list)}) should match for sample {i}"

@@ -59,12 +59,27 @@
                     "y_pred",
                     "probas"
                 ]
+            },
+            {
+                "class_name": "torch_transformers_hallucination_detector_postprocessor",
+                "tokenizer": "{TRANSFORMER}",
+                "max_seq_length": 4096,
+                "in": [
+                    "x",
+                    "y_pred",
+                    "probas",
+                    "labels"
+                ],
+                "out": [
+                    "spans"
+                ]
             }
         ],
         "out": [
         "y_pred",
         "probas",
-        "labels"
+        "labels",
+        "spans"
         ]
     },
     "train": {
