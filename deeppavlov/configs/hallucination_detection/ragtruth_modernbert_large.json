@@ -68,7 +68,7 @@
         ]
     },
     "train": {
-        "epochs": 20,
+        "epochs": 6,
         "batch_size": 4,
         "metrics": [
             {
@@ -109,7 +109,7 @@
             "ROOT_PATH": "/root/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "TRANSFORMER": "answerdotai/ModernBERT-base",
+            "TRANSFORMER": "answerdotai/ModernBERT-large",
             "MODEL_PATH": "{MODELS_PATH}/ragtruth_hallucination_detector/{TRANSFORMER}"
         },
         "download": []

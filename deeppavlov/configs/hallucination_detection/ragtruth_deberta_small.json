@@ -32,8 +32,8 @@
             {
                 "class_name": "torch_transformers_hallucination_detector",
                 "pretrained_bert": "{TRANSFORMER}",
-                "trust_remote_code": true,
                 "optimizer": "AdamW",
+                "trust_remote_code": true,
                 "optimizer_parameters": {
                     "lr": 1e-05,
                     "weight_decay": 1e-03,
@@ -63,11 +63,12 @@
         ],
         "out": [
         "y_pred",
-        "probas"
+        "probas",
+        "labels"
         ]
     },
     "train": {
-        "epochs": 50,
+        "epochs": 6,
         "batch_size": 4,
         "metrics": [
             {
@@ -108,7 +109,7 @@
             "ROOT_PATH": "/root/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
-            "TRANSFORMER": "EuroBERT/EuroBERT-210m",
+            "TRANSFORMER": "microsoft/deberta-v3-small",
             "MODEL_PATH": "{MODELS_PATH}/ragtruth_hallucination_detector/{TRANSFORMER}"
         },
         "download": []
