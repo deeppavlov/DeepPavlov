@@ -8,7 +8,8 @@ from typing import List, Dict, Tuple, Any, Optional
 from deeppavlov.core.common.registry import register
 from deeppavlov.core.data.dataset_reader import DatasetReader
 from deeppavlov.core.data.utils import download_decompress
-
+from datasets import load_dataset
+from random import shuffle
 log = getLogger(__name__)
 
 @register('hallucination_reader')  
@@ -21,7 +22,7 @@ class HallucinationDatasetReader(DatasetReader):
             #  do_lower_case: bool = False,
             #  max_seq_length: int = 4096,
              dataset_name: str = None,
-             language: str = "en",
+             language: str = "en", # TODO
              download_url: str = None,
              preprocess_raw: bool = False,
              raw_data_files: Optional[Dict[str, str]] = None,
@@ -68,9 +69,6 @@ class HallucinationDatasetReader(DatasetReader):
         
         for split in ['train', 'dev', 'test']:
             split_samples = [s for s in all_samples if s['split'] == split]
-            # dataset[split] = split_samples
-            #TODO
-            #HOTFIX
             dataset[split] = self._convert_to_xy_tuples(split_samples)[:]
             # dataset[split] = self._preprocessing_tokenize(split_samples)[:1000]
             
@@ -80,37 +78,68 @@ class HallucinationDatasetReader(DatasetReader):
     
         dataset = self._handle_validation_split(dataset, splits_info)
         
+        
+        val_ids = set([s[0]['id'] for s in dataset['valid']]) if 'valid' in dataset else None
+        
+        for lang in ['cn', 'fr', 'es', 'it', 'hu', 'de', 'pl']:
+            print(f'loading {lang} version!')
+            ds = load_dataset(f'KRLabsOrg/ragtruth-{lang}-translated')
+            # prevent possible validation leak
+            dataset['train'].extend(self._convert_to_xy_tuples(ds['train'].to_list(), skip_ids=val_ids))
+            dataset['test'].extend(self._convert_to_xy_tuples(ds['test'].to_list(), skip_ids=None))
+            
+        shuffle(dataset['train'])
         return dataset
     
     def _preprocessing_tokenize(self,samples: List[Dict[str, Any]]):
-        
         pass
         
-    def _convert_to_xy_tuples(self, samples: List[Dict[str, Any]]) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
+    def _convert_to_xy_tuples(self, samples: List[Dict[str, Any]], skip_ids=None) -> List[Tuple[Dict[str, Any], Dict[str, Any]]]:
         xy_tuples = []
-        
-        for sample in samples:
+        skipped = 0
+
+        for i, sample in enumerate(samples):
+            if skip_ids and i in skip_ids:
+                skipped += 1
+                continue
             try:
+                
+                prompt = sample.get('prompt', '').strip()
+                answer = sample.get('answer', '').strip()
+                language = sample.get('language', '')
+                if len(prompt) < 10 or len(answer) < 10:
+                    skipped += 1
+                    continue
+                if language == 'chinese':
+                    if prompt.startswith("指令：\n仅根据提供的 JSON ") and answer.startswith("Taco Tuyo 是一家位于加利"): # broken example
+                        skipped += 1
+                        continue
+                if language == 'hungarian':
+                    if prompt.startswith("Foglalja össze") and answer.startswith("Taylor Swift popénekesnő"):
+                        skipped += 1
+                        continue
                 x = {
-                    'prompt': sample.get('prompt', ''),
-                    'answer': sample.get('answer', ''),
+                    'prompt': prompt,
+                    'answer': answer,
                     'task_type': sample.get('task_type', ''),
                     'dataset': sample.get('dataset', ''),
-                    'language': sample.get('language', ''),
+                    'language': language,
                     'labels': sample.get('labels', []),
+                    'id': i,
                 }
-                
                 y = {
                     'labels': sample.get('labels', [])
                 }
-                
                 xy_tuples.append((x, y))
-                
+
             except Exception as e:
                 log.warning(f"Failed to process sample: {e}")
                 continue
-        
+
+        if skipped:
+            log.info(f"Skipped {skipped} samples with empty prompt or answer or validation.")
         return xy_tuples
+    
     def _should_preprocess_raw_data(self, data_path: Path, raw_data_files: Optional[Dict[str, str]]) -> bool:
         """Check if we should preprocess raw data"""
         if raw_data_files:
