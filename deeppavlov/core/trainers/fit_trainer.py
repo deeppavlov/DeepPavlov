@@ -161,7 +161,6 @@ class FitTrainer:
         examples = 0
 
         data = islice(data, self.max_test_batches)
-
         for x, y_true in tqdm(data):
             examples += len(x)
             y_predicted = list(self._chainer.compute(list(x), list(y_true), targets=expected_outputs))
