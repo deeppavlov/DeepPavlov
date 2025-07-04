@@ -61,6 +61,7 @@
   "paraphraser_reader": "deeppavlov.dataset_readers.paraphraser_reader:ParaphraserReader",
   "path_ranking_preprocessor": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:PathRankingPreprocessor",
   "pop_ranker": "deeppavlov.models.doc_retrieval.pop_ranker:PopRanker",
+  "printer": "deeppavlov.models.preprocessors.torch_transformers_preprocessor:Printer",
   "proba2labels": "deeppavlov.models.classifiers.proba2labels:Proba2Labels",
   "query_formatter": "deeppavlov.models.kbqa.query_generator:QueryFormatter",
   "query_generator": "deeppavlov.models.kbqa.query_generator:QueryGenerator",
