@@ -670,7 +670,7 @@ class TorchTransformersHallucinationDetectorPostprocessor(Component):
                 starts += [-1]
                 ends += [-1]
                 scores += [-1]
-                new_answers.append(["", -1, -1])
+                new_answers.append(["", -1, -1, answer_text])
             else:
                 min_start = min(span["start"] for span in spans)
                 max_end = max(span["end"] for span in spans)
@@ -683,7 +683,7 @@ class TorchTransformersHallucinationDetectorPostprocessor(Component):
                 starts += [min_start]
                 ends += [max_end]
                 scores += [confidence]
-                new_answers.append([merged_text, min_start, confidence])
+                new_answers.append([merged_text, min_start, confidence, answer_text])
         return new_answers
         # return answers, starts, ends, scores
 

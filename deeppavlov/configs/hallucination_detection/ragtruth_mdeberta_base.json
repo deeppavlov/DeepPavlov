@@ -14,7 +14,7 @@
         "class_name": "data_learning_iterator"
     },
     "chainer": {
-        "in": ["x"],
+        "in": ["context_raw", "question_raw", "answer_raw"],
         "in_y": ["y"],
         "pipe": [
             {
@@ -22,11 +22,16 @@
                 "tokenizer": "{TRANSFORMER}",
                 "do_lower_case": false,
                 "max_seq_length": 2000,
-                "in": ["x"],
+                "in": [
+                    "context_raw",
+                    "question_raw",
+                    "answer_raw"
+                ],
                 "out": [
                     "input_ids",
                     "attention_mask",
-                    "labels"
+                    "labels",
+                    "prompts"
                 ]
             },
             {
@@ -65,21 +70,19 @@
                 "tokenizer": "{TRANSFORMER}",
                 "max_seq_length": 4096,
                 "in": [
-                    "x",
+                    "answer_raw",
+                    "prompts",
                     "y_pred",
                     "probas",
                     "labels"
                 ],
                 "out": [
-                    "spans"
+                    "ans_predicted"
                 ]
             }
         ],
         "out": [
-            "y_pred",
-            "probas",
-            "labels",
-            "spans"
+            "ans_predicted"
         ]
     },
     "train": {
@@ -121,11 +124,11 @@
     },
     "metadata": {
         "variables": {
-            "ROOT_PATH": "/cephfs/home/savkin/DeepPavlov/",
+            "ROOT_PATH": "/root/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
-            "MODELS_PATH": "{ROOT_PATH}/model_weights",
+            "MODELS_PATH": "{ROOT_PATH}/models",
             "TRANSFORMER": "microsoft/mdeberta-v3-base",
-            "MODEL_PATH": "{MODELS_PATH}/mdeberta-v3-base"
+            "MODEL_PATH": "DeepPavlov/{TRANSFORMER}"
         },
         "download": []
     }
