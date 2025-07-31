@@ -124,12 +124,17 @@
     },
     "metadata": {
         "variables": {
-            "ROOT_PATH": "/root/.deeppavlov",
+            "ROOT_PATH": "~/.deeppavlov",
             "DOWNLOADS_PATH": "{ROOT_PATH}/downloads",
             "MODELS_PATH": "{ROOT_PATH}/models",
             "TRANSFORMER": "microsoft/mdeberta-v3-base",
-            "MODEL_PATH": "DeepPavlov/{TRANSFORMER}"
+            "MODEL_PATH": "{MODELS_PATH}/hallucination_detection"
         },
-        "download": []
-    }
+    "download": [
+      {
+        "url": "http://files.deeppavlov.ai/tmp/hallucination_detection/hallucination_detection_model.tar.gz",
+        "subdir": "{MODELS_PATH}/hallucination_detection"
+      }
+    ]
+  }
 }
