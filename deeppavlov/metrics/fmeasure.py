@@ -118,6 +118,19 @@ def hallucination_detection_report(y_true, y_pred):
 
 @register_metric('ner_f1')
 def ner_f1(y_true, y_predicted):
+    """
+    Calculates F1 measure for Named Entity Recognition task.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+
+    Alias:
+        ner_f1
+    """
     y_true = list(chain(*y_true))
     y_predicted = list(chain(*y_predicted))
     results = precision_recall_f1(y_true,
@@ -128,9 +141,23 @@ def ner_f1(y_true, y_predicted):
 
 
 @register_metric('ner_token_f1')
-def ner_token_f1(y_true, y_pred, print_results=False):
+def ner_token_f1(y_true, y_predicted, print_results=False):
+    """
+    Calculates F1 measure for Named Entity Recognition task without taking into account BIO or BIOES markup.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+        print_results: if True, then F1 score for each entity type is printed
+
+    Returns:
+        F1 score
+
+    Alias:
+        ner_f1
+    """
     y_true = list(chain(*y_true))
-    y_pred = list(chain(*y_pred))
+    y_pred = list(chain(*y_predicted))
 
     # Drop BIO or BIOES markup
     assert all(len(tag.split('-')) <= 2 for tag in y_true)
@@ -281,6 +308,9 @@ def round_f1(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1
     """
     try:
         predictions = [np.round(x) for x in y_predicted]
@@ -305,6 +335,9 @@ def round_f1_macro(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1_macro
     """
     try:
         predictions = [np.round(x) for x in y_predicted]
@@ -312,6 +345,29 @@ def round_f1_macro(y_true, y_predicted):
         predictions = y_predicted
 
     return f1_score(np.array(y_true), np.array(predictions), average="macro")
+
+
+@register_metric('f1_micro')
+def round_f1_micro(y_true, y_predicted):
+    """
+    Calculates F1 micro measure.
+
+    Args:
+        y_true: list of true values
+        y_predicted: list of predicted values
+
+    Returns:
+        F1 score
+
+    Alias:
+        f1_micro
+    """
+    try:
+        predictions = [np.round(x) for x in y_predicted]
+    except TypeError:
+        predictions = y_predicted
+
+    return f1_score(np.array(y_true), np.array(predictions), average="micro")
 
 
 @register_metric('f1_weighted')
@@ -325,6 +381,9 @@ def round_f1_weighted(y_true, y_predicted):
 
     Returns:
         F1 score
+
+    Alias:
+        f1_weighted
     """
     try:
         predictions = [np.round(x) for x in y_predicted]

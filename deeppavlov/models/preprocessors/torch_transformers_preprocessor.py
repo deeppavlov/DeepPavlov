@@ -959,19 +959,17 @@ class TorchTransformersNerPreprocessor(Component):
         tokenizer: instance of Bert FullTokenizer
     """
 
-    def __init__(
-        self,
-        vocab_file: str,
-        do_lower_case: bool = False,
-        max_seq_length: int = 512,
-        max_subword_length: int = None,
-        token_masking_prob: float = 0.0,
-        provide_subword_tags: bool = False,
-        subword_mask_mode: str = "first",
-        return_features: bool = False,
-        **kwargs,
-    ):
-        self._re_tokenizer = re.compile(r"[\w']+|[^\w ]")
+    def __init__(self,
+                 vocab_file: str,
+                 do_lower_case: bool = False,
+                 max_seq_length: int = 512,
+                 max_subword_length: int = None,
+                 token_masking_prob: float = 0.0,
+                 provide_subword_tags: bool = False,
+                 subword_mask_mode: str = "first",
+                 return_features: bool = False,
+                 **kwargs):
+        self._re_tokenizer = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,5})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?|(?:[\w\d_\.\"!#$%&'*+-\/=?^`{|}~]+@[\w\.]*)|[\d]+[\d\.,]+[\d]+|[\w'\.:@]+|[^\w ]")
         self.provide_subword_tags = provide_subword_tags
         self.mode = kwargs.get("mode")
         self.max_seq_length = max_seq_length
@@ -1002,9 +1000,18 @@ class TorchTransformersNerPreprocessor(Component):
             for s in tokens:
                 tokens_list = []
                 tokens_offsets_list = []
-                for elem in re.finditer(self._re_tokenizer, s):
-                    tokens_list.append(elem[0])
-                    tokens_offsets_list.append((elem.start(), elem.end()))
+                matches = tuple(re.finditer(self._re_tokenizer, s))
+                for i, elem in enumerate(matches):
+                    if (i == len(matches) - 1) and (elem[0][-1] == '.'):
+                        tokens_list.append(elem[0][:-1])
+                        tokens_list = list(filter(None, tokens_list))
+                        tokens_list.append('.')
+                        if elem.start() != elem.end() - 1:
+                            tokens_offsets_list.append((elem.start(), elem.end() - 1))
+                        tokens_offsets_list.append((elem.end() - 1, elem.end()))
+                    else:
+                        tokens_list.append(elem[0])
+                        tokens_offsets_list.append((elem.start(), elem.end()))
                 tokens_batch.append(tokens_list)
                 tokens_offsets_batch.append(tokens_offsets_list)
             tokens = tokens_batch
@@ -1147,6 +1154,43 @@ class TorchTransformersNerPreprocessor(Component):
         startofword_markers.append(0)
         tags_subword.append("X")
         return tokens_subword, startofword_markers, tags_subword
+
+
+@register('torch_transformers_ner_postprocessor')
+class TorchTransformersNerPostprocessor(Component):
+    """
+    Takes tokens and predicted labels and updates labels for entities matching regex.
+    Args:
+        tokens: list of tokens
+        y_preds: list of predicted tags
+
+    Return:
+        new_tags: list of updated predicted tags
+    """
+
+    def __init__(self,
+                 **kwargs):
+        self.phone_pattern = re.compile(r"(?:\+?\d{1,3})?(?:[ (.-]*(\d{3})[ ).-]*(\d{3})[ .-]?(?:\d{1,5})[ .-]?(\d{2})?)(?:[,\s]*?[x(]?(ext|доб)?\.?\s?(\d{3,4})[)]?)?")
+        self.email_pattern = re.compile(r"(?:[\w\d_\.\"!#$%&'*+-\/=?^`{|}~]+@[\w\.]*)")
+        self.mode = kwargs.get('mode')    
+
+    def __call__(self,
+                 tokens: Union[List[List[str]], List[str]],
+                 tags: List[List[str]] = None):
+        new_tags = []
+        for i, token_tag_pair in enumerate(list(zip(tokens, tags))):
+            new_tags.append([])
+            for token, tag in list(zip(token_tag_pair[0], token_tag_pair[1])):
+                matches_phone = tuple(re.finditer(self.phone_pattern, token))
+                matches_email = tuple(re.finditer(self.email_pattern, token))
+                if matches_phone:
+                    new_tags[i].append("B-PHONE_NUMBER")
+                elif matches_email:
+                    new_tags[i].append("B-EMAIL_ADDRESS")
+                else:
+                    new_tags[i].append(tag)
+            
+        return new_tags
 
 
 @register("torch_bert_ranker_preprocessor")

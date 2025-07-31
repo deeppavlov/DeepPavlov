@@ -65,3 +65,16 @@ services:
       - CUDA_VISIBLE_DEVICES=$TEST_GPU_0
       - PYTEST_ARGS=$PYTEST_ARGS
       - DP_PYTEST_NO_CACHE=True
+  py311:
+    build:
+      context: ../../
+      dockerfile: utils/Docker/Dockerfile
+      args:
+        - EPOCH=$EPOCH
+        - PYTHON_VERSION=3.11.6
+        - BASE_IMAGE=nvidia/cuda:11.5.2-cudnn8-runtime-ubuntu20.04
+    user: '${UID}:${GID}'
+    environment:
+      - CUDA_VISIBLE_DEVICES=$TEST_GPU_1
+      - PYTEST_ARGS=$PYTEST_ARGS
+      - DP_PYTEST_NO_CACHE=True

@@ -150,6 +150,10 @@
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
   ],
+  "torch_transformers_ner_postprocessor": [
+    "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
+    "{DEEPPAVLOV_PATH}/requirements/transformers.txt"
+  ],
   "torch_transformers_hallucination_detector_preprocessor": [
     "{DEEPPAVLOV_PATH}/requirements/pytorch.txt",
     "{DEEPPAVLOV_PATH}/requirements/transformers.txt",
