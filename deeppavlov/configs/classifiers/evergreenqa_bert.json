@@ -101,7 +101,7 @@
     "download": [
       {
         "url": "http://files.deeppavlov.ai/tmp/evergreen_dataset/evergreen.tar.gz",
-        "subdir": "{DOWNLOADS_PATH}/evergreen"
+        "subdir": "{DOWNLOADS_PATH}"
       },
       {
         "url": "http://files.deeppavlov.ai/tmp/rag/rag_demo_bert_mult.tar.gz",

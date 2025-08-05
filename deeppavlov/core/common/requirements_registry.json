@@ -26,6 +26,9 @@
   "huggingface_dataset_reader": [
     "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
   ],
+  "ragtruth_reader": [
+    "{DEEPPAVLOV_PATH}/requirements/datasets.txt"
+  ],
   "kenlm_elector": [
     "{DEEPPAVLOV_PATH}/requirements/kenlm.txt"
   ],
