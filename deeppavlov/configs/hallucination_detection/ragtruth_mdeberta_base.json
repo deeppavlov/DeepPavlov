@@ -132,6 +132,10 @@
         },
     "download": [
       {
+        "url": "http://files.deeppavlov.ai/tmp/ragtruth/ragtruth.tar.gz",
+        "subdir": "{DOWNLOADS_PATH}/ragtruth"
+      },
+      {
         "url": "http://files.deeppavlov.ai/tmp/hallucination_detection/hallucination_detection_model.tar.gz",
         "subdir": "{MODELS_PATH}/hallucination_detection"
       }
