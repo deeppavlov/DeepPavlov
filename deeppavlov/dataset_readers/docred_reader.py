@@ -409,6 +409,6 @@ class DocREDDatasetReader(DatasetReader):
     def print_statistics(self, train_stat: Dict, valid_stat: Dict, test_stat: Dict) -> None:
         """ Print out the relation statistics as a markdown table """
         df = pd.DataFrame([self.rel2relid, train_stat, valid_stat, test_stat]).T
-        df.columns = ['d{}'.format(i) for i, col in enumerate(df, 1)]
+        df.columns = ['rel_id', 'train', 'valid', 'test']
         logger.info("\n")
         logger.info(df)
