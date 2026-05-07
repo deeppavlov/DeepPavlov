@@ -78,11 +78,11 @@ class BasicClassificationDatasetReader(DatasetReader):
             file = Path(data_path).joinpath(file_name)
             if file.exists():
                 if format == 'csv':
-                    keys = ('sep', 'header', 'names')
+                    keys = ('sep', 'header', 'names', 'dtype')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_csv(file, **options)
                 elif format == 'json':
-                    keys = ('orient', 'lines')
+                    keys = ('orient', 'lines', 'dtype')
                     options = {k: kwargs[k] for k in keys if k in kwargs}
                     df = pd.read_json(file, **options)
                 else:
