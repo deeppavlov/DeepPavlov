@@ -99,7 +99,7 @@ Deployment process consists of two main stages:
 
     ``sudo pip3 install virtualenv``
 
-5.  Create and activate Python 3.6 virtual enviroment:
+5.  Create and activate Python 3.6 virtual environment:
 
     ``virtualenv env -p python3.6``
 
