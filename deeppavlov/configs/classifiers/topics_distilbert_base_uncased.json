@@ -6,7 +6,7 @@
     "y": "topic",
     "data_path": "{DOWNLOADS_PATH}/dp_topics_downsampled_data/",
     "train" : "train.csv",
-    "valid" : "valid.csv"  
+    "valid" : "valid.csv"
   },
   "dataset_iterator": {
     "class_name": "basic_classification_iterator",

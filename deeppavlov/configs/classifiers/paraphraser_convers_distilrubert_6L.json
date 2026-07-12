@@ -29,7 +29,7 @@
         "save_path": "{MODEL_PATH}/model",
         "load_path": "{MODEL_PATH}/model",
         "attention_probs_keep_prob": 0.0,
-        "hidden_keep_prob": 0.67, 
+        "hidden_keep_prob": 0.67,
         "optimizer": "AdamW",
         "optimizer_parameters": {
           "lr": 7.22e-05
@@ -90,4 +90,4 @@
       }
     ]
   }
-} 
+}

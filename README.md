@@ -138,7 +138,7 @@ where
 You can train it in the same simple way:
 
 ```python
-from deeppavlov import train_model 
+from deeppavlov import train_model
 
 model = train_model(<config_path>, install=True, download=True)
 ```
@@ -150,7 +150,7 @@ The data format is specified in the corresponding model doc page.
 You can also calculate metrics on the dataset specified in your config file:
 
 ```python
-from deeppavlov import evaluate_model 
+from deeppavlov import evaluate_model
 
 model = evaluate_model(<config_path>, install=True, download=True)
 ```
